@@ -15,7 +15,7 @@ const cabinSketch = Cabin_Sketch({
 // navigation bar.
 export default function NavBar() {
     // separate from teazo logo because it'll be styled differently 
-    const navItems = ["HOME", "MENU", "GALLERY", "CONTACT"];
+    const navItems = ["HOME", "MENU", "GALLERY", "CONTACT", "DELIVERY"];
 
 
     return (
