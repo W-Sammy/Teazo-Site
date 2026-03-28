@@ -121,11 +121,12 @@ export default function MenuPage() {
           <p
             className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
           >
-            Explore some of our featured menu categories. 
+            Explore some of our featured menu categories. This route is ready and
+            can be updated later with real menu data.
           </p>
         </section>
 
-        <section className="mx-auto mt-16 grid max-w-[1320px] gap-6 sm:grid-cols-2 lg:mt-20 lg:gap-8">
+        <section className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 md:grid-cols-2 lg:mt-20 lg:gap-8">
           {menuSections.map((section) => (
             <article
               key={section.title}
