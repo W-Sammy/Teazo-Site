@@ -121,8 +121,7 @@ export default function MenuPage() {
           <p
             className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
           >
-            Explore some of our featured menu categories. This route is ready and
-            can be updated later with real menu data.
+            Explore some of our featured menu categories.
           </p>
         </section>
 
