@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function Sidebar({ defaultActive = "dashboard" }) {
+export default function Sidebar() {
   const colorIconRoot = "/admin_icons/"
   const blackIconRoot = "/admin_icons/black_icons/"
   const pathname = usePathname();
@@ -19,7 +19,7 @@ export default function Sidebar({ defaultActive = "dashboard" }) {
 
   return (
     <div
-      className="flex flex-col w-32 h-full p-2 gap-2"
+      className="flex flex-col w-fit h-full p-2 gap-2"
       style={{ backgroundColor: "#E5E7EB" }}
     >
       
@@ -40,6 +40,7 @@ export default function Sidebar({ defaultActive = "dashboard" }) {
                 backgroundColor: isActive ? "#ffffff" : "transparent",
               }}
             >
+              {/* image color based off whether page is active or not */}
               <Image
                 src = {isActive ? colorIconRoot+item.img: blackIconRoot+item.img_b}
                 alt = "icon"

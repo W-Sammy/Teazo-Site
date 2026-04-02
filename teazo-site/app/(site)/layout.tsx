@@ -1,4 +1,4 @@
-import NavBar from "@/components/nav-bar";
+import NavBar from "@/app/(site)/components/nav-bar";
 
 export default function SiteLayout({
   children,

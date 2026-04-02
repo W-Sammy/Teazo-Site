@@ -9,7 +9,7 @@ export default function AdminLayout({
 }){
   return (
     <div className="flex h-full">
-      <aside className="sticky top-16 h-[100vh] w-32 ">
+      <aside className="sticky top-16 h-[100vh] ">
         <Sidebar />
       </aside>
       
