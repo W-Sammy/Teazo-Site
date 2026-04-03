@@ -1,4 +1,4 @@
-export default function AdminPage(){
+export default function AdminMenuPage(){
   return (
     <div>
       <h1>Hello World</h1>

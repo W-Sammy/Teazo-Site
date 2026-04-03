@@ -1,4 +1,4 @@
-export default function AdminPage(){
+export default function AdminEventsPage(){
   return (
     <div>
       <h1>Hello World</h1>
