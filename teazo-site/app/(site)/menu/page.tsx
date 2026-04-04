@@ -18,6 +18,7 @@ const montserrat = Montserrat({
   weight: ["400", "700"],
 });
 
+// Decorative pink underline behind the section heading.
 function PaintStroke() {
   return (
     <svg
@@ -50,112 +51,609 @@ function PaintStroke() {
   );
 }
 
+/* Structure used to group menu items into named categories.
+   Each section can optionally include a subtitle plus a list of items
+   rendered through the reusable MenuItemCard component. */
 type MenuSection = {
   title: string;
+  subtitle?: string;
   items: MenuItem[];
 };
 
+/* Creates mock menu items in a shape that closely matches the expected
+   backend/Square API response. This will make it easy to migrate later
+   when real data is connected through the products endpoint. */
+function createMenuItem(
+  categoryId: string,
+  categoryName: string,
+  name: string,
+  priceCents: number,
+  description?: string,
+  imageUrl: string | null = "/TEAZO_logo.png"
+): MenuItem {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return {
+    catalogObjectId: `mock-${categoryId}-${slug}`,
+    name,
+    variationId: null,
+    priceCents,
+    currency: "USD",
+    imageUrl,
+    categoryId,
+    categoryName,
+    description,
+  };
+}
+
+/* Featured/special items shown near the top of the page before the full
+   category list. These are currently mocked from the client’s Square site
+   and can be replaced later with API-driven data. */
+const specials: MenuItem[] = [
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Chocolate Truffle (8pc)",
+    675,
+    "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in..."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Sesame Mochi Latte",
+    725,
+    "The delightful beverage combines the rich, nutty essence of toasted sesame with the chewy texture ..."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Matcha Sesame Cheezo",
+    725,
+    "A world where rich matcha meets the nutty goodness of house made sesame cheezo."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Sesame Cheezo Latte",
+    725,
+    "A rich, creamy latte infused with the nutty goodness of toasted sesame and topped with a dreamy layer ..."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Brown Sugar Fluffy Coffee",
+    725,
+    "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!..."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Strawberry Tea",
+    675,
+    "Homemade strawberry jelly with fresh strawberry puree and four season tea."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Strawberry Jelly Latte",
+    675,
+    "Homemade strawberry jelly with creamy milk."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
+    750,
+    "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Cryst..."
+  ),
+  createMenuItem(
+    "specials",
+    "TEAZO Special",
+    "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
+    750,
+    "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is include..."
+  ),
+];
+
+/* Main category data for the menu page.
+   Product names, prices, and descriptions are currently based on the
+   client’s existing Square menu, while image URLs remain placeholders
+   until the final image/data mapping is completed. */
 const menuSections: MenuSection[] = [
   {
-    title: "Milk Teas",
+    title: "Japanese Soufflé Pancake",
+    subtitle: "Think cottony clouds of heaven that melt in your mouth",
     items: [
-      {
-        name: "Classic Milk Tea",
-        description: "A smooth and creamy black milk tea.",
-      },
-      {
-        name: "Taro Milk Tea",
-        description: "Sweet and nutty taro flavor with a creamy finish.",
-      },
-      {
-        name: "Thai Milk Tea",
-        description: "Bold tea flavor with warm spices and sweetness.",
-      },
-      {
-        name: "Brown Sugar Milk Tea",
-        description: "Rich brown sugar flavor with creamy milk tea.",
-      },
+      createMenuItem(
+        "souffle-pancake",
+        "Japanese Soufflé Pancake",
+        "Crème Brûlée Soufflé",
+        1299,
+        "A light, fluffy Japanese soufflé with a layer of crispy torched brown sugar on top."
+      ),
+      createMenuItem(
+        "souffle-pancake",
+        "Japanese Soufflé Pancake",
+        "Sea Salt Seaweed Pork Floss Soufflé",
+        1399,
+        "A Japanese style soufflé pancake with salted pork floss on top."
+      ),
+      createMenuItem(
+        "souffle-pancake",
+        "Japanese Soufflé Pancake",
+        "Strawberry Soufflé",
+        1299,
+        "Light and fluffy soufflé pancake with a smooth strawberry cream to finish."
+      ),
+      createMenuItem(
+        "souffle-pancake",
+        "Japanese Soufflé Pancake",
+        "Matcha Soufflé",
+        1299,
+        "Light and fluffy soufflé pancake with a smooth matcha cream to finish."
+      ),
+      createMenuItem(
+        "souffle-pancake",
+        "Japanese Soufflé Pancake",
+        "Chocolate Soufflé",
+        1299,
+        "Light and fluffy soufflé pancake with a smooth chocolate cream to finish."
+      ),
     ],
   },
   {
-    title: "Fruit Teas",
+    title: "Tiramisu Cheezo",
     items: [
-      {
-        name: "Passion Fruit Tea",
-        description: "Bright and tropical with a tangy finish.",
-      },
-      {
-        name: "Mango Green Tea",
-        description: "Refreshing green tea blended with mango flavor.",
-      },
-      {
-        name: "Peach Black Tea",
-        description: "Light peach sweetness with bold black tea.",
-      },
-      {
-        name: "Strawberry Tea",
-        description: "Fruity and refreshing with a sweet berry flavor.",
-      },
+      createMenuItem(
+        "tiramisu-cheezo",
+        "Tiramisu Cheezo",
+        "Tiramisu Milk Tea",
+        650,
+        "Signature Teazo milk tea topped with a strong and creamy layer of tiramisu cheezo."
+      ),
+      createMenuItem(
+        "tiramisu-cheezo",
+        "Tiramisu Cheezo",
+        "Tiramisu Oolong Tea",
+        650,
+        "High mountain oolong tea topped with a strong and creamy layer of tiramisu cheezo."
+      ),
+      createMenuItem(
+        "tiramisu-cheezo",
+        "Tiramisu Cheezo",
+        "Tiramisu Matcha Latte",
+        650,
+        "Matcha latte topped with a strong and creamy layer of tiramisu cheezo."
+      ),
     ],
   },
   {
-    title: "Specialty Drinks",
+    title: "Cheezo Tea",
+    subtitle: "Fresh brewed premium tea with salty cheese cream",
     items: [
-      {
-        name: "Matcha Latte",
-        description: "Creamy matcha drink with a smooth earthy flavor.",
-      },
-      {
-        name: "Coffee Milk Tea",
-        description: "A bold blend of coffee notes and milk tea.",
-      },
-      {
-        name: "Wintermelon Tea",
-        description: "Lightly sweet tea with a mellow wintermelon taste.",
-      },
-      {
-        name: "Honey Lemon Tea",
-        description: "Fresh citrus flavor balanced with honey sweetness.",
-      },
+      createMenuItem(
+        "cheezo-tea",
+        "Cheezo Tea",
+        "Black Jade Tea",
+        600,
+        "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a..."
+      ),
+      createMenuItem(
+        "cheezo-tea",
+        "Cheezo Tea",
+        "Jasmine Tea",
+        600,
+        "Jasmine Tea top with sea salt cheezo cream. Cheezo cream included."
+      ),
+      createMenuItem(
+        "cheezo-tea",
+        "Cheezo Tea",
+        "Earl Grey Tea",
+        600,
+        "Earl Grey Black Tea top with sea salt cheezo cream. Cheezo included"
+      ),
+      createMenuItem(
+        "cheezo-tea",
+        "Cheezo Tea",
+        "Four Season Tea",
+        600,
+        "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has..."
+      ),
+      createMenuItem(
+        "cheezo-tea",
+        "Cheezo Tea",
+        "Oolong Tea",
+        600,
+        "High mountain oolong tea topped with sea salt cheezo cream. Cheezo cream included."
+      ),
     ],
   },
   {
-    title: "Toppings",
+    title: "Milk Tea",
     items: [
-      {
-        name: "Boba",
-        description: "Classic chewy tapioca pearls.",
-      },
-      {
-        name: "Crystal Boba",
-        description: "Soft and lightly sweet translucent pearls.",
-      },
-      {
-        name: "Pudding",
-        description: "Smooth egg pudding topping.",
-      },
-      {
-        name: "Grass Jelly",
-        description: "Cool and silky herbal jelly topping.",
-      },
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
+        750,
+        "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Cryst..."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Boba Milk Tea",
+        650,
+        "Signature house BOBA milk tea, Boba included. Dairy free."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Jasmine Milk Tea",
+        600,
+        "A traditional Jasmine Milk Tea with an amazing scentful smell of flowers."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Earl Grey Milk Tea",
+        600,
+        "A Classic Earl Grey tea with milk."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Oolong Milk Tea",
+        600,
+        "High mountain premium oolong tea with milk."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Oreo Milk Tea",
+        650,
+        "A signature milk tea twisted with puff cream and topped with crushed Oreo."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Puff Cream Milk Tea",
+        650,
+        "A signature milk tea twisted with puff cream."
+      ),
+      createMenuItem(
+        "milk-tea",
+        "Milk Tea",
+        "Taro Milk Tea",
+        600,
+        "Strong taro taste with milk. (Caffeine free.)"
+      ),
+      createMenuItem("milk-tea", "Milk Tea", "Thai Tea", 600),
+    ],
+  },
+  {
+    title: "Fresh Fruit Tea",
+    items: [
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Very Berry Cheezo",
+        799,
+        "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Mango Cheezo",
+        799,
+        "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Berry Bang Cheezo",
+        799,
+        "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Mango Coco",
+        799,
+        "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Super Fruit Tea",
+        799,
+        "Fresh mix fruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Super Orange Tea",
+        725,
+        "Fresh orange and lime with choice of tea. (Large Cup Only) We don't recommend light sweet and light ice."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Super Lemon Tea",
+        725,
+        "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice,..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Passion Pineapple Tea",
+        725,
+        "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "PassionFruit Orange Tea",
+        725,
+        "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet..."
+      ),
+      createMenuItem(
+        "fresh-fruit-tea",
+        "Fresh Fruit Tea",
+        "Passionfruit Lemon Tea",
+        725,
+        "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light..."
+      ),
+    ],
+  },
+  {
+    title: "Matcha",
+    items: [
+      createMenuItem(
+        "matcha",
+        "Matcha",
+        "Mango Matcha Cheezo",
+        699,
+        "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha..."
+      ),
+      createMenuItem(
+        "matcha",
+        "Matcha",
+        "Strawberry Matcha Cheezo",
+        699,
+        "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing..."
+      ),
+      createMenuItem(
+        "matcha",
+        "Matcha",
+        "Matcha Latte",
+        699,
+        "A layered premium matcha with whole milk."
+      ),
+      createMenuItem(
+        "matcha",
+        "Matcha",
+        "Matcha Slush",
+        625,
+        "A ice cold matcha slush made freshly. (Cold only)"
+      ),
+      createMenuItem(
+        "matcha",
+        "Matcha",
+        "Oreo Brulee Matcha",
+        699,
+        "A matcha slush twisted with puff cream and topped with crushed Oreo. (Cold only)"
+      ),
+    ],
+  },
+  {
+    title: "Caffeine Free Drink",
+    items: [
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Brown Sugar Boba Latte",
+        699,
+        "Signature brown sugar Boba with creamy milk, Boba included. (Dairy)"
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
+        750,
+        "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only."
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Avocado Smash",
+        725,
+        "Fresh Avocado blended with ice and non dairy milk. Creamy and Healthy. (Cold only)"
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Banana berry Snow",
+        625,
+        "Fresh banana blended with strawberry puree, ice and milk. (Cold only)"
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Oreo Smoothie",
+        625,
+        "A ice cold Oreo Smoothie."
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Peach Yogurt",
+        600,
+        "Peach flavored yogurt drink."
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Strawberry Fizz",
+        600,
+        "Fresh strawberry puree flavor with sparkling water."
+      ),
+      createMenuItem(
+        "caffeine-free-drink",
+        "Caffeine Free Drink",
+        "Watermelon Slush",
+        625,
+        "Fresh watermelon blended with ice."
+      ),
+      createMenuItem("caffeine-free-drink", "Caffeine Free Drink", "Perrier", 300),
+    ],
+  },
+  {
+    title: "Dessert & Cake",
+    items: [
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Brown Sugar Mochi (6pc)",
+        800,
+        "Its crispy, chewy texture and a rich caramel-like flavor from the brown sugar, dusted with soy powder."
+      ),
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Chocolate Truffle (8pc)",
+        675,
+        "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in..."
+      ),
+      createMenuItem("dessert-cake", "Dessert & Cake", "Tiramisu Cup", 675),
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Tiramisu cake",
+        1299,
+        "A housemade rich and smooth mascarpone cream between layers of soaked sponge with coffee, dusted with cocoa powder. (No alcohol)"
+      ),
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Matchamisu cake",
+        1299,
+        "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemad..."
+      ),
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Salty Caramelmisu Cake",
+        1299,
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No..."
+      ),
+      createMenuItem(
+        "dessert-cake",
+        "Dessert & Cake",
+        "Salty Soymilkmisu Cake",
+        1299,
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No..."
+      ),
+    ],
+  },
+  {
+    title: "Snack",
+    items: [
+      createMenuItem("snack", "Snack", "Crispy Popcorn Chicken (Spicy)", 999),
+      createMenuItem("snack", "Snack", "Fried Chicken Wing (Spicy)", 900),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "TAKOYAKI",
+        999,
+        "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of..."
+      ),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "Fried Mini Octopus",
+        900,
+        "A very crispy snack with a delightful taste."
+      ),
+      createMenuItem("snack", "Snack", "Curly Fries", 725),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "Fried Cheese Stick",
+        700,
+        "A crispy fried mozzarella cheese stick. (Recommended to enjoy while it's hot.)"
+      ),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "Fried Tofu",
+        800,
+        "A great and enjoyable snack for everyone."
+      ),
+      createMenuItem("snack", "Snack", "Spam Musubi", 775),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "Pork Floss Spam Musubi",
+        800,
+        "Pork Floss Spam Musubi"
+      ),
     ],
   },
 ];
 
+/* Shared section renderer for one menu category.
+   It displays the category heading/subtitle and then maps each item
+   in the section into the reusable MenuItemCard component. */
 function MenuCategorySection({ section }: { section: MenuSection }) {
   return (
     <section className="rounded-[28px] bg-white px-5 py-6 shadow-sm sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-      <div className="mb-6 flex items-center justify-center text-center">
+      <div className="mb-6 flex flex-col items-center justify-center text-center">
         <h3
           className={`${cabinSketch.className} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
         >
           {section.title}
         </h3>
+
+        {section.subtitle && (
+          <p
+            className={`${montserrat.className} mt-3 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
+          >
+            {section.subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* The grid shifts from one column to two columns on larger screens
+          so the category layout remains readable on both mobile and desktop. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {section.items.map((item) => (
+          <MenuItemCard key={item.catalogObjectId} item={item} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* Separate section for TEAZO featured specials.
+   This keeps specials visually distinct from the standard menu categories
+   while still reusing the same menu card component for consistency. */
+function SpecialsSection() {
+  return (
+    <section className="mx-auto mt-16 max-w-[1320px] rounded-[28px] bg-white px-5 py-6 shadow-sm sm:px-6 sm:py-7 lg:mt-20 lg:px-8 lg:py-8">
+      <div className="mb-6 flex items-center justify-center text-center">
+        <h3
+          className={`${cabinSketch.className} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
+        >
+          TEAZO Special
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {section.items.map((item) => (
-          <MenuItemCard key={item.name} item={item} />
+        {specials.map((item) => (
+          <MenuItemCard key={item.catalogObjectId} item={item} />
         ))}
       </div>
     </section>
@@ -166,6 +664,7 @@ export default function MenuPage() {
   return (
     <main className="min-h-screen bg-[#f4efeb] text-stone-900">
       <div className="mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+        {/* Page hero area */}
         <section className="flex flex-col items-center text-center">
           <Image
             src="/TEAZO_logo.png"
@@ -188,18 +687,21 @@ export default function MenuPage() {
             <h2
               className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
             >
-              Drinks &amp; Toppings
+              Drinks, Desserts &amp; Specials
             </h2>
           </div>
 
           <p
             className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
           >
-            Explore some of our featured menu categories.
+            Explore TEAZO menu categories and featured specials.
           </p>
         </section>
 
-        <div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:grid-cols-2 lg:gap-8">
+        <SpecialsSection />
+
+        {/* Main list of menu categories rendered below the specials section. */}
+        <div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
           {menuSections.map((section) => (
             <MenuCategorySection key={section.title} section={section} />
           ))}
