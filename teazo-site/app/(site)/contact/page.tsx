@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch } from "next/font/google";
-import { BubbleField } from "./_components/bubble-field";
+import { BubbleField } from "@/app/components/bubble-field";
 import {
   contactContent,
   directionsHref,
@@ -61,8 +61,8 @@ export default function ContactPage() {
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#f4efeb] text-stone-900">
-      {/* Background animation stays route-local so the contact page can keep its
-          own visual personality without affecting other pages. */}
+      {/* Shared so other pages can reuse the same motion treatment without
+          copying contact-specific files. */}
       <BubbleField count={13} />
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
