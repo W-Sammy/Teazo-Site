@@ -98,14 +98,14 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Chocolate Truffle (8pc)",
     675,
-    "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in..."
+    "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder."
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Sesame Mochi Latte",
     725,
-    "The delightful beverage combines the rich, nutty essence of toasted sesame with the chewy texture ..."
+    "The delightful beverage combines the rich, nutty essence of toasted sesame with the chewy texture of house made milk mochi and cream milk."
   ),
   createMenuItem(
     "specials",
@@ -119,14 +119,14 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Sesame Cheezo Latte",
     725,
-    "A rich, creamy latte infused with the nutty goodness of toasted sesame and topped with a dreamy layer ..."
+    "A rich, creamy latte infused with the nutty goodness of toasted sesame and topped with a dreamy layer of sesame cheezo."
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Brown Sugar Fluffy Coffee",
     725,
-    "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!..."
+    "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!(Dairy)"
   ),
   createMenuItem(
     "specials",
@@ -147,14 +147,14 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
     750,
-    "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Cryst..."
+    "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only."
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
     750,
-    "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is include..."
+    "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only."
   ),
 ];
 
@@ -239,7 +239,7 @@ const menuSections: MenuSection[] = [
         "Cheezo Tea",
         "Black Jade Tea",
         600,
-        "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a..."
+        "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a hybrid of the Assam tea plant and the wild tea tree that grows naturally in the mountain forests of Taiwan)"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -260,7 +260,7 @@ const menuSections: MenuSection[] = [
         "Cheezo Tea",
         "Four Season Tea",
         600,
-        "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has..."
+        "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has been hand-picked and hand-processed by traditional methods. It is an excellent daily tea with a smooth sweet taste and pleasing color)"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -279,7 +279,7 @@ const menuSections: MenuSection[] = [
         "Milk Tea",
         "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
         750,
-        "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Cryst..."
+        "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only."
       ),
       createMenuItem(
         "milk-tea",
@@ -341,28 +341,28 @@ const menuSections: MenuSection[] = [
         "Fresh Fruit Tea",
         "Very Berry Cheezo",
         799,
-        "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold..."
+        "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Mango Cheezo",
         799,
-        "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and..."
+        "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Berry Bang Cheezo",
         799,
-        "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo..."
+        "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Mango Coco",
         799,
-        "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba..."
+        "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba included (Cold and Large Cup Only.) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -383,28 +383,28 @@ const menuSections: MenuSection[] = [
         "Fresh Fruit Tea",
         "Super Lemon Tea",
         725,
-        "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice,..."
+        "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice, please enjoy it within 1 hour for the best taste. (Large Cup Only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Passion Pineapple Tea",
         725,
-        "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light..."
+        "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "PassionFruit Orange Tea",
         725,
-        "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet..."
+        "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Passionfruit Lemon Tea",
         725,
-        "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light..."
+        "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
       ),
     ],
   },
@@ -416,14 +416,14 @@ const menuSections: MenuSection[] = [
         "Matcha",
         "Mango Matcha Cheezo",
         699,
-        "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha..."
+        "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top."
       ),
       createMenuItem(
         "matcha",
         "Matcha",
         "Strawberry Matcha Cheezo",
         699,
-        "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing..."
+        "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top."
       ),
       createMenuItem(
         "matcha",
@@ -525,7 +525,7 @@ const menuSections: MenuSection[] = [
         "Dessert & Cake",
         "Chocolate Truffle (8pc)",
         675,
-        "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in..."
+        "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder."
       ),
       createMenuItem("dessert-cake", "Dessert & Cake", "Tiramisu Cup", 675),
       createMenuItem(
@@ -540,21 +540,21 @@ const menuSections: MenuSection[] = [
         "Dessert & Cake",
         "Matchamisu cake",
         1299,
-        "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemad..."
+        "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemade, No alcohol)"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Salty Caramelmisu Cake",
         1299,
-        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No..."
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No alcohol)"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Salty Soymilkmisu Cake",
         1299,
-        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No..."
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No alcohol)"
       ),
     ],
   },
@@ -568,7 +568,7 @@ const menuSections: MenuSection[] = [
         "Snack",
         "TAKOYAKI",
         999,
-        "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of..."
+        "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of dried bonito."
       ),
       createMenuItem(
         "snack",
