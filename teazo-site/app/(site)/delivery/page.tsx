@@ -17,17 +17,16 @@ const boldMontserrat = Montserrat({
     weight: ['800'] // extra bold
 });
 
+// medium montserrat
 const mediumMontserrat = Montserrat({
     subsets: ['latin'],
     weight: ['500']
 });
 
-// need to setup montserrat
-
 export default function Delivery() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen">
-        {/* bubble background! */}
+        {/* bubble background */}
         <div className="">
             <BubbleField />
         </div>
