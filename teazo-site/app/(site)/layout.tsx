@@ -1,4 +1,5 @@
 import NavBar from "@/app/(site)/components/nav-bar";
+import Footer from "@/app/(site)/components/footer";
 
 export default function SiteLayout({
   children,
@@ -9,6 +10,7 @@ export default function SiteLayout({
     <div>
       <NavBar />
       {children}
+      <Footer />
     </div>
   );
 }
