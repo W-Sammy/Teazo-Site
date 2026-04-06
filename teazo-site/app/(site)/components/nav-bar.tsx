@@ -24,8 +24,9 @@ export default function NavBar() {
             <nav className="mx-auto flex items-center justify-between px-10 py-6">
                     
                 {/* teazo logo - gold, cabin sketch & underlined (no change during hover) */}
-                <Link href="/" 
-                      className={`${cabinSketch.className} text-[64px] font-normal border-b-2 border-[#DBAF82] leading-[0.8] text-[#DBAF82]`}
+                <Link 
+                    href="/" 
+                    className={`${cabinSketch.className} text-[64px] font-normal border-b-2 border-[#DBAF82] leading-[0.8] text-[#DBAF82] tracking-[0.05em]`}
                 >
                     TEAZO
                 </Link>
@@ -37,7 +38,7 @@ export default function NavBar() {
                         <Link
                             key={item}
                             href={item == "HOME" ? "/" : `/${item.toLowerCase()}`} // route HOME to just "/" instead of "/home"
-                            className={`${montserrat.className} text-[18px] font-bold tracking-[0.05em] text-black transition border-b-2 border-transparent hover:border-black pb-1`}
+                            className={`${montserrat.className} text-[18px] font-bold tracking-[0.05em] text-black transition border-b-2 border-transparent hover:border-black pb-1 tracking-[0.05em]`}
                         >
                             {item}
                         </Link>
