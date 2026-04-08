@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 type BubbleFieldProps = {
   count?: number;
+  className?: string;
 };
 
 type Particle = {
@@ -99,9 +100,15 @@ function targetInCell(
   const cellMinY = row * cellHeight;
   const cellMaxY = (row + 1) * cellHeight;
   const innerMinX = Math.max(horizontalPadding, cellMinX + cellWidth * 0.18);
-  const innerMaxX = Math.min(width - horizontalPadding, cellMaxX - cellWidth * 0.18);
+  const innerMaxX = Math.min(
+    width - horizontalPadding,
+    cellMaxX - cellWidth * 0.18,
+  );
   const innerMinY = Math.max(verticalPadding, cellMinY + cellHeight * 0.18);
-  const innerMaxY = Math.min(height - verticalPadding, cellMaxY - cellHeight * 0.18);
+  const innerMaxY = Math.min(
+    height - verticalPadding,
+    cellMaxY - cellHeight * 0.18,
+  );
   const fallbackX = Math.max(
     horizontalPadding,
     Math.min(width - horizontalPadding, cellMinX + cellWidth * 0.5),
@@ -112,14 +119,8 @@ function targetInCell(
   );
 
   return {
-    x:
-      innerMinX < innerMaxX
-        ? randomBetween(innerMinX, innerMaxX)
-        : fallbackX,
-    y:
-      innerMinY < innerMaxY
-        ? randomBetween(innerMinY, innerMaxY)
-        : fallbackY,
+    x: innerMinX < innerMaxX ? randomBetween(innerMinX, innerMaxX) : fallbackX,
+    y: innerMinY < innerMaxY ? randomBetween(innerMinY, innerMaxY) : fallbackY,
   };
 }
 
@@ -240,11 +241,17 @@ function initialTarget(
   return {
     x: Math.max(
       horizontalPadding,
-      Math.min(width - horizontalPadding, x + randomBetween(-driftRangeX, driftRangeX)),
+      Math.min(
+        width - horizontalPadding,
+        x + randomBetween(-driftRangeX, driftRangeX),
+      ),
     ),
     y: Math.max(
       verticalPadding,
-      Math.min(height - verticalPadding, y + randomBetween(-driftRangeY, driftRangeY)),
+      Math.min(
+        height - verticalPadding,
+        y + randomBetween(-driftRangeY, driftRangeY),
+      ),
     ),
   };
 }
@@ -269,10 +276,7 @@ function currentTargetCrowding(particle: Particle, particles: Particle[]) {
     );
     const positionInfluenceRadius = particle.radius + other.radius + 170;
     const targetInfluenceRadius = particle.radius + other.radius + 210;
-    const positionPressure = Math.max(
-      0,
-      1 - positionDistance / positionInfluenceRadius,
-    );
+    const positionPressure = Math.max(0, 1 - positionDistance / positionInfluenceRadius);
     const targetPressure = Math.max(0, 1 - targetDistance / targetInfluenceRadius);
 
     crowding += positionPressure * 1.2 + targetPressure * 0.95;
@@ -293,7 +297,10 @@ function currentBubbleCrowding(particle: Particle, particles: Particle[]) {
 
     const distance = Math.hypot(particle.x - other.x, particle.y - other.y);
     const influenceRadius =
-      particle.radius + other.radius + Math.min(particle.radius, other.radius) * 1.4 + 170;
+      particle.radius +
+      other.radius +
+      Math.min(particle.radius, other.radius) * 1.4 +
+      170;
     const pressure = Math.max(0, 1 - distance / influenceRadius);
 
     crowding += pressure * 1.35;
@@ -305,10 +312,7 @@ function currentBubbleCrowding(particle: Particle, particles: Particle[]) {
 function createParticle(width: number, height: number, id: number): Particle {
   const seed = bubbleSeeds[id % bubbleSeeds.length];
   const scaledRadius = Math.max(18, Math.min(seed.radius, width * 0.14));
-  const x = Math.max(
-    scaledRadius,
-    Math.min(width - scaledRadius, seed.x * width),
-  );
+  const x = Math.max(scaledRadius, Math.min(width - scaledRadius, seed.x * width));
   const y = Math.max(
     scaledRadius,
     Math.min(height - scaledRadius, seed.y * height),
@@ -352,7 +356,10 @@ function createParticle(width: number, height: number, id: number): Particle {
   };
 }
 
-export function BubbleField({ count = 18 }: BubbleFieldProps) {
+export function BubbleField({
+  count = 18,
+  className,
+}: BubbleFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bubbleRefs = useRef<Array<HTMLDivElement | null>>([]);
   const particlesRef = useRef<Particle[]>([]);
@@ -427,8 +434,7 @@ export function BubbleField({ count = 18 }: BubbleFieldProps) {
           0.001;
         const targetCrowding = currentTargetCrowding(particle, particles);
         const localCrowding = currentBubbleCrowding(particle, particles);
-        const crowdedTarget =
-          particle.targetAge > 1800 && targetCrowding > 1.4;
+        const crowdedTarget = particle.targetAge > 1800 && targetCrowding > 1.4;
         const crowdedPocket =
           particle.targetAge > 1200 &&
           localCrowding > BUBBLE_LOCAL_CROWDING_THRESHOLD;
@@ -617,7 +623,12 @@ export function BubbleField({ count = 18 }: BubbleFieldProps) {
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className={[
+        "pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       {/* These divs are painted imperatively for animation performance. */}
       {Array.from({ length: visibleCount }).map((_, index) => (
