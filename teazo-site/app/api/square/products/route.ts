@@ -1,45 +1,81 @@
 import { squareClient } from "@/app/lib/square";
 import type { CatalogObject } from 'square';
+import type { MenuItem, ModifierList, ModifierOption } from "@/app/types/menu-item";
 
 
-export async function GET() {
-    const itemResult = await squareClient.catalog.list({ types: "ITEM" });
-    const imageResult = await squareClient.catalog.list({ types: "IMAGE" });
-    const categoryResult = await squareClient.catalog.list({ types: "CATEGORY" });
-
-    const imageMap = new Map();
-    for await (const img of imageResult) {
-        imageMap.set(img.id, (img as CatalogObject.Image).imageData?.url);
-    }
-
-    const categoryMap = new Map();
-    for await (const category of categoryResult) {
-        categoryMap.set(category.id, (category as CatalogObject.Category).categoryData?.name);
-    }
-
-    const items = [];
-    for await (const item of itemResult) {
-        items.push(item);
-    }
-
-    const products = items.map((item) => {
-        const catalogItem = item as CatalogObject.Item;
-        const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
-        const priceMoney = variation?.itemVariationData?.priceMoney;
-        const imageId = catalogItem.itemData?.imageIds?.[0];
-        const categoryId = catalogItem.itemData?.categories?.[0]?.id;
-
+function buildModifierList(obj: CatalogObject.ModifierList): ModifierList {
+    const options: ModifierOption[] = (obj.modifierListData?.modifiers ?? []).map((mod) => {
+        const modifier = mod as CatalogObject.Modifier;
+        const priceMoney = modifier.modifierData?.priceMoney;
         return {
-            catalogObjectId: item.id,
-            name: catalogItem.itemData?.name,
-            variationId: variation?.id,
+            id: modifier.id,
+            name: modifier.modifierData?.name ?? undefined,
             priceCents: priceMoney ? Number(priceMoney.amount) : 0,
-            currency: priceMoney?.currency || "USD",
-            imageUrl: imageId ? imageMap.get(imageId) : null,
-            categoryId: categoryId ?? null,
-            categoryName: categoryId ? categoryMap.get(categoryId) ?? null : null,
         };
     });
 
-    return Response.json(products);
+    return {
+        id: obj.id,
+        name: obj.modifierListData?.name ?? undefined,
+        options,
+    };
+}
+
+
+export async function GET() {
+    try {
+        const [itemResult, imageResult, categoryResult, modifierListResult] = await Promise.all([
+            squareClient.catalog.list({ types: "ITEM" }),
+            squareClient.catalog.list({ types: "IMAGE" }),
+            squareClient.catalog.list({ types: "CATEGORY" }),
+            squareClient.catalog.list({ types: "MODIFIER_LIST" }),
+        ]);
+
+        const imageMap = new Map<string, string>();
+        for await (const img of imageResult) {
+            imageMap.set(img.id, (img as CatalogObject.Image).imageData?.url ?? "");
+        }
+
+        const categoryMap = new Map<string, string>();
+        for await (const category of categoryResult) {
+            categoryMap.set(category.id, (category as CatalogObject.Category).categoryData?.name ?? "");
+        }
+
+        const modifierListMap = new Map<string, ModifierList>();
+        for await (const obj of modifierListResult) {
+            const modifierList = buildModifierList(obj as CatalogObject.ModifierList);
+            modifierListMap.set(obj.id, modifierList);
+        }
+
+        const products: MenuItem[] = [];
+        for await (const item of itemResult) {
+            const catalogItem = item as CatalogObject.Item;
+            const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
+            const priceMoney = variation?.itemVariationData?.priceMoney;
+            const imageId = catalogItem.itemData?.imageIds?.[0];
+            const categoryId = catalogItem.itemData?.categories?.[0]?.id ?? null;
+
+            const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
+                .map((info) => modifierListMap.get(info.modifierListId ?? ""))
+                .filter((ml): ml is ModifierList => ml !== undefined);
+
+            products.push({
+                catalogObjectId: item.id,
+                name: catalogItem.itemData?.name,
+                description: catalogItem.itemData?.description ?? undefined,
+                variationId: variation?.id,
+                priceCents: priceMoney ? Number(priceMoney.amount) : 0,
+                currency: priceMoney?.currency ?? "USD",
+                imageUrl: imageId ? imageMap.get(imageId) ?? null : null,
+                categoryId,
+                categoryName: categoryId ? categoryMap.get(categoryId) ?? null : null,
+                modifiers,
+            });
+        }
+
+        return Response.json(products);
+    } catch (error) {
+        console.error("Square catalog fetch failed:", error);
+        return Response.json({ error: "Failed to fetch products" }, { status: 500 });
+    }
 }
