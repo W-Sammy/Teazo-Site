@@ -114,7 +114,6 @@ const specials: MenuItem[] = [
     "Matcha Sesame Cheezo",
     725,
     "A world where rich matcha meets the nutty goodness of house made sesame cheezo.",
-    "/Menu Items/"
   ),
   createMenuItem(
     "specials",
