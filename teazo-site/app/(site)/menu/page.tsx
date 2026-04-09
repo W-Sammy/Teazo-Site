@@ -99,7 +99,7 @@ const specials: MenuItem[] = [
     "Chocolate Truffle (8pc)",
     675,
     "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder.",
-    "/Menu Items/Chocolate Truffle.webp"
+    "/menu_items/chocolate_truffle.webp"
   ),
   createMenuItem(
     "specials",
@@ -128,7 +128,7 @@ const specials: MenuItem[] = [
     "Brown Sugar Fluffy Coffee",
     725,
     "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!(Dairy)",
-    "/Menu Items/Brown Sugar Fluffy Coffee.webp"
+    "/menu_items/brown_sugar_fluffy_coffee.webp"
   ),
   createMenuItem(
     "specials",
@@ -136,7 +136,7 @@ const specials: MenuItem[] = [
     "Strawberry Tea",
     675,
     "Homemade strawberry jelly with fresh strawberry puree and four season tea.",
-    "/Menu Items/Strawberry Tea.webp"
+    "/menu_items/strawberry_tea.webp"
   ),
   createMenuItem(
     "specials",
@@ -144,7 +144,7 @@ const specials: MenuItem[] = [
     "Strawberry Jelly Latte",
     675,
     "Homemade strawberry jelly with creamy milk.",
-    "/Menu Items/Strawberry Jelly Latte.webp"
+    "/menu_items/strawberry_jelly_latte.webp"
   ),
   createMenuItem(
     "specials",
@@ -152,7 +152,7 @@ const specials: MenuItem[] = [
     "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
     750,
     "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only.",
-    "/Menu Items/Creme Brulee Boba Milk Tea.webp"
+    "/menu_items/creme_brulee_boba_milk_tea.webp"
   ),
   createMenuItem(
     "specials",
@@ -160,7 +160,7 @@ const specials: MenuItem[] = [
     "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
     750,
     "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only.",
-    "/Menu Items/Creme Brulee Brown Sugar Boba Latte.webp"
+    "/menu_items/creme_brulee_brown_sugar_boba_latte.webp"
   ),
 ];
 
@@ -179,7 +179,7 @@ const menuSections: MenuSection[] = [
         "Crème Brûlée Soufflé",
         1299,
         "A light, fluffy Japanese soufflé with a layer of crispy torched brown sugar on top.",
-        "/Menu Items/Crème Brûlée Soufflé.webp"
+        "/menu_items/creme_brulee_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
@@ -187,7 +187,7 @@ const menuSections: MenuSection[] = [
         "Sea Salt Seaweed Pork Floss Soufflé",
         1399,
         "A Japanese style soufflé pancake with salted pork floss on top.",
-        "/Menu Items/Sea Salt Seaweed Pork Floss Soufflé.webp"
+        "/menu_items/sea_salt_seaweed_pork_floss_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
@@ -195,7 +195,7 @@ const menuSections: MenuSection[] = [
         "Strawberry Soufflé",
         1299,
         "Light and fluffy soufflé pancake with a smooth strawberry cream to finish.",
-        "/Menu Items/Strawberry Soufflé.webp"
+        "/menu_items/strawberry_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
@@ -203,15 +203,15 @@ const menuSections: MenuSection[] = [
         "Matcha Soufflé",
         1299,
         "Light and fluffy soufflé pancake with a smooth matcha cream to finish.",
-        "/Menu Items/Matcha Soufflé.webp"
+        "/menu_items/matcha_souffle.webp"
       ),
-      createMenuItem(
+      createMenuItem( 
         "souffle-pancake",
         "Japanese Soufflé Pancake",
         "Chocolate Soufflé",
         1299,
         "Light and fluffy soufflé pancake with a smooth chocolate cream to finish.",
-        "/Menu Items/Chocolate Soufflé.webp"
+        "/menu_items/chocolate_souffle.webp"
       ),
     ],
   },
@@ -224,7 +224,7 @@ const menuSections: MenuSection[] = [
         "Tiramisu Milk Tea",
         650,
         "Signature Teazo milk tea topped with a strong and creamy layer of tiramisu cheezo.",
-        "/Menu Items/Tiramisu Milk Tea.webp"
+        "/menu_items/tiramisu_milk_tea.webp"
       ),
       createMenuItem(
         "tiramisu-cheezo",
@@ -232,7 +232,7 @@ const menuSections: MenuSection[] = [
         "Tiramisu Oolong Tea",
         650,
         "High mountain oolong tea topped with a strong and creamy layer of tiramisu cheezo.",
-        "/Menu Items/Tiramisu Oolong Tea.webp"
+        "/menu_items/tiramisu_oolong_tea.webp"
       ),
       createMenuItem(
         "tiramisu-cheezo",
@@ -240,7 +240,7 @@ const menuSections: MenuSection[] = [
         "Tiramisu Matcha Latte",
         650,
         "Matcha latte topped with a strong and creamy layer of tiramisu cheezo.",
-        "/Menu Items/Tiramisu Matcha Latte.webp"
+        "/menu_items/tiramisu_matcha_latte.webp"
       ),
     ],
   },
@@ -254,7 +254,7 @@ const menuSections: MenuSection[] = [
         "Black Jade Tea",
         600,
         "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a hybrid of the Assam tea plant and the wild tea tree that grows naturally in the mountain forests of Taiwan)",
-        "/Menu Items/Black Jade Tea.webp"
+        "/menu_items/black_jade_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -262,7 +262,7 @@ const menuSections: MenuSection[] = [
         "Jasmine Tea",
         600,
         "Jasmine Tea top with sea salt cheezo cream. Cheezo cream included.",
-        "/Menu Items/Jasmine Tea.webp"
+        "/menu_items/jasmine_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -270,7 +270,7 @@ const menuSections: MenuSection[] = [
         "Earl Grey Tea",
         600,
         "Earl Grey Black Tea top with sea salt cheezo cream. Cheezo included",
-        "/Menu Items/Earl Grey Tea.webp"
+        "/menu_items/earl_grey_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -278,7 +278,7 @@ const menuSections: MenuSection[] = [
         "Four Season Tea",
         600,
         "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has been hand-picked and hand-processed by traditional methods. It is an excellent daily tea with a smooth sweet taste and pleasing color)",
-        "/Menu Items/Four Season Tea.webp"
+        "/menu_items/four_season_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
@@ -286,7 +286,7 @@ const menuSections: MenuSection[] = [
         "Oolong Tea",
         600,
         "High mountain oolong tea topped with sea salt cheezo cream. Cheezo cream included.",
-        "/Menu Items/Oolong Tea.webp"
+        "/menu_items/oolong_tea.webp"
       ),
     ],
   },
@@ -299,7 +299,7 @@ const menuSections: MenuSection[] = [
         "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
         750,
         "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only.",
-        "/Menu Items/Creme Brulee Boba Milk Tea.webp"
+        "/menu_items/creme_brulee_boba_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -307,7 +307,7 @@ const menuSections: MenuSection[] = [
         "Boba Milk Tea",
         650,
         "Signature house BOBA milk tea, Boba included. Dairy free.",
-        "/Menu Items/Boba Milk Tea.webp"
+        "/menu_items/boba_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -315,7 +315,7 @@ const menuSections: MenuSection[] = [
         "Jasmine Milk Tea",
         600,
         "A traditional Jasmine Milk Tea with an amazing scentful smell of flowers.",
-        "/Menu Items/Jasmine Milk Tea.webp"
+        "/menu_items/jasmine_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -323,7 +323,7 @@ const menuSections: MenuSection[] = [
         "Earl Grey Milk Tea",
         600,
         "A Classic Earl Grey tea with milk.",
-        "/Menu Items/Earl Grey Milk Tea.webp"
+        "/menu_items/earl_grey_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -331,7 +331,7 @@ const menuSections: MenuSection[] = [
         "Oolong Milk Tea",
         600,
         "High mountain premium oolong tea with milk.",
-        "/Menu Items/Oolong Milk Tea.webp"
+        "/menu_items/oolong_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -339,7 +339,7 @@ const menuSections: MenuSection[] = [
         "Oreo Milk Tea",
         650,
         "A signature milk tea twisted with puff cream and topped with crushed Oreo.",
-        "/Menu Items/Oreo Milk Tea.webp"
+        "/menu_items/oreo_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -347,7 +347,7 @@ const menuSections: MenuSection[] = [
         "Puff Cream Milk Tea",
         650,
         "A signature milk tea twisted with puff cream.",
-        "/Menu Items/Puff Cream Milk Tea.webp"
+        "/menu_items/puff_cream_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
@@ -355,7 +355,7 @@ const menuSections: MenuSection[] = [
         "Taro Milk Tea",
         600,
         "Strong taro taste with milk. (Caffeine free.)",
-        "/Menu Items/Taro Milk Tea.webp"
+        "/menu_items/taro_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea", 
@@ -363,7 +363,7 @@ const menuSections: MenuSection[] = [
         "Thai Tea", 
         600,
         "",
-        "/Menu Items/Thai Tea.webp"),
+        "/menu_items/thai_tea.webp"),
     ],
   },
   {
@@ -375,7 +375,7 @@ const menuSections: MenuSection[] = [
         "Very Berry Cheezo",
         799,
         "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Very Berry Cheezo.webp"
+        "/menu_items/very_berry_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -383,7 +383,7 @@ const menuSections: MenuSection[] = [
         "Mango Cheezo",
         799,
         "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Mango Cheezo.webp"
+        "/menu_itmes/mango_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -391,7 +391,7 @@ const menuSections: MenuSection[] = [
         "Berry Bang Cheezo",
         799,
         "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Berry Bang Cheezo.webp"
+        "/menu_items/berry_bang_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -399,7 +399,7 @@ const menuSections: MenuSection[] = [
         "Mango Coco",
         799,
         "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba included (Cold and Large Cup Only.) We don't recommend light sweet and light ice.",
-        "/Menu Items/Mango Coco.webp"
+        "/menu_items/mango_coco.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -407,7 +407,7 @@ const menuSections: MenuSection[] = [
         "Super Fruit Tea",
         799,
         "Fresh mix fruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Super Fruit Tea.webp"
+        "/menu_items/super_fruit_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -415,7 +415,7 @@ const menuSections: MenuSection[] = [
         "Super Orange Tea",
         725,
         "Fresh orange and lime with choice of tea. (Large Cup Only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Super Orange Tea.webp"
+        "/menu_items/super_orange_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -423,7 +423,7 @@ const menuSections: MenuSection[] = [
         "Super Lemon Tea",
         725,
         "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice, please enjoy it within 1 hour for the best taste. (Large Cup Only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Super Lemon Tea.webp"
+        "/menu_items/super_lemon_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -431,7 +431,7 @@ const menuSections: MenuSection[] = [
         "Passion Pineapple Tea",
         725,
         "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Passion Pineapple Tea.webp"
+        "/menu_items/passion_pineapple_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -439,7 +439,7 @@ const menuSections: MenuSection[] = [
         "PassionFruit Orange Tea",
         725,
         "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
-        "/Menu Items/PassionFruit Orange Tea.webp"
+        "/menu_items/passionfruit_orange_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -447,7 +447,7 @@ const menuSections: MenuSection[] = [
         "Passionfruit Lemon Tea",
         725,
         "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
-        "/Menu Items/Passionfruit Lemon Tea.webp"
+        "/menu_items/passionfruit_lemon_tea.webp"
       ),
     ],
   },
@@ -460,7 +460,7 @@ const menuSections: MenuSection[] = [
         "Mango Matcha Cheezo",
         699,
         "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top.",
-        "/Menu Items/Mango Matcha Cheezo.webp"
+        "/menu_items/mango_matcha_cheezo.webp"
       ),
       createMenuItem(
         "matcha",
@@ -468,7 +468,7 @@ const menuSections: MenuSection[] = [
         "Strawberry Matcha Cheezo",
         699,
         "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top.",
-        "/Menu Items/Strawberry Matcha Cheezo.webp"
+        "/menu_items/strawberry_matcha_cheezo.webp"
       ),
       createMenuItem(
         "matcha",
@@ -476,7 +476,7 @@ const menuSections: MenuSection[] = [
         "Matcha Latte",
         699,
         "A layered premium matcha with whole milk.",
-        "/Menu Items/Matcha Latte.webp"
+        "/menu_items/matcha_latte.webp"
       ),
       createMenuItem(
         "matcha",
@@ -484,7 +484,7 @@ const menuSections: MenuSection[] = [
         "Matcha Slush",
         625,
         "A ice cold matcha slush made freshly. (Cold only)",
-        "/Menu Items/Matcha Slush.webp"
+        "/menu_items/matcha_slush.webp"
       ),
       createMenuItem(
         "matcha",
@@ -492,7 +492,7 @@ const menuSections: MenuSection[] = [
         "Oreo Brulee Matcha",
         699,
         "A matcha slush twisted with puff cream and topped with crushed Oreo. (Cold only)",
-        "/Menu Items/Oreo Brulee Matcha.webp"
+        "/menu items/oreo_brulee_matcha.webp"
       ),
     ],
   },
@@ -505,7 +505,7 @@ const menuSections: MenuSection[] = [
         "Brown Sugar Boba Latte",
         699,
         "Signature brown sugar Boba with creamy milk, Boba included. (Dairy)",
-        "/Menu Items/Brown Sugar Boba Latte.webp"
+        "/menu_items/brown_sugar_boba_latte.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -513,7 +513,7 @@ const menuSections: MenuSection[] = [
         "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
         750,
         "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only.",
-        "/Menu Items/Creme Brulee Brown Sugar Boba Latte.webp"
+        "/menu_items/creme_brulee_brown_sugar_boba_latte.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -521,7 +521,7 @@ const menuSections: MenuSection[] = [
         "Avocado Smash",
         725,
         "Fresh Avocado blended with ice and non dairy milk. Creamy and Healthy. (Cold only)",
-        "/Menu Items/Avocado Smash.webp"
+        "/menu_items/avocado_smash.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -529,7 +529,7 @@ const menuSections: MenuSection[] = [
         "Banana berry Snow",
         625,
         "Fresh banana blended with strawberry puree, ice and milk. (Cold only)",
-        "/Menu Items/Banana berry Snow.webp"
+        "/menu_items/banana_berry_snow.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -537,7 +537,7 @@ const menuSections: MenuSection[] = [
         "Oreo Smoothie",
         625,
         "A ice cold Oreo Smoothie.",
-        "/Menu Items/Oreo Smoothie.webp"
+        "/menu_items/oreo_smoothie.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -545,7 +545,7 @@ const menuSections: MenuSection[] = [
         "Peach Yogurt",
         600,
         "Peach flavored yogurt drink.",
-        "/Menu Items/Peach Yogurt.webp"
+        "/menu_items/peach_yogurt.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -553,7 +553,7 @@ const menuSections: MenuSection[] = [
         "Strawberry Fizz",
         600,
         "Fresh strawberry puree flavor with sparkling water.",
-        "/Menu Items/Strawberry Fizz.webp"
+        "/menu_items/strawberry_fizz.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
@@ -561,7 +561,7 @@ const menuSections: MenuSection[] = [
         "Watermelon Slush",
         625,
         "Fresh watermelon blended with ice.",
-        "/Menu Items/Watermelon Slush.webp"
+        "/menu_items/watermelon_slush.webp"
       ),
       createMenuItem(
         "caffeine-free-drink", 
@@ -569,7 +569,7 @@ const menuSections: MenuSection[] = [
         "Perrier", 
         300,
         "",
-        "/Menu Items/Perrier.webp"
+        "/menu_items/perrier.webp"
       ),
     ],
   },
@@ -582,7 +582,7 @@ const menuSections: MenuSection[] = [
         "Brown Sugar Mochi (6pc)",
         800,
         "Its crispy, chewy texture and a rich caramel-like flavor from the brown sugar, dusted with soy powder.",
-        "/Menu Items/Brown Sugar Mochi.webp"
+        "/menu_items/brown_sugar_mochi.webp"
       ),
       createMenuItem(
         "dessert-cake",
@@ -590,7 +590,7 @@ const menuSections: MenuSection[] = [
         "Chocolate Truffle (8pc)",
         675,
         "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder.",
-        "/Menu Items/Chocolate Truffle.webp"
+        "/menu_items/chocolate_truffle.webp"
       ),
       createMenuItem(
         "dessert-cake", 
@@ -598,14 +598,14 @@ const menuSections: MenuSection[] = [
         "Tiramisu Cup", 
         675,
         "",
-        "/Menu Items/Tiramisu Cup.webp"),
+        "/menu_items/tiramisu_cup.webp"),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Tiramisu cake",
         1299,
         "A housemade rich and smooth mascarpone cream between layers of soaked sponge with coffee, dusted with cocoa powder. (No alcohol)",
-        "/Menu Items/Tiramisu cake.webp"
+        "/menu_items/tiramisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
@@ -613,7 +613,7 @@ const menuSections: MenuSection[] = [
         "Matchamisu cake",
         1299,
         "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemade, No alcohol)",
-        "/Menu Items/Matchamisu cake.webp"
+        "/menu_items/matchamisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
@@ -621,7 +621,7 @@ const menuSections: MenuSection[] = [
         "Salty Caramelmisu Cake",
         1299,
         "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No alcohol)",
-        "/Menu Items/Salty Caramelmisu Cake.webp"
+        "/menu_items/salty_caramelmisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
@@ -629,7 +629,7 @@ const menuSections: MenuSection[] = [
         "Salty Soymilkmisu Cake",
         1299,
         "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No alcohol)",
-        "/Menu Items/Salty Soymilkmisu Cake.webp"
+        "/menu_items/salty_soymilkmisu_cake.webp"
       ),
     ],
   },
@@ -642,7 +642,7 @@ const menuSections: MenuSection[] = [
         "Crispy Popcorn Chicken (Spicy)",
         999,
         "",
-        "/Menu Items/Crispy Popcorn Chicken.webp"
+        "/menu_items/crispy_popcorn_chicken.webp"
       ),
       createMenuItem(
         "snack", 
@@ -650,7 +650,7 @@ const menuSections: MenuSection[] = [
         "Fried Chicken Wing (Spicy)", 
         900,
         "",
-        "/Menu Items/Fried Chicken Wing.webp"
+        "/menu_items/fried_chicken_wing.webp"
       ),
       createMenuItem(
         "snack",
@@ -658,7 +658,7 @@ const menuSections: MenuSection[] = [
         "TAKOYAKI",
         999,
         "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of dried bonito.",
-        "/Menu Items/TAKOYAKI.webp"
+        "/menu_items/takoyaki.webp"
       ),
       createMenuItem(
         "snack",
@@ -666,7 +666,7 @@ const menuSections: MenuSection[] = [
         "Fried Mini Octopus",
         900,
         "A very crispy snack with a delightful taste.",
-        "/Menu Items/Fried Mini Octopus.webp"
+        "/menu_items/fried_mini_octopus.webp"
       ),
       createMenuItem(
         "snack", 
@@ -674,7 +674,7 @@ const menuSections: MenuSection[] = [
         "Curly Fries", 
         725,
         "",
-        "/Menu Items/Curly Fries.webp"
+        "/menu_items/curly_fries.webp"
         ),
       createMenuItem(
         "snack",
@@ -682,7 +682,7 @@ const menuSections: MenuSection[] = [
         "Fried Cheese Stick",
         700,
         "A crispy fried mozzarella cheese stick. (Recommended to enjoy while it's hot.)",
-        "/Menu Items/Fried Cheese Stick.webp"
+        "/menu_items/fried_cheese_stick.webp"
       ),
       createMenuItem(
         "snack",
@@ -690,7 +690,7 @@ const menuSections: MenuSection[] = [
         "Fried Tofu",
         800,
         "A great and enjoyable snack for everyone.",
-        "/Menu Items/Fried Tofu.webp"
+        "/menu_items/fried_tofu.webp"
       ),
       createMenuItem(
         "snack", 
@@ -698,7 +698,7 @@ const menuSections: MenuSection[] = [
         "Spam Musubi", 
         775,
         "",
-        "/Menu Items/Spam Musubi.webp"
+        "/menu_items/spam_musubi.webp"
         ),
       createMenuItem(
         "snack",
@@ -706,7 +706,7 @@ const menuSections: MenuSection[] = [
         "Pork Floss Spam Musubi",
         800,
         "Pork Floss Spam Musubi",
-        "/Menu Items/Pork Floss Spam Musubi.webp"
+        "/menu_items/pork_floss_spam_musubi.webp"
       ),
     ],
   },
