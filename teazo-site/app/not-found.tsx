@@ -39,7 +39,7 @@ export default function NotFound() {
                 The page you were looking for doesn't exist.  
                 </p>
                 <p className={`${montserrat.className} text-base md:text-2xl lg:text-4xl text-black text-center font-normal`}>
-                You may have misstyped the address or the page may have been moved.  
+                You may have mistyped the address or the page may have been moved.  
                 </p>
             </div>
 
