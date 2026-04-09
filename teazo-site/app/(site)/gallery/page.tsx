@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
 
 export const metadata: Metadata = {
@@ -33,8 +34,13 @@ const mockImages: GalleryImage[] = [
 
 export default function GalleryPage() {
   return (
-    <main className="min-h-screen bg-[#f4efeb] text-stone-900">
-      <div className="mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+    <main className="relative z-0 min-h-screen bg-[#FFF8F9] text-stone-900">
+      {/* bubble background */}
+      <div className="">
+        <BubbleField />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
 
         {/* Page header */}
         <section className="flex flex-col items-center text-center">
