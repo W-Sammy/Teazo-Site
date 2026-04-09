@@ -98,7 +98,8 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Chocolate Truffle (8pc)",
     675,
-    "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder."
+    "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder.",
+    "/menu_items/chocolate_truffle.webp"
   ),
   createMenuItem(
     "specials",
@@ -112,7 +113,7 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Matcha Sesame Cheezo",
     725,
-    "A world where rich matcha meets the nutty goodness of house made sesame cheezo."
+    "A world where rich matcha meets the nutty goodness of house made sesame cheezo.",
   ),
   createMenuItem(
     "specials",
@@ -126,35 +127,40 @@ const specials: MenuItem[] = [
     "TEAZO Special",
     "Brown Sugar Fluffy Coffee",
     725,
-    "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!(Dairy)"
+    "Our creamy brown sugar latte and a fluffy coffee cream to top it off. Perfect for you coffee lovers!(Dairy)",
+    "/menu_items/brown_sugar_fluffy_coffee.webp"
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Strawberry Tea",
     675,
-    "Homemade strawberry jelly with fresh strawberry puree and four season tea."
+    "Homemade strawberry jelly with fresh strawberry puree and four season tea.",
+    "/menu_items/strawberry_tea.webp"
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Strawberry Jelly Latte",
     675,
-    "Homemade strawberry jelly with creamy milk."
+    "Homemade strawberry jelly with creamy milk.",
+    "/menu_items/strawberry_jelly_latte.webp"
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
     750,
-    "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only."
+    "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only.",
+    "/menu_items/creme_brulee_boba_milk_tea.webp"
   ),
   createMenuItem(
     "specials",
     "TEAZO Special",
     "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
     750,
-    "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only."
+    "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only.",
+    "/menu_items/creme_brulee_brown_sugar_boba_latte.webp"
   ),
 ];
 
@@ -172,35 +178,40 @@ const menuSections: MenuSection[] = [
         "Japanese Soufflé Pancake",
         "Crème Brûlée Soufflé",
         1299,
-        "A light, fluffy Japanese soufflé with a layer of crispy torched brown sugar on top."
+        "A light, fluffy Japanese soufflé with a layer of crispy torched brown sugar on top.",
+        "/menu_items/creme_brulee_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
         "Japanese Soufflé Pancake",
         "Sea Salt Seaweed Pork Floss Soufflé",
         1399,
-        "A Japanese style soufflé pancake with salted pork floss on top."
+        "A Japanese style soufflé pancake with salted pork floss on top.",
+        "/menu_items/sea_salt_seaweed_pork_floss_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
         "Japanese Soufflé Pancake",
         "Strawberry Soufflé",
         1299,
-        "Light and fluffy soufflé pancake with a smooth strawberry cream to finish."
+        "Light and fluffy soufflé pancake with a smooth strawberry cream to finish.",
+        "/menu_items/strawberry_souffle.webp"
       ),
       createMenuItem(
         "souffle-pancake",
         "Japanese Soufflé Pancake",
         "Matcha Soufflé",
         1299,
-        "Light and fluffy soufflé pancake with a smooth matcha cream to finish."
+        "Light and fluffy soufflé pancake with a smooth matcha cream to finish.",
+        "/menu_items/matcha_souffle.webp"
       ),
-      createMenuItem(
+      createMenuItem( 
         "souffle-pancake",
         "Japanese Soufflé Pancake",
         "Chocolate Soufflé",
         1299,
-        "Light and fluffy soufflé pancake with a smooth chocolate cream to finish."
+        "Light and fluffy soufflé pancake with a smooth chocolate cream to finish.",
+        "/menu_items/chocolate_souffle.webp"
       ),
     ],
   },
@@ -212,21 +223,24 @@ const menuSections: MenuSection[] = [
         "Tiramisu Cheezo",
         "Tiramisu Milk Tea",
         650,
-        "Signature Teazo milk tea topped with a strong and creamy layer of tiramisu cheezo."
+        "Signature Teazo milk tea topped with a strong and creamy layer of tiramisu cheezo.",
+        "/menu_items/tiramisu_milk_tea.webp"
       ),
       createMenuItem(
         "tiramisu-cheezo",
         "Tiramisu Cheezo",
         "Tiramisu Oolong Tea",
         650,
-        "High mountain oolong tea topped with a strong and creamy layer of tiramisu cheezo."
+        "High mountain oolong tea topped with a strong and creamy layer of tiramisu cheezo.",
+        "/menu_items/tiramisu_oolong_tea.webp"
       ),
       createMenuItem(
         "tiramisu-cheezo",
         "Tiramisu Cheezo",
         "Tiramisu Matcha Latte",
         650,
-        "Matcha latte topped with a strong and creamy layer of tiramisu cheezo."
+        "Matcha latte topped with a strong and creamy layer of tiramisu cheezo.",
+        "/menu_items/tiramisu_matcha_latte.webp"
       ),
     ],
   },
@@ -239,35 +253,40 @@ const menuSections: MenuSection[] = [
         "Cheezo Tea",
         "Black Jade Tea",
         600,
-        "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a hybrid of the Assam tea plant and the wild tea tree that grows naturally in the mountain forests of Taiwan)"
+        "Black Jade Tea top with sea salt cheezo cream. Cheezo included. (Black Jade Tea 【红玉红茶】 is a hybrid of the Assam tea plant and the wild tea tree that grows naturally in the mountain forests of Taiwan)",
+        "/menu_items/black_jade_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
         "Cheezo Tea",
         "Jasmine Tea",
         600,
-        "Jasmine Tea top with sea salt cheezo cream. Cheezo cream included."
+        "Jasmine Tea top with sea salt cheezo cream. Cheezo cream included.",
+        "/menu_items/jasmine_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
         "Cheezo Tea",
         "Earl Grey Tea",
         600,
-        "Earl Grey Black Tea top with sea salt cheezo cream. Cheezo included"
+        "Earl Grey Black Tea top with sea salt cheezo cream. Cheezo included",
+        "/menu_items/earl_grey_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
         "Cheezo Tea",
         "Four Season Tea",
         600,
-        "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has been hand-picked and hand-processed by traditional methods. It is an excellent daily tea with a smooth sweet taste and pleasing color)"
+        "Four season tea top with sea salt cheezo cream. (Four Season tea is a high-mountain tea which has been hand-picked and hand-processed by traditional methods. It is an excellent daily tea with a smooth sweet taste and pleasing color)",
+        "/menu_items/four_season_tea.webp"
       ),
       createMenuItem(
         "cheezo-tea",
         "Cheezo Tea",
         "Oolong Tea",
         600,
-        "High mountain oolong tea topped with sea salt cheezo cream. Cheezo cream included."
+        "High mountain oolong tea topped with sea salt cheezo cream. Cheezo cream included.",
+        "/menu_items/oolong_tea.webp"
       ),
     ],
   },
@@ -279,58 +298,72 @@ const menuSections: MenuSection[] = [
         "Milk Tea",
         "Creme Brulee Boba Milk Tea 厚烧蛋糕波波奶茶",
         750,
-        "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only."
+        "MUST TRY! A signature boba milk tea with a layer of torched brown sugar cream on top. Boba and Crystal Boba are included. Regular cup only.",
+        "/menu_items/creme_brulee_boba_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Boba Milk Tea",
         650,
-        "Signature house BOBA milk tea, Boba included. Dairy free."
+        "Signature house BOBA milk tea, Boba included. Dairy free.",
+        "/menu_items/boba_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Jasmine Milk Tea",
         600,
-        "A traditional Jasmine Milk Tea with an amazing scentful smell of flowers."
+        "A traditional Jasmine Milk Tea with an amazing scentful smell of flowers.",
+        "/menu_items/jasmine_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Earl Grey Milk Tea",
         600,
-        "A Classic Earl Grey tea with milk."
+        "A Classic Earl Grey tea with milk.",
+        "/menu_items/earl_grey_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Oolong Milk Tea",
         600,
-        "High mountain premium oolong tea with milk."
+        "High mountain premium oolong tea with milk.",
+        "/menu_items/oolong_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Oreo Milk Tea",
         650,
-        "A signature milk tea twisted with puff cream and topped with crushed Oreo."
+        "A signature milk tea twisted with puff cream and topped with crushed Oreo.",
+        "/menu_items/oreo_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Puff Cream Milk Tea",
         650,
-        "A signature milk tea twisted with puff cream."
+        "A signature milk tea twisted with puff cream.",
+        "/menu_items/puff_cream_milk_tea.webp"
       ),
       createMenuItem(
         "milk-tea",
         "Milk Tea",
         "Taro Milk Tea",
         600,
-        "Strong taro taste with milk. (Caffeine free.)"
+        "Strong taro taste with milk. (Caffeine free.)",
+        "/menu_items/taro_milk_tea.webp"
       ),
-      createMenuItem("milk-tea", "Milk Tea", "Thai Tea", 600),
+      createMenuItem(
+        "milk-tea", 
+        "Milk Tea", 
+        "Thai Tea", 
+        600,
+        "",
+        "/menu_items/thai_tea.webp"),
     ],
   },
   {
@@ -341,70 +374,80 @@ const menuSections: MenuSection[] = [
         "Fresh Fruit Tea",
         "Very Berry Cheezo",
         799,
-        "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
+        "A blended tea slush made of fresh strawberries, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
+        "/menu_items/very_berry_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Mango Cheezo",
         799,
-        "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
+        "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
+        "/menu_itmes/mango_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Berry Bang Cheezo",
         799,
-        "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice."
+        "A blended tea slush made of fresh strawberries and blues, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
+        "/menu_items/berry_bang_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Mango Coco",
         799,
-        "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba included (Cold and Large Cup Only.) We don't recommend light sweet and light ice."
+        "A blended tea slush made of fresh mango with a top of creamy coconut milk to finish it off. Crystal boba included (Cold and Large Cup Only.) We don't recommend light sweet and light ice.",
+        "/menu_items/mango_coco.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Super Fruit Tea",
         799,
-        "Fresh mix fruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
+        "Fresh mix fruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
+        "/menu_items/super_fruit_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Super Orange Tea",
         725,
-        "Fresh orange and lime with choice of tea. (Large Cup Only) We don't recommend light sweet and light ice."
+        "Fresh orange and lime with choice of tea. (Large Cup Only) We don't recommend light sweet and light ice.",
+        "/menu_items/super_orange_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Super Lemon Tea",
         725,
-        "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice, please enjoy it within 1 hour for the best taste. (Large Cup Only) We don't recommend light sweet and light ice."
+        "Freshly squeezed lemon and lime with any choice of tea. Recommended regular sweetness and ice, please enjoy it within 1 hour for the best taste. (Large Cup Only) We don't recommend light sweet and light ice.",
+        "/menu_items/super_lemon_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Passion Pineapple Tea",
         725,
-        "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light sweet and light ice."
+        "Fresh pineapple and passionfruit with four season tea. (Large cup only) We don't recommend light sweet and light ice.",
+        "/menu_items/passion_pineapple_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "PassionFruit Orange Tea",
         725,
-        "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
+        "Fresh orange and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
+        "/menu_items/passionfruit_orange_tea.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
         "Fresh Fruit Tea",
         "Passionfruit Lemon Tea",
         725,
-        "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice."
+        "Fresh lemon, lime and passionfruit with choice of tea. (Large cup only) We don't recommend light sweet and light ice.",
+        "/menu_items/passionfruit_lemon_tea.webp"
       ),
     ],
   },
@@ -416,35 +459,40 @@ const menuSections: MenuSection[] = [
         "Matcha",
         "Mango Matcha Cheezo",
         699,
-        "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top."
+        "A beautiful three layer drink with mango flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top.",
+        "/menu_items/mango_matcha_cheezo.webp"
       ),
       createMenuItem(
         "matcha",
         "Matcha",
         "Strawberry Matcha Cheezo",
         699,
-        "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top."
+        "A beautiful three layer drink with strawberry flavor on the bottom, milk in the middle, and a amazing matcha cheezo on the top.",
+        "/menu_items/strawberry_matcha_cheezo.webp"
       ),
       createMenuItem(
         "matcha",
         "Matcha",
         "Matcha Latte",
         699,
-        "A layered premium matcha with whole milk."
+        "A layered premium matcha with whole milk.",
+        "/menu_items/matcha_latte.webp"
       ),
       createMenuItem(
         "matcha",
         "Matcha",
         "Matcha Slush",
         625,
-        "A ice cold matcha slush made freshly. (Cold only)"
+        "A ice cold matcha slush made freshly. (Cold only)",
+        "/menu_items/matcha_slush.webp"
       ),
       createMenuItem(
         "matcha",
         "Matcha",
         "Oreo Brulee Matcha",
         699,
-        "A matcha slush twisted with puff cream and topped with crushed Oreo. (Cold only)"
+        "A matcha slush twisted with puff cream and topped with crushed Oreo. (Cold only)",
+        "/menu items/oreo_brulee_matcha.webp"
       ),
     ],
   },
@@ -456,58 +504,73 @@ const menuSections: MenuSection[] = [
         "Caffeine Free Drink",
         "Brown Sugar Boba Latte",
         699,
-        "Signature brown sugar Boba with creamy milk, Boba included. (Dairy)"
+        "Signature brown sugar Boba with creamy milk, Boba included. (Dairy)",
+        "/menu_items/brown_sugar_boba_latte.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Creme Brulee Brown Sugar Boba Latte 厚烧蛋糕黑糖鲜奶",
         750,
-        "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only."
+        "A signature brown sugar boba latte with a layer of torched brown sugar cream on top. Boba is included. Regular cup only.",
+        "/menu_items/creme_brulee_brown_sugar_boba_latte.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Avocado Smash",
         725,
-        "Fresh Avocado blended with ice and non dairy milk. Creamy and Healthy. (Cold only)"
+        "Fresh Avocado blended with ice and non dairy milk. Creamy and Healthy. (Cold only)",
+        "/menu_items/avocado_smash.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Banana berry Snow",
         625,
-        "Fresh banana blended with strawberry puree, ice and milk. (Cold only)"
+        "Fresh banana blended with strawberry puree, ice and milk. (Cold only)",
+        "/menu_items/banana_berry_snow.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Oreo Smoothie",
         625,
-        "A ice cold Oreo Smoothie."
+        "A ice cold Oreo Smoothie.",
+        "/menu_items/oreo_smoothie.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Peach Yogurt",
         600,
-        "Peach flavored yogurt drink."
+        "Peach flavored yogurt drink.",
+        "/menu_items/peach_yogurt.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Strawberry Fizz",
         600,
-        "Fresh strawberry puree flavor with sparkling water."
+        "Fresh strawberry puree flavor with sparkling water.",
+        "/menu_items/strawberry_fizz.webp"
       ),
       createMenuItem(
         "caffeine-free-drink",
         "Caffeine Free Drink",
         "Watermelon Slush",
         625,
-        "Fresh watermelon blended with ice."
+        "Fresh watermelon blended with ice.",
+        "/menu_items/watermelon_slush.webp"
       ),
-      createMenuItem("caffeine-free-drink", "Caffeine Free Drink", "Perrier", 300),
+      createMenuItem(
+        "caffeine-free-drink", 
+        "Caffeine Free Drink", 
+        "Perrier", 
+        300,
+        "",
+        "/menu_items/perrier.webp"
+      ),
     ],
   },
   {
@@ -518,87 +581,132 @@ const menuSections: MenuSection[] = [
         "Dessert & Cake",
         "Brown Sugar Mochi (6pc)",
         800,
-        "Its crispy, chewy texture and a rich caramel-like flavor from the brown sugar, dusted with soy powder."
+        "Its crispy, chewy texture and a rich caramel-like flavor from the brown sugar, dusted with soy powder.",
+        "/menu_items/brown_sugar_mochi.webp"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Chocolate Truffle (8pc)",
         675,
-        "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder."
+        "House made chocolate truffles are artisan confections made with care, that features a smooth, creamy chocolate ganache center that melts in your mouth surrounded by a delicious and delicate coat of chocolate powder.",
+        "/menu_items/chocolate_truffle.webp"
       ),
-      createMenuItem("dessert-cake", "Dessert & Cake", "Tiramisu Cup", 675),
+      createMenuItem(
+        "dessert-cake", 
+        "Dessert & Cake", 
+        "Tiramisu Cup", 
+        675,
+        "",
+        "/menu_items/tiramisu_cup.webp"),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Tiramisu cake",
         1299,
-        "A housemade rich and smooth mascarpone cream between layers of soaked sponge with coffee, dusted with cocoa powder. (No alcohol)"
+        "A housemade rich and smooth mascarpone cream between layers of soaked sponge with coffee, dusted with cocoa powder. (No alcohol)",
+        "/menu_items/tiramisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Matchamisu cake",
         1299,
-        "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemade, No alcohol)"
+        "A rich and smooth mascarpone cream between layers of soaked Ladyfingers with matcha and dusted with matcha powder. (Housemade, No alcohol)",
+        "/menu_items/matchamisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Salty Caramelmisu Cake",
         1299,
-        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No alcohol)"
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with coffee, dusted with caramel crunch. (No alcohol)",
+        "/menu_items/salty_caramelmisu_cake.webp"
       ),
       createMenuItem(
         "dessert-cake",
         "Dessert & Cake",
         "Salty Soymilkmisu Cake",
         1299,
-        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No alcohol)"
+        "A housemade rich and smooth salty mascarpone cream between layers of soaked Ladyfingers with soymilk, dusted with soy powder. (No alcohol)",
+        "/menu_items/salty_soymilkmisu_cake.webp"
       ),
     ],
   },
   {
     title: "Snack",
     items: [
-      createMenuItem("snack", "Snack", "Crispy Popcorn Chicken (Spicy)", 999),
-      createMenuItem("snack", "Snack", "Fried Chicken Wing (Spicy)", 900),
+      createMenuItem(
+        "snack",
+        "Snack",
+        "Crispy Popcorn Chicken (Spicy)",
+        999,
+        "",
+        "/menu_items/crispy_popcorn_chicken.webp"
+      ),
+      createMenuItem(
+        "snack", 
+        "Snack", 
+        "Fried Chicken Wing (Spicy)", 
+        900,
+        "",
+        "/menu_items/fried_chicken_wing.webp"
+      ),
       createMenuItem(
         "snack",
         "Snack",
         "TAKOYAKI",
         999,
-        "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of dried bonito."
+        "A ball shaped traditional Japanese snack. The balls are brushed with Takoyaki sauce and mayonnaise, and then sprinkled with shavings of dried bonito.",
+        "/menu_items/takoyaki.webp"
       ),
       createMenuItem(
         "snack",
         "Snack",
         "Fried Mini Octopus",
         900,
-        "A very crispy snack with a delightful taste."
+        "A very crispy snack with a delightful taste.",
+        "/menu_items/fried_mini_octopus.webp"
       ),
-      createMenuItem("snack", "Snack", "Curly Fries", 725),
+      createMenuItem(
+        "snack", 
+        "Snack", 
+        "Curly Fries", 
+        725,
+        "",
+        "/menu_items/curly_fries.webp"
+        ),
       createMenuItem(
         "snack",
         "Snack",
         "Fried Cheese Stick",
         700,
-        "A crispy fried mozzarella cheese stick. (Recommended to enjoy while it's hot.)"
+        "A crispy fried mozzarella cheese stick. (Recommended to enjoy while it's hot.)",
+        "/menu_items/fried_cheese_stick.webp"
       ),
       createMenuItem(
         "snack",
         "Snack",
         "Fried Tofu",
         800,
-        "A great and enjoyable snack for everyone."
+        "A great and enjoyable snack for everyone.",
+        "/menu_items/fried_tofu.webp"
       ),
-      createMenuItem("snack", "Snack", "Spam Musubi", 775),
+      createMenuItem(
+        "snack", 
+        "Snack", 
+        "Spam Musubi", 
+        775,
+        "",
+        "/menu_items/spam_musubi.webp"
+        ),
       createMenuItem(
         "snack",
         "Snack",
         "Pork Floss Spam Musubi",
         800,
-        "Pork Floss Spam Musubi"
+        "Pork Floss Spam Musubi",
+        "/menu_items/pork_floss_spam_musubi.webp"
       ),
     ],
   },
