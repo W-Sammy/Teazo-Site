@@ -29,6 +29,7 @@ export default function NotFound() {
             </div>
             {/* Page text content */}
             <div className="relative z-10 h-screen flex flex-col items-center pt-[35vh] gap-4 md:gap-6 lg:gap-8"> 
+                {/* [!] Awaiting chalk strokes asset for styling */}
                 <h1 className={`${cabinSketch.className} text-7xl md:text-7xl lg:text-9xl text-black`}>
                     404 ERROR
                 </h1>
