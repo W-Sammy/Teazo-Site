@@ -383,7 +383,7 @@ const menuSections: MenuSection[] = [
         "Mango Cheezo",
         799,
         "A blended tea slush made of fresh mango, top with sea salt cheezo cream. Cheezo included (Cold and Large Cup Only) We don't recommend light sweet and light ice.",
-        "/menu_itmes/mango_cheezo.webp"
+        "/menu_items/mango_cheezo.webp"
       ),
       createMenuItem(
         "fresh-fruit-tea",
@@ -492,7 +492,7 @@ const menuSections: MenuSection[] = [
         "Oreo Brulee Matcha",
         699,
         "A matcha slush twisted with puff cream and topped with crushed Oreo. (Cold only)",
-        "/menu items/oreo_brulee_matcha.webp"
+        "/menu_items/oreo_brulee_matcha.webp"
       ),
     ],
   },
