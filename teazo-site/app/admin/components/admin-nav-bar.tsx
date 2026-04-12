@@ -18,8 +18,9 @@ export default function Sidebar() {
   ];
 
   const controls = [
+    { id: "website-content", label: "Website Content", href: "/admin/website-content"},
     { id: "userview", label: "User View", href: "/"},
-    { id: "logout", label: "Logout", href: "/"}
+    { id: "logout", label: "Logout", href: "/"},
   ]
   return (
 
