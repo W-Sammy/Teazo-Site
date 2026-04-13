@@ -35,7 +35,8 @@ export default function ListView({items} :  {items: Row[]}){
         {/*creates the column names*/}
         <thead>
           <tr className="border-b border-[#dbb082]">
-            <th className="w-6"></th>
+            <th className="w-6"></th>  {/* dele column */}
+            <th className="w-10"></th> {/* edit column */}
             {keys.map((key) => (
               <th key = {key} className = "pr-1 py-2 text-left">
                 <div title={key}>
@@ -46,8 +47,6 @@ export default function ListView({items} :  {items: Row[]}){
           </tr>
         </thead>
 
-        
-
         {/*prints the row dakines*/}
         <tbody>
           {items.map((item, row_i) => (
@@ -57,7 +56,7 @@ export default function ListView({items} :  {items: Row[]}){
               className="border-b border-[#dbb082]/50 cursor-pointer hover:bg-[#dbb082]/25"
             >
               {/* delete cell */}
-              <td className="pr-6 py-2">
+              <td className="pr-2 py-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); //prevents row click
@@ -66,6 +65,19 @@ export default function ListView({items} :  {items: Row[]}){
                   className="text-red-500 hover:text-red-700 cursor-pointer"
                 >
                   ✕
+                </button>
+              </td>
+
+              {/* edit cell */}
+              <td className="pr-6 py-2">
+                <button 
+                  className="bg-[#dbb082] text-xs px-1.5 py-0.5 rounded cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation(); //prevents row click
+                    editHandler(item);
+                  }}
+                > 
+                  EDIT 
                 </button>
               </td>
               {keys.map((key)=>(
