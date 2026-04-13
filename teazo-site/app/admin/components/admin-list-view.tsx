@@ -55,11 +55,10 @@ export default function ListView({items} :  {items: Row[]}){
               onClick={() => editHandler(item)}
               className="border-b border-[#dbb082]/50 cursor-pointer hover:bg-[#dbb082]/25"
             >
-              {/* delete cell */}
               <td className="pr-2 py-2">
                 <button
                   onClick={(e) => {
-                    e.stopPropagation(); //prevents row click
+                    e.stopPropagation();
                     deleteHandler(item);
                   }}
                   className="text-red-500 hover:text-red-700 cursor-pointer"
@@ -67,11 +66,9 @@ export default function ListView({items} :  {items: Row[]}){
                   ✕
                 </button>
               </td>
-
-              {/* edit cell */}
               <td className="pr-6 py-2">
                 <button 
-                  className="bg-[#dbb082] text-xs px-1.5 py-0.5 rounded cursor-pointer"
+                  className="bg-[#dbb082] text-xs px-1.5 py-0.5 rounded cursor-pointer font-bold text-white"
                   onClick={(e) => {
                     e.stopPropagation(); //prevents row click
                     editHandler(item);
