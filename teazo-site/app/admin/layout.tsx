@@ -8,7 +8,7 @@ export default function AdminLayout({
   children: ReactNode; 
 }){
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-white text-black">
       <aside className="sticky top-16 h-[100vh] ">
         <Sidebar />
       </aside>
