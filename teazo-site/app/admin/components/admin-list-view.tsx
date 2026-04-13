@@ -35,7 +35,7 @@ export default function ListView({items} :  {items: Row[]}){
         {/*creates the column names*/}
         <thead>
           <tr className="border-b border-[#dbb082]">
-            <th className="w-6"></th> {/* delete column */}
+            <th className="w-6"></th>
             {keys.map((key) => (
               <th key = {key} className = "pr-1 py-2 text-left">
                 <div title={key}>
