@@ -777,6 +777,7 @@ export default function MenuPage() {
 			{/* Full-page bubble layer with increased bubble density keeps animated background visible
           as the user scrolls farther down the menu page. */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Increased bubble density so the background remains visually engaging */}
 				<BubbleField count={52} />
 			</div>
 
