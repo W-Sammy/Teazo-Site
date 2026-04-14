@@ -33,17 +33,38 @@ export async function GET() {
 
         const imageMap = new Map<string, string>();
         for await (const img of imageResult) {
+            //checks to ensure img.id exist
+            if (!img.id) {
+                return Response.json (
+                    { error: "Catalog item missing id" },
+                    { status: 500 }
+                );
+            }
             imageMap.set(img.id, (img as CatalogObject.Image).imageData?.url ?? "");
         }
 
         const categoryMap = new Map<string, string>();
         for await (const category of categoryResult) {
+            //checks to ensure category.id exist
+            if (!category.id) {
+                return Response.json (
+                    { error: "Catalog item missing id" },
+                    { status: 500 }
+                );
+            }
             categoryMap.set(category.id, (category as CatalogObject.Category).categoryData?.name ?? "");
         }
 
         const modifierListMap = new Map<string, ModifierList>();
         for await (const obj of modifierListResult) {
             const modifierList = buildModifierList(obj as CatalogObject.ModifierList);
+            //checks to ensure obj.id exist
+            if (!obj.id) {
+                return Response.json (
+                    { error: "Catalog item missing id" },
+                    { status: 500 }
+                );
+            }
             modifierListMap.set(obj.id, modifierList);
         }
 
@@ -54,6 +75,14 @@ export async function GET() {
             const priceMoney = variation?.itemVariationData?.priceMoney;
             const imageId = catalogItem.itemData?.imageIds?.[0];
             const categoryId = catalogItem.itemData?.categories?.[0]?.id ?? null;
+
+            //checks to ensure item.id exist
+            if (!item.id) {
+                return Response.json (
+                    { error: "Catalog item missing id" },
+                    { status: 500 }
+                );
+            }
 
             const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
                 .map((info) => modifierListMap.get(info.modifierListId ?? ""))
