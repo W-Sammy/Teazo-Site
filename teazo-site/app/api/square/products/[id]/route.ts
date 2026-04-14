@@ -18,6 +18,13 @@ export async function GET(
     if (!item) {
         return Response.json(null, { status: 404 });
     }
+    // ensures that item id does exist. required for item components
+    if (!item.id) {
+    return Response.json (
+        { error: "Catalog item missing id" },
+        { status: 500 }
+    );
+}
 
     const catalogItem = item as CatalogObject.Item;
     const relatedObjects = result.relatedObjects ?? [];
