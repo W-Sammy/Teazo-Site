@@ -12,7 +12,7 @@ export interface ModifierList {
 
 export interface MenuItem {
     catalogObjectId: string;
-    name: string | undefined;
+    name: string | null | undefined;
     description: string | undefined;
     variationId: string | undefined;
     priceCents: number;
