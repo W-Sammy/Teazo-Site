@@ -2,20 +2,22 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import MenuItemCard, { type MenuItem } from "../components/menu-item-card";
+import { BubbleField } from "@/app/components/bubble-field";
+import GeneralButton from "@/app/components/general-button";
 
 export const metadata: Metadata = {
-  title: "Menu",
-  description: "Explore the TEAZO menu.",
+	title: "Menu",
+	description: "Explore TEAZO menu categories and featured specials.",
 };
 
 const cabinSketch = Cabin_Sketch({
-  subsets: ["latin"],
-  weight: ["700"],
+	subsets: ["latin"],
+	weight: ["700"],
 });
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+	subsets: ["latin"],
+	weight: ["400", "700"],
 });
 
 // Decorative pink underline behind the section heading.
@@ -769,52 +771,76 @@ function SpecialsSection() {
 }
 
 export default function MenuPage() {
-  return (
-    <main className="min-h-screen bg-[#f4efeb] text-stone-900">
-      <div className="mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
-        {/* Page hero area */}
-        <section className="flex flex-col items-center text-center">
-          <Image
-            src="/TEAZO_logo.png"
-            alt=""
-            aria-hidden="true"
-            width={389}
-            height={397}
-            className="h-[170px] w-auto sm:h-[195px]"
-            priority
-          />
+	return (
+		<main className="relative isolate min-h-screen bg-[#f4efeb] text-stone-900">
+			<div className="pointer-events-none absolute inset-0 overflow-hidden">
+				<BubbleField count={52} />
+			</div>
 
-          <h1
-            className={`${cabinSketch.className} mt-4 text-[3.8rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[5.1rem]`}
-          >
-            Menu
-          </h1>
+			<div className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden sm:h-[780px] lg:h-[860px]">
+				<BubbleField count={13} />
+			</div>
 
-          <div className="relative mt-14 inline-flex items-center justify-center sm:mt-16">
-            <PaintStroke />
-            <h2
-              className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
-            >
-              Drinks, Desserts &amp; Specials
-            </h2>
-          </div>
+			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+				<section className="flex flex-col items-center text-center">
+					<Image
+						src="/TEAZO_logo.png"
+						alt=""
+						aria-hidden="true"
+						width={389}
+						height={397}
+						className="h-[170px] w-auto sm:h-[195px]"
+						priority
+					/>
 
-          <p
-            className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
-          >
-            Explore TEAZO menu categories and featured specials.
-          </p>
-        </section>
+					<h1
+						className={`${cabinSketch.className} mt-4 text-[3.8rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[5.1rem]`}
+					>
+						Menu
+					</h1>
 
-        <SpecialsSection />
+					<div className="mt-10 flex flex-col items-center sm:mt-12">
+						<p
+							className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
+>
+							Too Much Scrolling?
+						</p>
 
-        {/* Main list of menu categories rendered below the specials section. */}
-        <div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
-          {menuSections.map((section) => (
-            <MenuCategorySection key={section.title} section={section} />
-          ))}
-        </div>
-      </div>
-    </main>
-  );
+						<p
+							className={`${montserrat.className} mt-2 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
+>
+							Download Our Menu
+						</p>
+
+						<div className="mt-8">
+							<GeneralButton text="DOWNLOAD" href="/static-menu" />
+						</div>
+					</div>
+
+					<div className="relative mt-16 inline-flex items-center justify-center sm:mt-20">
+						<PaintStroke />
+						<h2
+							className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
+						>
+							Drinks, Desserts &amp; Specials
+						</h2>
+					</div>
+
+					<p
+						className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
+					>
+						Explore TEAZO menu categories and featured specials.
+					</p>
+				</section>
+
+				<SpecialsSection />
+
+				<div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
+					{menuSections.map((section) => (
+						<MenuCategorySection key={section.title} section={section} />
+					))}
+				</div>
+			</div>
+		</main>
+	);
 }
