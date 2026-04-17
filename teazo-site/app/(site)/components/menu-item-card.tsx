@@ -1,10 +1,15 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
+
+const FALLBACK_IMAGE_SRC = "/TEAZO_logo.png";
 
 /* Core menu item shape for the UI.
    This is closer to the Square API shape so mock data can be replaced later
@@ -38,8 +43,15 @@ function formatPrice(priceCents: number, currency: string | null) {
    This component is responsible only for rendering one item’s image,
    name, price, and optional description in a consistent card layout. */
 export default function MenuItemCard({ item }: MenuItemCardProps) {
-  const imageSrc = item.imageUrl || "/TEAZO_logo.png";
+  const initialImageSrc = item.imageUrl || FALLBACK_IMAGE_SRC;
+  const [imageSrc, setImageSrc] = useState(initialImageSrc);
   const formattedPrice = formatPrice(item.priceCents, item.currency);
+
+  useEffect(() => {
+    setImageSrc(item.imageUrl || FALLBACK_IMAGE_SRC);
+  }, [item.imageUrl]);
+
+  const isUsingFallbackImage = imageSrc === FALLBACK_IMAGE_SRC;
 
   return (
     <article className="flex min-h-[180px] items-start justify-between gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -77,8 +89,14 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
           src={imageSrc}
           alt={item.name}
           fill
-          className="object-cover"
-          sizes="112px"
+          className={isUsingFallbackImage ? "object-contain p-2" : "object-cover"}
+          sizes="(max-width: 640px) 96px, 112px"
+          loading="lazy"
+          onError={() => {
+            if (imageSrc !== FALLBACK_IMAGE_SRC) {
+              setImageSrc(FALLBACK_IMAGE_SRC);
+            }
+          }}
         />
       </div>
     </article>
