@@ -5,7 +5,7 @@ import PdfPreview from "@/app/components/pdf-preview";
 
 export const metadata: Metadata = {
 	title: "Static Menu",
-	description: "View and download the TEAZO static menu PDF.",
+	description: "View, open, and download the TEAZO static menu PDF.",
 };
 
 const cabinSketch = Cabin_Sketch({
@@ -35,8 +35,8 @@ export default function StaticMenuPage() {
 				<p
 					className={`${montserrat.className} mt-6 max-w-3xl text-center text-base leading-7 text-stone-700 sm:text-lg`}
 				>
-					View the TEAZO static menu below or download a copy for offline
-					viewing.
+					Preview the TEAZO static menu below. You can also open the PDF in a
+					new tab or download a copy for offline viewing.
 				</p>
 
 				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -57,6 +57,13 @@ export default function StaticMenuPage() {
 						OPEN PDF
 					</a>
 				</div>
+
+				<p
+					className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
+				>
+					If the preview does not load, use the buttons above to open or
+					download the PDF.
+				</p>
 
 				<div className="mt-10 w-full max-w-[900px]">
 					<PdfPreview fileUrl="/teazo-static-menu.pdf" />
