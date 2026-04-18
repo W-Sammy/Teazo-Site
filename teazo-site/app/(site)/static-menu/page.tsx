@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
-import PdfPreview from "@/app/components/pdf-preview";
+import StaticMenuContent from "./static-menu-content";
 
 export const metadata: Metadata = {
 	title: "Static Menu",
@@ -35,39 +35,10 @@ export default function StaticMenuPage() {
 				<p
 					className={`${montserrat.className} mt-6 max-w-3xl text-center text-base leading-7 text-stone-700 sm:text-lg`}
 				>
-					View the TEAZO static menu below. You can also open the PDF in a
-					new tab or download a copy for offline viewing.
+					View the TEAZO menu below or download a copy for offline viewing.
 				</p>
 
-				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-					<a
-						href="/teazo-static-menu.pdf"
-						download
-						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7]`}
-					>
-						DOWNLOAD PDF
-					</a>
-
-					<a
-						href="/teazo-static-menu.pdf"
-						target="_blank"
-						rel="noopener noreferrer"
-						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center border border-black bg-transparent px-8 text-[18px] font-semibold tracking-[0.05em] text-black transition-colors hover:bg-black hover:text-white`}
-					>
-						OPEN PDF
-					</a>
-				</div>
-
-				<p
-					className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
-				>
-					If the preview does not load, use the buttons above to open or
-					download the PDF.
-				</p>
-
-				<div className="mt-10 w-full max-w-[900px]">
-					<PdfPreview fileUrl="/teazo-static-menu.pdf" />
-				</div>
+				<StaticMenuContent />
 			</div>
 		</main>
 	);

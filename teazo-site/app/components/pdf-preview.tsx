@@ -4,65 +4,61 @@ import { useEffect, useRef } from "react";
 
 type PdfPreviewProps = {
 	fileUrl: string;
+	onPreviewError?: () => void;
+	onPreviewSuccess?: () => void;
 };
 
-export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
+export default function PdfPreview({
+	fileUrl,
+	onPreviewError,
+	onPreviewSuccess,
+}: PdfPreviewProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		let cancelled = false;
 		let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+		let loadTimeout: ReturnType<typeof setTimeout> | null = null;
 		let observer: IntersectionObserver | null = null;
+		let successReported = false;
+		let failureReported = false;
+
+		function reportSuccess() {
+			if (!successReported && !cancelled) {
+				successReported = true;
+				failureReported = false;
+
+				if (loadTimeout) {
+					clearTimeout(loadTimeout);
+					loadTimeout = null;
+				}
+
+				onPreviewSuccess?.();
+			}
+		}
+
+		function reportFailure() {
+			if (!failureReported && !cancelled) {
+				failureReported = true;
+
+				if (loadTimeout) {
+					clearTimeout(loadTimeout);
+					loadTimeout = null;
+				}
+
+				onPreviewError?.();
+			}
+		}
 
 		function showFallback() {
 			const currentContainer = containerRef.current;
 			if (!currentContainer) return;
 
+			reportFailure();
+
 			currentContainer.innerHTML = `
 				<div style="text-align:center; padding: 2rem 0; color: #57534e;">
-					<p style="margin-bottom: 1rem;">Preview unavailable in this browser.</p>
-					<div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
-						<a
-							href="${fileUrl}"
-							target="_blank"
-							rel="noopener noreferrer"
-							style="
-								display:inline-flex;
-								align-items:center;
-								justify-content:center;
-								height:56px;
-								min-width:190px;
-								padding:0 24px;
-								background:black;
-								color:white;
-								text-decoration:none;
-								font-weight:600;
-								letter-spacing:0.05em;
-							"
-						>
-							OPEN PDF
-						</a>
-						<a
-							href="${fileUrl}"
-							download
-							style="
-								display:inline-flex;
-								align-items:center;
-								justify-content:center;
-								height:56px;
-								min-width:190px;
-								padding:0 24px;
-								border:1px solid black;
-								background:transparent;
-								color:black;
-								text-decoration:none;
-								font-weight:600;
-								letter-spacing:0.05em;
-							"
-						>
-							DOWNLOAD PDF
-						</a>
-					</div>
+					<p style="margin-bottom: 1rem;">Preview unavailable on this device.</p>
 				</div>
 			`;
 		}
@@ -77,6 +73,18 @@ export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 			}
 
 			container.innerHTML = "";
+			successReported = false;
+			failureReported = false;
+
+			if (loadTimeout) {
+				clearTimeout(loadTimeout);
+			}
+
+			loadTimeout = setTimeout(() => {
+				if (!successReported) {
+					showFallback();
+				}
+			}, 3500);
 
 			try {
 				const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -127,6 +135,10 @@ export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 					}).promise;
 
 					host.dataset.rendered = "true";
+
+					if (pageNum === 1) {
+						reportSuccess();
+					}
 				}
 
 				const pageHosts: HTMLDivElement[] = [];
@@ -216,9 +228,13 @@ export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 				clearTimeout(resizeTimeout);
 			}
 
+			if (loadTimeout) {
+				clearTimeout(loadTimeout);
+			}
+
 			window.removeEventListener("resize", handleResize);
 		};
-	}, [fileUrl]);
+	}, [fileUrl, onPreviewError, onPreviewSuccess]);
 
 	return <div ref={containerRef} className="w-full" />;
 }
