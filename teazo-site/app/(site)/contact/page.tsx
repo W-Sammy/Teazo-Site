@@ -7,6 +7,7 @@ import {
   directionsHref,
   mapEmbedSrc,
 } from "./contact-content";
+import Subtitle from "../components/sub-title";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -87,12 +88,7 @@ export default function ContactPage() {
           {/* The decorative brush stroke sits behind the section heading rather
               than being baked into an image, which keeps the heading editable. */}
           <div className="relative mt-14 inline-flex items-center justify-center sm:mt-16">
-            <PaintStroke />
-            <h2
-              className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.35rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.95rem] lg:text-[5.35rem]`}
-            >
-              Location &amp; Hours
-            </h2>
+            <Subtitle text="Location & Hours"/>
           </div>
         </section>
 
