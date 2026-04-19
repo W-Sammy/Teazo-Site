@@ -26,6 +26,9 @@ const mediumMontserrat = Montserrat({
 export default function Delivery() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen">
+        {/* name of the website on tab*/}
+        <title>Delivery</title>
+
         {/* bubble background */}
         <div className="">
             <BubbleField />
