@@ -22,3 +22,8 @@ export interface MenuItem {
     categoryName: string | null;
     modifiers: ModifierList[];
 }
+
+export interface Category {
+    categoryId: string | null;
+    categoryName: string | null;
+}
