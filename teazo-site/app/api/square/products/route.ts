@@ -2,7 +2,7 @@ import { squareClient } from "@/app/lib/square";
 import type { CatalogObject } from 'square';
 import type { MenuItem, ModifierList, ModifierOption } from "@/app/types/menu-item";
 
-
+// Helper function to build a ModifierList object from a CatalogObject.ModifierList
 function buildModifierList(obj: CatalogObject.ModifierList): ModifierList {
     const options: ModifierOption[] = (obj.modifierListData?.modifiers ?? []).map((mod) => {
         const modifier = mod as CatalogObject.Modifier;
@@ -21,9 +21,17 @@ function buildModifierList(obj: CatalogObject.ModifierList): ModifierList {
     };
 }
 
-
+/**
+ * GET /api/products
+ *
+ * Fetches all active products from the Square catalog.
+ *
+ * @returns 200 - Array of MenuItem objects
+ * @returns 500 - Square API failure or unexpected catalog data
+ */
 export async function GET() {
     try {
+        // Fetch all catalog objects in parallel
         const [itemResult, imageResult, categoryResult, modifierListResult] = await Promise.all([
             squareClient.catalog.list({ types: "ITEM" }),
             squareClient.catalog.list({ types: "IMAGE" }),
@@ -31,44 +39,40 @@ export async function GET() {
             squareClient.catalog.list({ types: "MODIFIER_LIST" }),
         ]);
 
+        // Create a map of the image data
         const imageMap = new Map<string, string>();
         for await (const img of imageResult) {
-            //checks to ensure img.id exist
             if (!img.id) {
-                return Response.json (
-                    { error: "Catalog item missing id" },
-                    { status: 500 }
-                );
+                console.warn("Skipping unexpected image object:", img);
+                continue;
             }
             imageMap.set(img.id, (img as CatalogObject.Image).imageData?.url ?? "");
         }
 
+        // Create a map of the category data
         const categoryMap = new Map<string, string>();
         for await (const category of categoryResult) {
-            //checks to ensure category.id exist
             if (!category.id) {
-                return Response.json (
-                    { error: "Catalog item missing id" },
-                    { status: 500 }
-                );
+                console.warn("Skipping unexpected category object:", category);
+                continue;
             }
             categoryMap.set(category.id, (category as CatalogObject.Category).categoryData?.name ?? "");
         }
 
+        // Create a map of the modified data
         const modifierListMap = new Map<string, ModifierList>();
         for await (const obj of modifierListResult) {
             const modifierList = buildModifierList(obj as CatalogObject.ModifierList);
-            //checks to ensure obj.id exist
             if (!obj.id) {
-                return Response.json (
-                    { error: "Catalog item missing id" },
-                    { status: 500 }
-                );
+                console.warn("Skipping unexpected modifier object:", obj);
+                continue;
             }
             modifierListMap.set(obj.id, modifierList);
         }
 
         const products: MenuItem[] = [];
+
+        // Fill MenuItem[] with catalog item data
         for await (const item of itemResult) {
             const catalogItem = item as CatalogObject.Item;
             const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
@@ -76,7 +80,6 @@ export async function GET() {
             const imageId = catalogItem.itemData?.imageIds?.[0];
             const categoryId = catalogItem.itemData?.categories?.[0]?.id ?? null;
 
-            //checks to ensure item.id exist
             if (!item.id) {
                 return Response.json (
                     { error: "Catalog item missing id" },
