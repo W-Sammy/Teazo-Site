@@ -1,6 +1,7 @@
 import { squareClient } from "@/app/lib/square";
 import type { CatalogObject } from 'square';
 import type { MenuItem, ModifierList, ModifierOption } from "@/app/types/menu-item";
+import { buildModifierList } from '@/app/lib/square-helpers';
 
 
 export async function GET(
@@ -38,26 +39,11 @@ export async function GET(
     const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
     const priceMoney = variation?.itemVariationData?.priceMoney;
 
-    const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? []).flatMap((info) => {
-        const modifierListObj = relatedObjects.find((o) => o.id === info.modifierListId) as CatalogObject.ModifierList | undefined;
-        if (!modifierListObj) return [];
-
-        const options: ModifierOption[] = (modifierListObj.modifierListData?.modifiers ?? []).map((mod) => {
-            const modifier = mod as CatalogObject.Modifier;
-            const modPriceMoney = modifier.modifierData?.priceMoney;
-            return {
-                id: modifier.id,
-                name: modifier.modifierData?.name ?? undefined,
-                priceCents: modPriceMoney ? Number(modPriceMoney.amount) : 0,
-            };
+    const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
+        .flatMap((info) => {
+            const listObj = relatedObjects.find((o) => o.id === info.modifierListId && o.type === "MODIFIER_LIST") as CatalogObject.ModifierList | undefined;
+            return listObj ? [buildModifierList(listObj)] : [];
         });
-
-        return [{
-            id: modifierListObj.id,
-            name: modifierListObj.modifierListData?.name ?? undefined,
-            options,
-        }];
-    });
 
     const menuItem: MenuItem = {
         catalogObjectId: item.id,
