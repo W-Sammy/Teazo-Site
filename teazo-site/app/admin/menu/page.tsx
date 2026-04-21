@@ -1,15 +1,38 @@
 import ListView from "@/app/admin/components/admin-list-view"
 
-export default function AdminMenuPage(){
-  const sampodata = [
-    {id: 1, name: "Tea", price: 100, category: [1], 
-      chickenchicckecicnekcichchiekchciekchceic: "asdfassdfasdfasdfasdfasdf"},
-    {id: 2, name: "Matcha", category: [3,4,5], 
-      chickenchicckecicnekcichchiekchciekchceic: "asdfasdfasdffasdfasdfasasd"}
-  ]
+import { MenuItem } from "@/app/(site)/components/menu-item-card"
+
+async function getMenuItems(): Promise<MenuItem[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/square/products`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch Menu Items");
+  }
+
+  return res.json();
+}
+
+function filterMenuItems(menuItems: MenuItem[]){
+  return menuItems.map((item) => ({
+    id: item.catalogObjectId,
+    img: item.imageUrl ?? "TEAZO_logo.png",
+    name: item.name ?? "Unnamed item", 
+    price: item.priceCents / 100,
+    description: item.description ?? "",
+    categoryId: item.categoryId ?? "",
+    categoryName: item.categoryName ?? "No Category"
+  }));
+}
+
+export default async function AdminMenuPage(){
+  const menuItems = await getMenuItems();
+  const displayedMenuItems = filterMenuItems(menuItems);
+
   return (
     <div>
-      <ListView items={sampodata}/>
+      <ListView items={displayedMenuItems}/>
     </div>
   )
 }
