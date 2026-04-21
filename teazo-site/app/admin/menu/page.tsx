@@ -21,8 +21,8 @@ function filterMenuItems(menuItems: MenuItem[]){
     name: item.name ?? "Unnamed item", 
     price: item.priceCents / 100,
     description: item.description ?? "",
-    categoryId: item.categoryId ?? "",
-    categoryName: item.categoryName ?? "No Category"
+    category_id: item.categoryId ?? "",
+    category_name: item.categoryName ?? "No Category"
   }));
 }
 
