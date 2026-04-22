@@ -18,6 +18,8 @@ type Category = {
   name: string;
 };
 
+//adds section for filters.
+//filters are dynamically created based on category
 export default function AdminMenuClient({
   items,
   categories,
@@ -51,19 +53,28 @@ export default function AdminMenuClient({
   }, [items, search, selectedCategories]);
 
   return (
-    <div className="flex gap-6 h-screen">
+    <div className="flex">
       
-      {/* LEFT FILTER SIDEBAR */}
-      <div className="w-48 flex-shrink-0 space-y-2 border-r border-[#dbb082]">
-        <h3 className="font-semibold text-sm mb-2">Categories</h3>
+      {/* menu sidebar*/}
+      <div className="w-48 fixed top-0 pt-4 pr-4 pl-2 h-screen space-y-2 border-[#dbb082] border-r overflow-y-auto">
+        
+        <h3 className="font-semibold text-base mb-2">Filters</h3>
+
+        <button
+          onClick={() => setSelectedCategories([])}
+          className="text-xs text-blue-500 hover:underline"
+        >
+          Clear filters
+        </button>
 
         {categories.map((category) => {
           const checked = selectedCategories.includes(category.id);
 
           return (
-            <label key={category.id} className= "flex items-center gap-2 text-sm cursor-pointer">
+            <label key={category.id} className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
+                className="accent-[#b98555] scale-125 "
                 checked={checked}
                 onChange={() => toggleCategory(category.id)}
               />
@@ -73,17 +84,17 @@ export default function AdminMenuClient({
         })}
       </div>
 
-      {/* RIGHT CONTENT */}
-      <div className="flex-1 space-y-4">
-        {/* search bar */}
-        <input
-          type="text"
-          placeholder="Search menu items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border rounded px-3 py-2 w-full max-w-sm"
-        />
-
+      {/* right side "children"*/}
+      <div className="flex-1 ml-48 space-y-4 ">
+        <div className="pl-8 pt-4">
+          <input
+            type="text"
+            placeholder="Search menu items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-200 rounded px-3 py-2 w-64"
+          />
+        </div>
         <ListView items={filteredItems} />
       </div>
 

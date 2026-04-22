@@ -63,7 +63,7 @@ export default function ListView({items} :  {items: Row[]}){
   return (
     <div className="w-full">
       <table className = "w-full border-collapse">
-        {/*creates the column names*/}
+        {/*creates the column names takes into account delete and edit buttons*/}
         <thead>
           <tr className="border-b border-[#dbb082]">
             <th className="w-6"></th> 
@@ -92,7 +92,7 @@ export default function ListView({items} :  {items: Row[]}){
                     e.stopPropagation();
                     deleteHandler(item);
                   }}
-                  className="text-red-500 hover:text-red-700 cursor-pointer"
+                  className="pl-4 text-red-500 hover:text-red-700 cursor-pointer"
                 >
                   ✕
                 </button>
@@ -109,7 +109,7 @@ export default function ListView({items} :  {items: Row[]}){
                 </button>
               </td>
               {keys.filter((key) => key !== "id" && key !== "category_id").map((key)=>(
-                <td key={key} className=" pr-1 py-2">
+                <td key={key} className=" py-2">
                   { key === "price"
                     ? `$${Number(item[key] ?? 0).toFixed(2)}`
                     : key === "img"
