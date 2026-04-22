@@ -69,7 +69,7 @@ type Row = Partial<Record<string, string | string[] | number | number[] | boolea
 export default function ListView({items} :  {items: Row[]}){
   /* checks if there is data */
   if (!items || items.length == 0) {
-    return <div> No data found </div> 
+    return <div className = "px-4"> No data found </div> 
   }
 
   /* gets the different keys of the json array */
