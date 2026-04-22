@@ -3,22 +3,9 @@ import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 import Footer from "@/app/(site)/components/footer";
 
 import { BubbleField } from "@/app/components/bubble-field";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
 
 import Link from "next/link";
 import Image from "next/image";
-
-// Site fonts
-const cabinSketch = Cabin_Sketch({
-    weight: "400",
-    style: "normal"
-});
-
-const montserrat = Montserrat({
-    weight: ["400", "600", "800"],
-    style: "normal"
-});
-
 
 export default function AdminLoginPage() {
   return (
