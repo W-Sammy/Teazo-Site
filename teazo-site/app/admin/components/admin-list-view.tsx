@@ -1,5 +1,6 @@
 'use client'
 import Image from "next/image";
+import { allowedHosts } from "@/app/lib/imageHosts";
 
 type Row = Partial<Record<string, string | string[] | number | number[] | boolean | null>>;
 
@@ -28,20 +29,42 @@ type Row = Partial<Record<string, string | string[] | number | number[] | boolea
   }
 
   function displayIcon(value: unknown, itemName: unknown) {
-    const src = getImageSrc(value) ?? "/TEAZO_logo.png";
+    const rawSrc = getImageSrc(value);
+    const safeSrc =
+      typeof rawSrc === "string" && checkURL(rawSrc)
+        ? rawSrc
+        : "/TEAZO_logo.png";
     const cItemName = checkString(itemName) ?? "No Name"
+
+
 
     //makes the images pretty small since that is not the focus
     return (
       <Image
-        src={src}
+        src={safeSrc}
         alt={cItemName}
         width={40}
         height={40}
         className="w-8 h-8 object-cover rounded shrink-0"
+        onError={(e) => {
+          e.currentTarget.src = "/TEAZO_logo.png";
+        }}
       />
     );
   }
+
+  function checkURL(url: string): boolean {
+    try {
+      const { hostname } = new URL(url);
+
+      return allowedHosts.some(allowed =>
+        hostname === allowed || hostname.endsWith(`.${allowed}`)
+      );
+    } catch {
+      return false;
+    }
+  }
+
 
 export default function ListView({items} :  {items: Row[]}){
   /* checks if there is data */
