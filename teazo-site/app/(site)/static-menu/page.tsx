@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
-import StaticMenuContent from "./static-menu-content";
+import PdfPreview from "@/app/components/pdf-preview";
 
 export const metadata: Metadata = {
 	title: "Static Menu",
-	description: "View, open, and download the TEAZO static menu PDF.",
+	description: "View and download the TEAZO static menu PDF.",
 };
 
 const cabinSketch = Cabin_Sketch({
@@ -35,10 +35,41 @@ export default function StaticMenuPage() {
 				<p
 					className={`${montserrat.className} mt-6 max-w-3xl text-center text-base leading-7 text-stone-700 sm:text-lg`}
 				>
-					View the TEAZO menu below or download a copy for offline viewing.
+					View the TEAZO static menu below or download a copy for offline
+					viewing.
 				</p>
 
-				<StaticMenuContent />
+				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+					<a
+						href="/teazo-static-menu.pdf"
+						download
+						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7]`}
+					>
+						DOWNLOAD PDF
+					</a>
+
+					<a
+						href="/teazo-static-menu.pdf"
+						target="_blank"
+						rel="noopener noreferrer"
+						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center border border-black bg-transparent px-8 text-[18px] font-semibold tracking-[0.05em] text-black transition-colors hover:bg-black hover:text-white`}
+					>
+						OPEN PDF
+					</a>
+				</div>
+
+				<div className="mt-6">
+					<p
+						className={`${montserrat.className} text-center text-base text-stone-600 sm:text-lg`}
+					>
+						Use the buttons above to open or download our menu. A preview will
+						appear when supported.
+					</p>
+				</div>
+
+				<div className="mt-10 w-full max-w-[900px]">
+					<PdfPreview fileUrl="/teazo-static-menu.pdf" />
+				</div>
 			</div>
 		</main>
 	);
