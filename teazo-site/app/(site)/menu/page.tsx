@@ -838,15 +838,6 @@ export default function MenuPage() {
 						</div>
 					</div>
 
-					<div className="relative mt-16 inline-flex items-center justify-center sm:mt-20">
-						<PaintStroke />
-						<h2
-							className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
-						>
-							Drinks, Desserts &amp; Specials
-						</h2>
-					</div>
-
 					<div className="relative mt-14 inline-flex items-center justify-center sm:mt-16">
 						<PaintStroke />
 						<h2
