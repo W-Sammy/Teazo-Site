@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Top of page navbar */}
-      <div className="relative z-10">
+      <div className="relative z-20">
         <MenulessNavBar />
       </div>
 
@@ -41,43 +41,44 @@ export default function AdminLoginPage() {
             <Image
               src="/teazo_logo_text.png"
               alt="Teazo logo with text"
-              width={110}
-              height={110}
+              width={180}
+              height={180}
               className="mb-3 h-auto w-auto"
               priority
             />
 
-            <h1 className="text-[17px] sm:text-[18px] tracking-[0.25em] font-medium text-black text-center">
+            <h1 className="text-[22px] tracking-[0.25em] font-semibold text-black text-center">
               ADMIN PORTAL
             </h1>
           </div>
 
-          {/* Form */}
-          <form className="mt-8 flex flex-col gap-5">
+          {/* Login Form */}
+          <form className="relative mt-8 flex flex-col items-center gap-5">
             <input
               type="email"
               name="email"
               placeholder="EMAIL"
-              className="h-[42px] w-full border border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-black"
+              className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
             />
 
             <input
               type="password"
               name="password"
               placeholder="PASSWORD"
-              className="h-[42px] w-full border border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-black"
+              className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
             />
 
             <button
               type="submit"
               style={{ cursor: 'pointer' }}
-              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:opacity-90 hover:pointer"
+              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7]"
             >
               SIGN IN
             </button>
 
+            {/* [!] Needs to be update once account administrative workflow has been developed */}
             <Link
-              href="/forgot-password"
+              href="/404"
               className="text-center text-[14px] font-semibold tracking-[0.03em] text-black hover:underline"
             >
               FORGOT PASSWORD?
@@ -86,7 +87,7 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Google SSO container */}
-        <div className="w-full max-w-[470px] bg-white  shadow-sm">
+        <div className="relative flex flex-col mb-20 w-full max-w-[470px] bg-white  shadow-sm">
           <button
             type="button"
             className="group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 border border-gray-200 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50"
