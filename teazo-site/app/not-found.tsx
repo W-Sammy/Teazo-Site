@@ -34,7 +34,7 @@ export default function NotFound() {
                     404 ERROR
                 </h1>
                 <h2 className={`${montserrat.className} text-2xl md:text-4xl lg:text-5xl text-black text-center font-semibold `}> 
-                    Oops!
+                    OOPS!
                 </h2>
                 <p className={`${montserrat.className} text-base md:text-2xl lg:text-4xl text-black text-center font-normal`}>
                 The page you were looking for doesn't exist.  
