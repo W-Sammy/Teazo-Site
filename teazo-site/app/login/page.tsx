@@ -1,3 +1,4 @@
+"use client";
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 import Footer from "@/app/(site)/components/footer";
@@ -6,8 +7,15 @@ import { BubbleField } from "@/app/components/bubble-field";
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState} from "react";
+
+
 
 export default function AdminLoginPage() {
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
   return (
     <div className="relative min-h-screen flex flex-col bg-[#f4efeb] overflow-hidden">
       {/* Background effects layer */}
@@ -44,6 +52,7 @@ export default function AdminLoginPage() {
             <input
               type="email"
               name="email"
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="EMAIL"
               className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
             />
@@ -51,17 +60,27 @@ export default function AdminLoginPage() {
             <input
               type="password"
               name="password"
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="PASSWORD"
               className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
             />
 
+            {(!email || !password) && (
+              <p className="absolute top-17 mt-10 text-sm text-red-500">
+                Email or password cannot be empty 
+              </p>
+            )}
+
             <button
               type="submit"
-              style={{ cursor: 'pointer' }}
-              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7]"
+              disabled={!email || !password}
+              style={{ cursor: !email || !password ? "not-allowed" : "pointer" }}
+              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7] "
             >
               SIGN IN
             </button>
+
+            
 
             {/* [!] Needs to be update once account administrative workflow has been developed */}
             <Link

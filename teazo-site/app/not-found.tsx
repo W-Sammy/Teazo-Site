@@ -2,6 +2,8 @@
 import NavBar from "@/app/(site)/components/nav-bar";
 import Footer from "@/app/(site)/components/footer";
 
+import Image from "next/image";
+
 import { BubbleField } from "./components/bubble-field";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 
@@ -29,8 +31,15 @@ export default function NotFound() {
             </div>
             {/* Page text content */}
             <div className="relative z-10 h-screen flex flex-col items-center pt-[35vh] gap-4 md:gap-6 lg:gap-8"> 
-                {/* [!] Awaiting chalk strokes asset for styling */}
-                <h1 className={`${cabinSketch.className} text-7xl md:text-7xl lg:text-9xl text-black`}>
+                <Image
+                    src="/pink_scribble.png"
+                    alt="Pink Scribble"
+                    width={800}
+                    height={800}
+                    className="absolute z-0 opacity-90 w-[350px] md:w-[400px] lg:w-[800px] h-auto"
+                    priority
+                />
+                <h1 className={`${cabinSketch.className} relative z-10 text-7xl md:text-7xl lg:text-9xl text-black`}>
                     404 ERROR
                 </h1>
                 <h2 className={`${montserrat.className} text-2xl md:text-4xl lg:text-5xl text-black text-center font-semibold `}> 
