@@ -38,7 +38,7 @@ export default function StaticMenuContent() {
 		<>
 			<div className="mt-8 flex w-full justify-center">
 				<a
-					href="/teazo-static-menu.pdf"
+					href="/teazo-menu.pdf"
 					target="_blank"
 					rel="noopener noreferrer"
 					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7] hover:text-black`}
@@ -58,7 +58,7 @@ export default function StaticMenuContent() {
 			{shouldRenderPreview && (
 				<div className="mt-10 w-full max-w-[900px]">
 					<PdfPreview
-						fileUrl="/teazo-static-menu.pdf"
+						fileUrl="/teazo-menu.pdf"
 						onPreviewError={() => setPreviewFailed(true)}
 						onPreviewSuccess={() => setPreviewFailed(false)}
 					/>
