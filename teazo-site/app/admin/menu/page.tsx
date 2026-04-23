@@ -4,7 +4,7 @@ import  AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/(site)/components/menu-item-card"
 
 async function getMenuItems(): Promise<MenuItem[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/square/products`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`, {
     cache: "no-store",
   });
 
