@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
-import PdfPreview from "@/app/components/pdf-preview";
+import StaticMenuContent from "./static-menu-content";
 
 export const metadata: Metadata = {
-	title: "Static Menu",
+	title: "Menu",
 	description: "View and download the TEAZO static menu PDF.",
 };
 
@@ -29,7 +29,7 @@ export default function StaticMenuPage() {
 				<h1
 					className={`${cabinSketch.className} text-center text-[3rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[4rem]`}
 				>
-					Static Menu
+					Menu
 				</h1>
 
 				<p
@@ -39,36 +39,8 @@ export default function StaticMenuPage() {
 					viewing.
 				</p>
 
-				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-					<a
-						href="/teazo-static-menu.pdf"
-						download
-						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7]`}
-					>
-						DOWNLOAD PDF
-					</a>
-
-					<a
-						href="/teazo-static-menu.pdf"
-						target="_blank"
-						rel="noopener noreferrer"
-						className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center border border-black bg-transparent px-8 text-[18px] font-semibold tracking-[0.05em] text-black transition-colors hover:bg-black hover:text-white`}
-					>
-						OPEN PDF
-					</a>
-				</div>
-
-				<div className="mt-6">
-					<p
-						className={`${montserrat.className} text-center text-base text-stone-600 sm:text-lg`}
-					>
-						Use the buttons above to open or download our menu. A preview will
-						appear when supported.
-					</p>
-				</div>
-
-				<div className="mt-10 w-full max-w-[900px]">
-					<PdfPreview fileUrl="/teazo-static-menu.pdf" />
+				<div className="mt-8 flex w-full flex-col items-center">
+					<StaticMenuContent />
 				</div>
 			</div>
 		</main>

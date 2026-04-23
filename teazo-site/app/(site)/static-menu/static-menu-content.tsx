@@ -36,22 +36,14 @@ export default function StaticMenuContent() {
 
 	return (
 		<>
-			<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-				<a
-					href="/teazo-static-menu.pdf"
-					download
-					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7]`}
-				>
-					DOWNLOAD MENU
-				</a>
-
+			<div className="mt-8 flex w-full justify-center">
 				<a
 					href="/teazo-static-menu.pdf"
 					target="_blank"
 					rel="noopener noreferrer"
-					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center border border-black bg-transparent px-8 text-[18px] font-semibold tracking-[0.05em] text-black transition-colors hover:bg-black hover:text-white`}
+					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7] hover:text-black`}
 				>
-					OPEN MENU
+					OPEN PDF
 				</a>
 			</div>
 
@@ -59,8 +51,8 @@ export default function StaticMenuContent() {
 				className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
 			>
 				{previewFailed
-					? "Use the buttons above to open or download our menu."
-					: "Use the buttons above to open or download our menu. A preview will appear when supported."}
+					? "Use the button above to open our menu."
+					: "Use the button above to open our menu. A preview will appear when supported."}
 			</p>
 
 			{shouldRenderPreview && (

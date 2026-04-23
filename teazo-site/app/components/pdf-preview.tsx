@@ -14,39 +14,45 @@ export default function PdfPreview({
 	onPreviewSuccess,
 }: PdfPreviewProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
+	const renderIdRef = useRef(0);
+	const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
-		let cancelled = false;
+		let unmounted = false;
 
 		async function renderPdf() {
 			const container = containerRef.current;
-			if (!container) return;
+			if (!container || unmounted) return;
 
+			const renderId = ++renderIdRef.current;
 			container.innerHTML = "";
 
 			try {
 				// @ts-ignore runtime import from public folder
 				const pdfjsLib = (await import(/* webpackIgnore: true */ "/pdfjs/pdf.min.mjs")) as any;
 
+				if (unmounted || renderId !== renderIdRef.current) return;
+
 				pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
 
 				const loadingTask = pdfjsLib.getDocument(fileUrl);
 				const pdf = await loadingTask.promise;
 
+				if (unmounted || renderId !== renderIdRef.current) return;
+
 				for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-					if (cancelled) return;
+					if (unmounted || renderId !== renderIdRef.current) return;
 
 					const page = await pdf.getPage(pageNum);
 
 					const currentContainer = containerRef.current;
-					if (!currentContainer) return;
+					if (!currentContainer || unmounted || renderId !== renderIdRef.current) return;
 
 					const containerWidth = currentContainer.clientWidth || 900;
 					const unscaledViewport = page.getViewport({ scale: 1 });
 
 					const isMobile = window.innerWidth < 640;
 					const fitScale = containerWidth / unscaledViewport.width;
-
 					const scale = isMobile
 						? Math.min(fitScale, 1.0)
 						: Math.min(fitScale, 1.5);
@@ -55,7 +61,6 @@ export default function PdfPreview({
 
 					const canvas = document.createElement("canvas");
 					const context = canvas.getContext("2d");
-
 					if (!context) continue;
 
 					canvas.width = Math.floor(viewport.width);
@@ -73,10 +78,16 @@ export default function PdfPreview({
 						canvasContext: context,
 						viewport,
 					}).promise;
+
+					if (unmounted || renderId !== renderIdRef.current) return;
 				}
 
-				onPreviewSuccess?.();
+				if (!unmounted && renderId === renderIdRef.current) {
+					onPreviewSuccess?.();
+				}
 			} catch (error) {
+				if (unmounted || renderId !== renderIdRef.current) return;
+
 				console.error("Failed to render PDF preview:", error);
 				onPreviewError?.();
 
@@ -94,16 +105,28 @@ export default function PdfPreview({
 		renderPdf();
 
 		const handleResize = () => {
-			renderPdf();
+			if (resizeTimeoutRef.current) {
+				clearTimeout(resizeTimeoutRef.current);
+			}
+
+			resizeTimeoutRef.current = setTimeout(() => {
+				renderPdf();
+			}, 150);
 		};
 
 		window.addEventListener("resize", handleResize);
 
 		return () => {
-			cancelled = true;
+			unmounted = true;
+			renderIdRef.current += 1;
+
+			if (resizeTimeoutRef.current) {
+				clearTimeout(resizeTimeoutRef.current);
+			}
+
 			window.removeEventListener("resize", handleResize);
 		};
-	}, [fileUrl, onPreviewError, onPreviewSuccess]);
+	}, [fileUrl]);
 
 	return <div ref={containerRef} className="w-full" />;
 }

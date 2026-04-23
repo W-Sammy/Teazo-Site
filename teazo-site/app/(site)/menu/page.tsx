@@ -20,36 +20,18 @@ const montserrat = Montserrat({
 	weight: ["400", "700"],
 });
 
-// Decorative pink underline behind the section heading.
+// Decorative pink scribble behind the section heading.
 function PaintStroke() {
 	return (
-		<svg
-			aria-hidden="true"
-			viewBox="0 0 900 230"
-			className="absolute left-1/2 top-1/2 h-[120px] w-[680px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2"
-		>
-			<path
-				d="M70 120C180 74 250 134 364 104c80-20 118-45 222-28 72 12 126 34 214 16"
-				fill="none"
-				stroke="#ffafc4"
-				strokeLinecap="round"
-				strokeWidth="26"
+		<div className="absolute left-1/2 top-1/2 h-[120px] w-[680px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2">
+			<Image
+				src="/pink_scribble.png"
+				alt=""
+				aria-hidden="true"
+				fill
+				className="object-contain"
 			/>
-			<path
-				d="M106 152c78-50 158-14 243-36 104-27 177-88 333-58"
-				fill="none"
-				stroke="#ffbfd0"
-				strokeLinecap="round"
-				strokeWidth="24"
-			/>
-			<path
-				d="M274 80c64-10 146 24 204 10 94-22 149-12 234 14"
-				fill="none"
-				stroke="#ff9eb9"
-				strokeLinecap="round"
-				strokeWidth="20"
-			/>
-		</svg>
+		</div>
 	);
 }
 
@@ -738,8 +720,6 @@ function MenuCategorySection({ section }: { section: MenuSection }) {
 				)}
 			</div>
 
-			{/* The grid shifts from one column to two columns on larger screens
-          so the category layout remains readable on both mobile and desktop. */}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				{section.items.map((item) => (
 					<MenuItemCard key={item.catalogObjectId} item={item} />
@@ -783,26 +763,15 @@ export default function MenuPage() {
 				<BubbleField count={13} />
 			</div>
 
-			{/* Full-page bubble layer with increased bubble density keeps animated background visible
-          as the user scrolls farther down the menu page. */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Increased bubble density so the background remains visually engaging */}
 				<BubbleField count={52} />
 			</div>
 
-			{/* BubbleField is wrapped in a fixed-height container so bubbles stay 
-          concentrated in the top hero area. */}
 			<div className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden sm:h-[780px] lg:h-[860px]">
-				{/* Keep the bubbles focused around the logo, heading,
-            and intro so the menu page has more visual motion near
-            the top. */}
 				<BubbleField count={13} />
 			</div>
 
-			{/* Keep all page content above the animated bubbles so the text and
-          cards remain fully readable and interactive. */}
 			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
-				{/* Page hero area */}
 				<section className="flex flex-col items-center text-center">
 					<Image
 						src="/TEAZO_logo.png"
@@ -823,13 +792,13 @@ export default function MenuPage() {
 					<div className="mt-10 flex flex-col items-center sm:mt-12">
 						<p
 							className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
->
+						>
 							Too Much Scrolling?
 						</p>
 
 						<p
 							className={`${montserrat.className} mt-2 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
->
+						>
 							Download Our Menu
 						</p>
 
