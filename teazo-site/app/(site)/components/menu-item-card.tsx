@@ -1,10 +1,15 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
+
+const FALLBACK_IMAGE_SRC = "/TEAZO_logo.png";
 
 /* Core menu item shape for the UI.
    This is closer to the Square API shape so mock data can be replaced later
@@ -38,14 +43,19 @@ function formatPrice(priceCents: number, currency: string | null) {
    This component is responsible only for rendering one item’s image,
    name, price, and optional description in a consistent card layout. */
 export default function MenuItemCard({ item }: MenuItemCardProps) {
-  const imageSrc = item.imageUrl || "/TEAZO_logo.png";
+  const initialImageSrc = item.imageUrl || FALLBACK_IMAGE_SRC;
+  const [imageSrc, setImageSrc] = useState(initialImageSrc);
   const formattedPrice = formatPrice(item.priceCents, item.currency);
+
+  useEffect(() => {
+    setImageSrc(item.imageUrl || FALLBACK_IMAGE_SRC);
+  }, [item.imageUrl]);
+
+  const isUsingFallbackImage = imageSrc === FALLBACK_IMAGE_SRC;
 
   return (
     <article className="flex min-h-[180px] items-start justify-between gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      {/* Left side of the card contains the text-based product information. */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top row keeps the product name and formatted price aligned consistently. */}
         <div className="flex items-start justify-between gap-4">
           <h4
             className={`${montserrat.className} text-[1rem] font-bold uppercase tracking-[0.03em] text-stone-900 sm:text-[1.05rem]`}
@@ -60,7 +70,6 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
           </span>
         </div>
 
-        {/* Render the description only when the item includes one. */}
         {item.description && (
           <p
             className={`${montserrat.className} mt-3 line-clamp-3 text-[0.95rem] leading-6 text-stone-600`}
@@ -70,15 +79,19 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
         )}
       </div>
 
-      {/* Right side of the card displays the product image in a fixed-size frame
-          so cards stay visually consistent across different menu sections. */}
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
         <Image
           src={imageSrc}
           alt={item.name}
           fill
-          className="object-cover"
-          sizes="112px"
+          className={isUsingFallbackImage ? "object-contain p-2" : "object-cover"}
+          sizes="(max-width: 640px) 96px, 112px"
+          loading="lazy"
+          onError={() => {
+            if (imageSrc !== FALLBACK_IMAGE_SRC) {
+              setImageSrc(FALLBACK_IMAGE_SRC);
+            }
+          }}
         />
       </div>
     </article>
