@@ -42,7 +42,6 @@ export default function NavBar() {
                 </Link>
 
                 {/* navItems - black, monserrat, underlined when hovered */}
-                {/* desktop view */}
                 <div className="grid grid-cols-5 w-full md:w-auto md:flex gap-2 md:gap-12">
                     {navItems.map((item) => (
                         <Link
