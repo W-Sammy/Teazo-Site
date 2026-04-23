@@ -41,7 +41,8 @@ export default function NavBar() {
                     TEAZO
                 </Link>
 
-                {/* navItems - black, monserrat, underlined when hovered */}
+                {/* navItems - black, monserrat, underlined when hovered & active on page
+                    right on desktop, centered & below logo on mobile */}
                 <div className="grid grid-cols-5 w-full md:w-auto md:flex gap-2 md:gap-12">
                     {navItems.map((item) => (
                         <Link
