@@ -3,35 +3,43 @@ import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import StaticMenuContent from "./static-menu-content";
 
+/* Sets the browser tab title and page description. */
 export const metadata: Metadata = {
 	title: "Menu",
 	description: "View and download the TEAZO static menu PDF.",
 };
 
+/* Font used for the main page heading. */
 const cabinSketch = Cabin_Sketch({
 	subsets: ["latin"],
 	weight: ["700"],
 });
 
+/* Font used for the supporting page text. */
 const montserrat = Montserrat({
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
 
+/* Static menu route page. */
 export default function StaticMenuPage() {
 	return (
 		<main className="relative isolate min-h-screen bg-[#f4efeb] px-5 pb-20 pt-28 text-stone-900 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+			{/* Decorative bubble background. */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
 				<BubbleField count={30} />
 			</div>
 
+			{/* Main content layer above the bubbles. */}
 			<div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col items-center">
+				{/* Page heading. */}
 				<h1
 					className={`${cabinSketch.className} text-center text-[3rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[4rem]`}
 				>
 					Menu
 				</h1>
 
+				{/* Short page description. */}
 				<p
 					className={`${montserrat.className} mt-6 max-w-3xl text-center text-base leading-7 text-stone-700 sm:text-lg`}
 				>
@@ -39,6 +47,7 @@ export default function StaticMenuPage() {
 					viewing.
 				</p>
 
+				{/* Client component for PDF button and preview. */}
 				<div className="mt-8 flex w-full flex-col items-center">
 					<StaticMenuContent />
 				</div>
