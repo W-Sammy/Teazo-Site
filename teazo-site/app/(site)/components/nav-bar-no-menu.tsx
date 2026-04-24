@@ -35,7 +35,7 @@ export default function MenulessNavBar() {
 
 
                 {/* navItems - black, monserrat, underlined when hovered */}
-                <div className="flex gap-12">
+                <div className="hidden md:flex gap-12">
                     {navItems.map((item) => (
                         <Link
                             key={item}
