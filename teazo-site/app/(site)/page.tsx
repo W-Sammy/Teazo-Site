@@ -52,10 +52,10 @@ export default function Home() {
             {/* description text */}
            <div className="absolute z-20 w-full flex flex-col items-center justify-center pt-130 gap-1">
                <h1 className={`${mediumMontserrat.className} text-[32px] text-black tracking-[0.1em]`}>
-                   To Share Boba Life
+                   TO SHARE BOBA LIFE
                 </h1>
                 <h1 className={`${boldMontserrat.className} text-[36px] text-black tracking-[0.1em]`}>
-                    With All Boba Lovers
+                    WITH ALL BOBA LOVERS
                 </h1>
             </div>
     </main>
