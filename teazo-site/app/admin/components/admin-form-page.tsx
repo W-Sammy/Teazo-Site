@@ -7,24 +7,21 @@ type AdminFormProps = {
 };
 
 export default function AdminForm({ isOpen, onClose, children }: AdminFormProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center ">
-      {/* background overlay */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Form content*/}
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div
+      className={`shrink-0 h-full bg-white shadow-xl transition-all duration-300 overflow-hidden ${
+        isOpen ? "w-80" : "w-0"
+      }`}
+    >
+      <div className="relative h-full overflow-y-auto p-6">
+        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-3 right-4 text-gray-500 hover:text-black text-lg font-bold"
         >
           x
         </button>
+
         {children}
       </div>
     </div>

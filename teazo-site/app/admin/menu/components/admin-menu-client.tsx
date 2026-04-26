@@ -34,9 +34,7 @@ export default function AdminMenuClient({
     "price-asc" | "price-desc"
   >("name-asc");
 
-  //for filters
   const [filtersOpen, setFiltersOpen] = useState(true);
-  //for upload menu 
   const [open, setOpen] = useState(false);
 
   function toggleCategory(id: string) {
@@ -81,10 +79,10 @@ export default function AdminMenuClient({
   }, [items, search, selectedCategories, sortBy]);
 
   return (
-    <div className="flex gap-4">
-      {/* filters sidebar */}
+    <div className="flex w-full h-screen min-w-0">
+      {/* filters */}
       <div
-        className={`sticky top-0 h-screen shrink-0 border-r border-[#dbb082] bg-white transition-all duration-300 overflow-hidden ${
+        className={`shrink-0 h-full border-r border-[#dbb082] bg-white transition-all duration-300 overflow-y-auto ${
           filtersOpen ? "w-48 p-4" : "w-10 p-2"
         }`}
       >
@@ -159,9 +157,9 @@ export default function AdminMenuClient({
         )}
       </div>
 
-      {/* page content */}
-      <div className="flex-1 min-w-0 space-y-4">
-        <div className="pl-4 pr-4 pt-4 flex items-center justify-between">
+      {/* main content */}
+      <div className="flex-1 min-w-0 h-full flex flex-col">
+        <div className="pl-4 pr-4 pt-4 pb-4 flex items-center justify-between shrink-0">
           <input
             type="search"
             placeholder="Search menu items..."
@@ -170,39 +168,32 @@ export default function AdminMenuClient({
             className="bg-gray-200 rounded px-3 py-2 w-64"
           />
 
-          <div>
-            {/* button for uploading form */}
-            <button
-              onClick={() => setOpen(true)}
-              className="rounded-lg font-bold bg-[#FFBDC7] px-4 py-2 text-white cursor-pointer hover:bg-[#F59AA3]"
-            >
-              Upload Menu
-            </button>
-
-            <AdminForm isOpen={open} onClose={() => setOpen(false)}>
-              <h2 className="mb-4 text-xl text-center font-semibold">Upload Menu</h2>
-
-              <form className="flex flex-col gap-3">
-                <input
-                  type="text"
-                  placeholder="Name"
-                  className="rounded border p-2"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="rounded border p-2"
-                />
-                <button className="mt-2 rounded bg-[#FFBDC7] p-2 text-white hover:bg-[#F59AA3]">
-                  Submit
-                </button>
-              </form>
-            </AdminForm>
-          </div>
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-lg font-bold bg-[#FFBDC7] px-4 py-2 text-white cursor-pointer hover:bg-[#F59AA3]"
+          >
+            Upload Menu
+          </button>
         </div>
 
-        <ListView items={filteredItems} />
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <ListView items={filteredItems} />
+        </div>
       </div>
+
+      {/* right drawer */}
+      <AdminForm isOpen={open} onClose={() => setOpen(false)}>
+        <h2 className="mb-4 text-xl text-center font-semibold">Upload Menu</h2>
+
+        <form className="flex flex-col gap-3">
+          <input type="text" placeholder="Name" className="rounded border p-2" />
+          <input type="email" placeholder="Email" className="rounded border p-2" />
+
+          <button className="mt-2 rounded bg-[#FFBDC7] p-2 text-white hover:bg-[#F59AA3]">
+            Submit
+          </button>
+        </form>
+      </AdminForm>
     </div>
   );
 }

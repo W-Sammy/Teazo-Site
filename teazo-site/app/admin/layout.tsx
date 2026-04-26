@@ -13,7 +13,7 @@ export default function AdminLayout({
         <Sidebar />
       </aside>
       
-      <main className="flex-1 overflow-y-auto p-2">
+      <main className="flex-1 overflow-y-auto">
         {children}
       </main>
     </div>
