@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ListView from "@/app/admin/components/admin-list-view";
+import AdminForm from "@/app/admin/components/admin-form-page";
 
 type DisplayedMenuItem = {
   id: string;
@@ -18,8 +19,6 @@ type Category = {
   name: string;
 };
 
-//adds section for filters.
-//filters are dynamically created based on category
 export default function AdminMenuClient({
   items,
   categories,
@@ -30,27 +29,30 @@ export default function AdminMenuClient({
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<
-    "name-asc" | "name-desc" | 
+    "name-asc" | "name-desc" |
     "category-asc" | "category-desc" |
     "price-asc" | "price-desc"
   >("name-asc");
 
+  //for filters
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  //for upload menu 
+  const [open, setOpen] = useState(false);
+
   function toggleCategory(id: string) {
     setSelectedCategories((prev) =>
       prev.includes(id)
-        ? prev.filter((c) => c !== id) // remove
-        : [...prev, id] // add
+        ? prev.filter((c) => c !== id)
+        : [...prev, id]
     );
   }
 
   const filteredItems = useMemo(() => {
     const filtered = items.filter((item) => {
-      //filters based on the selected categories
       const matchesCategory =
         selectedCategories.length === 0 ||
         selectedCategories.includes(item.category_id);
-      
-      //for the search bar
+
       const matchesSearch =
         item.name.toLowerCase().includes(search.toLowerCase()) ||
         item.description.toLowerCase().includes(search.toLowerCase());
@@ -58,8 +60,7 @@ export default function AdminMenuClient({
       return matchesCategory && matchesSearch;
     });
 
-    // sortin filterdd values
-    const sorted = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "name-asc":
           return a.name.localeCompare(b.name);
@@ -77,86 +78,131 @@ export default function AdminMenuClient({
           return 0;
       }
     });
-
-    return sorted;
   }, [items, search, selectedCategories, sortBy]);
 
   return (
-    <div className="flex">
-      
-      {/* menu sidebar*/}
-      <div className="w-48 fixed top-0 pt-8 pr-4 pl-2 h-screen space-y-2 border-[#dbb082] border-r overflow-y-auto">
-        
-        <h3 className="font-semibold text-base mb-2">Filters</h3>
+    <div className="flex gap-4">
+      {/* filters sidebar */}
+      <div
+        className={`sticky top-0 h-screen shrink-0 border-r border-[#dbb082] bg-white transition-all duration-300 overflow-hidden ${
+          filtersOpen ? "w-48 p-4" : "w-10 p-2"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          {filtersOpen && <h3 className="font-semibold text-base">Filters</h3>}
 
-        {/* sorting section */}
-        <div className="pt-2">
-          <label className="text-sm text-gray-600">
-            Sort by:
-            <select
-              value={sortBy}
-              onChange={(e) =>
-                setSortBy(
-                  e.target.value as
-                    | "name-asc"
-                    | "name-desc"
-                    | "category-asc"
-                    | "category-desc"
-                    | "price-asc"
-                    | "price-desc"
-                )
-              }
-              className="bg-gray-200 rounded px-3 py-2 text-sm"
-            >
-              <option value="name-asc">Name A to Z</option>
-              <option value="name-desc">Name Z to A</option>
-              <option value="category-asc">Category A to Z</option>
-              <option value="category-desc">Category Z to A</option>
-              <option value="price-asc">Price Low to High</option>
-              <option value="price-desc">Price High to Low</option>
-            </select>
-          </label>
+          <button
+            onClick={() => setFiltersOpen((prev) => !prev)}
+            className="text-lg font-bold cursor-pointer pr-2 py-1 rounded hover:bg-gray-100"
+            aria-label="Toggle filters"
+          >
+            {filtersOpen ? "←" : "→"}
+          </button>
         </div>
 
-        <button
-          onClick={() => setSelectedCategories([])}
-          className="text-xs text-blue-500 hover:underline"
-        >
-          Clear filters
-        </button>
-        
-        {/*mapping other filters */}
-        {categories.map((category) => {
-          const checked = selectedCategories.includes(category.id);
+        {filtersOpen && (
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-gray-600 block mb-1">Sort by:</label>
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value as
+                      | "name-asc"
+                      | "name-desc"
+                      | "category-asc"
+                      | "category-desc"
+                      | "price-asc"
+                      | "price-desc"
+                  )
+                }
+                className="bg-gray-200 rounded px-3 py-2 text-sm w-full"
+              >
+                <option value="name-asc">Name A to Z</option>
+                <option value="name-desc">Name Z to A</option>
+                <option value="category-asc">Category A to Z</option>
+                <option value="category-desc">Category Z to A</option>
+                <option value="price-asc">Price Low to High</option>
+                <option value="price-desc">Price High to Low</option>
+              </select>
+            </div>
 
-          return (
-            <label key={category.id} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                className="accent-[#b98555] scale-125 "
-                checked={checked}
-                onChange={() => toggleCategory(category.id)}
-              />
-              {category.name}
-            </label>
-          );
-        })}
+            <button
+              onClick={() => setSelectedCategories([])}
+              className="text-xs text-blue-500 hover:underline"
+            >
+              Clear filters
+            </button>
+
+            <div className="space-y-1">
+              {categories.map((category) => {
+                const checked = selectedCategories.includes(category.id);
+
+                return (
+                  <label
+                    key={category.id}
+                    className="flex items-center gap-2 pb-1 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-[#b98555] scale-125"
+                      checked={checked}
+                      onChange={() => toggleCategory(category.id)}
+                    />
+                    {category.name}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* right side "children"*/}
-      <div className="flex-1 ml-48 space-y-4 ">
-        <div className="pl-8 pt-4">
-      <input
-        type="search"
-        placeholder="Search menu items..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="bg-gray-200 rounded px-3 py-2 w-64"
-      />
+      {/* page content */}
+      <div className="flex-1 min-w-0 space-y-4">
+        <div className="pl-4 pr-4 pt-4 flex items-center justify-between">
+          <input
+            type="search"
+            placeholder="Search menu items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-200 rounded px-3 py-2 w-64"
+          />
+
+          <div>
+            {/* button for uploading form */}
+            <button
+              onClick={() => setOpen(true)}
+              className="rounded-lg font-bold bg-[#FFBDC7] px-4 py-2 text-white cursor-pointer hover:bg-[#F59AA3]"
+            >
+              Upload Menu
+            </button>
+
+            <AdminForm isOpen={open} onClose={() => setOpen(false)}>
+              <h2 className="mb-4 text-xl text-center font-semibold">Upload Menu</h2>
+
+              <form className="flex flex-col gap-3">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="rounded border p-2"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="rounded border p-2"
+                />
+                <button className="mt-2 rounded bg-[#FFBDC7] p-2 text-white hover:bg-[#F59AA3]">
+                  Submit
+                </button>
+              </form>
+            </AdminForm>
+          </div>
         </div>
+
         <ListView items={filteredItems} />
       </div>
-
     </div>
   );
 }

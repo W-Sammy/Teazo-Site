@@ -85,7 +85,7 @@ export default function ListView({items} :  {items: Row[]}){
 
   return (
     <div className="w-full">
-      <table className = "w-full border-collapse">
+      <table className = "w-full min-w-[700px] border-collapse">
         {/*creates the column names takes into account delete and edit buttons*/}
         <thead>
           <tr className="border-b border-[#dbb082]">
