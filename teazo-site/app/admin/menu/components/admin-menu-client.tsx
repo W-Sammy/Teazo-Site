@@ -168,12 +168,19 @@ export default function AdminMenuClient({
             className="bg-gray-200 rounded px-3 py-2 w-64"
           />
 
-          <button
-            onClick={() => setOpen(true)}
-            className="rounded-lg font-bold bg-[#FFBDC7] px-4 py-2 text-white cursor-pointer hover:bg-[#F59AA3]"
-          >
-            Upload Menu
-          </button>
+          <div className="flex gap-2 shrink-0">
+            {/* probably needs some adjustments sooner or later */}
+            <button className="shrink-0 rounded-lg px-4 py-2">
+              Add Item
+            </button>
+
+            <button
+              onClick={() => setOpen(true)}
+              className="shrink-0 rounded-lg font-bold bg-[#FFBDC7] px-4 py-2 text-white cursor-pointer hover:bg-[#F59AA3] whitespace-nowrap"
+            >
+              Upload Menu
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -185,12 +192,21 @@ export default function AdminMenuClient({
       <AdminForm isOpen={open} onClose={() => setOpen(false)}>
         <h2 className="mb-4 text-xl text-center font-semibold">Upload Menu</h2>
 
-        <form className="flex flex-col gap-3">
-          <input type="text" placeholder="Name" className="rounded border p-2" />
-          <input type="email" placeholder="Email" className="rounded border p-2" />
+        <form 
+          className="flex flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            console.log("upload logic here");
+          }}
+        >
+          <input
+            type="file"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.pdf"
+            className="rounded bg-gray-200 p-2"
+          />
 
           <button className="mt-2 rounded bg-[#FFBDC7] p-2 text-white hover:bg-[#F59AA3]">
-            Submit
+            Upload
           </button>
         </form>
       </AdminForm>
