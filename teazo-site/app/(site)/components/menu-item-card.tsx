@@ -54,17 +54,19 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
   const isUsingFallbackImage = imageSrc === FALLBACK_IMAGE_SRC;
 
   return (
-    <article className="flex min-h-[180px] items-start justify-between gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      {/* This text column is allowed to shrink so long item names wrap instead of pushing into the image. */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-start justify-between gap-4">
+        {/* Stacking the name and price on mobile prevents the price from being covered by the image. */}
+        <div className="flex flex-col gap-1">
           <h4
-            className={`${montserrat.className} text-[1rem] font-bold uppercase tracking-[0.03em] text-stone-900 sm:text-[1.05rem]`}
+            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 sm:text-[1.05rem]`}
           >
             {item.name}
           </h4>
 
           <span
-            className={`${montserrat.className} shrink-0 text-[0.95rem] font-bold text-[#c68f5d]`}
+            className={`${montserrat.className} text-[0.95rem] font-bold text-[#c68f5d]`}
           >
             {formattedPrice}
           </span>
@@ -79,7 +81,8 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
         )}
       </div>
 
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
+      {/* The image keeps a fixed size so it does not overlap the text or price. */}
+      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
         <Image
           src={imageSrc}
           alt={item.name}
