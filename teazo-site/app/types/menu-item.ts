@@ -31,3 +31,21 @@ export interface Category {
     categoryId: string | null;
     categoryName: string | null;
 }
+
+export interface CreateMenuItemBody {
+    name: string;
+    description?: string;
+    priceCents: number;
+    currency?: string;
+    categoryIds?: string[];
+    modifierListIds?: string[];
+}
+
+export interface UpdateMenuItemBody {
+    name?: string;
+    description?: string;
+    priceCents?: number;
+    currency?: string;
+    categoryIds?: string[];
+    modifierListIds?: string[];
+}

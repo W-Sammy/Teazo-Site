@@ -1,7 +1,7 @@
 import { squareClient } from "@/app/lib/square";
-import type { CatalogObject } from 'square';
-import type { MenuItem, ModifierList, ItemCategory } from "@/app/types/menu-item";
-import { buildModifierList } from '@/app/lib/square-helpers';
+import type { CatalogObject, Currency } from 'square';
+import type { MenuItem, ModifierList, ItemCategory, CreateMenuItemBody } from "@/app/types/menu-item";
+import { buildModifierList, buildMenuItemFromGetResponse } from '@/app/lib/square-helpers';
 
 /**
  * GET /api/products
@@ -92,5 +92,76 @@ export async function GET() {
     } catch (error) {
         console.error("Square catalog fetch failed:", error);
         return Response.json({ error: "Failed to fetch products" }, { status: 500 });
+    }
+}
+
+/**
+ * POST /api/square/products
+ *
+ * Creates a new catalog item in Square.
+ *
+ * @returns 201 - The created MenuItem
+ * @returns 400 - Missing required fields
+ * @returns 500 - Square API failure
+ */
+export async function POST(request: Request) {
+    try {
+        const body: CreateMenuItemBody = await request.json();
+
+        if (!body.name || body.priceCents === undefined) {
+            return Response.json({ error: "name and priceCents are required" }, { status: 400 });
+        }
+
+        // defines structure of Square catalogItem then sends it to square
+        const upsertResult = await squareClient.catalog.object.upsert({
+            idempotencyKey: crypto.randomUUID(),
+            object: {
+                type: "ITEM",
+                id: "#new-item",
+                itemData: {
+                    name: body.name,
+                    description: body.description,
+                    categories: body.categoryIds?.map((id) => ({ id })),
+                    modifierListInfo: body.modifierListIds?.map((id) => ({
+                        modifierListId: id,
+                        enabled: true,
+                    })),
+                    variations: [
+                        {
+                            type: "ITEM_VARIATION",
+                            id: "#new-variation",
+                            itemVariationData: {
+                                name: "Regular",
+                                pricingType: "FIXED_PRICING",
+                                priceMoney: {
+                                    amount: BigInt(body.priceCents),
+                                    currency: (body.currency ?? "USD") as Currency,
+                                },
+                            },
+                        },
+                    ],
+                },
+            },
+        });
+
+        const newId = upsertResult.idMappings?.find((m) => m.clientObjectId === "#new-item")?.objectId;
+        if (!newId) {
+            return Response.json({ error: "Failed to retrieve created item id" }, { status: 500 });
+        }
+
+        const getResult = await squareClient.catalog.object.get({
+            objectId: newId,
+            includeRelatedObjects: true,
+        });
+
+        const menuItem = buildMenuItemFromGetResponse(getResult);
+        if (!menuItem) {
+            return Response.json({ error: "Failed to build created item" }, { status: 500 });
+        }
+
+        return Response.json(menuItem, { status: 201 });
+    } catch (error) {
+        console.error("Square catalog create failed:", error);
+        return Response.json({ error: "Failed to create product" }, { status: 500 });
     }
 }
