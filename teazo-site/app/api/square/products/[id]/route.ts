@@ -1,6 +1,6 @@
 import { squareClient } from "@/app/lib/square";
 import type { CatalogObject } from 'square';
-import type { MenuItem, ModifierList, ModifierOption } from "@/app/types/menu-item";
+import type { MenuItem, ModifierList, ItemCategory } from "@/app/types/menu-item";
 import { buildModifierList } from '@/app/lib/square-helpers';
 
 /**
@@ -44,9 +44,13 @@ export async function GET(
     const imageId = catalogItem.itemData?.imageIds?.[0];
     const imageObj = relatedObjects.find((o) => o.id === imageId) as CatalogObject.Image | undefined;
 
-    // extract categoryId then finds the categoryObj
-    const categoryId = catalogItem.itemData?.categories?.[0]?.id ?? null;
-    const categoryObj = relatedObjects.find((o) => o.id === categoryId) as CatalogObject.Category | undefined;
+    // extract categories and resolve names from relatedObjects
+    const categories: ItemCategory[] = (catalogItem.itemData?.categories ?? [])
+        .filter((c): c is { id: string } => !!c.id)
+        .map((c) => {
+            const obj = relatedObjects.find((o) => o.id === c.id) as CatalogObject.Category | undefined;
+            return { id: c.id, name: obj?.categoryData?.name ?? null };
+        });
 
     // extract variation and priceMoney
     const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
@@ -68,8 +72,7 @@ export async function GET(
         priceCents: priceMoney ? Number(priceMoney.amount) : 0,
         currency: priceMoney?.currency ?? "USD",
         imageUrl: imageObj?.imageData?.url ?? null,
-        categoryId,
-        categoryName: categoryObj?.categoryData?.name ?? null,
+        categories,
         modifiers,
     };
 

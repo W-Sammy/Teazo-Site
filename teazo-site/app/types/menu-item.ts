@@ -10,6 +10,11 @@ export interface ModifierList {
     options: ModifierOption[];
 }
 
+export interface ItemCategory {
+    id: string;
+    name: string | null;
+}
+
 export interface MenuItem {
     catalogObjectId: string;
     name: string | null | undefined;
@@ -18,8 +23,7 @@ export interface MenuItem {
     priceCents: number;
     currency: string;
     imageUrl: string | null;
-    categoryId: string | null;
-    categoryName: string | null;
+    categories: ItemCategory[];
     modifiers: ModifierList[];
 }
 

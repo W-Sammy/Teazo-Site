@@ -1,6 +1,6 @@
 import { squareClient } from "@/app/lib/square";
 import type { CatalogObject } from 'square';
-import type { MenuItem, ModifierList } from "@/app/types/menu-item";
+import type { MenuItem, ModifierList, ItemCategory } from "@/app/types/menu-item";
 import { buildModifierList } from '@/app/lib/square-helpers';
 
 /**
@@ -60,7 +60,9 @@ export async function GET() {
             const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
             const priceMoney = variation?.itemVariationData?.priceMoney;
             const imageId = catalogItem.itemData?.imageIds?.[0];
-            const categoryId = catalogItem.itemData?.categories?.[0]?.id ?? null;
+            const categories: ItemCategory[] = (catalogItem.itemData?.categories ?? [])
+                .filter((c): c is { id: string } => !!c.id)
+                .map((c) => ({ id: c.id, name: categoryMap.get(c.id) ?? null }));
 
             if (!item.id) {
                 return Response.json (
@@ -81,8 +83,7 @@ export async function GET() {
                 priceCents: priceMoney ? Number(priceMoney.amount) : 0,
                 currency: priceMoney?.currency ?? "USD",
                 imageUrl: imageId ? imageMap.get(imageId) ?? null : null,
-                categoryId,
-                categoryName: categoryId ? categoryMap.get(categoryId) ?? null : null,
+                categories,
                 modifiers,
             });
         }
