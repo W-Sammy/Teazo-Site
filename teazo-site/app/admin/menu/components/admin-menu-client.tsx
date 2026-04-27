@@ -30,7 +30,6 @@ export default function AdminMenuClient({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<
     "name-asc" | "name-desc" |
-    "category-asc" | "category-desc" |
     "price-asc" | "price-desc"
   >("name-asc");
 
@@ -66,10 +65,6 @@ export default function AdminMenuClient({
           return a.name.localeCompare(b.name);
         case "name-desc":
           return b.name.localeCompare(a.name);
-        case "category-asc":
-          return a.category_name.localeCompare(b.category_name);
-        case "category-desc":
-          return b.category_name.localeCompare(a.category_name);
         case "price-asc":
           return a.price - b.price;
         case "price-desc":
@@ -111,8 +106,6 @@ export default function AdminMenuClient({
                     e.target.value as
                       | "name-asc"
                       | "name-desc"
-                      | "category-asc"
-                      | "category-desc"
                       | "price-asc"
                       | "price-desc"
                   )
@@ -121,8 +114,6 @@ export default function AdminMenuClient({
               >
                 <option value="name-asc">Name A to Z</option>
                 <option value="name-desc">Name Z to A</option>
-                <option value="category-asc">Category A to Z</option>
-                <option value="category-desc">Category Z to A</option>
                 <option value="price-asc">Price Low to High</option>
                 <option value="price-desc">Price High to Low</option>
               </select>
@@ -161,7 +152,7 @@ export default function AdminMenuClient({
 
       {/* main content */}
       <div className="flex-1 min-w-0 h-full flex flex-col">
-        <div className="pl-4 pr-4 pt-4 pb-4 flex items-center justify-between shrink-0">
+        <div className="pl-4 pr-4 pt-4 pb-4 flex items-center justify-between shrink-0 border-b border-[#dbb082]">
           <input
             type="search"
             placeholder="Search menu items..."

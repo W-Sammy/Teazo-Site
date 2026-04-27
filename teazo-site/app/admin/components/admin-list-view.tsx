@@ -1,8 +1,20 @@
 'use client'
 import Image from "next/image";
 import { allowedHosts } from "@/app/lib/imageHosts";
+import { ItemCategory } from "@/app/types/menu-item";
 
-type Row = Partial<Record<string, string | string[] | number | number[] | boolean | null>>;
+
+
+type CellValue =
+  | string
+  | string[]
+  | number
+  | number[]
+  | boolean
+  | null
+  | ItemCategory[];
+
+type Row = Partial<Record<string, CellValue>>;
 
   function checkCell(value: unknown) {
     if (value == null) return "N/A";
@@ -53,6 +65,42 @@ type Row = Partial<Record<string, string | string[] | number | number[] | boolea
     );
   }
 
+  function displayCategories(value: unknown) {
+    if (!Array.isArray(value)) return "N/A";
+
+    const categories = value.filter(
+      (cat): cat is { id: string; name: string | null } =>
+        typeof cat === "object" &&
+        cat !== null &&
+        "id" in cat &&
+        "name" in cat
+    );
+
+    if (categories.length === 0) return "N/A";
+
+    if (categories.length === 1) {
+      return categories[0].name ?? "Unnamed category";
+    }
+
+    return (
+      <div className="relative inline-block group">
+        <span className="cursor-pointer font-bold text-blue-600 hover:underline">
+          {categories.length}
+        </span>
+
+        <div className="absolute left-0 top-full z-20 mt-1 hidden min-w-[160px] rounded border bg-white p-2 shadow-lg group-hover:block">
+          <ul className="space-y-1 text-sm text-gray-700">
+            {categories.map((category) => (
+              <li key={category.id}>
+                {category.name ?? "Unnamed category"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   function checkURL(url: string): boolean {
     try {
       const { hostname } = new URL(url);
@@ -91,7 +139,7 @@ export default function ListView({items} :  {items: Row[]}){
           <tr className="border-b border-[#dbb082]">
             <th className="w-6"></th> 
             <th className="w-10"></th>
-            {keys.filter((key) => key !== "id" && key !== "category_id").map((key) => (
+            {keys.filter((key) => key !== "id").map((key) => (
               <th key = {key} className = "pr-1 py-2 text-left">
                   
                   {checkCell(key)}
@@ -133,10 +181,12 @@ export default function ListView({items} :  {items: Row[]}){
               </td>
               {keys.filter((key) => key !== "id" && key !== "category_id").map((key)=>(
                 <td key={key} className=" py-2">
-                  { key === "price"
+                  {key === "price"
                     ? `$${Number(item[key] ?? 0).toFixed(2)}`
                     : key === "img"
                     ? displayIcon(item[key], item.id)
+                    : key === "categories"
+                    ? displayCategories(item[key])
                     : checkCell(item[key])
                   }
                 </td>
