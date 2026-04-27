@@ -88,7 +88,7 @@ type Row = Partial<Record<string, CellValue>>;
           {categories.length}
         </span>
 
-        <div className="absolute left-0 top-full z-20 mt-1 hidden min-w-[160px] rounded border bg-white p-2 shadow-lg group-hover:block">
+        <div className="absolute left-0 top-full z-20 mt-1 hidden min-w-[160px] rounded border border-[#dbb082] bg-white p-2 shadow-lg group-hover:block">
           <ul className="space-y-1 text-sm text-gray-700">
             {categories.map((category) => (
               <li key={category.id}>
