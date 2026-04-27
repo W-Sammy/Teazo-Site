@@ -1,7 +1,7 @@
 
 import ListView from "@/app/admin/components/admin-list-view"
 import  AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
-import { MenuItem } from "@/app/(site)/components/menu-item-card"
+import { MenuItem } from "@/app/types/menu-item"
 
 async function getMenuItems(): Promise<MenuItem[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`, {
@@ -21,8 +21,7 @@ function filterMenuItems(menuItems: MenuItem[]){
     name: item.name ?? "Unnamed item", 
     price: item.priceCents / 100,
     description: item.description ?? "",
-    category_id: item.categoryId ?? "",
-    category_name: item.categoryName ?? "No Category"
+    categories: item.categories
   }));
 }
 
@@ -30,8 +29,10 @@ function getUniqueCategories(items: ReturnType<typeof filterMenuItems>) {
   const map = new Map<string, string>();
 
   for (const item of items) {
-    if (item.category_id && !map.has(item.category_id)) {
-      map.set(item.category_id, item.category_name);
+    for (const category of item.categories) {
+      if (category.id && !map.has(category.id)) {
+        map.set(category.id, category.name ?? "Uncategorized");
+      }
     }
   }
 

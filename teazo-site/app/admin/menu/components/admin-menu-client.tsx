@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ItemCategory } from "@/app/types/menu-item";
 import ListView from "@/app/admin/components/admin-list-view";
 import AdminForm from "@/app/admin/components/admin-form-page";
 
@@ -10,8 +11,7 @@ type DisplayedMenuItem = {
   name: string;
   price: number;
   description: string;
-  category_id: string;
-  category_name: string;
+  categories: ItemCategory[];
 };
 
 type Category = {
@@ -49,7 +49,9 @@ export default function AdminMenuClient({
     const filtered = items.filter((item) => {
       const matchesCategory =
         selectedCategories.length === 0 ||
-        selectedCategories.includes(item.category_id);
+        item.categories.some((category) =>
+          selectedCategories.includes(category.id)
+        );
 
       const matchesSearch =
         item.name.toLowerCase().includes(search.toLowerCase()) ||
