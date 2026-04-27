@@ -15,9 +15,6 @@ export default function StaticMenuContent() {
 	/* Controls whether the PDF preview appears. */
 	const [shouldRenderPreview, setShouldRenderPreview] = useState(false);
 
-	/* Tracks whether the preview is unavailable or failed. */
-	const [previewFailed, setPreviewFailed] = useState(false);
-
 	useEffect(() => {
 		/* Disable preview on small screens. */
 		const isMobile = window.innerWidth < 640;
@@ -36,13 +33,11 @@ export default function StaticMenuContent() {
 		/* Use the PDF button only on mobile and Safari. */
 		if (isMobile || isSafari) {
 			setShouldRenderPreview(false);
-			setPreviewFailed(true);
 			return;
 		}
 
 		/* Enable preview for supported desktop browsers. */
 		setShouldRenderPreview(true);
-		setPreviewFailed(false);
 	}, []);
 
 	return (
@@ -59,23 +54,17 @@ export default function StaticMenuContent() {
 				</a>
 			</div>
 
-			{/* Shows a message based on preview support. */}
+			{/* Simple helper message for the PDF button. */}
 			<p
 				className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
 			>
-				{previewFailed
-					? "Use the button above to open our menu."
-					: "Use the button above to open our menu. A preview will appear when supported."}
+				Use the button above to open our menu.
 			</p>
 
 			{/* Renders the PDF preview when supported. */}
 			{shouldRenderPreview && (
 				<div className="mt-10 w-full max-w-[900px]">
-					<PdfPreview
-						fileUrl="/teazo-menu.pdf"
-						onPreviewError={() => setPreviewFailed(true)}
-						onPreviewSuccess={() => setPreviewFailed(false)}
-					/>
+					<PdfPreview fileUrl="/teazo-menu.pdf" />
 				</div>
 			)}
 		</>
