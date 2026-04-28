@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 import PdfPreview from "@/app/components/pdf-preview";
+import GeneralButton from "@/app/components/general-button";
 
 /* Font used for the button and helper text. */
 const montserrat = Montserrat({
@@ -44,14 +45,7 @@ export default function StaticMenuContent() {
 		<>
 			{/* Opens the PDF in a new tab. */}
 			<div className="mt-8 flex w-full justify-center">
-				<a
-					href="/teazo-menu.pdf"
-					target="_blank"
-					rel="noopener noreferrer"
-					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7] hover:text-white`}
-				>
-					OPEN PDF
-				</a>
+				<GeneralButton text="OPEN PDF" href="/teazo-menu.pdf" />
 			</div>
 
 			{/* Simple helper message for the PDF button. */}
