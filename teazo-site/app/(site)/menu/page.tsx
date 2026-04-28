@@ -802,7 +802,7 @@ export default function MenuPage() {
 							Download Our Menu
 						</p>
 
-						<div className="mt-8">
+						<div className="mt-8 cursor-pointer [&_*]:cursor-pointer">
 							<GeneralButton text="DOWNLOAD" href="/static-menu" />
 						</div>
 					</div>
