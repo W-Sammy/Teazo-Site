@@ -48,7 +48,7 @@ export default function StaticMenuContent() {
 					href="/teazo-menu.pdf"
 					target="_blank"
 					rel="noopener noreferrer"
-					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7] hover:text-black`}
+					className={`${montserrat.className} inline-flex h-[70px] min-w-[213px] items-center justify-center bg-black px-8 text-[18px] font-semibold tracking-[0.05em] text-white transition-colors hover:bg-[#FFBDC7] hover:text-white`}
 				>
 					OPEN PDF
 				</a>
