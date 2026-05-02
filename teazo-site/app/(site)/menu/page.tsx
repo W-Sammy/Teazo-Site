@@ -756,19 +756,7 @@ export default function MenuPage() {
 	return (
 		<main className="relative isolate min-h-screen bg-[#f4efeb] text-stone-900">
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-				<BubbleField count={52} />
-			</div>
-
-			<div className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden sm:h-[780px] lg:h-[860px]">
-				<BubbleField count={13} />
-			</div>
-
-			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-				<BubbleField count={52} />
-			</div>
-
-			<div className="pointer-events-none absolute inset-x-0 top-0 h-[720px] overflow-hidden sm:h-[780px] lg:h-[860px]">
-				<BubbleField count={13} />
+				<BubbleField />
 			</div>
 
 			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
