@@ -624,7 +624,7 @@ export function BubbleField({
       ref={containerRef}
       aria-hidden="true"
       className={[
-        "pointer-events-none absolute inset-0 overflow-hidden",
+        "pointer-events-none fixed inset-0 overflow-hidden",
         className,
       ]
         .filter(Boolean)

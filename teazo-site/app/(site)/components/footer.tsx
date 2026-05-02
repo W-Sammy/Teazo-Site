@@ -9,7 +9,7 @@ const montserrat = Montserrat({
 // footer.
 export default function Footer() {
     return (
-        <footer className={`${montserrat.className} text-white text-[16px] w-full bg-black flex flex-col items-center justify-center gap-4 py-10`}>
+        <footer className={`${montserrat.className} relative z-40 text-white text-[16px] w-full bg-black flex flex-col items-center justify-center gap-4 py-10`}>
             <span>teazosf@hotmail.com</span>
 
             {/* fetch current year */}
