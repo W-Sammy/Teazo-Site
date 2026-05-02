@@ -43,8 +43,7 @@ function formatPrice(priceCents: number, currency: string | null) {
    This component is responsible only for rendering one item’s image,
    name, price, and optional description in a consistent card layout. */
 export default function MenuItemCard({ item }: MenuItemCardProps) {
-  const initialImageSrc = item.imageUrl || FALLBACK_IMAGE_SRC;
-  const [imageSrc, setImageSrc] = useState(initialImageSrc);
+  const [imageSrc, setImageSrc] = useState(item.imageUrl || FALLBACK_IMAGE_SRC);
   const formattedPrice = formatPrice(item.priceCents, item.currency);
 
   useEffect(() => {

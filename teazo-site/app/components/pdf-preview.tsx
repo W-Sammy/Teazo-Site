@@ -5,16 +5,10 @@ import { useEffect, useRef } from "react";
 /* Props for the PDF preview component. */
 type PdfPreviewProps = {
 	fileUrl: string;
-	onPreviewError?: () => void;
-	onPreviewSuccess?: () => void;
 };
 
 /* Renders PDF pages into responsive canvas elements. */
-export default function PdfPreview({
-	fileUrl,
-	onPreviewError,
-	onPreviewSuccess,
-}: PdfPreviewProps) {
+export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 	/* Container where the PDF canvases are inserted. */
 	const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -41,14 +35,15 @@ export default function PdfPreview({
 
 			try {
 				/* Load PDF.js from the public folder at runtime. */
-				// @ts-ignore runtime import from public folder
-				const pdfjsLib = (await import(/* webpackIgnore: true */ "/pdfjs/pdf.min.mjs")) as any;
+				const pdfjsPath = "/pdfjs/pdf.min.mjs";
+				const pdfjsLib = (await import(/* webpackIgnore: true */ pdfjsPath)) as any;
 
 				/* Stop if this render is outdated. */
 				if (unmounted || renderId !== renderIdRef.current) return;
 
 				/* Set the PDF.js worker path. */
-				pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
+				pdfjsLib.GlobalWorkerOptions.workerSrc =
+					"/pdfjs/pdf.worker.min.mjs";
 
 				/* Load the PDF file. */
 				const loadingTask = pdfjsLib.getDocument(fileUrl);
@@ -74,11 +69,8 @@ export default function PdfPreview({
 					const unscaledViewport = page.getViewport({ scale: 1 });
 
 					/* Limit scale so the preview stays readable without oversized canvases. */
-					const isMobile = window.innerWidth < 640;
 					const fitScale = containerWidth / unscaledViewport.width;
-					const scale = isMobile
-						? Math.min(fitScale, 1.0)
-						: Math.min(fitScale, 1.5);
+					const scale = Math.min(fitScale, 1.5);
 
 					/* Create the scaled viewport for rendering. */
 					const viewport = page.getViewport({ scale });
@@ -112,18 +104,12 @@ export default function PdfPreview({
 					/* Stop if another render started during this page render. */
 					if (unmounted || renderId !== renderIdRef.current) return;
 				}
-
-				/* Tell the parent the preview loaded successfully. */
-				if (!unmounted && renderId === renderIdRef.current) {
-					onPreviewSuccess?.();
-				}
 			} catch (error) {
 				/* Ignore errors from old renders. */
 				if (unmounted || renderId !== renderIdRef.current) return;
 
 				/* Log the issue and show fallback content. */
 				console.error("Failed to render PDF preview:", error);
-				onPreviewError?.();
 
 				const currentContainer = containerRef.current;
 				if (!currentContainer) return;
@@ -131,7 +117,7 @@ export default function PdfPreview({
 				/* Fallback shown when the preview cannot render. */
 				currentContainer.innerHTML = `
 					<div style="text-align:center; padding: 2rem 0; color: #57534e;">
-						<p style="margin-bottom: 1rem;">Use the buttons above to open or download our menu. A preview will appear when supported.</p>
+						<p style="margin-bottom: 1rem;">Use the button above to open our menu. A preview will appear when supported.</p>
 					</div>
 				`;
 			}

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
-import MenuItemCard, { type MenuItem } from "../components/menu-item-card";
+import { type MenuItem } from "../components/menu-item-card";
+import MenuItemsSection from "../components/menu-items-section";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 
@@ -37,7 +38,7 @@ function PaintStroke() {
 
 /* Structure used to group menu items into named categories.
    Each section can optionally include a subtitle plus a list of items
-   rendered through the reusable MenuItemCard component. */
+   rendered through the reusable MenuItemsSection component. */
 type MenuSection = {
 	title: string;
 	subtitle?: string;
@@ -698,60 +699,6 @@ const menuSections: MenuSection[] = [
 	},
 ];
 
-/* Shared section renderer for one menu category.
-   It displays the category heading/subtitle and then maps each item
-   in the section into the reusable MenuItemCard component. */
-function MenuCategorySection({ section }: { section: MenuSection }) {
-	return (
-		<section className="rounded-[28px] bg-white px-5 py-6 shadow-sm sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-			<div className="mb-6 flex flex-col items-center justify-center text-center">
-				<h3
-					className={`${cabinSketch.className} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
-				>
-					{section.title}
-				</h3>
-
-				{section.subtitle && (
-					<p
-						className={`${montserrat.className} mt-3 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
-					>
-						{section.subtitle}
-					</p>
-				)}
-			</div>
-
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				{section.items.map((item) => (
-					<MenuItemCard key={item.catalogObjectId} item={item} />
-				))}
-			</div>
-		</section>
-	);
-}
-
-/* Separate section for TEAZO featured specials.
-   This keeps specials visually distinct from the standard menu categories
-   while still reusing the same menu card component for consistency. */
-function SpecialsSection() {
-	return (
-		<section className="mx-auto mt-16 max-w-[1320px] rounded-[28px] bg-white px-5 py-6 shadow-sm sm:px-6 sm:py-7 lg:mt-20 lg:px-8 lg:py-8">
-			<div className="mb-6 flex items-center justify-center text-center">
-				<h3
-					className={`${cabinSketch.className} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
-				>
-					TEAZO Special
-				</h3>
-			</div>
-
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				{specials.map((item) => (
-					<MenuItemCard key={item.catalogObjectId} item={item} />
-				))}
-			</div>
-		</section>
-	);
-}
-
 export default function MenuPage() {
 	return (
 		<main className="relative isolate min-h-screen bg-[#f4efeb] text-stone-900">
@@ -811,11 +758,26 @@ export default function MenuPage() {
 					</p>
 				</section>
 
-				<SpecialsSection />
+				{/* Featured specials use the shared menu item section with extra outer spacing. */}
+				<MenuItemsSection
+					title="TEAZO Special"
+					items={specials}
+					className="mx-auto mt-16 max-w-[1320px] lg:mt-20"
+					headingClassName={cabinSketch.className}
+					bodyClassName={montserrat.className}
+				/>
 
+				{/* Full menu categories use the shared menu item section in a vertical grid. */}
 				<div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
 					{menuSections.map((section) => (
-						<MenuCategorySection key={section.title} section={section} />
+						<MenuItemsSection
+							key={section.title}
+							title={section.title}
+							subtitle={section.subtitle}
+							items={section.items}
+							headingClassName={cabinSketch.className}
+							bodyClassName={montserrat.className}
+						/>
 					))}
 				</div>
 			</div>
