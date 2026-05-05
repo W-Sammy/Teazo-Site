@@ -43,8 +43,7 @@ export default function StaticMenuPage() {
 				<p
 					className={`${montserrat.className} mt-6 max-w-3xl text-center text-base leading-7 text-stone-700 sm:text-lg`}
 				>
-					View the TEAZO menu below or download a copy for offline
-					viewing.
+					View the TEAZO menu below or download a copy for offline viewing.
 				</p>
 
 				{/* Client component for PDF button and preview. */}
