@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import Subtitle from "@/app/(site)/components/sub-title"
+
 //import carousel
 import ImageCarousel from "@/app/(site)/components/image-carousel";
 
@@ -25,22 +27,6 @@ const mediumMontserrat = Montserrat({
     subsets: ['latin'],
     weight: ['500']
 });
-
-// Decorative pink underline behind the section heading.
-// Decorative pink scribble behind the section heading.
-function PaintStroke() {
-    return (
-        <div className="absolute left-1/2 top-1/2 h-[120px] w-[680px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2">
-            <Image
-                src="/pink_scribble.png"
-                alt=""
-                aria-hidden="true"
-                fill
-                className="object-contain"
-            />
-        </div>
-    );
-}
 
 export default function Home() {
   return (
@@ -78,26 +64,19 @@ export default function Home() {
                 </h1>
             </div>
 
-            {/* buttons */}
+            {/* button */}
             <div className="absolute z-20 w-full flex items-center justify-center pt-175 gap-12">
                 <GeneralButton text="ORDER NOW" href="" />    
                 </div>
 
-			<div className="relative mt-14 inline-flex items-center justify-center sm:mt-250">
-				<PaintStroke />
-				<h2
-					className={`${cabinSketch.className} relative z-20 px-180 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem] whitespace-nowrap`}
-				>
-					OUR STORY
-				</h2>
+			<div className="relative mt-14 inline-flex w-full justify-center sm:mt-250 mb-14">
+				<Subtitle text={"OUR STORY"} />
             </div>
 
-
-        <div className="relative mt-14 inline-flex items-center justify-center sm:mt-20"> </div>
-        
-         <div className="flex justify-center items-center">
-            <ImageCarousel />
-        </div>       
+            {/*import image carousel*/}
+                <div className="flex justify-center items-center">
+                <ImageCarousel />
+            </div>       
         
         {/*textbox with company message and icons*/}
         <section className=" relative z-10 mx-auto mt-16 mb-20  w-full max-w-[1000px] bg-white px-4 py-5 sm:px-6 sm:py-6 lg:mt-20 lg:px-7 lg:py-7 xl:max-w-[900px]"> 

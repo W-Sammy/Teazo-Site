@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, JSX } from "react";
+import { useState, JSX } from "react";
 
 export default function ImageCarousel(): JSX.Element {
     const images: string[] = [
@@ -26,11 +26,6 @@ export default function ImageCarousel(): JSX.Element {
         );
     };
 
-    useEffect(() => {
-        const interval = setInterval(nextSlide, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
     const currentImage = images[index] || "/fallback.png";
 
     return (
@@ -43,7 +38,24 @@ export default function ImageCarousel(): JSX.Element {
                     fill
                     className="object-contain rounded-xl"
                 />
+                
+                {/* LEFT BUTTON */}
+                <button
+                    onClick={prevSlide}
+                    className="absolute left-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
+                >
+                    ◀
+                </button>
+
+                {/* RIGHT BUTTON */}
+                <button
+                    onClick={nextSlide}
+                    className="absolute right-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
+                >
+                    ▶
+                </button>
             </div>
         </div>
+        
     );
 }
