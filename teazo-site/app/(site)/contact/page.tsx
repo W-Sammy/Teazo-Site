@@ -24,7 +24,7 @@ const MOBILE_USER_AGENT_REGEX =
 // route. Reuse this instance instead of re-declaring font config inline.
 const cabinSketch = Cabin_Sketch({
   subsets: ["latin"],
-  weight: ["700"],
+  weight: ["400"],
 });
 
 const montserrat = Montserrat({
@@ -36,6 +36,11 @@ const montserrat = Montserrat({
 const HOURS_TIME_COLUMN_MIN_WIDTH = "10.5rem";
 const HOURS_DAY_SHIFT_PX = 10;
 const HOURS_TIME_SHIFT_PX = -28;
+const socialLinks = {
+  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
+  instagram: "https://www.instagram.com/teazosf/",
+  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
+};
 
 function PinIcon() {
   return (
@@ -143,12 +148,12 @@ export default async function ContactPage() {
   const opensWebmail = !isMobileRequest;
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f4efeb] text-stone-900">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
       {/* Shared so other pages can reuse the same motion treatment without
           copying contact-specific files. */}
       <BubbleField count={13} />
 
-      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
         <section className="flex flex-col items-center text-center">
           {/* Use the approved uploaded logo asset rather than reconstructing it
               in code so brand updates can be handled from /public later. */}
@@ -162,9 +167,9 @@ export default async function ContactPage() {
             priority
           />
           <h1
-            className={`${cabinSketch.className} mt-4 text-[3.8rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[5.1rem]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
           >
-            Contact
+            CONTACT
           </h1>
 
           {/* The decorative brush stroke sits behind the section heading rather
@@ -263,9 +268,9 @@ export default async function ContactPage() {
                 {hours.map((entry) => (
                   <div
                     key={entry.day}
-                    className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] items-center gap-x-3 gap-y-1 rounded-[12px] border border-[#ece3de] bg-white px-4 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-rows-1 sm:gap-y-0"
+                    className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_auto] items-center gap-x-4 gap-y-1 rounded-[12px] border border-[#ece3de] bg-white px-5 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-rows-1 sm:gap-x-3 sm:gap-y-0 sm:px-4"
                   >
-                    <span className="row-span-2 text-stone-500 sm:row-span-1">
+                    <span className="col-start-1 row-start-1 self-center text-stone-500">
                       <CalendarIcon />
                     </span>
                     <dt
@@ -288,6 +293,163 @@ export default async function ContactPage() {
               </dl>
             </div>
           </div>
+        </section>
+
+        <section
+          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+        >
+          <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
+            <div className="max-w-3xl">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+                Group Orders
+              </p>
+              <h2
+                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+              >
+                Planning for a Crowd?
+              </h2>
+              <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
+                Call us for group ordering and discounted pricing on larger
+                drink, snack, and dessert orders.
+              </p>
+
+              <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
+                <a
+                  href={socialLinks.facebook}
+                  aria-label={`${location.businessName} on Facebook`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block transition hover:opacity-70"
+                >
+                  <Image
+                    src="/social_icons/teazo_fb_icon.png"
+                    alt=""
+                    aria-hidden="true"
+                    width={64}
+                    height={64}
+                    className="h-12 w-12 object-contain"
+                  />
+                </a>
+                <a
+                  href={emailHref}
+                  aria-label={`Email ${location.businessName}`}
+                  target={opensWebmail ? "_blank" : undefined}
+                  rel={opensWebmail ? "noreferrer" : undefined}
+                  className="block transition hover:opacity-70"
+                >
+                  <Image
+                    src="/social_icons/teazo_email_icon.png"
+                    alt=""
+                    aria-hidden="true"
+                    width={64}
+                    height={64}
+                    className="h-12 w-12 object-contain"
+                  />
+                </a>
+                <a
+                  href={socialLinks.instagram}
+                  aria-label={`${location.businessName} on Instagram`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block transition hover:opacity-70"
+                >
+                  <Image
+                    src="/social_icons/teazo_insta_icon.png"
+                    alt=""
+                    aria-hidden="true"
+                    width={64}
+                    height={64}
+                    className="h-12 w-12 object-contain"
+                  />
+                </a>
+                <a
+                  href={socialLinks.yelp}
+                  aria-label={`${location.businessName} on Yelp`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block transition hover:opacity-70"
+                >
+                  <Image
+                    src="/social_icons/teazo_yelp_icon.png"
+                    alt=""
+                    aria-hidden="true"
+                    width={64}
+                    height={64}
+                    className="h-12 w-12 object-contain"
+                  />
+                </a>
+              </div>
+            </div>
+
+            <a
+              href={phoneHref}
+              className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
+            >
+              <PhoneIcon />
+              CALL TO ORDER
+            </a>
+          </div>
+        </section>
+
+        <div className="relative mt-14 flex items-center justify-center sm:mt-16">
+          <Subtitle text="CONTACT US" />
+        </div>
+
+        <section
+          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-white px-5 py-7 shadow-sm sm:px-6 sm:py-8 lg:px-8 lg:py-9`}
+        >
+          <form
+            action={`mailto:${location.email}`}
+            method="post"
+            encType="text/plain"
+            className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-5"
+          >
+            <div className="grid w-full gap-5 md:grid-cols-2">
+              <input
+                type="text"
+                name="firstName"
+                placeholder="FIRST NAME"
+                aria-label="First name"
+                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+              />
+              <input
+                type="text"
+                name="lastName"
+                placeholder="LAST NAME"
+                aria-label="Last name"
+                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="EMAIL"
+                aria-label="Email"
+                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+              />
+              <input
+                type="text"
+                name="subject"
+                placeholder="SUBJECT"
+                aria-label="Subject"
+                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+              />
+            </div>
+
+            <textarea
+              name="message"
+              placeholder="MESSAGE"
+              aria-label="Message"
+              rows={8}
+              className="min-h-[250px] w-full resize-y border-2 border-[#b9aaa4] bg-white px-4 py-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+            />
+
+            <button
+              type="submit"
+              className="mt-1 flex h-[66px] w-[210px] cursor-pointer items-center justify-center bg-black text-[1rem] font-bold tracking-[0.12em] text-white transition hover:bg-[#FFBDC7]"
+            >
+              SUBMIT
+            </button>
+          </form>
         </section>
       </div>
     </main>

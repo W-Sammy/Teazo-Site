@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
 
@@ -10,11 +10,6 @@ export const metadata: Metadata = {
 };
 
 const cabinSketch = Cabin_Sketch({
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
-const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -40,7 +35,7 @@ export default function GalleryPage() {
         <BubbleField />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
 
         {/* Page header */}
         <section className="flex flex-col items-center text-center">
@@ -55,9 +50,9 @@ export default function GalleryPage() {
           />
 
           <h1
-            className={`${cabinSketch.className} mt-4 text-[3.8rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[5.1rem]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
           >
-            Gallery
+            GALLERY
           </h1>
         </section>
 

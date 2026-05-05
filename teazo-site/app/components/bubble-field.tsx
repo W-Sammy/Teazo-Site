@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 type BubbleFieldProps = {
   count?: number;
@@ -48,12 +48,18 @@ const bubbleSeeds = [
   { x: 0.91, y: 0.9, radius: 30, tint: "rgba(245, 184, 206, 0.82)" },
 ] as const;
 
+let persistedParticles: Particle[] = [];
+let persistedWidth = 0;
+let persistedHeight = 0;
+let persistedCount = 0;
+
 const BUBBLE_CRUISE_SPEED = 0.1;
 const BUBBLE_MOVE_SCALE = 3.1;
 const BUBBLE_HEADING_BLEND = 0.015;
 const BUBBLE_VELOCITY_BLEND = 0.09;
 const BUBBLE_REPULSION_INFLUENCE = 0.68;
 const BUBBLE_LOCAL_CROWDING_THRESHOLD = 1.1;
+const BUBBLE_RESEED_RESIZE_THRESHOLD = 0.35;
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -367,7 +373,7 @@ export function BubbleField({
   const lastTimeRef = useRef(0);
   const visibleCount = Math.min(count, bubbleSeeds.length);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = containerRef.current;
 
     if (!container) {
@@ -404,12 +410,65 @@ export function BubbleField({
       width = container.clientWidth;
       height = container.clientHeight;
 
-      // Rebuild particles from the seed layout whenever the available space changes
-      // so the composition stays balanced on different viewport sizes.
-      particlesRef.current = Array.from({ length: visibleCount }, (_, index) =>
-        createParticle(width, height, index),
-      );
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+
+      if (
+        persistedParticles.length === visibleCount &&
+        persistedCount === visibleCount &&
+        persistedWidth === width &&
+        persistedHeight === height
+      ) {
+        particlesRef.current = persistedParticles;
+      } else {
+        const canScaleExistingParticles =
+          persistedParticles.length === visibleCount &&
+          persistedCount === visibleCount &&
+          persistedWidth > 0 &&
+          persistedHeight > 0;
+
+        if (canScaleExistingParticles) {
+          const widthChange = Math.abs(width - persistedWidth) / persistedWidth;
+          const heightChange = Math.abs(height - persistedHeight) / persistedHeight;
+
+          if (
+            widthChange <= BUBBLE_RESEED_RESIZE_THRESHOLD &&
+            heightChange <= BUBBLE_RESEED_RESIZE_THRESHOLD
+          ) {
+            const scaleX = width / persistedWidth;
+            const scaleY = height / persistedHeight;
+
+            persistedParticles = persistedParticles.map((particle) => ({
+              ...particle,
+              x: particle.x * scaleX,
+              y: particle.y * scaleY,
+              targetX: particle.targetX * scaleX,
+              targetY: particle.targetY * scaleY,
+            }));
+          } else {
+            persistedParticles = Array.from({ length: visibleCount }, (_, index) =>
+              createParticle(width, height, index),
+            );
+          }
+        } else {
+          persistedParticles = Array.from({ length: visibleCount }, (_, index) =>
+            createParticle(width, height, index),
+          );
+        }
+
+        persistedWidth = width;
+        persistedHeight = height;
+        persistedCount = visibleCount;
+        particlesRef.current = persistedParticles;
+      }
+
       lastTimeRef.current = 0;
+      const initialPaintTime = window.performance.now();
+
+      for (const particle of particlesRef.current) {
+        paintParticle(particle, initialPaintTime);
+      }
     };
 
     const step = (time: number) => {
