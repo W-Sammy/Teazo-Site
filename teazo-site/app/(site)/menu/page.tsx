@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const cabinSketch = Cabin_Sketch({
 	subsets: ["latin"],
-	weight: ["700"],
+	weight: ["400"],
 });
 
 const montserrat = Montserrat({
@@ -701,12 +701,12 @@ const menuSections: MenuSection[] = [
 
 export default function MenuPage() {
 	return (
-		<main className="relative isolate min-h-screen bg-[#f4efeb] text-stone-900">
+		<main className="relative isolate min-h-screen bg-[#FFF8F9] text-stone-900">
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
 				<BubbleField />
 			</div>
 
-			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32 lg:px-10 lg:pt-36">
+			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
 				<section className="flex flex-col items-center text-center">
 					<Image
 						src="/TEAZO_logo.png"
@@ -719,9 +719,9 @@ export default function MenuPage() {
 					/>
 
 					<h1
-						className={`${cabinSketch.className} mt-4 text-[3.8rem] uppercase leading-[0.9] tracking-[0.08em] text-[#d9ab79] sm:text-[5.1rem]`}
+						className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
 					>
-						Menu
+						MENU
 					</h1>
 
 					<div className="mt-10 flex flex-col items-center sm:mt-12">
