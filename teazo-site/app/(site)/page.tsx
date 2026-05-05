@@ -82,7 +82,7 @@ export default function Home() {
         <section className=" relative z-10 mx-auto mt-16 mb-20  w-full max-w-[1000px] bg-white px-4 py-5 sm:px-6 sm:py-6 lg:mt-20 lg:px-7 lg:py-7 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
-            <div className="ml-5 space-y-4 text-[#161616]">
+            <div className="${mediumMontserrat.className} ml-5 space-y-4 text-[#000000]">
             
                 <p> TEAZO is specializing in bringing you high qualities drink, snack and dessert.</p>
 
