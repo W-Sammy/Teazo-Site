@@ -27,8 +27,8 @@ export default function Subtitle({ text }: Editables) {
 
             {/* text */}
             <div className="absolute inset-0 flex items-center justify-center">
-                {/* locked to uppercase */}
-                <h2 className={`${cabinSketch.className} text-[48px] md:text-[64px] text-black uppercase pt-4`}>
+                {/* locked to uppercase, wraps for mobile view */}
+                <h2 className={`${cabinSketch.className} text-[48px] md:text-[64px] text-black uppercase pt-4 leading-[0.9] md:leading-none md:whitespace-nowrap`}>
                     {text}
                 </h2>
             </div>
