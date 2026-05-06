@@ -30,59 +30,63 @@ const mediumMontserrat = Montserrat({
 
 export default function Home() {
   return (
-    <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20">
+    <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
             </div>
     
             {/* logo */}
-            <div className="absolute z-20 w-full flex flex-col items-center justify-center pt-45 gap-3">
+            {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
+            <section className="relative z-20 flex min-h-[calc(100vh-120px)] w-full flex-col items-center justify-center px-4 py-16 text-center sm:py-20">
                 <Image
                     src="/TEAZO_logo.png"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
                     height={397}
-                    className="h-[170px] w-auto sm:h-[195px]"
+                    className="h-[135px] w-auto sm:h-[170px] md:h-[195px]"
                     priority
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} text-[70px] text-[#D9AE81]`}>
+            <h1 className={`${cabinSketch.className} mt-2 text-[52px] leading-none text-[#D9AE81] sm:text-[70px]`}>
                 TEAZO
             </h1>
-        </div>
 
             {/* description text */}
-           <div className="absolute z-20 w-full flex flex-col items-center justify-center pt-130 gap-1">
-               <h1 className={`${mediumMontserrat.className} text-[32px] text-black tracking-[0.1em]`}>
+           {/* changed text sizes and spacing to be responsive on mobile */}
+           <div className="mt-10 flex w-full flex-col items-center justify-center gap-2">
+               <h1 className={`${mediumMontserrat.className} text-[24px] leading-tight text-black tracking-[0.08em] sm:text-[32px] md:text-[40px]`}>
                    TO SHARE BOBA LIFE
                 </h1>
-                <h1 className={`${boldMontserrat.className} text-[36px] text-black tracking-[0.1em]`}>
+                <h1 className={`${boldMontserrat.className} text-[27px] leading-tight text-black tracking-[0.08em] sm:text-[36px] md:text-[46px]`}>
                     WITH ALL BOBA LOVERS
                 </h1>
             </div>
 
             {/* button */}
-            <div className="absolute z-20 w-full flex items-center justify-center pt-175 gap-12">
+            {/* changed from absolute positioning to normal page flow so button does not cover text */}
+            <div className="mt-10 flex w-full items-center justify-center">
                 <GeneralButton text="ORDER NOW" href="" />    
                 </div>
+        </section>
 
-			<div className="relative mt-14 inline-flex w-full justify-center sm:mt-250 mb-14">
+			<div className="relative z-10 mb-10 flex w-full justify-center px-4">
 				<Subtitle text={"OUR STORY"} />
             </div>
 
             {/*import image carousel*/}
-                <div className="flex justify-center items-center">
+                <div className="relative z-10 flex justify-center items-center px-4">
                 <ImageCarousel />
             </div>       
         
         {/*textbox with company message and icons*/}
-        <section className=" relative z-10 mx-auto mt-16 mb-20  w-full max-w-[1000px] bg-white px-4 py-5 sm:px-6 sm:py-6 lg:mt-20 lg:px-7 lg:py-7 xl:max-w-[900px]"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-7 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
-            <div className="${mediumMontserrat.className} ml-5 space-y-4 text-[#000000]">
+            {/* fixed className template string so the Montserrat font applies correctly */}
+            <div className={`${mediumMontserrat.className} space-y-6 text-[20px] leading-relaxed text-[#000000] sm:text-[24px]`}>
             
                 <p> TEAZO is specializing in bringing you high qualities drink, snack and dessert.</p>
 
@@ -93,18 +97,18 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert.We
 
 
                 {/*social media icons*/}
-                <div className="mt-6 flex justify-center items-center gap-6">
+                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
                     <a href="">
-                    <img src="/social_icons/teazo_fb_icon.png" alt="Order" className="w-16 h-16" />
+                    <img src="/social_icons/teazo_fb_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_email_icon.png" alt="Order" className="w-16 h-16" />
+                    <img src="/social_icons/teazo_email_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_insta_icon.png" alt="Order" className="w-16 h-16" />
+                    <img src="/social_icons/teazo_insta_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_yelp_icon.png" alt="Order" className="w-16 h-16" />
+                    <img src="/social_icons/teazo_yelp_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
 
