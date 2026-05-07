@@ -38,41 +38,41 @@ export default function Home() {
     
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 flex min-h-[calc(100vh-120px)] w-full flex-col items-center justify-center px-4 py-16 text-center sm:py-20">
+            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
                     src="/TEAZO_logo.png"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
                     height={397}
-                    className="h-[135px] w-auto sm:h-[170px] md:h-[195px]"
+                    className="h-[170px] w-auto sm:h-[195px]"
                     priority
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} mt-2 text-[52px] leading-none text-[#D9AE81] sm:text-[70px]`}>
+            <h1 className={`${cabinSketch.className} mt-3 text-[70px] leading-none text-[#D9AE81]`}>
                 TEAZO
             </h1>
 
             {/* description text */}
            {/* changed text sizes and spacing to be responsive on mobile */}
-           <div className="mt-10 flex w-full flex-col items-center justify-center gap-2">
-               <h1 className={`${mediumMontserrat.className} text-[24px] leading-tight text-black tracking-[0.08em] sm:text-[32px] md:text-[40px]`}>
+           <div className="mt-10 flex w-full flex-col items-center justify-center gap-2 sm:mt-12">
+               <h1 className={`${mediumMontserrat.className} text-[1.35rem] leading-tight text-black tracking-[0.14em] sm:text-[1.55rem]`}>
                    TO SHARE BOBA LIFE
                 </h1>
-                <h1 className={`${boldMontserrat.className} text-[27px] leading-tight text-black tracking-[0.08em] sm:text-[36px] md:text-[46px]`}>
+                <h1 className={`${boldMontserrat.className} text-[2rem] leading-tight text-black tracking-[0.06em] sm:text-[2.5rem]`}>
                     WITH ALL BOBA LOVERS
                 </h1>
             </div>
 
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
-            <div className="mt-10 flex w-full items-center justify-center">
+            <div className="mt-8 flex w-full items-center justify-center">
                 <GeneralButton text="ORDER NOW" href="" />    
                 </div>
         </section>
 
-			<div className="relative z-10 mb-10 flex w-full justify-center px-4">
+			<div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
 				<Subtitle text={"OUR STORY"} />
             </div>
 
