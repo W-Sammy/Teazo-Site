@@ -56,7 +56,7 @@ export default function Home() {
 
             {/* description text */}
            {/* changed text sizes and spacing to be responsive on mobile */}
-           <div className="mt-10 flex w-full flex-col items-center justify-center gap-2 sm:mt-12">
+           <div className="mt-6 flex w-full flex-col items-center justify-center gap-1 sm:mt-8">
                <h1 className={`${mediumMontserrat.className} text-[1.35rem] leading-tight text-black tracking-[0.14em] sm:text-[1.55rem]`}>
                    TO SHARE BOBA LIFE
                 </h1>
@@ -67,7 +67,7 @@ export default function Home() {
 
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
-            <div className="mt-8 flex w-full items-center justify-center">
+            <div className="mt-6 flex w-full items-center justify-center">
                 <GeneralButton text="ORDER NOW" href="" />    
                 </div>
         </section>
