@@ -50,13 +50,13 @@ export default function Home() {
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} mt-3 text-[70px] leading-none text-[#D9AE81]`}>
+            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}>
                 TEAZO
             </h1>
 
             {/* description text */}
            {/* changed text sizes and spacing to be responsive on mobile */}
-           <div className="mt-6 flex w-full flex-col items-center justify-center gap-1 sm:mt-8">
+           <div className="mt-3 flex w-full flex-col items-center justify-center gap-1 sm:mt-5">
                <h1 className={`${mediumMontserrat.className} text-[1.35rem] leading-tight text-black tracking-[0.14em] sm:text-[1.55rem]`}>
                    TO SHARE BOBA LIFE
                 </h1>
