@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: {
         absolute: "TEAZO",
     },
-    description: "TEAZO site",
+    description: "TEAZO HOME",
 };
 
 // setup fonts
