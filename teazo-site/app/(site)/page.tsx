@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 
 import Subtitle from "@/app/(site)/components/sub-title"
@@ -9,6 +10,14 @@ import ImageCarousel from "@/app/(site)/components/image-carousel";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
+
+// added page metadata so the browser tab shows TEAZO for the landing page
+export const metadata: Metadata = {
+    title: {
+        absolute: "TEAZO",
+    },
+    description: "TEAZO site",
+};
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
@@ -72,8 +81,8 @@ export default function Home() {
                 </div>
         </section>
 
-			<div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
-				<Subtitle text={"OUR STORY"} />
+            <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
+                <Subtitle text={"OUR STORY"} />
             </div>
 
             {/*import image carousel*/}
