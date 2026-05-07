@@ -22,7 +22,7 @@ export default function MenulessNavBar() {
 
     return (
         // 50% opacity white "rectangle"
-        <header className="fixed top-0 w-full z-50 bg-white/50">
+        <header className="fixed top-0 w-full z-50 bg-white/50 backdrop-blur-md">
             <nav className="mx-auto flex items-center justify-between px-10 py-6">
                     
                 {/* teazo logo - gold, cabin sketch & underlined (no change during hover) */}

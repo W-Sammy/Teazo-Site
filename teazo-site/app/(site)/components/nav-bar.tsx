@@ -29,7 +29,7 @@ export default function NavBar() {
 
     return (
         // 50% opacity white "rectangle"
-        <header className="fixed top-0 w-full z-50 bg-white/50">
+        <header className="fixed top-0 w-full z-50 bg-white/50 backdrop-blur-md">
             <nav className="mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between px-6 py-4 md:px-10 md:py-6 gap-4 md:gap-0">
                     
                 {/* teazo logo - gold, cabin sketch & underlined (no change during hover)
