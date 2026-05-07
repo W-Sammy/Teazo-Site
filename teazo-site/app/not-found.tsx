@@ -11,7 +11,7 @@ import { Cabin_Sketch, Montserrat } from "next/font/google";
 // change browser tab name for the 404 page
 export const metadata: Metadata = {
     title: {
-        absolute: "Error 404 (Not Found)",
+        absolute: "404 Not Found",
     },
 };
 
