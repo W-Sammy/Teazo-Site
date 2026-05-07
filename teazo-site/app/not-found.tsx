@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 
 import NavBar from "@/app/(site)/components/nav-bar";
 import Footer from "@/app/(site)/components/footer";
@@ -6,6 +7,13 @@ import Image from "next/image";
 
 import { BubbleField } from "./components/bubble-field";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
+
+// change browser tab name for the 404 page
+export const metadata: Metadata = {
+    title: {
+        absolute: "Error 404 (Not Found)",
+    },
+};
 
 // Site fonts
 const cabinSketch = Cabin_Sketch({
