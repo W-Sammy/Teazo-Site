@@ -14,9 +14,9 @@ import GeneralButton from "@/app/components/general-button";
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
     title: {
-        absolute: "TEAZO",
+        absolute: "Teazo",
     },
-    description: "TEAZO HOME",
+    description: "Teazo Home",
 };
 
 // setup fonts

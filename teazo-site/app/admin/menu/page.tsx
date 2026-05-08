@@ -1,7 +1,13 @@
-
+import type { Metadata } from "next";
 import ListView from "@/app/admin/components/admin-list-view"
-import  AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
+import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Teazo Menu Admin",
+  },
+};
 
 async function getMenuItems(): Promise<MenuItem[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`, {
