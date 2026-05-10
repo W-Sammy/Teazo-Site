@@ -724,7 +724,7 @@ export default function MenuPage() {
 						MENU
 					</h1>
 
-					<div className="mt-10 flex flex-col items-center sm:mt-12">
+					<div className="mt-4 flex flex-col items-center sm:mt-6">
 						<p
 							className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
 						>
@@ -732,17 +732,17 @@ export default function MenuPage() {
 						</p>
 
 						<p
-							className={`${montserrat.className} mt-2 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
+							className={`${montserrat.className} mt-1 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
 						>
 							Download Our Menu
 						</p>
 
-						<div className="mt-8 cursor-pointer [&_*]:cursor-pointer">
+						<div className="mt-5 cursor-pointer [&_*]:cursor-pointer">
 							<GeneralButton text="DOWNLOAD" href="/static-menu" />
 						</div>
 					</div>
 
-					<div className="relative mt-14 inline-flex items-center justify-center sm:mt-16">
+					<div className="relative mt-10 inline-flex items-center justify-center sm:mt-12">
 						<PaintStroke />
 						<h2
 							className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
@@ -752,7 +752,7 @@ export default function MenuPage() {
 					</div>
 
 					<p
-						className={`${montserrat.className} mt-8 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
+						className={`${montserrat.className} mt-6 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
 					>
 						Explore TEAZO menu categories and featured specials.
 					</p>
@@ -784,3 +784,4 @@ export default function MenuPage() {
 		</main>
 	);
 }
+
