@@ -6,38 +6,26 @@ import {
   Admin,
   AdminRole,
   ADMIN_ROLE_LABELS,
-} from "@/types/admin";
-
-
-type Role = "Owner" | "Can Edit" | "Can View";
-
-type Admin = {
-  id: number;
-  username: string;
-  email: string;
-  role: Role;
-  isCurrentUser?: boolean;
-};
+} from "@/app/types/admin-perms";
 
 const initialAdmins: Admin[] = [
   {
     id: 1,
     username: "You",
     email: "temp@teazo.com",
-    role: "Owner",
-    isCurrentUser: true,
+    role: 1,
   },
   {
     id: 2,
     username: "Person1",
     email: "Person1@teazo.com",
-    role: "Can Edit",
+    role: 2,
   },
   {
     id: 3,
     username: "Person2",
     email: "Person2@teazo.com",
-    role: "Can View",
+    role: 3,
   },
 ];
 
@@ -47,9 +35,9 @@ export default function AdminsTable() {
 
   const [newUsername, setNewUsername] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<"Can Edit" | "Can View">("Can View");
+  const [newRole, setNewRole] = useState<AdminRole>(3);
 
-  const changeRole = (id: number, role: Role) => {
+  const changeRole = (id: number, role: AdminRole) => {
     setAdmins((currentAdmins) =>
       currentAdmins.map((admin) =>
         admin.id === id ? { ...admin, role } : admin
@@ -64,8 +52,8 @@ export default function AdminsTable() {
 
     const newAdmin: Admin = {
       id: Date.now(),
-      username: newUsername,
-      email: newEmail,
+      username: newUsername.trim(),
+      email: newEmail.trim(),
       role: newRole,
     };
 
@@ -73,7 +61,7 @@ export default function AdminsTable() {
 
     setNewUsername("");
     setNewEmail("");
-    setNewRole("Can View");
+    setNewRole(3);
     setShowModal(false);
   };
 
@@ -120,9 +108,9 @@ export default function AdminsTable() {
 
               {/* Role */}
               <div>
-                {admin.isCurrentUser || admin.role === "Owner" ? (
+                {admin.role === 1 ? (
                   <span className="text-sm text-gray-400">
-                    Owner
+                    {ADMIN_ROLE_LABELS[admin.role]}
                   </span>
                 ) : (
                   <RoleDropdown
@@ -198,12 +186,12 @@ export default function AdminsTable() {
               <select
                 value={newRole}
                 onChange={(e) =>
-                  setNewRole(e.target.value as "Can Edit" | "Can View")
+                  setNewRole(Number(e.target.value) as AdminRole)
                 }
                 className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 outline-none focus:border-pink-300"
               >
-                <option value="Can View">Can View</option>
-                <option value="Can Edit">Can Edit</option>
+                <option value={3}>{ADMIN_ROLE_LABELS[3]}</option>
+                <option value={2}>{ADMIN_ROLE_LABELS[2]}</option>
               </select>
             </div>
 
@@ -240,10 +228,12 @@ function RoleDropdown({
   role,
   onChange,
 }: {
-  role: "Can Edit" | "Can View";
-  onChange: (role: "Can Edit" | "Can View") => void;
+  role: AdminRole;
+  onChange: (role: AdminRole) => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  const roles: AdminRole[] = [2, 3];
 
   return (
     <div className="relative inline-block">
@@ -252,7 +242,7 @@ function RoleDropdown({
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 text-sm text-gray-400"
       >
-        {role}
+        {ADMIN_ROLE_LABELS[role]}
 
         <svg
           width="14"
@@ -271,27 +261,19 @@ function RoleDropdown({
 
       {open && (
         <div className="absolute left-0 top-full z-20 mt-2 w-32 overflow-hidden rounded-md border border-gray-100 bg-white shadow-lg">
-          <button
-            type="button"
-            onClick={() => {
-              onChange("Can Edit");
-              setOpen(false);
-            }}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50"
-          >
-            Can Edit
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              onChange("Can View");
-              setOpen(false);
-            }}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50"
-          >
-            Can View
-          </button>
+          {roles.map((roleOption) => (
+            <button
+              key={roleOption}
+              type="button"
+              onClick={() => {
+                onChange(roleOption);
+                setOpen(false);
+              }}
+              className="block w-full px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50"
+            >
+              {ADMIN_ROLE_LABELS[roleOption]}
+            </button>
+          ))}
         </div>
       )}
     </div>
