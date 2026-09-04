@@ -12,7 +12,7 @@ const initialAdmins: Admin[] = [
   {
     id: 1,
     username: "You",
-    email: "temp@teazo.com",
+    email: "temp@teazo.comemp@teazo.cemp@teazo.cemp@teazo.cemp@teazo.c",
     role: 1,
   },
   {
@@ -88,28 +88,22 @@ export default function AdminsTable() {
           {admins.map((admin) => (
             <div
               key={admin.id}
-              className="grid grid-cols-[1.5fr_2fr_1.5fr] items-center py-3"
+              className="group/row grid grid-cols-[1.5fr_2fr_1.5fr] items-center py-3"
             >
               {/* Username */}
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 transition-colors group-hover/row:text-pink-300">
                 {admin.username}
               </div>
 
               {/* Email */}
-              <div
-                className={`text-sm ${
-                  admin.username === "Person1"
-                    ? "text-pink-300"
-                    : "text-gray-400"
-                }`}
-              >
+              <div className="text-sm text-gray-400 transition-colors group-hover/row:text-pink-300">
                 {admin.email}
               </div>
 
               {/* Role */}
               <div>
                 {admin.role === 1 ? (
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-gray-400 transition-colors group-hover/row:text-pink-300">
                     {ADMIN_ROLE_LABELS[admin.role]}
                   </span>
                 ) : (
@@ -240,7 +234,9 @@ function RoleDropdown({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 text-sm text-gray-400"
+        className={`flex items-center gap-2 text-sm transition-colors group-hover/row:text-pink-300 ${
+          open ? "text-pink-300" : "text-gray-400"
+        }`}
       >
         {ADMIN_ROLE_LABELS[role]}
 
@@ -251,9 +247,7 @@ function RoleDropdown({
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className={`transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
