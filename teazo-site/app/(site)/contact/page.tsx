@@ -322,7 +322,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_fb_icon.png"
+                    src="/social_icons/social_svg/teazo_fb_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
