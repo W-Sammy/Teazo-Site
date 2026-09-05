@@ -39,7 +39,7 @@ export default function Delivery() {
             {/* logo */}
             <div className="flex flex-col items-center">
                 <Image
-                    src="/TEAZO_logo.png"
+                    src="/TEAZO_logo.svg"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}

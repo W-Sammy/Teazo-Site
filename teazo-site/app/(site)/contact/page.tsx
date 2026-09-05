@@ -158,7 +158,7 @@ export default async function ContactPage() {
           {/* Use the approved uploaded logo asset rather than reconstructing it
               in code so brand updates can be handled from /public later. */}
           <Image
-            src="/TEAZO_logo.png"
+            src="/TEAZO_logo.svg"
             alt=""
             aria-hidden="true"
             width={389}

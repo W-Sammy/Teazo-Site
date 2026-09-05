@@ -49,7 +49,7 @@ export default function Home() {
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
-                    src="/TEAZO_logo.png"
+                    src="/TEAZO_logo.svg"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
