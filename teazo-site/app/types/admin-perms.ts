@@ -1,11 +1,12 @@
 export type AdminRole = 1 | 2 | 3;
 
-export type Admin = {
+export interface Admin {
   id: number;
   username: string;
   email: string;
   role: AdminRole;
-};
+  canInviteUsers: boolean;
+}
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   1: "Owner",
