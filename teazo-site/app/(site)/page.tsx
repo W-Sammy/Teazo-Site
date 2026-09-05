@@ -111,7 +111,7 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert.We
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_email_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
                     <img src="/social_icons/teazo_insta_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
