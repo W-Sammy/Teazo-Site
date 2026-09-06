@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-import type { Admin, AdminRole, NewAdminInput,} from "@/app/types/admin-perms";
-import { OWNER_ROLE, READ_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
-import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
-import { AdminRow } from "@/app/admin/settings/components/AdminRow";
-import { useAdmins } from "@/app/admin/settings/hooks/useAdmins";
+import type { Admin, AdminRole } from "@/app/types/admin-perms";
+import type { NewAdminInput } from "./admin-types";
+import { AddAdminModal } from "./components/AddAdminModal";
+import { AdminRow } from "./components/AdminRow";
+import { useAdmins } from "./hooks/useAdmins";
+import { OWNER_ROLE, READ_ROLE, WRITE_ROLE } from "./roles";
 
 const initialAdmins: Admin[] = [
   {
