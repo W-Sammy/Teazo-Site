@@ -1,9 +1,7 @@
 import { useState } from "react";
 
-import { ADMIN_ROLE_LABELS } from "@/app/types/admin-perms";
-import type { AdminRole } from "@/app/types/admin-perms";
-import type { NewAdminInput } from "../admin-types";
-import { READ_ROLE, WRITE_ROLE } from "../roles";
+import { ADMIN_ROLE_LABELS, READ_ROLE, WRITE_ROLE} from "@/app/types/admin-perms";
+import type { AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { InviteSwitch } from "./InviteSwitch";
 
 export function AddAdminModal({

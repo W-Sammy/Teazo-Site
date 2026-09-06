@@ -1,6 +1,5 @@
-import { ADMIN_ROLE_LABELS } from "@/app/types/admin-perms";
+import { ADMIN_ROLE_LABELS, OWNER_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
 import type { Admin, AdminRole } from "@/app/types/admin-perms";
-import { OWNER_ROLE, WRITE_ROLE } from "../roles";
 import { AdminActions } from "./AdminActions";
 import { InviteSwitch } from "./InviteSwitch";
 import { RoleDropdown } from "./RoleDropdown";

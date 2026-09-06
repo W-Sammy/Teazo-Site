@@ -1,6 +1,5 @@
-import { ADMIN_ROLE_LABELS } from "@/app/types/admin-perms";
+import { ADMIN_ROLE_LABELS, OWNER_ROLE, WRITE_ROLE, READ_ROLE } from "@/app/types/admin-perms";
 import type { AdminRole } from "@/app/types/admin-perms";
-import { READ_ROLE, WRITE_ROLE } from "../roles";
 import { useState } from "react";
 
 export function RoleDropdown({
