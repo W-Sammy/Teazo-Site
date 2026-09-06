@@ -4,6 +4,7 @@ import { ADMIN_ROLE_LABELS, READ_ROLE, WRITE_ROLE} from "@/app/types/admin-perms
 import type { AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { InviteSwitch } from "./InviteSwitch";
 
+/*only frontend/ui for getting input, handling done in hooks/use-admins.ts*/
 export function AddAdminModal({
   onAdd,
   onCancel,

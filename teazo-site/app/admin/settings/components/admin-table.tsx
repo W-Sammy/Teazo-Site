@@ -8,6 +8,7 @@ import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import { useAdmins } from "@/app/admin/settings/hooks/use-admins";
 
+/* temporary data */
 const initialAdmins: Admin[] = [
   {
     id: 1,
@@ -32,6 +33,7 @@ const initialAdmins: Admin[] = [
   },
 ];
 
+/* fully put together admin table code */
 export default function AdminsTable() {
   const [showModal, setShowModal] = useState(false);
   const {
@@ -52,6 +54,7 @@ export default function AdminsTable() {
     return () => window.clearTimeout(timeout);
   }, [clearError, errorMessage]);
 
+  /* create function to call addAdmin in the hoooks */
   const handleAddAdmin = (input: NewAdminInput) => {
     const added = addAdmin(input);
     if (added) setShowModal(false);
@@ -77,6 +80,7 @@ export default function AdminsTable() {
       )}
 
       <div className="w-full max-w-5xl">
+        {/*top row */}
         <div className="grid grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4">
           <div className="text-sm font-semibold text-gray-500">Username</div>
           <div className="text-sm font-semibold text-gray-500">Email (SSO)</div>
@@ -85,6 +89,7 @@ export default function AdminsTable() {
           <div aria-hidden="true" />
         </div>
 
+        {/*mapping of all the admins */}
         <div>
           {admins.map((admin) => (
             <AdminRow
@@ -99,6 +104,7 @@ export default function AdminsTable() {
           ))}
         </div>
 
+        {/*add user button*/}
         <button
           type="button"
           onClick={() => setShowModal(true)}
@@ -108,6 +114,7 @@ export default function AdminsTable() {
         </button>
       </div>
 
+      {/*add user modal that gets the input and passes addAdmin function*/}
       {showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}

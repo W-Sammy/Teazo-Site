@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AdminsTable from "@/app/admin/settings/components/admin-table"
+import AdminsTable from "@/app/admin/settings/components/admin-table";
 
 export const metadata: Metadata = {
   title: {
