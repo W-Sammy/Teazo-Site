@@ -25,26 +25,33 @@ export default function AdminViewToggle<T extends string>({
 }: AdminViewToggleProps<T>) {
   return (
     <div
-      className={`inline-flex w-full min-w-0 overflow-hidden rounded-lg border border-[#dbb082] sm:w-auto sm:shrink-0 ${className}`}
+      className={`flex w-full min-w-0 overflow-visible rounded-lg border border-[#dbb082] md:inline-flex md:w-auto md:shrink-0 ${className}`}
       role="group"
       aria-label={ariaLabel}
     >
       {options.map((option, index) => {
         const isActive = option.value === value;
 
+        const roundedCornerClass =
+          index === 0
+            ? "rounded-l-[7px]"
+            : index === options.length - 1
+              ? "rounded-r-[7px]"
+              : "";
+
         return (
           <button
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            className={`inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-sm transition-colors sm:flex-none sm:gap-2 sm:px-3 ${
+            className={`inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-sm md:flex-none md:gap-2 md:px-3 ${roundedCornerClass} ${
               index > 0
                 ? "border-l border-[#dbb082]"
                 : ""
             } ${
               isActive
                 ? "bg-[#dbb082] font-semibold text-white"
-                : "bg-white text-gray-600 hover:bg-[#fffaf6]"
+                : "bg-white text-[#4b5563] hover:bg-[#fffaf6]"
             }`}
             aria-pressed={isActive}
           >
@@ -57,7 +64,7 @@ export default function AdminViewToggle<T extends string>({
               </span>
             )}
 
-            <span className="whitespace-nowrap">
+            <span className="block shrink-0 whitespace-nowrap">
               {option.label}
             </span>
           </button>
@@ -82,6 +89,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="8"
         y="2"
@@ -89,6 +97,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="14"
         y="2"
@@ -104,6 +113,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="8"
         y="8"
@@ -111,6 +121,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="14"
         y="8"
@@ -126,6 +137,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="8"
         y="14"
@@ -133,6 +145,7 @@ export function GridViewIcon() {
         height="4"
         rx="0.5"
       />
+
       <rect
         x="14"
         y="14"
