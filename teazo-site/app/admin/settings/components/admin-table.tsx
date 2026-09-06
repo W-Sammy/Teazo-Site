@@ -6,7 +6,7 @@ import type { Admin, AdminRole, NewAdminInput,} from "@/app/types/admin-perms";
 import { OWNER_ROLE, READ_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
-import { useAdmins } from "@/app/admin/settings/hooks/use-admins";
+import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 
 /* temporary data */
 const initialAdmins: Admin[] = [
