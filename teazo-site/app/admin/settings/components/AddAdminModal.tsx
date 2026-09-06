@@ -78,7 +78,7 @@ export function AddAdminModal({
               Allow user invitations
             </p>
             <p className="mt-0.5 text-xs text-gray-400">
-              Requires Write access.
+              Requires Edit access.
             </p>
           </div>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+/*Called in AdminRow.tsx*/
 export function AdminActions({
   username,
   onDelete,

@@ -4,6 +4,7 @@ import { AdminActions } from "./AdminActions";
 import { InviteSwitch } from "./InviteSwitch";
 import { RoleDropdown } from "./RoleDropdown";
 
+/* handles actions, invite switch, and role dropdown for each admin in the table */
 export function AdminRow({
   admin,
   onRoleChange,

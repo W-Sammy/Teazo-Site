@@ -32,7 +32,7 @@ export function useAdmins(initialAdmins: Admin[]) {
 
     if (admin.role !== WRITE_ROLE) {
       setError(
-        `${admin.username} needs Write access before they can invite users.`
+        `${admin.username} needs Edit access before they can invite users.`
       );
       return;
     }
