@@ -354,7 +354,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_insta_icon.png"
+                    src="/social_icons/social_svg/teazo_insta_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
@@ -370,7 +370,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_yelp_icon.png"
+                    src="/social_icons/social_svg/teazo_yelp_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
