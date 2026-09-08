@@ -142,10 +142,8 @@ export default async function ContactPage() {
   const hoursTimeMinWidth = isMobileRequest
     ? "auto"
     : HOURS_TIME_COLUMN_MIN_WIDTH;
-  const emailHref = isMobileRequest
-    ? `mailto:${location.email}`
-    : `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(location.email)}`;
-  const opensWebmail = !isMobileRequest;
+  const emailHref = `mailto:${location.email}`;
+  const opensWebmail = false;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
