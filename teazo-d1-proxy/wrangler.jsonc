@@ -1,0 +1,52 @@
+{
+  // TEAZO D1 proxy Worker.
+  //
+  // The Next.js app is hosted on VERCEL and has no Cloudflare bindings.
+  // This Worker is the only thing that binds D1 and R2, and it exists because
+  // D1 is not reachable from outside a Worker. See ../docs/BUILD-GUIDE.md §2.
+  //
+  // migrations_dir points back into the Next.js app on purpose: the schema is
+  // the app's contract, so it lives next to the app. Wrangler accepts a path
+  // outside its own project directory.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "teazo-d1-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Hourly. It is the lapsed-invitation case that sets this frequency, not
+  // the byte reaping — a lapsed invite blocks re-inviting that address.
+  "triggers": { "crons": ["0 * * * *"] },
+
+  // The R2 binding does not expose its own bucket name at runtime (there is no
+  // env.MEDIA.name), and the sweeper needs it to refuse cross-bucket deletes.
+  "vars": { "MEDIA_BUCKET_NAME": "teazo-media" },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "teazo-db",
+      // Filled in by `npx wrangler d1 create teazo-db`.
+      "database_id": "",
+      "migrations_dir": "../teazo-site/migrations"
+    }
+  ],
+
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "teazo-media" }],
+
+  "env": {
+    "preview": {
+      "vars": { "MEDIA_BUCKET_NAME": "teazo-media-preview" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "teazo-db-preview",
+          "database_id": "",
+          "migrations_dir": "../teazo-site/migrations"
+        }
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "teazo-media-preview" }]
+    }
+  }
+}

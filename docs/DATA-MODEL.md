@@ -1,6 +1,7 @@
 # TEAZO — Data Model (Cloudflare D1 + R2)
 
 Status: proposed, migrations validated locally, not yet deployed.
+Runtime: Vercel + a Cloudflare D1 proxy Worker + R2. See §2.
 Scope: the database and object-storage layer the team builds against. Application
 code, API routes and Square wiring are out of scope here.
 
@@ -39,34 +40,38 @@ The Square integration is real but read-mostly and **pinned to Sandbox**
 
 ---
 
-## 2. Two things to settle before anyone writes application code
+## 2. The runtime, and the one thing still broken
 
-### Blocker 1 — D1 is not reachable from Vercel
+### The architecture — decided
 
-`README.md:46-49` lists the deployment target as **Vercel** *and* Cloudflare D1 + R2.
-Those are not compatible as written. D1 is exposed as a runtime **binding** inside the
-Workers/Pages runtime. From Vercel the only path is D1's HTTP REST API, which is
-rate-limited and explicitly not meant for the request path.
+**Hosting is Vercel. The database is Cloudflare D1. Object storage is Cloudflare R2.**
 
-R2 is fine either way — it speaks the S3 API, so Vercel can reach it with credentials.
-D1 is the problem.
+Those are compatible, but not directly: D1 is exposed as a runtime **binding**, and a
+Vercel function has no bindings. Cloudflare's own documentation is explicit about the
+answer — *"To access a D1 database outside of a Worker project, you need to create an
+API using a Worker"* — and equally explicit that the D1 REST API is not a substitute,
+being *"best suited for administrative use as the global Cloudflare API rate limit
+applies."*
 
-Three ways out:
+So the data path is:
 
-| Option | Cost | Consequence |
-|---|---|---|
-| **A. Move hosting to Cloudflare Workers** via `@opennextjs/cloudflare` | one-time migration, keeps the whole stack on Cloudflare | native `env.DB` / `env.MEDIA` bindings; the schema below applies unchanged |
-| B. Stay on Vercel, swap D1 for Turso or Neon | Turso is also SQLite — **this DDL ports nearly as-is** | drops "Cloudflare D1" from the stack; keep R2 for objects |
-| C. Stay on Vercel, call D1 over HTTP | no migration | rate limits on every request; not recommended |
+```
+Vercel (Next.js) --HTTPS + bearer--> teazo-d1-proxy (Worker) --binding--> D1
+Vercel (Next.js) --S3 API + keys--> R2          (uploads)
+browser          --CDN-cached-----> media.<domain>  (reads, never touches Vercel)
+```
 
-**Recommendation: A.** The team has already committed to Cloudflare in the README and
-to the client. It keeps one vendor, gives native bindings, and R2 uploads stop needing
-separate S3 credentials. The migrations in this PR are written for it.
+R2 is the easy half: it speaks the S3 API, so Vercel reaches it directly, and public
+reads go to a custom domain with Cloudflare CDN caching in front.
 
-This decision does not block the schema — options A and B run the same SQLite DDL. It
-blocks *wiring*, so decide before writing data-access code.
+**None of this changes the schema.** Every table, index, trigger and CHECK below is
+plain SQLite and is unaffected by where the app runs. What it changes is the wiring,
+and that is documented in [`BUILD-GUIDE.md` §2](./BUILD-GUIDE.md#2-reaching-d1-and-r2-from-vercel).
 
-### Blocker 2 — `/admin` is publicly reachable right now
+The cost to be aware of: every database read crosses a network hop. Batch reads, and
+cache public pages with `revalidate`.
+
+### Still broken — `/admin` is publicly reachable right now
 
 There is no `middleware.ts` anywhere in the repo, and `app/admin/layout.tsx` is pure
 presentation with no guard. Anyone who knows the URL can open the admin portal.
@@ -126,7 +131,7 @@ The current code reads a narrow projection of this and throws the rest away —
 3. **The BigInt patch is on the money path.** `app/lib/square.ts:12-21` monkey-patches
    `BigInt.prototype.toJSON` at module scope to return `Number(this)`. It is lossy, it
    is a global side effect of an import, and every price in the system passes through
-   it. It will follow the Square client into a Workers runtime.
+   it. Convert `bigint` explicitly at the Square boundary instead.
 
 ---
 
@@ -392,13 +397,11 @@ remaining semester for seven developers. This is 26.
 
 ## 7. Open questions for the team
 
-1. **Hosting** (Blocker 1) — Workers via `@opennextjs/cloudflare`, or Vercel + Turso?
-   Nothing else can be wired until this is decided.
-2. **Hours: who wins?** Square Locations, or D1? Both can hold them. Pick one direction
+1. **Hours: who wins?** Square Locations, or D1? Both can hold them. Pick one direction
    and make the other a mirror.
-3. **Menu photography: who wins?** The 65 curated `.webp`, or Square's hosted images?
+2. **Menu photography: who wins?** The 65 curated `.webp`, or Square's hosted images?
    The schema assumes local wins via `menu_item_display.image_media_id`, because that
    is what renders today. If Square wins, drop that column.
-4. **When is the Square production cutover?** Every curation row created before it is
+3. **When is the Square production cutover?** Every curation row created before it is
    keyed to sandbox ids and will need re-mapping. Cheapest if curation starts *after*.
-5. **Alt text and captions** — add the inputs to the upload form, or accept nulls?
+4. **Alt text and captions** — add the inputs to the upload form, or accept nulls?

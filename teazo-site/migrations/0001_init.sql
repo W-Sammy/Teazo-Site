@@ -167,7 +167,8 @@ BEGIN
 END;
 
 -- Bytes to reap from R2 after a row is soft-deleted. D1 has no TTL and no
--- scheduled jobs of its own, so a cron-triggered Worker drains this.
+-- scheduled jobs of its own, so a scheduled sweeper drains this. R2 deletes
+-- are not transactional with D1, which is the other reason this queue exists.
 CREATE TABLE pending_r2_deletion (
   id         TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(16)))),
   r2_bucket  TEXT NOT NULL,
@@ -188,7 +189,7 @@ CREATE TABLE gallery_image (
   id            TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(16)))),
   media_id      TEXT NOT NULL REFERENCES media_asset(id) ON DELETE RESTRICT,
   name          TEXT NOT NULL,
-  -- Precomputed in the Worker at write time. SQLite ships only BINARY /
+  -- Precomputed by the application at write time. SQLite ships only BINARY /
   -- NOCASE / RTRIM, none of which reproduce the localeCompare order the admin
   -- UI sorts by today, and the content is bilingual.
   name_sort_key TEXT NOT NULL,
