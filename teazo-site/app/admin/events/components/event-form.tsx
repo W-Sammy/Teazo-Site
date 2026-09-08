@@ -1,13 +1,23 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type SubmitEvent } from "react";
+import Image from "next/image";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type SubmitEvent,
+} from "react";
 import type {
   AdminEvent,
   EventCatalogItem,
   EventCategory,
 } from "@/app/types/admin-event";
 
-export type EventFormValues = Omit<AdminEvent, "id">;
+export type EventFormValues = Omit<AdminEvent, "id" | "imageUrl"> & {
+  imageFile: File | null;
+};
 
 type EventFormProps = {
   initialEvent?: AdminEvent | null;
@@ -32,6 +42,9 @@ function toggleValue(values: string[], value: string) {
     ? values.filter((current) => current !== value)
     : [...values, value];
 }
+
+const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxFileSize = 10 * 1024 * 1024;
 
 export default function EventForm({
   initialEvent = null,
@@ -59,7 +72,21 @@ export default function EventForm({
   const [itemIds, setItemIds] = useState<string[]>(
     initialEvent?.itemIds ?? [],
   );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState(
+    initialEvent?.imageUrl ?? "/temp.png",
+  );
+  const [imageError, setImageError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const temporaryPreviewUrl = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (temporaryPreviewUrl.current) {
+        URL.revokeObjectURL(temporaryPreviewUrl.current);
+      }
+    };
+  }, []);
 
   const affectedItemCount = useMemo(() => {
     if (appliesToAll) return items.length;
@@ -71,6 +98,29 @@ export default function EventForm({
         item.categoryIds.some((id) => selectedCategories.has(id)),
     ).length;
   }, [appliesToAll, categoryIds, itemIds, items]);
+
+  function selectImage(file: File) {
+    setImageError(null);
+
+    if (!acceptedImageTypes.includes(file.type)) {
+      setImageError("Choose a JPG, PNG, or WEBP image.");
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      setImageError("The selected image must be 10 MB or smaller.");
+      return;
+    }
+
+    if (temporaryPreviewUrl.current) {
+      URL.revokeObjectURL(temporaryPreviewUrl.current);
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(file);
+    temporaryPreviewUrl.current = nextPreviewUrl;
+    setImageFile(file);
+    setPreviewUrl(nextPreviewUrl);
+  }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -101,6 +151,7 @@ export default function EventForm({
     onSave({
       name: name.trim(),
       description: description.trim(),
+      imageFile,
       startAt: startDate.toISOString(),
       endAt: endDate.toISOString(),
       appliesToAll,
@@ -137,6 +188,36 @@ export default function EventForm({
         }
         className="mt-1 resize-y rounded border border-[#dbb082] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFBDC7]/50"
       />
+
+      <div className="mt-4">
+        <label className="text-sm text-gray-700" htmlFor="event-image">
+          Event image <span className="text-gray-400">(optional)</span>
+        </label>
+        <div className="relative mt-1 aspect-[4/3] overflow-hidden rounded-xl border border-[#dbb082] bg-[#f3ece6]">
+          <Image
+            src={previewUrl}
+            alt={`${name || "Event"} preview`}
+            fill
+            unoptimized={previewUrl.startsWith("blob:")}
+            className="object-cover"
+            sizes="272px"
+          />
+        </div>
+        <input
+          id="event-image"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            const file = event.target.files?.[0];
+            if (file) selectImage(file);
+            event.target.value = "";
+          }}
+          className="mt-2 block w-full cursor-pointer rounded border border-[#dbb082] bg-[#fffaf6] p-2 text-xs file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-[#FFBDC7] file:px-3 file:py-2 file:font-semibold file:text-white"
+        />
+        <p className={`mt-1 text-xs ${imageError ? "text-red-600" : "text-gray-500"}`}>
+          {imageError ?? "JPG, PNG, or WEBP · 10 MB maximum. /temp.png is used if omitted."}
+        </p>
+      </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3">
         <label className="text-sm text-gray-700" htmlFor="event-start">

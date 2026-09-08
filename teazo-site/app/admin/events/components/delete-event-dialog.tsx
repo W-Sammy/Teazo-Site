@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MouseEvent } from "react";
 import type { AdminEvent } from "@/app/types/admin-event";
 
@@ -28,13 +29,27 @@ export default function DeleteEventDialog({
         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
         onClick={(clickEvent: MouseEvent<HTMLDivElement>) => clickEvent.stopPropagation()}
       >
-        <h2 id="delete-event-title" className="text-xl font-semibold text-gray-900">
-          Delete event?
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-gray-600">
-          Are you sure you want to delete <strong>{event.name}</strong>? This removes
-          it from the current event session.
-        </p>
+        <div className="flex items-start gap-4">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f3ece6]">
+            <Image
+              src={event.imageUrl}
+              alt=""
+              fill
+              unoptimized={event.imageUrl.startsWith("blob:")}
+              className="object-cover"
+              sizes="80px"
+            />
+          </div>
+          <div>
+            <h2 id="delete-event-title" className="text-xl font-semibold text-gray-900">
+              Delete event?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Are you sure you want to delete <strong>{event.name}</strong>? This
+              removes it from the current event session.
+            </p>
+          </div>
+        </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"

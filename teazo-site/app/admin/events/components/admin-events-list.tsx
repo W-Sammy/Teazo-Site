@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MouseEvent } from "react";
 import type {
   AdminEvent,
@@ -30,11 +31,12 @@ export default function AdminEventsList({
 }: AdminEventsListProps) {
   return (
     <div className="w-full overflow-x-auto rounded-lg border border-[#dbb082]/60 bg-white">
-      <table className="w-full min-w-[900px] border-collapse">
+      <table className="w-full min-w-[980px] border-collapse">
         <thead>
           <tr className="border-b border-[#dbb082] bg-[#fffaf6] text-left text-sm text-gray-700">
             <th className="w-14 px-3 py-3" aria-label="Delete" />
             <th className="w-20 px-3 py-3" aria-label="Edit" />
+            <th className="w-20 px-3 py-3">Image</th>
             <th className="px-3 py-3">Name</th>
             <th className="px-3 py-3">Description</th>
             <th className="px-3 py-3">Applies To</th>
@@ -76,6 +78,18 @@ export default function AdminEventsList({
                   >
                     EDIT
                   </button>
+                </td>
+                <td className="px-3 py-2">
+                  <div className="relative h-11 w-11 overflow-hidden rounded bg-[#f3ece6]">
+                    <Image
+                      src={event.imageUrl}
+                      alt=""
+                      fill
+                      unoptimized={event.imageUrl.startsWith("blob:")}
+                      className="object-cover"
+                      sizes="44px"
+                    />
+                  </div>
                 </td>
                 <td className="px-3 py-2 font-medium text-gray-900">{event.name}</td>
                 <td className="max-w-60 truncate px-3 py-2 text-gray-600">{event.description}</td>

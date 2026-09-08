@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type {
   AdminEvent,
   EventCatalogItem,
@@ -37,31 +38,55 @@ export default function AdminEventsGrid({
             key={event.id}
             className="overflow-hidden rounded-2xl border border-[#dbb082]/60 bg-white shadow-sm"
           >
-            <div className="relative bg-gradient-to-br from-[#fff0f2] to-[#fffaf6] p-5">
-              <span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${statusClasses[status]}`}>
+            <div className="relative aspect-[4/3] overflow-hidden bg-[#f3ece6]">
+              <Image
+                src={event.imageUrl}
+                alt={event.name}
+                fill
+                unoptimized={event.imageUrl.startsWith("blob:")}
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+              />
+              <button
+                type="button"
+                onClick={() => onEdit(event)}
+                className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+                aria-label={`Edit ${event.name}`}
+              />
+              <span className={`absolute left-3 top-3 z-20 rounded-full px-2 py-1 text-xs font-semibold capitalize shadow-sm ${statusClasses[status]}`}>
                 {status}
               </span>
               <button
                 type="button"
                 onClick={() => onDelete(event)}
-                className="absolute right-3 top-3 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-red-500 shadow hover:bg-red-50"
+                className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white text-red-500 shadow hover:bg-red-50"
                 aria-label={`Delete ${event.name}`}
               >
                 ×
               </button>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-[#9b6d43]">
-                {formatEventDate(event.startAt)}
-              </p>
-              <h2 className="mt-1 line-clamp-2 text-lg font-semibold text-gray-900">
-                {event.name}
-              </h2>
             </div>
 
             <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="line-clamp-2 text-lg font-semibold text-gray-900">
+                  {event.name}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => onEdit(event)}
+                  className="shrink-0 cursor-pointer text-xs font-bold text-[#b98555] hover:underline"
+                >
+                  EDIT
+                </button>
+              </div>
               <p className="line-clamp-3 min-h-15 text-sm leading-5 text-gray-600">
                 {event.description}
               </p>
               <dl className="mt-4 space-y-2 text-xs">
+                <div>
+                  <dt className="font-semibold text-gray-700">Starts</dt>
+                  <dd className="text-gray-500">{formatEventDate(event.startAt)}</dd>
+                </div>
                 <div>
                   <dt className="font-semibold text-gray-700">Ends</dt>
                   <dd className="text-gray-500">{formatEventDate(event.endAt)}</dd>
@@ -73,13 +98,6 @@ export default function AdminEventsGrid({
                   </dd>
                 </div>
               </dl>
-              <button
-                type="button"
-                onClick={() => onEdit(event)}
-                className="mt-4 cursor-pointer text-xs font-bold text-[#b98555] hover:underline"
-              >
-                EDIT
-              </button>
             </div>
           </article>
         );

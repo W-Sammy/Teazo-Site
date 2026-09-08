@@ -2,6 +2,7 @@ export type AdminEvent = {
   id: string;
   name: string;
   description: string;
+  imageUrl: string;
   startAt: string;
   endAt: string;
   appliesToAll: boolean;

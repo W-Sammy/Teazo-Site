@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import AdminForm from "@/app/admin/components/admin-form-page";
 import AdminViewToggle, {
   GridViewIcon,
@@ -33,6 +33,7 @@ const viewOptions: readonly AdminViewOption<EventViewMode>[] = [
 ];
 
 const statuses: EventStatus[] = ["upcoming", "active", "ended"];
+const fallbackEventImage = "/temp.png";
 
 function createEventId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -55,6 +56,15 @@ export default function AdminEventsClient({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null);
   const [eventPendingDelete, setEventPendingDelete] = useState<AdminEvent | null>(null);
+  const managedObjectUrls = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const urls = managedObjectUrls.current;
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+      urls.clear();
+    };
+  }, []);
 
   const categoryNames = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
@@ -121,19 +131,43 @@ export default function AdminEventsClient({
     setDrawerOpen(true);
   }
 
+  function createManagedObjectUrl(file: File) {
+    const url = URL.createObjectURL(file);
+    managedObjectUrls.current.add(url);
+    return url;
+  }
+
+  function revokeManagedObjectUrl(url: string) {
+    if (!managedObjectUrls.current.has(url)) return;
+    URL.revokeObjectURL(url);
+    managedObjectUrls.current.delete(url);
+  }
+
   function handleSave(values: EventFormValues) {
+    const { imageFile, ...eventValues } = values;
+    const imageUrl = imageFile
+      ? createManagedObjectUrl(imageFile)
+      : editingEvent?.imageUrl ?? fallbackEventImage;
+
     setEvents((current) =>
       editingEvent
         ? current.map((event) =>
-            event.id === editingEvent.id ? { ...event, ...values } : event,
+            event.id === editingEvent.id
+              ? { ...event, ...eventValues, imageUrl }
+              : event,
           )
-        : [{ id: createEventId(), ...values }, ...current],
+        : [{ id: createEventId(), ...eventValues, imageUrl }, ...current],
     );
+
+    if (imageFile && editingEvent) {
+      revokeManagedObjectUrl(editingEvent.imageUrl);
+    }
     closeDrawer();
   }
 
   function confirmDelete() {
     if (!eventPendingDelete) return;
+    revokeManagedObjectUrl(eventPendingDelete.imageUrl);
     setEvents((current) =>
       current.filter((event) => event.id !== eventPendingDelete.id),
     );
