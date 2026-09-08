@@ -6,12 +6,24 @@
   // README currently names as the host. See docs/DATA-MODEL.md ("Blocker 1")
   // before wiring application code to these bindings.
   //
-  // This file is still correct and useful today regardless of that decision:
-  // it is what `wrangler d1 migrations apply` and `wrangler r2 bucket` read.
+  // This file is useful today regardless of that decision: it is what
+  // `wrangler d1 migrations apply` and `wrangler r2 bucket` read.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "teazo-site",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
+
+  // Populated by `opennextjs-cloudflare build`. Uncomment once the hosting
+  // decision is made and @opennextjs/cloudflare is installed.
+  // "main": ".open-next/worker.js",
+  // "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+
+  // The R2 binding does not expose its own bucket name at runtime — there is
+  // no env.MEDIA.name — so media_asset.r2_bucket is filled from this var.
+  "vars": {
+    "MEDIA_BUCKET_NAME": "teazo-media",
+    "SQUARE_ENV": "sandbox"
+  },
 
   "d1_databases": [
     {
@@ -32,6 +44,10 @@
 
   "env": {
     "preview": {
+      "vars": {
+        "MEDIA_BUCKET_NAME": "teazo-media-preview",
+        "SQUARE_ENV": "sandbox"
+      },
       "d1_databases": [
         {
           "binding": "DB",

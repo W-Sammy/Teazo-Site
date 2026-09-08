@@ -4,13 +4,16 @@
 -- Sources are cited per block.
 
 -- ---------------------------------------------------------------------------
--- Roles — matches AdminRole = 1 | 2 | 3 on branch steven-create-admins
--- (teazo-site/app/types/admin-perms.ts)
+-- Roles — labels are exactly ADMIN_ROLE_LABELS from
+-- origin/steven-create-admins:teazo-site/app/types/admin-perms.ts:10-14,
+-- which is what the Settings table renders. Do not rename these without
+-- changing the UI: role 2 ("Can Edit") is also the only role for which
+-- admin_user.can_invite_users may be 1.
 -- ---------------------------------------------------------------------------
 INSERT INTO role (id, key, label, rank) VALUES
-  (1, 'owner',   'Owner',   10),
-  (2, 'manager', 'Manager', 20),
-  (3, 'staff',   'Staff',   30);
+  (1, 'owner', 'Owner',    10),
+  (2, 'edit',  'Can Edit', 20),
+  (3, 'view',  'Can View', 30);
 
 -- ---------------------------------------------------------------------------
 -- Business profile — app/(site)/contact/contact-content.ts:22-32

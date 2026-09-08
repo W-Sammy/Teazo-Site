@@ -132,14 +132,18 @@ The current code reads a narrow projection of this and throws the rest away —
 
 ## 4. Schema
 
-24 tables, 28 indexes. `migrations/0001_init.sql` and `0002_seed.sql`.
-Validated against SQLite 3.45 — DDL applies clean and 24 constraint assertions pass.
+26 tables, 31 indexes, 6 triggers. `migrations/0001_init.sql` and `0002_seed.sql`.
+Validated against SQLite 3.45 and through wrangler's own migration runner:
+the DDL applies clean and 33 constraint assertions pass.
+
+**For how to build against it, see [`BUILD-GUIDE.md`](./BUILD-GUIDE.md).**
 
 ### Conventions
 
 | Concern | Choice | Why |
 |---|---|---|
 | ids | `TEXT` via `hex(randomblob(16))` | D1 has no UUID type; the gallery admin already mints `crypto.randomUUID()` client-side |
+| PKs | every `TEXT` PK is explicitly `NOT NULL` | in SQLite **only `INTEGER PRIMARY KEY` implies NOT NULL** — a bare `id TEXT PRIMARY KEY` accepts NULL, and a helper returning `undefined` then writes a row nothing can ever look up |
 | booleans | `INTEGER 0/1` + `CHECK` | SQLite has no BOOLEAN |
 | enums | `TEXT` + `CHECK` | no ENUM, and **SQLite cannot add a CHECK later** without a full table rebuild — so they are declared now |
 | timestamps | ISO-8601 `TEXT`, UTC | sorts lexicographically, no timezone ambiguity |
@@ -150,8 +154,13 @@ Validated against SQLite 3.45 — DDL applies clean and 24 constraint assertions
 
 `role`, `admin_user`, `oauth_account`, `admin_session`, `admin_invitation`
 
-Roles are `1=Owner, 2=Manager, 3=Staff`, matching `AdminRole = 1|2|3` on the
-unmerged `steven-create-admins` branch.
+Roles are `1=Owner, 2=Can Edit, 3=Can View` — the exact `ADMIN_ROLE_LABELS`
+from the unmerged `steven-create-admins` branch, which is what the Settings
+table renders.
+
+`admin_user.can_invite_users` mirrors the branch's per-admin invite flag. A CHECK
+restricts it to role 2, because `changeRole()` forces it false for any other role
+and `toggleInvitePermission()` refuses unless the role is "Can Edit".
 
 - `UNIQUE(email_normalized) WHERE deleted_at IS NULL` — the branch's `addAdmin`
   currently appends without a duplicate check, so the same email can be added twice.
@@ -170,19 +179,26 @@ unmerged `steven-create-admins` branch.
 > `admin_invitation` accumulate expired rows forever unless a cron-triggered Worker
 > sweeps them. That Worker is a named deliverable, not an afterthought.
 
-### 4.2 Media — 2 tables
+### 4.2 Media — 2 tables + a guard trigger
 
 `media_asset`, `pending_r2_deletion`
 
 D1 holds metadata, R2 holds bytes. `mime_type` is restricted to the three types the
 upload form already accepts (`gallery-upload-form.tsx:27`) plus PDF.
 
-There is **no refcount column** — a hand-maintained counter across six referencing
+There is **no refcount column** — a hand-maintained counter across eight referencing
 tables drifts the first time a write path forgets to decrement, and then the cleanup
-job either deletes live objects or leaks dead ones. Instead: `ON DELETE RESTRICT` on
-everything that references media, and `pending_r2_deletion` as an explicit queue the
-sweeper drains. Deleting bytes is decoupled from deleting rows on purpose — R2 deletes
-are not transactional with D1.
+job either deletes live objects or leaks dead ones.
+
+Instead, protection is a **trigger**, not the foreign keys. Media is *soft*-deleted,
+so `ON DELETE RESTRICT` never fires on a normal retirement —
+`trg_media_soft_delete_guard` refuses to set `deleted_at` while any of the eight
+referencing tables still points at the row. The delete handler should still run an
+explicit usage query first so it can return a helpful 409 naming the holder instead
+of surfacing a raw constraint error.
+
+`pending_r2_deletion` is the queue a cron Worker drains. Deleting bytes is decoupled
+from deleting rows on purpose — R2 deletes are not transactional with D1.
 
 ### 4.3 Gallery — 3 tables
 
@@ -222,11 +238,17 @@ highest-value slice for the client: it is what lets Karen change hours without a
   is_current = 1`, so replacing it is an insert rather than a destructive overwrite of
   a live URL.
 
-### 4.5 Square catalog — 4 tables
+### 4.5 Square catalog — 6 tables
 
-`square_sync_state`, `catalog_item_cache`, `menu_section`, `menu_section_item`,
-`menu_item_display`
+`square_sync_state`, `catalog_item_cache`, `catalog_variation_cache`,
+`catalog_category_cache`, `menu_section`, `menu_section_item`, `menu_item_display`
 
+- **Prices live in `catalog_variation_cache`, not on the item.** A boba shop's
+  Regular/Large *is* a Square `ITEM_VARIATION`. One row per item would collapse every
+  size pair to whichever the sync wrote last and show one wrong price. This is the same
+  truncation as landmine 1 below, and the reason that bug must be fixed before syncing.
+- `catalog_category_cache` exists so "render only sections joined to a live catalog
+  row" has something to join to when a category is deleted in Square.
 - `catalog_item_cache` carries **`square_version`** — Square's optimistic-concurrency
   token, which the PUT handler already reads and echoes. Without it there is no way to
   tell whether a cached price is current, and a stale price on the public menu is a
@@ -236,7 +258,15 @@ highest-value slice for the client: it is what lets Karen change hours without a
   two drafts did) cannot express the most prominent section on the menu page.
 - `menu_item_display` holds presentation only: local photo override, badge, featured,
   hide-on-website, allergen note. **No price, no name, no availability, no modifiers.**
-- Every one of these is keyed `(square_object_id, square_env)`.
+- Every one of these is keyed on `square_env`, **including `square_sync_state`** — its
+  PK is `(key, square_env)` so both environments hold independent watermarks and a
+  cutover does not destroy the sandbox cursor.
+- `menu_section_item` carries a composite FK pinning its `square_env` to its section's,
+  and another into `catalog_item_cache`, so a membership row can neither cross
+  environments nor point at an item that was never synced.
+- `menu_section_item.square_ordinal` mirrors Square's per-category ordinal and *seeds*
+  the D1-owned `position` on first sync. Square's ordinal cannot be the ongoing
+  authority, because "TEAZO Special" has no Square category and therefore no ordinal.
 
 **Orphan policy.** SQLite cannot foreign-key into Square. When a catalog object is
 deleted, curation rows point at a dead id and the menu renders gaps. `DELETE
@@ -356,7 +386,7 @@ earn it back.
 | `navigation_item`, `page_metadata` | nav is 5 labels in a container locked to `grid-cols-5`; a DB-driven nav breaks on the 6th item |
 
 The union of everything the analysis proposed was ~68 tables — larger than the
-remaining semester for seven developers. This is 24.
+remaining semester for seven developers. This is 26.
 
 ---
 
