@@ -1,0 +1,374 @@
+# TEAZO — Data Model (Cloudflare D1 + R2)
+
+Status: proposed, migrations validated locally, not yet deployed.
+Scope: the database and object-storage layer the team builds against. Application
+code, API routes and Square wiring are out of scope here.
+
+---
+
+## 1. What the project actually is today
+
+TEAZO is a Next.js 16 / React 19 app for a single bubble-tea shop at 1050 Taraval St,
+San Francisco. Six public routes, six admin routes, three Square API routes. ~6,100
+lines of TypeScript under `teazo-site/app`.
+
+**There is no persistence of any kind.** No database client, no ORM, no storage SDK,
+no `localStorage`. `package.json` dependencies are exactly: `next`, `react`,
+`react-dom`, `pdfjs-dist`, `square`. Every byte the site displays is either a git-tracked
+file in `public/` or a TypeScript literal in a component.
+
+| Surface | State | What backs it now |
+|---|---|---|
+| `/` home | built | inline JSX; carousel is a hardcoded `string[]` |
+| `/menu` | built | **787 lines of literals** — 71 items via a `createMenuItem` factory |
+| `/gallery` | built | 9 mock records that all point at `/TEAZO_logo.png` |
+| `/contact` | built | `contact-content.ts` — real address, phone, hours |
+| `/delivery` | built | 3 hardcoded marketplace deeplinks |
+| `/static-menu` | built | serves `public/teazo-menu.pdf` |
+| `/login` | **shell** | no `onSubmit`, no `onClick`, state never leaves the component |
+| `/admin` | **stub** | `<h1>Hello World</h1>` |
+| `/admin/menu` | partial | really fetches Square; every mutation is `console.log` |
+| `/admin/gallery` | built UI | fully client-side, uploads die on refresh (`URL.createObjectURL`) |
+| `/admin/events` | **stub** | `<h1>Hello World</h1>` |
+| `/admin/settings` | **stub** | `<h1>Hello World</h1>` (PR #47 adds an Admins table) |
+| `/admin/website-content` | **stub** | `<h1>Hello World</h1>` |
+
+The Square integration is real but read-mostly and **pinned to Sandbox**
+(`app/lib/square.ts:8`), and no public page consumes it — `grep "fetch("` across
+`app/(site)/` returns zero hits.
+
+---
+
+## 2. Two things to settle before anyone writes application code
+
+### Blocker 1 — D1 is not reachable from Vercel
+
+`README.md:46-49` lists the deployment target as **Vercel** *and* Cloudflare D1 + R2.
+Those are not compatible as written. D1 is exposed as a runtime **binding** inside the
+Workers/Pages runtime. From Vercel the only path is D1's HTTP REST API, which is
+rate-limited and explicitly not meant for the request path.
+
+R2 is fine either way — it speaks the S3 API, so Vercel can reach it with credentials.
+D1 is the problem.
+
+Three ways out:
+
+| Option | Cost | Consequence |
+|---|---|---|
+| **A. Move hosting to Cloudflare Workers** via `@opennextjs/cloudflare` | one-time migration, keeps the whole stack on Cloudflare | native `env.DB` / `env.MEDIA` bindings; the schema below applies unchanged |
+| B. Stay on Vercel, swap D1 for Turso or Neon | Turso is also SQLite — **this DDL ports nearly as-is** | drops "Cloudflare D1" from the stack; keep R2 for objects |
+| C. Stay on Vercel, call D1 over HTTP | no migration | rate limits on every request; not recommended |
+
+**Recommendation: A.** The team has already committed to Cloudflare in the README and
+to the client. It keeps one vendor, gives native bindings, and R2 uploads stop needing
+separate S3 credentials. The migrations in this PR are written for it.
+
+This decision does not block the schema — options A and B run the same SQLite DDL. It
+blocks *wiring*, so decide before writing data-access code.
+
+### Blocker 2 — `/admin` is publicly reachable right now
+
+There is no `middleware.ts` anywhere in the repo, and `app/admin/layout.tsx` is pure
+presentation with no guard. Anyone who knows the URL can open the admin portal.
+
+Worse, `POST /api/square/products` and `PUT|DELETE /api/square/products/[id]` are
+unauthenticated route handlers that **write to the live Square catalog**. That is a
+production-catalog write endpoint open to the internet, currently pointed at Sandbox.
+
+This is a live hole today, independent of the database work. The `admin_user` /
+`admin_session` tables below are the storage half of the fix; the middleware is the
+other half and should land in the same sprint.
+
+---
+
+## 3. The Square boundary — the rule that keeps the site and the register agreeing
+
+Square's Catalog API **authoritatively owns** far more than the current code reads:
+
+- item name, description, variations, prices, currency
+- categories, and the **`ordinal`** on each category membership — Square owns display order
+- modifier lists, their `selectionType`, and `min/maxSelectedModifiers`
+- item images (`imageIds[]`)
+- sold-out state (`ItemVariationLocationOverrides.soldOut` + the Inventory API)
+- online visibility and availability periods
+- store address, phone, timezone and business hours (the **Locations** API)
+
+The current code reads a narrow projection of this and throws the rest away —
+`app/api/square/products/route.ts:63-65` maps categories to `{id, name}` and discards
+`ordinal`; `square-helpers.ts:48-63` drops `selectionType` and min/max.
+
+> **Rule: D1 never stores a field Square owns as an editable value.**
+> Cache it (with `square_version` so staleness is detectable), or read it live.
+> Anything an admin can edit in D1 that Square also owns *will* drift, and the
+> website will contradict the register in front of a customer.
+
+**D1 legitimately owns** what Square genuinely cannot express for this site:
+
+- the synthetic **"TEAZO Special"** grouping — a curated block with no Square CATEGORY
+- section **subtitles** ("Think cottony clouds of heaven that melt in your mouth")
+- the **65 curated local photographs** in `public/menu_items` — a parallel photo set to
+  whatever Square holds, and the one the site actually renders today
+- everything non-catalog: gallery, events, site copy, admin identity, inquiries
+
+### Three landmines in the current code
+
+1. **`variations[0]` truncation.** `PUT /api/square/products/[id]:90-104` rewrites
+   `itemData.variations` to a **single-element array** named `"Regular"`. For a boba
+   shop, sizes / ice / sugar are exactly what Square models as multiple variations and
+   `CatalogItemOption`. Every admin edit silently deletes all but the first. **Fix this
+   route before caching variations** — otherwise the cache faithfully mirrors data
+   corruption.
+
+2. **Sandbox → production is a keyspace change.** Sandbox and production are separate
+   merchant accounts sharing no object ids. Every curation row keyed on a Square id
+   dies at cutover. Hence `square_env` in the primary key of every Square-keyed table.
+
+3. **The BigInt patch is on the money path.** `app/lib/square.ts:12-21` monkey-patches
+   `BigInt.prototype.toJSON` at module scope to return `Number(this)`. It is lossy, it
+   is a global side effect of an import, and every price in the system passes through
+   it. It will follow the Square client into a Workers runtime.
+
+---
+
+## 4. Schema
+
+24 tables, 28 indexes. `migrations/0001_init.sql` and `0002_seed.sql`.
+Validated against SQLite 3.45 — DDL applies clean and 24 constraint assertions pass.
+
+### Conventions
+
+| Concern | Choice | Why |
+|---|---|---|
+| ids | `TEXT` via `hex(randomblob(16))` | D1 has no UUID type; the gallery admin already mints `crypto.randomUUID()` client-side |
+| booleans | `INTEGER 0/1` + `CHECK` | SQLite has no BOOLEAN |
+| enums | `TEXT` + `CHECK` | no ENUM, and **SQLite cannot add a CHECK later** without a full table rebuild — so they are declared now |
+| timestamps | ISO-8601 `TEXT`, UTC | sorts lexicographically, no timezone ambiguity |
+| soft delete | `deleted_at` + **partial** uniques | a plain unique makes "delete then re-add" fail |
+| JSON columns | `TEXT` + `json_valid()` CHECK | no JSONB |
+
+### 4.1 Identity & access — 5 tables
+
+`role`, `admin_user`, `oauth_account`, `admin_session`, `admin_invitation`
+
+Roles are `1=Owner, 2=Manager, 3=Staff`, matching `AdminRole = 1|2|3` on the
+unmerged `steven-create-admins` branch.
+
+- `UNIQUE(email_normalized) WHERE deleted_at IS NULL` — the branch's `addAdmin`
+  currently appends without a duplicate check, so the same email can be added twice.
+  Normalization is an explicit column because SQLite's `NOCASE` folds ASCII only.
+- `UNIQUE(role_id) WHERE role_id = 1` — at most one Owner. *At least* one is not
+  expressible in SQLite; that guard belongs in the delete/demote handler.
+- `oauth_account` stores **only** `provider` + `provider_account_id` (the Google `sub`).
+  No access or refresh tokens: the app never calls a Google API on the user's behalf,
+  and D1 has no column-level encryption.
+- `admin_session` deliberately has **no `last_seen_at`** — one UPDATE per authenticated
+  request is the canonical D1 anti-pattern. It exists to make revocation possible.
+  If sessions get chatty, move them to Workers KV (native TTL) and keep a small
+  revocation table here.
+
+> **D1 has no TTL and no scheduled jobs of its own.** `admin_session` and
+> `admin_invitation` accumulate expired rows forever unless a cron-triggered Worker
+> sweeps them. That Worker is a named deliverable, not an afterthought.
+
+### 4.2 Media — 2 tables
+
+`media_asset`, `pending_r2_deletion`
+
+D1 holds metadata, R2 holds bytes. `mime_type` is restricted to the three types the
+upload form already accepts (`gallery-upload-form.tsx:27`) plus PDF.
+
+There is **no refcount column** — a hand-maintained counter across six referencing
+tables drifts the first time a write path forgets to decrement, and then the cleanup
+job either deletes live objects or leaks dead ones. Instead: `ON DELETE RESTRICT` on
+everything that references media, and `pending_r2_deletion` as an explicit queue the
+sweeper drains. Deleting bytes is decoupled from deleting rows on purpose — R2 deletes
+are not transactional with D1.
+
+### 4.3 Gallery — 3 tables
+
+`gallery_image`, `gallery_tag`, `gallery_image_tag`
+
+- **`name_sort_key`** exists because the admin sorts with `localeCompare`, D1 ships only
+  BINARY/NOCASE/RTRIM, and the content is bilingual (`厚烧蛋糕波波奶茶`). Compute the key
+  with `Intl.Collator` in the Worker at write time and sort on that, or the order
+  visibly changes when this moves to SQL.
+- **`gallery_tag.name_normalized` is UNIQUE.** Today `normalizeTag` trims and collapses
+  whitespace but does not lowercase, and duplicate-checks only within one image — so
+  "Matcha" and "matcha" become two sidebar entries. The unique index is the fix.
+- Search is a case-insensitive substring over name **and** tags — `LIKE '%q%'`, which no
+  B-tree serves. At this size a scan is fine; if it grows, D1 supports FTS5.
+- The public `GalleryImage {id,url,alt,caption}` and admin `AdminGalleryImage
+  {id,name,url,tags,createdAt}` types are reconciled into one table. `alt` and `caption`
+  are **not collected by the upload form today** — the form's value type is exactly
+  `{name, tags, file}`. Either add the inputs or accept the columns start null.
+
+### 4.4 Site content — 7 tables
+
+`business_profile`, `business_hours`, `hours_exception`, `site_link`,
+`content_block`, `carousel_slide`, `menu_document`
+
+This is what replaces `contact-content.ts` and the inline JSX literals. It is the
+highest-value slice for the client: it is what lets Karen change hours without a deploy.
+
+- `business_profile` is a singleton (`CHECK (id = 1)`) with `synced_from_square_at`,
+  because **Square's Locations API also owns address, phone and hours**. Decide the
+  direction of sync deliberately: if the owner changes hours in the Square dashboard —
+  which is where POS behavior lives — the website must not silently keep the old ones.
+- `hours_exception` handles holiday closures. `business_hours` alone cannot express
+  "closed for Lunar New Year", which is the most common hours edit a shop owner makes.
+- `site_link` is **one** table for social + delivery. The drafts wanted four tables for
+  what is, in total, eight URLs that change roughly never.
+- `menu_document` versions the static-menu PDF with `UNIQUE(is_current) WHERE
+  is_current = 1`, so replacing it is an insert rather than a destructive overwrite of
+  a live URL.
+
+### 4.5 Square catalog — 4 tables
+
+`square_sync_state`, `catalog_item_cache`, `menu_section`, `menu_section_item`,
+`menu_item_display`
+
+- `catalog_item_cache` carries **`square_version`** — Square's optimistic-concurrency
+  token, which the PUT handler already reads and echoes. Without it there is no way to
+  tell whether a cached price is current, and a stale price on the public menu is a
+  customer-facing error.
+- `menu_section.square_category_id` is **nullable** — that is what makes the "TEAZO
+  Special" block representable. Modelling `square_category_id` as the primary key (as
+  two drafts did) cannot express the most prominent section on the menu page.
+- `menu_item_display` holds presentation only: local photo override, badge, featured,
+  hide-on-website, allergen note. **No price, no name, no availability, no modifiers.**
+- Every one of these is keyed `(square_object_id, square_env)`.
+
+**Orphan policy.** SQLite cannot foreign-key into Square. When a catalog object is
+deleted, curation rows point at a dead id and the menu renders gaps. `DELETE
+/api/square/products/[id]` returns `deletedObjectIds` and currently **consumes it
+nowhere**. Required: on delete, mark `catalog_item_cache.is_deleted = 1`; render only
+sections joined to a live cache row; sweep `menu_section_item` on reconciliation.
+Note that a re-created item gets a **fresh Square id**, so its curation state is lost —
+that is inherent, and worth telling the client.
+
+**Sync mechanism.** Square emits exactly one catalog webhook, `catalog.version.updated`,
+and its payload carries only the merchant's new catalog version — **it does not say
+which objects changed**. So there is no object-level delta to key on. The correct design
+is `square_sync_state.last_catalog_version` driving a delta scan via
+`SearchCatalogObjects` with `beginTime` and `includeDeletedObjects`.
+
+D1 caps a query at roughly 100 bound parameters and ~100 KB of SQL, so a full sync of
+71 items cannot be one statement — chunk it and use `db.batch()`, which is D1's only
+transaction primitive.
+
+### 4.6 Events & inquiries — 2 tables
+
+`event`, `contact_message`
+
+`contact_message` has six columns matching the five inputs the form actually collects.
+The contact form currently posts to a `mailto:` with `encType="text/plain"`, which most
+browsers drop silently — **every inquiry submitted so far has been lost.** This is the
+cheapest real win in the whole schema.
+
+Deliberately **not** included: `phone`, `inquiry_type`, `spam_score`, `handled_by`,
+`ip`. There is no inbox screen to triage anything, and a raw visitor IP in a student
+project is a liability with no consumer. Add triage columns when someone builds the
+inbox.
+
+---
+
+## 5. Object storage (R2)
+
+### Buckets
+
+| Bucket | Purpose |
+|---|---|
+| `teazo-media` | production user-uploaded content |
+| `teazo-media-preview` | preview/dev |
+
+### Key layout
+
+```
+gallery/{yyyy}/{mm}/{uuid}.{ext}      gallery photographs
+menu/items/{square_object_id}/{uuid}.{ext}   local menu item photography
+carousel/{uuid}.{ext}                 home-page carousel slides
+events/{event_id}/{uuid}.{ext}        event flyers
+documents/menu/{uuid}.pdf             versioned static menu PDF
+branding/{uuid}.{ext}                 owner-replaceable logos
+```
+
+UUID keys, not content-addressed hashes: dedupe by checksum is a feature nothing asks
+for, and it makes "delete then re-upload the same file" fail on a unique index.
+
+### What moves and what stays
+
+`public/` is 18 MB across 101 files. The split is by **who owns the file**, not by type:
+
+| Stays in the repo (build-time assets) | Moves to R2 (owner-editable content) |
+|---|---|
+| `admin_icons/` (14 files) | `menu_items/` — 65 `.webp`, 6.4 MB |
+| `social_icons/` (4) | `carousel_images/` — 5 files, 8.1 MB |
+| `pdfjs/` (2, vendored lib) | `promotions/` — 1 file |
+| logos, `pink_scribble.png` | `teazo-menu.pdf` |
+
+Roughly **14.7 MB migrates**; the rest is code, not content.
+
+### Derivatives
+
+None. `next/image` already generates renditions on demand and that is how every
+`<Image>` in the app works today. There is no `sharp`, no image pipeline, and no
+measured page-weight problem. Add a variant table when there is evidence, not before.
+
+### Serving
+
+Serve through a Worker route or a bound custom domain, not public bucket URLs — that
+keeps `next.config.ts` `remotePatterns` to one hostname. Note `app/lib/imageHosts.ts`
+currently allowlists only the **sandbox** Square S3 bucket, which will need the
+production host at cutover.
+
+---
+
+## 6. Build order
+
+Sequenced by what is broken now, not by what is architecturally tidy.
+
+| # | Slice | Fixes |
+|---|---|---|
+| 1 | `media_asset` + gallery + R2 | uploads that vanish on refresh |
+| 2 | `admin_user` + `admin_session` + **middleware** | `/admin` and the Square write routes are open to the internet |
+| 3 | `contact_message` | the mailto form that silently loses every inquiry |
+| 4 | `business_profile` + hours + `site_link` + `content_block` | Karen can edit the site without a deploy |
+| 5 | `catalog_item_cache` + `menu_section` + `menu_item_display` | replaces the 787-line mock menu |
+| 6 | `event` | `/admin/events` has nothing to read |
+
+Slices 1–3 are each roughly a sprint of one developer's time and each closes a real
+defect. Slice 5 is the largest and depends on fixing the `variations[0]` truncation
+first.
+
+### Deliberately cut
+
+Proposed by the analysis, cut for lack of evidence in the repo. Each names what would
+earn it back.
+
+| Cut | Earn it back with |
+|---|---|
+| `audit_log` with before/after JSON | an activity-log screen, or >5 admins |
+| `content_block_revision` | a "restore previous version" control |
+| analytics event + daily rollup tables | the Dashboard is `<h1>Hello World</h1>`; per-pageview INSERTs are a D1 anti-pattern — use Workers Analytics Engine |
+| `web_order` / `payment_ref` | there is no cart, no checkout, no Payments SDK; ordering is delegated to three marketplaces |
+| `addon_group` / `addon_option` | justified only by two unreferenced PNG icons; these are Square's ModifierList/Modifier and belong there |
+| image variant tables, `refcount`, `checksum` | a measured page-weight problem `next/image` can't solve |
+| `navigation_item`, `page_metadata` | nav is 5 labels in a container locked to `grid-cols-5`; a DB-driven nav breaks on the 6th item |
+
+The union of everything the analysis proposed was ~68 tables — larger than the
+remaining semester for seven developers. This is 24.
+
+---
+
+## 7. Open questions for the team
+
+1. **Hosting** (Blocker 1) — Workers via `@opennextjs/cloudflare`, or Vercel + Turso?
+   Nothing else can be wired until this is decided.
+2. **Hours: who wins?** Square Locations, or D1? Both can hold them. Pick one direction
+   and make the other a mirror.
+3. **Menu photography: who wins?** The 65 curated `.webp`, or Square's hosted images?
+   The schema assumes local wins via `menu_item_display.image_media_id`, because that
+   is what renders today. If Square wins, drop that column.
+4. **When is the Square production cutover?** Every curation row created before it is
+   keyed to sandbox ids and will need re-mapping. Cheapest if curation starts *after*.
+5. **Alt text and captions** — add the inputs to the upload form, or accept nulls?
