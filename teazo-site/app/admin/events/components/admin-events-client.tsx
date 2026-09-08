@@ -33,7 +33,7 @@ const viewOptions: readonly AdminViewOption<EventViewMode>[] = [
 ];
 
 const statuses: EventStatus[] = ["upcoming", "active", "ended"];
-const fallbackEventImage = "/temp.png";
+const fallbackEventImage = "/admin_icons/teazo_dash_icon.png";
 
 function createEventId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto

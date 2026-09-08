@@ -74,7 +74,7 @@ export default function EventForm({
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState(
-    initialEvent?.imageUrl ?? "/temp.png",
+    initialEvent?.imageUrl ?? "/admin_icons/teazo_dash_icon.png",
   );
   const [imageError, setImageError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +215,7 @@ export default function EventForm({
           className="mt-2 block w-full cursor-pointer rounded border border-[#dbb082] bg-[#fffaf6] p-2 text-xs file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-[#FFBDC7] file:px-3 file:py-2 file:font-semibold file:text-white"
         />
         <p className={`mt-1 text-xs ${imageError ? "text-red-600" : "text-gray-500"}`}>
-          {imageError ?? "JPG, PNG, or WEBP · 10 MB maximum. /temp.png is used if omitted."}
+          {imageError ?? "JPG, PNG, or WEBP · 10 MB maximum. /admin_icons/teazo_dash_icon.png is used if omitted."}
         </p>
       </div>
 
