@@ -143,11 +143,6 @@ export default function EventForm({
       return;
     }
 
-    if (!appliesToAll && categoryIds.length === 0 && itemIds.length === 0) {
-      setError("Select all items, at least one category, or an individual item.");
-      return;
-    }
-
     onSave({
       name: name.trim(),
       description: description.trim(),
