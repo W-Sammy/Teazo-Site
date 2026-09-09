@@ -36,8 +36,20 @@ export interface Env {
 
 type Stmt = { sql: string; params?: unknown[] };
 
-/** A Worker invocation may issue at most 1000 D1 queries (50 on the free plan). */
-const MAX_STATEMENTS = 100;
+/**
+ * Sized for the FREE plan, which is what this project runs on.
+ *
+ *   D1:      50 queries per Worker invocation   (1000 on Workers Paid)
+ *   Workers: 50 subrequests per request         (1000 on Workers Paid)
+ *
+ * A /batch of N statements costs N D1 queries, so 40 leaves headroom under
+ * the 50 cap. Raising this above 50 silently breaks on free — the request
+ * fails partway, and because batch() is all-or-nothing you get a confusing
+ * "nothing happened" rather than an obvious limit error.
+ *
+ * On Workers Paid this can go to ~500.
+ */
+const MAX_STATEMENTS = 40;
 const MAX_BODY_BYTES = 1_000_000;
 
 /**
@@ -54,7 +66,16 @@ const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
  *  nothing. */
 const REAP_GRACE_HOURS = 24;
 const REAP_CUTOFF = `strftime('%Y-%m-%dT%H:%M:%fZ','now','-${REAP_GRACE_HOURS} hours')`;
-const REAP_LIMIT = 100;
+/**
+ * Rows reaped per cron run. Each row costs TWO subrequests (one R2 delete,
+ * one D1 update), and the free plan allows 50 subrequests per invocation.
+ * 20 rows = 40, plus the initial SELECT and the three session/invitation
+ * statements = 44. Under the cap with room to spare.
+ *
+ * At hourly, this drains 480 objects/day — far more than this shop will ever
+ * delete. Raise it only alongside Workers Paid.
+ */
+const REAP_LIMIT = 20;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

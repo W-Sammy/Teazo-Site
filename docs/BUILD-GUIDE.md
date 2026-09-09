@@ -14,6 +14,7 @@ If this guide and that file disagree, the file wins — tell whoever wrote this.
 | Database | Cloudflare D1 (SQLite) — 26 tables, 31 indexes, 6 triggers — reached through a proxy Worker |
 | Object storage | Cloudflare R2 — bucket `teazo-media`, served from a custom domain |
 | Catalog | Square API (authoritative — we cache it, we do not own it) |
+| Cost | **$0 on Cloudflare** — the whole stack fits the free tier ([§8.7](#87-running-it-free)) |
 | Status | Migrations and proxy Worker written and tested locally. **Nothing deployed yet.** |
 
 ---
@@ -1403,10 +1404,10 @@ fields and the buckets have never been created. Work top to bottom.
 
 **Billing**
 
-1. Add a billing profile and subscribe to **Workers Paid**. R2 cannot be
-   enabled without a payment method even for the free allowance, and D1's free
-   plan caps a Worker invocation at 50 queries — which the sweeper's 100-row
-   reap exceeds outright. See [§8.7](#87-what-it-costs).
+1. Enable R2: Dashboard → Storage & databases → R2 → Overview → complete the
+   checkout flow. This adds a card to the account but **costs nothing** — the
+   free allowance covers us many times over. No Workers Paid subscription is
+   needed; see [§8.7](#87-running-it-free).
 
 **Cloudflare resources**
 
@@ -1508,37 +1509,69 @@ hours. Within that window a deletion is undone by clearing `deleted_at` on the
 media row and its owner and deleting the pending row. After it, the only
 recovery is the original file on somebody's laptop.
 
-### 8.7 What it costs
+### 8.7 Running it free
 
-Re-check all of these before quoting them — every vendor changes pricing without
-warning. Current as of September 2026.
+**The entire Cloudflare stack fits in the free tier, and this project is built
+to stay there.** Nothing here needs Workers Paid.
 
-**Cloudflare Workers Paid — $5/month.** Not optional:
-
-| D1 limit | Free | Workers Paid |
+| | Free allowance | What we actually use |
 |---|---|---|
-| Max database size | 500 MB | **10 GB** |
-| **Queries per Worker invocation** | **50** | **1,000** |
-| Rows read | 5 M/day | 25 B/month included |
-| Rows written | 100 K/day | 50 M/month included |
+| Workers requests | 100,000 / day | a few hundred — every D1 read is one request, and public pages are cached |
+| Cron triggers | 5 per account | 1 (hourly sweeper) |
+| D1 storage | 5 GB total | a few MB |
+| D1 rows read | 5,000,000 / day | thousands |
+| D1 rows written | 100,000 / day | tens |
+| R2 storage | 10 GB-month | ~15 MB after the asset migration |
+| R2 Class A (writes) | 1,000,000 / month | a handful of uploads |
+| R2 Class B (reads) | 10,000,000 / month | most reads are CDN cache hits and never touch R2 |
+| R2 egress | **free at any volume** | this is why R2 is in the stack |
 
-The second row is what forces the upgrade: at 50 queries per invocation the
-sweeper's 100-row reap fails outright and `/batch` is crippled. The $5 also
-covers 10 M Worker requests — every database read from Vercel is one.
+Storage and traffic are not close to any limit — this is a one-location shop
+site. What *does* bite on the free plan is a pair of **per-invocation** limits:
 
-**R2 — effectively free at our size, but needs a card on file.** 10 GB-month
-storage, 1 M Class A and 10 M Class B operations free. **Egress is $0**, which
-is the reason R2 is in this stack and the reason serving media from the custom
-domain rather than a function matters financially as well as technically. The
-migration moves about 15 MB.
+| Limit | Free | Workers Paid |
+|---|---|---|
+| D1 queries per Worker invocation | **50** | 1,000 |
+| Subrequests per request | **50** | 1,000 |
+| CPU time per invocation | 10 ms | 30 s |
 
-**Vercel — Hobby is $0** and technically sufficient for the traffic, but its
-terms restrict it to non-commercial use. A shop's live site is commercial, so
-budget **Pro at ~$20/user/month**.
+The proxy is sized for those, and the constants are the enforcement:
 
-Realistically **$5/month minimum, ~$25/month done properly.** You are buying
-the per-invocation query cap and the commercial-use licence, not capacity —
-the database and bucket are nowhere near any paid threshold.
+- **`MAX_STATEMENTS = 40`** — a `/batch` of N statements costs N D1 queries.
+  Going over 50 fails partway, and because `batch()` is all-or-nothing you get
+  a confusing "nothing happened" rather than a clear limit error.
+- **`REAP_LIMIT = 20`** — each reaped row costs two subrequests (one R2 delete,
+  one D1 update). 20 rows = 40, plus the SELECT and the session/invitation
+  statements = 44. At hourly that drains 480 objects/day, far more than this
+  shop will ever delete, and any backlog simply clears over the next few runs.
+
+CPU time is not a concern: the proxy is I/O-bound, and waiting on D1 or R2 does
+not count against the 10 ms.
+
+**Two things to know before you count on free:**
+
+1. **R2 requires completing a checkout flow** — a card on the account — even
+   though the free allowance costs $0. This is the step that is currently
+   blocking us; the API returns error 10042 until it is done.
+2. **Exceeding a daily D1 limit stops queries**, it does not bill you. The site
+   would break rather than surprise anyone with an invoice. Upgrading to
+   Workers Paid lifts the caps "typically within minutes" if it ever happens.
+
+**When you would need to upgrade** — none of these are near:
+
+- sustained traffic past ~100k Worker requests/day
+- a genuine need to batch more than ~40 statements atomically
+- the database growing past 500 MB (the free per-database ceiling)
+
+**Vercel is the one line item that is not free in principle.** Hobby is $0 and
+technically sufficient for this traffic, but its terms restrict it to
+non-commercial use, and a shop's live website is commercial. That is a
+conversation to have with the client, and it is a Vercel question, not a
+Cloudflare one.
+
+> **Keeping it free is a design constraint, not an accident.** If you raise
+> `MAX_STATEMENTS` or `REAP_LIMIT`, you have quietly moved the project onto a
+> paid plan. Both constants carry a comment saying so.
 
 ---
 
@@ -1644,6 +1677,14 @@ Do not drop these — each fixes a specific bug.
   holds its email's unique slot, so re-inviting that address fails with a
   constraint error until the sweeper stamps `revoked_at`. This is a fourth
   correctness story that depends on the sweeper running.
+
+**Free-tier limits**
+
+- `MAX_STATEMENTS = 40` and `REAP_LIMIT = 20` in the proxy exist to stay under
+  the free plan's 50 D1-queries-per-invocation and 50-subrequests-per-request
+  caps. Raising either quietly moves the project onto a paid plan.
+- Exceeding a *daily* D1 limit stops queries rather than billing you — the site
+  breaks instead of surprising anyone with an invoice.
 
 **Vercel + proxy**
 
