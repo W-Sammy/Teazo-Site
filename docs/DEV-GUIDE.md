@@ -43,40 +43,11 @@ database and a local R2, and it will work unchanged when the real ones exist.
 
 ## 1. Start here
 
-Read this section even if you skip the rest. It covers who owns what, what
-credentials you need (for most of you: none), and how to get a working
-database on your laptop in about fifteen minutes.
+Read this section even if you skip the rest. It covers what credentials you
+need (for most of you: none), the database you get to yourself, and the rules
+for changing things other people depend on.
 
-### 1.1 Who owns what
-
-| Area | Owner | What that means |
-|---|---|---|
-| **Database schema & migrations** | **Juan** | Writes and applies every migration. Nobody else adds files to `teazo-site/migrations/`. |
-| **D1 proxy Worker** | **Juan** | Owns `teazo-d1-proxy/`, deploys it, holds its secret. |
-| **Cloudflare resources** | **Juan** | Creates the D1 databases and R2 buckets, attaches the custom domain, sets secrets, applies migrations to preview and production. |
-| Gallery + media upload UI | *unclaimed* | [§4](#4-object-storage--how-a-file-becomes-a-url), [§6.1](#61-gallery) |
-| Auth + admin middleware | *unclaimed* | [§7](#7-auth-and-middleware) — this closes a live security hole |
-| Square sync | *unclaimed* | [§5](#5-syncing-square-into-d1) |
-| Public pages on real data | *unclaimed* | [§3](#3-the-read-path--getting-data-to-the-frontend) |
-| Admin screens | *unclaimed* | [§6](#6-admin-writes--the-mutation-contract) |
-
-Claim one in the channel and put your name in this table.
-
-**What Juan is doing, concretely.** So you know what to expect and what to ask
-for:
-
-- The 26-table schema in `teazo-site/migrations/` — written, validated, **done**.
-- The D1 proxy Worker in `teazo-d1-proxy/` — written and tested locally, **done**.
-- Creating the real D1 databases and R2 buckets, wiring the custom domain, and
-  applying migrations. **Blocked** on things outside the code — see OPERATIONS.md.
-- Any future schema change. Ask; do not write migrations yourself ([§8](#8-asking-for-a-schema-change)).
-- Handing out the Square sandbox token and, if you need them, R2 keys.
-
-If you need a column, a table, or an index that does not exist, **ask rather
-than adding it**. It is usually a five-minute change, and going through one
-person is what keeps everyone's database identical.
-
-### 1.2 Credentials — most of you need none
+### 1.1 Credentials — most of you need none
 
 This is the part people assume will block them. It does not.
 
@@ -102,7 +73,7 @@ commit anyway:
 git status --short
 ```
 
-### 1.3 Your own sandbox database
+### 1.2 Your own sandbox database
 
 **Yes — you get a private one, and it is the default.** `--local` creates a real
 SQLite file under `teazo-d1-proxy/.wrangler/state/`. It is yours alone, it costs
@@ -133,7 +104,7 @@ which is what `SQUARE_ENV=sandbox` selects. The two are unrelated — your local
 D1 is our data, Square's sandbox is their test catalog. Both are safe to
 experiment in.
 
-### 1.4 Working rules — can two people change the database at once?
+### 1.3 Working rules — can two people change the database at once?
 
 Short answer: **yes for everyday work, no for schema changes.** The axis that
 matters is *which database* and *schema vs data* — not which tables you touch.
@@ -168,7 +139,7 @@ the dashboard console. Changes reach production through a migration Juan applies
 and a deploy. If production data needs fixing, that is a migration too, so there
 is a record of it.
 
-### 1.5 The one rule
+### 1.4 The one rule
 
 > **Square owns the catalog. D1 owns a copy plus the curation Square cannot express.**
 
@@ -180,7 +151,7 @@ front of a customer.
 
 What D1 legitimately owns is in [§5.1](#51-what-we-cache-vs-what-we-own).
 
-### 1.6 Where the app stands
+### 1.5 Where the app stands
 
 Worth knowing before you pick something up — much less is wired than it looks:
 
@@ -1393,7 +1364,7 @@ is:
   it needs a full 12-step table rebuild. Ask early for any of these.
 
 Juan applies the migration and tells you when it has landed; you then re-run
-`npm run db:migrate:local` (or reset, [§1.3](#13-your-own-sandbox-database)) to
+`npm run db:migrate:local` (or reset, [§1.2](#12-your-own-sandbox-database)) to
 pick it up. The deploy sequencing is his — see OPERATIONS.md.
 
 ---
