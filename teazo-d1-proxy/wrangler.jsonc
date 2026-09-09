@@ -27,7 +27,8 @@
     {
       "binding": "DB",
       "database_name": "teazo-db",
-      // Filled in by `npx wrangler d1 create teazo-db`.
+      // Filled in by `npx wrangler d1 create teazo-db`. Empty is fine for
+      // --local, which does not use it.
       "database_id": "",
       "migrations_dir": "../teazo-site/migrations"
     }

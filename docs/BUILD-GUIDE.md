@@ -21,7 +21,7 @@ If this guide and that file disagree, the file wins — tell whoever wrote this.
 
 ## Contents
 
-1. [Before you write any code](#1-before-you-write-any-code)
+1. [Start here](#1-start-here)
 2. [Reaching D1 and R2 from Vercel](#2-reaching-d1-and-r2-from-vercel)
 3. [The read path — getting data to the frontend](#3-the-read-path--getting-data-to-the-frontend)
 4. [Object storage — how a file becomes a URL](#4-object-storage--how-a-file-becomes-a-url)
@@ -35,32 +35,178 @@ If this guide and that file disagree, the file wins — tell whoever wrote this.
 
 ---
 
-## 1. Before you write any code
+## 1. Start here
 
-### The architecture is decided
+Read this section even if you skip the rest. It covers who owns what, what
+credentials you need (for most of you: none), and how to get a working
+database on your laptop in about fifteen minutes.
 
-**Hosting is Vercel.** The database is still Cloudflare D1 and object storage is
-still Cloudflare R2. Because D1 is only reachable from inside a Worker, a small
-proxy Worker sits between them — see [§2](#2-reaching-d1-and-r2-from-vercel).
-This is Cloudflare's own documented approach for exactly this situation.
+### 1.1 Who owns what
 
-**Nothing is deployed.** `wrangler.jsonc` has empty `database_id` fields and
-the buckets do not exist. R2 is not even enabled on the account yet — it needs a
-billing profile added in the dashboard first. Until someone runs the create
-commands, `--local` is the only thing that works. That is fine: **you can build
-almost everything against a local D1 file.**
+| Area | Owner | What that means |
+|---|---|---|
+| **Database schema & migrations** | **Juan** | Writes and applies every migration. Nobody else adds files to `teazo-site/migrations/`. |
+| **D1 proxy Worker** | **Juan** | Owns `teazo-d1-proxy/`, deploys it, holds its secret. |
+| **Cloudflare resources** | **Juan** | Creates the D1 databases and R2 buckets, attaches the custom domain, sets secrets, applies migrations to preview and production. |
+| Gallery + media upload UI | *unclaimed* | [§4](#4-object-storage--how-a-file-becomes-a-url), [§6.1](#61-gallery) |
+| Auth + admin middleware | *unclaimed* | [§7](#7-auth-and-middleware) — this closes a live security hole |
+| Square sync | *unclaimed* | [§5](#5-syncing-square-into-d1) |
+| Public pages on real data | *unclaimed* | [§3](#3-the-read-path--getting-data-to-the-frontend) |
+| Admin screens | *unclaimed* | [§6](#6-admin-writes--the-mutation-contract) |
 
-### The one rule
+Claim one in the channel and put your name in this table.
+
+**What Juan is doing, concretely.** So you know what to expect and what to ask
+for:
+
+- The 26-table schema in `teazo-site/migrations/` — written, validated, **done**.
+- The D1 proxy Worker in `teazo-d1-proxy/` — written and tested locally, **done**.
+- Creating the real D1 databases and R2 buckets, wiring the custom domain, and
+  applying migrations. **Blocked** — see §1.5.
+- Any future schema change. Ask; do not write migrations yourself.
+- Handing out the Square sandbox token and, if you need them, R2 keys.
+
+If you need a column, a table, or an index that does not exist, **ask rather
+than adding it**. It is usually a five-minute change, and going through one
+person is what keeps everyone's database identical.
+
+### 1.2 Credentials — most of you need none
+
+This is the part people assume will block them. It does not.
+
+| What you are building | Credentials you need |
+|---|---|
+| Public pages, admin screens, anything reading or writing the database | **None.** Local database, and a proxy token you make up. |
+| Gallery uploads, media handling | **None** for local work — `wrangler dev` gives you a local R2 too. |
+| Square sync, menu work | The **Square sandbox access token**. Ask Juan. |
+| Deploying anything | You do not deploy. Juan does. |
+
+So: unless you are touching Square, you can clone the repo and be productive
+without waiting on anyone.
+
+**When you do need a secret**, it comes from Juan directly through a password
+manager or a DM — never in the repo, never pasted into a shared channel, never
+in a commit message. If a token ever lands somewhere public, say so immediately
+rather than quietly deleting the message; it has to be rotated either way.
+
+`.env.local`, `.dev.vars`, and `.wrangler/` are all gitignored. Check before you
+commit anyway:
+
+```bash
+git status --short
+```
+
+### 1.3 Your own sandbox database
+
+**Yes — you get a private one, and it is the default.** `--local` creates a real
+SQLite file under `teazo-d1-proxy/.wrangler/state/`. It is yours alone, it costs
+nothing, it needs no Cloudflare account, and you can destroy it whenever you
+like.
+
+There are three databases, and one of them is yours:
+
+| | What | Who touches it | When you use it |
+|---|---|---|---|
+| **Local** (`--local`) | a SQLite file on your laptop | only you | **all day, every day** |
+| `teazo-db-preview` | shared remote D1 | the team | integration testing before a PR merges |
+| `teazo-db` | production | the deploy process only | never directly |
+
+Reset yours to a clean seeded state any time — this is a normal thing to do,
+not a last resort:
+
+```bash
+cd teazo-d1-proxy && rm -rf .wrangler/state && npm run db:migrate:local
+```
+
+That gives you the full schema plus the seed data: roles, the real TEAZO address
+and hours, social and delivery links, the ten menu sections, and the starter tag
+vocabulary. Break it freely.
+
+There is a separate sandbox one layer up: **Square's own sandbox catalog**,
+which is what `SQUARE_ENV=sandbox` selects. The two are unrelated — your local
+D1 is our data, Square's sandbox is their test catalog. Both are safe to
+experiment in.
+
+### 1.4 Working rules — can two people change the database at once?
+
+Short answer: **yes for everyday work, no for schema changes.** The axis that
+matters is *which database* and *schema vs data* — not which tables you touch.
+
+**Everyday development: unlimited parallelism, zero coordination.** Every
+developer has their own local database. Seven people can be inserting, deleting
+and dropping rows at the same second and none of it collides, because none of it
+is the same file. You never need to ask permission to work.
+
+**Schema changes: one person, always Juan.** Not because of locking, but because
+migrations are a shared, ordered, forward-only sequence. Wrangler records applied
+migrations by filename. If two people both write `0003_…sql`, the two databases
+diverge permanently and there is no revert command. So:
+
+- Do not add files to `teazo-site/migrations/`.
+- Do not edit a migration that already exists — it has already been applied
+  somewhere, so editing it means the change never runs there.
+- Ask for the schema change you need. It is fast.
+
+**The shared preview database: several people at once is fine.** SQLite
+serializes writes for you, so you cannot corrupt it by writing at the same
+time. The real risk is duller — overwriting each other's test data and debugging
+a ghost. Announce it in the channel before you do anything destructive there.
+
+> The intuition that "multiple people are fine as long as they use different
+> tables" is not the right model here. Concurrent *data* writes are safe on any
+> table, because the engine handles them. Concurrent *migrations* are unsafe
+> even on completely unrelated tables, because they share one numbered sequence.
+
+**Production: nobody, ever, by hand.** Not `wrangler d1 execute --remote`, not
+the dashboard console. Changes reach production through a migration Juan applies
+and a deploy. If production data needs fixing, that is a migration too, so there
+is a record of it.
+
+### 1.5 The state of the project today
+
+**The schema and the proxy Worker are finished and tested. Nothing is deployed.**
+
+Two things are blocking deployment, both outside the code:
+
+1. **The team's Cloudflare account has to be confirmed.** The one currently
+   authenticated on Juan's machine is personal, and resources created there would
+   not be reachable by the rest of you.
+2. **R2 is not enabled yet.** It needs the checkout flow completed in the
+   dashboard — a card on the account. It still costs **$0**; the free allowance
+   covers this project many times over ([§8.7](#87-running-it-free)). Until then
+   the API returns error 10042.
+
+Neither blocks you. Everything in this guide can be built against a local
+database and a local R2, and it will work unchanged when the real ones exist.
+
+### 1.6 The one rule
 
 > **Square owns the catalog. D1 owns a copy plus the curation Square cannot express.**
 
 Never make a D1 column the editable source of truth for something Square owns —
 item names, prices, variations, category membership and ordering, modifier rules,
 sold-out state, online visibility, store hours. If an admin can edit it in our UI
-*and* in the Square dashboard, the website and the register will disagree in front
-of a customer.
+*and* in the Square dashboard, the website and the register will disagree in
+front of a customer.
 
 What D1 legitimately owns is in [§5.1](#51-what-we-cache-vs-what-we-own).
+
+### 1.7 Where the app stands
+
+Worth knowing before you pick something up — much less is wired than it looks:
+
+| Surface | State |
+|---|---|
+| `/`, `/menu`, `/gallery`, `/contact`, `/delivery`, `/static-menu` | built, but every value is a hardcoded literal |
+| `/menu` specifically | **787 lines** of mock items, ids like `mock-specials-…` that match nothing in Square |
+| `/gallery` | 9 mock records that all point at the logo |
+| `/login` | a shell — no `onSubmit`, no `onClick`, state goes nowhere |
+| `/admin/gallery` | polished UI, **zero persistence** — uploads vanish on refresh |
+| `/admin/menu` | really fetches Square; every mutation is a `console.log` |
+| `/admin`, `/admin/events`, `/admin/settings`, `/admin/website-content` | `<h1>Hello World</h1>` |
+
+There is no database client, no ORM and no storage SDK in the app today. You are
+adding the first one.
 
 ---
 
@@ -256,6 +402,13 @@ Local dev uses `teazo-site/.env.local` for the app and
 `teazo-d1-proxy/.dev.vars` for the Worker. Both are gitignored.
 
 ### 2.6 First 20 minutes
+
+> **Windows: clone to a short path.** `C:\dev\Teazo-Site` is fine;
+> a deep path under `Documents\OneDrive\school\csc191\...` is not. Miniflare nests
+> its local database several directories deep under `.wrangler/state/`, and once
+> the total exceeds Windows' 260-character limit **every `wrangler d1` command
+> fails with a bare `internal error` that says nothing about paths.** Verified:
+> the same clone fails at a 200-character path and works at a 36-character one.
 
 ```bash
 git clone https://github.com/W-Sammy/Teazo-Site.git
@@ -543,6 +696,10 @@ and it makes "delete then re-upload the same file" fail on a unique index.
 Because keys are never reused, everything served from them is safely
 immutable-cacheable.
 
+Everything the gallery stores ends up `.webp`, because the upload route
+re-encodes ([§4.4](#44-the-upload-route)). The other extensions exist for the
+PDF menu and for assets migrated out of `public/`.
+
 ```ts
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg", "image/png": "png",
@@ -616,7 +773,9 @@ import { putObject } from "@/app/lib/r2";
 import { requireAdmin } from "@/app/lib/auth";
 import { mintGalleryKey, sniffMime, normalizeTag, sortKey } from "@/app/lib/media";
 
-const MAX_BYTES = 10 * 1024 * 1024;
+import sharp from "sharp";
+
+const MAX_BYTES = 10 * 1024 * 1024;   // what we accept from the browser
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export async function POST(request: Request) {
@@ -641,7 +800,19 @@ export async function POST(request: Request) {
     return Response.json({ error: "unsupported image type" }, { status: 415 });
   }
 
-  const key = mintGalleryKey(mime);
+  // Resize before storing. This is the single biggest lever on capacity:
+  // straight-from-the-phone JPEGs average 1.6 MB, which fills the 10 GB free
+  // allowance after ~6,400 photos. Re-encoded to webp at 2000px they average
+  // well under 300 KB, which is ~35,000 photos. See §8.8.
+  // sharp is available on Vercel — this is one of the things that would NOT
+  // work on Cloudflare Workers.
+  const { data: resized, info } = await sharp(Buffer.from(bytes))
+    .rotate()                                  // honour EXIF orientation
+    .resize({ width: 2000, withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer({ resolveWithObject: true });
+
+  const key = mintGalleryKey("image/webp");
   const mediaId = crypto.randomUUID();
   const imageId = crypto.randomUUID();
 
@@ -649,7 +820,7 @@ export async function POST(request: Request) {
   //    sweeper cannot see but which costs nothing. If we wrote D1 first and R2
   //    failed, we would have a row pointing at nothing and a broken page.
   //    Leak over dangle, always.
-  await putObject(key, bytes, mime);
+  await putObject(key, resized.buffer as ArrayBuffer, "image/webp");
 
   // 2. Metadata, all-or-nothing, in ONE /batch — that is the only transaction.
   const stmts = [
@@ -657,7 +828,12 @@ export async function POST(request: Request) {
       `INSERT INTO media_asset
          (id, r2_bucket, r2_key, mime_type, byte_size, original_filename, purpose, uploaded_by)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'gallery', ?7)`
-    ).bind(mediaId, process.env.R2_BUCKET_NAME!, key, mime, bytes.byteLength, file.name, admin.admin_id),
+    ).bind(mediaId, process.env.R2_BUCKET_NAME!, key, "image/webp", resized.byteLength, file.name, admin.admin_id),
+
+    // width/height come free from sharp — store them so <Image> can set
+    // dimensions without a layout shift.
+    prepare("UPDATE media_asset SET width = ?2, height = ?3 WHERE id = ?1")
+      .bind(mediaId, info.width, info.height),
 
     prepare(
       `INSERT INTO gallery_image (id, media_id, name, name_sort_key) VALUES (?1, ?2, ?3, ?4)`
@@ -1573,6 +1749,59 @@ Cloudflare one.
 > `MAX_STATEMENTS` or `REAP_LIMIT`, you have quietly moved the project onto a
 > paid plan. Both constants carry a comment saying so.
 
+### 8.8 How much can it actually hold?
+
+Computed from the real code paths, against the free-tier allowances.
+
+**Uploads per day.** The binding limit is D1 rows written (100,000/day) — each
+upload writes a `media_asset` row, a `gallery_image` row, and two rows per tag.
+
+| Tags per photo | D1 rows per upload | Uploads per day |
+|---|---|---|
+| 0 | 2 | 33,333 *(R2 Class A becomes the limit)* |
+| 3 | 8 | **12,500** |
+| 5 | 12 | 8,333 |
+| 10 | 22 | 4,545 |
+
+You would need 12,500 uploads **in a single day** to hit a wall. Karen will
+upload a handful a week.
+
+**Image views.** Effectively unlimited, because of the custom domain. A viewer
+hitting a cached image never reaches R2 — Cloudflare's edge serves it. Only
+cache *misses* count against the 10 M/month Class B budget, and keys are
+immutable UUIDs, so the hit rate should be very high.
+
+| CDN hit rate | Image views/month before R2 Class B runs out |
+|---|---|
+| 0% (Cache Everything rule missing) | 10,000,000 |
+| 90% | 100,000,000 |
+| 99% | ~1,000,000,000 |
+
+Page views are similarly unbounded: with `revalidate = 300` the gallery page
+re-renders at most 288 times a day regardless of traffic, and visitors are served
+cached HTML without ever reaching a Worker.
+
+**The one real ceiling: total R2 storage.** Not a daily rate — a cumulative one,
+and the only number worth watching.
+
+| Average photo size | Photos that fit in 10 GB |
+|---|---|
+| 98 KB — the existing `public/menu_items` `.webp` | ~107,000 |
+| 300 KB — good-quality webp | ~35,000 |
+| 1.6 MB — the existing `carousel_images` JPEGs | ~6,400 |
+| 10 MB — our upload cap | ~1,000 |
+
+That 100× spread is the whole story: **photo size decides capacity, and nothing
+else does.** `public/carousel_images/` averages 1.6 MB and one file is 7.9 MB —
+nearly the entire upload cap in a single image. Straight-from-the-phone uploads
+put you in the 6,000-photo range; resized webp puts you past 100,000.
+
+Which is why the upload route resizes ([§4.4](#44-the-upload-route)). Do not
+remove it.
+
+D1 metadata is a non-issue: 100,000 `media_asset` rows is roughly 30 MB against
+a 500 MB per-database ceiling.
+
 ---
 
 ## 9. Table reference
@@ -1643,6 +1872,12 @@ Do not drop these — each fixes a specific bug.
 ---
 
 ## 10. Gotchas
+
+**Environment**
+
+- **Windows: keep the repo path short.** Past ~260 characters total, miniflare's
+  nested state directory blows the `MAX_PATH` limit and every `wrangler d1`
+  command dies with an unexplained `internal error`. Clone to `C:\dev\`.
 
 **SQLite / D1**
 
