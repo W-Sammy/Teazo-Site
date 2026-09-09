@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import AdminEventsClient from "./components/admin-events-client";
 import type { AdminEvent, EventCatalogItem } from "@/app/types/admin-event";
 import type { MenuItem } from "@/app/types/menu-item";
@@ -19,10 +21,24 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return response.json();
 }
 
-const initialEvents: AdminEvent[] = [];
+async function getSampleEvents(): Promise<AdminEvent[]> {
+  const filePath = path.join(
+    process.cwd(),
+    "app",
+    "admin",
+    "events",
+    "components",
+    "sample-events.txt",
+  );
+  const contents = await readFile(filePath, "utf8");
+  return JSON.parse(contents) as AdminEvent[];
+}
 
 export default async function AdminEventsPage() {
-  const menuItems = await getMenuItems();
+  const [menuItems, initialEvents] = await Promise.all([
+    getMenuItems(),
+    getSampleEvents(),
+  ]);
   const items: EventCatalogItem[] = menuItems.map((item) => ({
     id: item.catalogObjectId,
     name: item.name ?? "Unnamed item",
