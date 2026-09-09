@@ -36,7 +36,7 @@ export function RoleDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-2 w-32 overflow-hidden rounded-md border border-gray-100 bg-white shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-2 w-32 overflow-visible rounded-md border border-gray-100 bg-white shadow-lg">
           {roles.map((roleOption) => (
             <button
               key={roleOption}

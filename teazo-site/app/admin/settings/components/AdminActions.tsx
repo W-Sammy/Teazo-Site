@@ -23,7 +23,7 @@ export function AdminActions({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-28 overflow-hidden rounded-md border border-gray-100 bg-white shadow-lg">
+        <div className="absolute right-0 top-full z-30 mt-1 w-28 overflow-visible rounded-md border border-gray-100 bg-white shadow-lg">
           <button
             type="button"
             onClick={() => {
