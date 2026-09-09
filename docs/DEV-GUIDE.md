@@ -1,9 +1,13 @@
-# TEAZO — Developer Build Guide
+# TEAZO — Developer Guide
 
-Everything you need to build against the TEAZO database and object storage.
-
-Companion document: [`DATA-MODEL.md`](./DATA-MODEL.md) explains *why* the schema
-looks like this. This document explains *how to use it*.
+For the six of you who are not Juan. This is everything you need to get a working
+database on your laptop, understand the schema, and build your feature. You will
+never create a Cloudflare resource, never deploy, and never write a migration —
+all of that lives in [`OPERATIONS.md`](./OPERATIONS.md), Juan's runbook (creating
+the D1 databases and R2 buckets, deploying the Worker and the app, migrations,
+backups and rollback, the go-live checklist, cost, and the Square production
+cutover). [`DATA-MODEL.md`](./DATA-MODEL.md) explains *why* the schema looks like
+this. This document explains *how to use it*.
 
 **Source of truth for the schema is [`teazo-site/migrations/0001_init.sql`](../teazo-site/migrations/0001_init.sql).**
 If this guide and that file disagree, the file wins — tell whoever wrote this.
@@ -14,21 +18,23 @@ If this guide and that file disagree, the file wins — tell whoever wrote this.
 | Database | Cloudflare D1 (SQLite) — 26 tables, 31 indexes, 6 triggers — reached through a proxy Worker |
 | Object storage | Cloudflare R2 — bucket `teazo-media`, served from a custom domain |
 | Catalog | Square API (authoritative — we cache it, we do not own it) |
-| Cost | **$0 on Cloudflare** — the whole stack fits the free tier ([§8.7](#87-running-it-free)) |
 | Status | Migrations and proxy Worker written and tested locally. **Nothing deployed yet.** |
+
+None of that blocks you. Everything in this guide can be built against a local
+database and a local R2, and it will work unchanged when the real ones exist.
 
 ---
 
 ## Contents
 
 1. [Start here](#1-start-here)
-2. [Reaching D1 and R2 from Vercel](#2-reaching-d1-and-r2-from-vercel)
+2. [Local setup and the database client](#2-local-setup-and-the-database-client)
 3. [The read path — getting data to the frontend](#3-the-read-path--getting-data-to-the-frontend)
 4. [Object storage — how a file becomes a URL](#4-object-storage--how-a-file-becomes-a-url)
 5. [Syncing Square into D1](#5-syncing-square-into-d1)
 6. [Admin writes — the mutation contract](#6-admin-writes--the-mutation-contract)
 7. [Auth and middleware](#7-auth-and-middleware)
-8. [Deployment, cron and environments](#8-deployment-cron-and-environments)
+8. [Asking for a schema change](#8-asking-for-a-schema-change)
 9. [Table reference](#9-table-reference)
 10. [Gotchas](#10-gotchas)
 11. [Who builds what](#11-who-builds-what)
@@ -62,8 +68,8 @@ for:
 - The 26-table schema in `teazo-site/migrations/` — written, validated, **done**.
 - The D1 proxy Worker in `teazo-d1-proxy/` — written and tested locally, **done**.
 - Creating the real D1 databases and R2 buckets, wiring the custom domain, and
-  applying migrations. **Blocked** — see §1.5.
-- Any future schema change. Ask; do not write migrations yourself.
+  applying migrations. **Blocked** on things outside the code — see OPERATIONS.md.
+- Any future schema change. Ask; do not write migrations yourself ([§8](#8-asking-for-a-schema-change)).
 - Handing out the Square sandbox token and, if you need them, R2 keys.
 
 If you need a column, a table, or an index that does not exist, **ask rather
@@ -162,24 +168,7 @@ the dashboard console. Changes reach production through a migration Juan applies
 and a deploy. If production data needs fixing, that is a migration too, so there
 is a record of it.
 
-### 1.5 The state of the project today
-
-**The schema and the proxy Worker are finished and tested. Nothing is deployed.**
-
-Two things are blocking deployment, both outside the code:
-
-1. **The team's Cloudflare account has to be confirmed.** The one currently
-   authenticated on Juan's machine is personal, and resources created there would
-   not be reachable by the rest of you.
-2. **R2 is not enabled yet.** It needs the checkout flow completed in the
-   dashboard — a card on the account. It still costs **$0**; the free allowance
-   covers this project many times over ([§8.7](#87-running-it-free)). Until then
-   the API returns error 10042.
-
-Neither blocks you. Everything in this guide can be built against a local
-database and a local R2, and it will work unchanged when the real ones exist.
-
-### 1.6 The one rule
+### 1.5 The one rule
 
 > **Square owns the catalog. D1 owns a copy plus the curation Square cannot express.**
 
@@ -191,7 +180,7 @@ front of a customer.
 
 What D1 legitimately owns is in [§5.1](#51-what-we-cache-vs-what-we-own).
 
-### 1.7 Where the app stands
+### 1.6 Where the app stands
 
 Worth knowing before you pick something up — much less is wired than it looks:
 
@@ -210,107 +199,124 @@ adding the first one.
 
 ---
 
-## 2. Reaching D1 and R2 from Vercel
+## 2. Local setup and the database client
 
 The app is hosted on **Vercel**. The database is still **Cloudflare D1** and the
 object storage is still **Cloudflare R2**. Those are compatible, but not for
-free: D1 is only reachable from inside a Worker, so we run one.
+free: D1 is only reachable from inside a Worker, so we run one — `teazo-d1-proxy/`.
+You run that Worker locally, against your own local D1, and the app talks to it
+over HTTP exactly as it will in production.
 
-> From Cloudflare's own docs: *"To access a D1 database outside of a Worker
-> project, you need to create an API using a Worker."* The D1 REST API is not
-> an alternative for the request path — Cloudflare describes it as *"best
-> suited for administrative use as the global Cloudflare API rate limit
-> applies."*
-
-### 2.1 The shape of it
-
-```
-                    ┌──────────────────────────────┐
-   browser ────────▶│  Vercel — Next.js app        │
-        │           │  teazo-site/                 │
-        │           └───────┬──────────────┬───────┘
-        │                   │              │
-        │       HTTPS +     │              │  S3 API +
-        │       bearer      │              │  R2 access keys
-        │                   ▼              ▼
-        │           ┌───────────────┐  ┌──────────────────┐
-        │           │ Worker        │  │ R2 bucket        │
-        │           │ teazo-d1-proxy│  │ teazo-media      │
-        │           └───────┬───────┘  └──────────────────┘
-        │                   │ binding             ▲
-        │                   ▼                     │ CDN, cached
-        │           ┌───────────────┐             │
-        │           │ D1: teazo-db  │             │
-        │           └───────────────┘             │
-        └─────────────────────────────────────────┘
-              image reads go straight to media.<domain>,
-              never through Vercel
-```
-
-Three things follow from this diagram, and they drive the rest of the guide:
-
-1. **Writes to the database cross a network hop.** Batch aggressively; a page
-   that makes eight sequential queries pays eight round trips.
-2. **Reads of media do not touch Vercel at all.** They go to the R2 custom
-   domain and are served from Cloudflare's CDN. That is faster and cheaper than
-   proxying bytes through a function.
-3. **The proxy Worker is a real deployable** with an owner, a secret, and a
-   deploy step. It is small — one file — but it is not free.
-
-### 2.2 Repository layout
+### 2.1 The two projects in this repo
 
 ```
 Teazo-Site/
 ├── teazo-site/            Next.js app  →  deployed to Vercel
-│   ├── app/
-│   └── migrations/        the D1 schema lives with the app
-└── teazo-d1-proxy/        Cloudflare Worker  →  deployed with wrangler
+│   ├── app/               where you work
+│   └── migrations/        the D1 schema — read it, do not add to it (§8)
+└── teazo-d1-proxy/        Cloudflare Worker  →  Juan deploys this
     ├── src/index.ts       /query, /batch, and the scheduled sweeper
-    ├── wrangler.jsonc     the only file in the repo with bindings
-    └── tsconfig.json
+    └── wrangler.jsonc     the only file in the repo with Cloudflare bindings
 ```
 
-> **The Worker must live outside `teazo-site/`.** `teazo-site/tsconfig.json`
-> has `"include": ["**/*.ts", …]` with only `node_modules` excluded, so a
-> Worker placed inside the app directory gets type-checked by `next build` and
-> fails it on `D1Database` and `R2Bucket`. Keeping it a sibling avoids the
-> problem entirely rather than papering over it with an `exclude` entry.
+Almost all of your work is in `teazo-site/app/`. You run commands in
+`teazo-d1-proxy/` only to start the local database and the proxy.
 
-`wrangler.jsonc` points `migrations_dir` back at `../teazo-site/migrations`.
-Wrangler accepts a path outside its own project, and the schema belongs next to
-the app that depends on it.
+> **Never put Worker code inside `teazo-site/`.** That project's `tsconfig.json`
+> has `"include": ["**/*.ts", …]` with only `node_modules` excluded, so any file
+> using `D1Database` or `R2Bucket` types gets type-checked by `next build` and
+> **fails the Vercel build**. That is why the Worker is a sibling directory, not
+> a subdirectory.
 
-### 2.3 The proxy Worker
+### 2.2 First 20 minutes
 
-The whole thing is [`teazo-d1-proxy/src/index.ts`](../teazo-d1-proxy/src/index.ts).
-It exposes two endpoints and one cron:
-
-| | |
-|---|---|
-| `POST /query` | `{ sql, params }` → one statement, returns D1's `.all()` result |
-| `POST /batch` | `{ statements: [{sql, params}] }` → `env.DB.batch()`, all-or-nothing |
-| `scheduled()` | the sweeper — see [§8.3](#83-the-sweeper) |
-
-Auth is a bearer token compared in constant time (both sides are SHA-256'd
-first, so the comparison never branches on length).
-
-**On accepting arbitrary SQL.** The proxy will run whatever the token-holder
-sends. That is deliberate: the only intended caller is our own Next.js server,
-which is exactly as trusted as the database itself. The security property that
-matters is therefore *the token never reaches the browser* — it is a
-server-only Vercel environment variable and must never be named
-`NEXT_PUBLIC_*`. If it leaks, rotate it on both sides in one sitting:
+> **Windows: clone to a short path.** `C:\dev\Teazo-Site` is fine;
+> a deep path under `Documents\OneDrive\school\csc191\...` is not. Miniflare nests
+> its local database several directories deep under `.wrangler/state/`, and once
+> the total exceeds Windows' 260-character limit **every `wrangler d1` command
+> fails with a bare `internal error` that says nothing about paths.** Verified:
+> the same clone fails at a 200-character path and works at a 36-character one.
 
 ```bash
-cd teazo-d1-proxy && npx wrangler secret put PROXY_TOKEN
+git clone https://github.com/W-Sammy/Teazo-Site.git
+cd Teazo-Site
 ```
 
-**`/batch` is the only transaction that exists.** D1 has no interactive
-transactions, so anything that must be atomic has to travel as a single
-`/batch` request. Splitting a logical transaction across two calls silently
-gives up atomicity.
+```bash
+cd teazo-d1-proxy && npm install
+```
 
-### 2.4 The client
+```bash
+npx wrangler d1 migrations apply teazo-db --local
+```
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "SELECT day_of_week, display_text FROM business_hours ORDER BY day_of_week;"
+```
+
+Seven rows, Monday through Sunday, ending `11:00 AM - 8:00 PM`. Now start the
+proxy against that local database:
+
+```bash
+echo "PROXY_TOKEN=local-dev-token" > .dev.vars && npx wrangler dev --port 8787
+```
+
+In a second terminal, prove it answers:
+
+```bash
+curl -s http://127.0.0.1:8787/query -H "authorization: Bearer local-dev-token" -H 'content-type: application/json' -d '{"sql":"SELECT label FROM role ORDER BY id","params":[]}'
+```
+
+You should get `Owner`, `Can Edit`, `Can View`. Then point the app at it:
+
+```bash
+cd ../teazo-site && printf 'D1_PROXY_URL=http://127.0.0.1:8787\nPROXY_TOKEN=local-dev-token\n' > .env.local && npm install && npm run dev
+```
+
+### 2.3 Useful scripts
+
+In `teazo-d1-proxy/package.json` (already there):
+
+```bash
+npm run dev                  # proxy against local D1
+npm run dev:cron             # same, plus a triggerable scheduled handler
+npm run db:migrate:local     # apply migrations to the local D1
+npm run db:migrate:prod      # apply to the remote production D1
+npm run db:backup            # wrangler d1 export -> backup.sql
+npm run deploy               # ship the Worker
+npm run tail                 # live logs from the deployed Worker
+```
+
+There is deliberately no unsuffixed `db:migrate`. `--local` and `--remote`
+should never be one typo apart.
+
+Of these, you use `dev`, `dev:cron` and `db:migrate:local`. The `:prod`,
+`deploy`, `backup` and `tail` scripts are Juan's — see OPERATIONS.md.
+
+### 2.4 Environment variables you need locally
+
+All server-only. **Nothing here may be prefixed `NEXT_PUBLIC_`** except
+`R2_PUBLIC_BASE`, which is a public hostname by definition.
+
+Local dev uses `teazo-site/.env.local` for the app and
+`teazo-d1-proxy/.dev.vars` for the Worker. Both are gitignored.
+
+| Variable | Where | What |
+|---|---|---|
+| `D1_PROXY_URL` | `teazo-site/.env.local` | `http://127.0.0.1:8787` — your locally running proxy |
+| `PROXY_TOKEN` | `teazo-site/.env.local` **and** `teazo-d1-proxy/.dev.vars` | same value both sides; locally it is one you make up, e.g. `local-dev-token` |
+| `SQUARE_ACCESS_TOKEN` | `teazo-site/.env.local` | sandbox today — ask Juan |
+| `SQUARE_ENV` | `teazo-site/.env.local` | `sandbox` \| `production` |
+
+If you are doing media work you need nothing else: `wrangler dev` gives you a
+local R2 too. The R2 variables the deployed app uses — `R2_ACCOUNT_ID`,
+`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` (`teazo-media`, also
+written to `media_asset.r2_bucket`) and `R2_PUBLIC_BASE` (`https://media.teazosf.com`,
+the R2 custom domain) — are set by Juan on Vercel. Ask him if you genuinely need
+keys against the real bucket. Production and preview values, and the scoping
+rules for them, are in OPERATIONS.md.
+
+### 2.5 The client
 
 `app/lib/d1.ts` keeps the same `prepare().bind().all()` ergonomics the rest of
 this guide uses, so every SQL example works unchanged.
@@ -380,90 +386,42 @@ await batch([
 ]);
 ```
 
-### 2.5 Environment variables
+The proxy exposes exactly two endpoints, and the client above is the only thing
+that should ever call them:
 
-All server-only. **Nothing here may be prefixed `NEXT_PUBLIC_`** except
-`R2_PUBLIC_BASE`, which is a public hostname by definition.
+| | |
+|---|---|
+| `POST /query` | `{ sql, params }` → one statement, returns D1's `.all()` result |
+| `POST /batch` | `{ statements: [{sql, params}] }` → `env.DB.batch()`, all-or-nothing |
 
-| Variable | Where | What |
-|---|---|---|
-| `D1_PROXY_URL` | Vercel | `https://teazo-d1-proxy.<sub>.workers.dev` |
-| `PROXY_TOKEN` | Vercel **and** `wrangler secret put` | same value both sides |
-| `R2_ACCOUNT_ID` | Vercel | Cloudflare account id |
-| `R2_ACCESS_KEY_ID` | Vercel | R2 API token, scoped to one bucket |
-| `R2_SECRET_ACCESS_KEY` | Vercel | ditto |
-| `R2_BUCKET_NAME` | Vercel | `teazo-media` — also written to `media_asset.r2_bucket` |
-| `R2_PUBLIC_BASE` | Vercel | `https://media.teazosf.com` — the R2 custom domain |
-| `SQUARE_ACCESS_TOKEN` | Vercel | sandbox today |
-| `SQUARE_ENV` | Vercel | `sandbox` \| `production` — see [§5.7](#57-sandbox--production-cutover) |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY` | Vercel | webhook verification |
+**The proxy will run whatever the token-holder sends.** That is deliberate: the
+only intended caller is our own Next.js server, which is exactly as trusted as
+the database itself. The security property that matters is therefore *the token
+never reaches the browser* — it is a server-only environment variable and must
+never be named `NEXT_PUBLIC_*`. If you think a token has leaked, tell Juan;
+rotating it is his job.
 
-Local dev uses `teazo-site/.env.local` for the app and
-`teazo-d1-proxy/.dev.vars` for the Worker. Both are gitignored.
+### 2.6 `/batch` is the only transaction
 
-### 2.6 First 20 minutes
+**`/batch` is the only transaction that exists.** D1 has no interactive
+transactions, so anything that must be atomic has to travel as a single
+`/batch` request. Splitting a logical transaction across two calls silently
+gives up atomicity.
 
-> **Windows: clone to a short path.** `C:\dev\Teazo-Site` is fine;
-> a deep path under `Documents\OneDrive\school\csc191\...` is not. Miniflare nests
-> its local database several directories deep under `.wrangler/state/`, and once
-> the total exceeds Windows' 260-character limit **every `wrangler d1` command
-> fails with a bare `internal error` that says nothing about paths.** Verified:
-> the same clone fails at a 200-character path and works at a 36-character one.
+Practically, that means:
 
-```bash
-git clone https://github.com/W-Sammy/Teazo-Site.git
-cd Teazo-Site
-```
+- Everything that must commit together goes into one `batch([...])` array — the
+  upload route in [§4.4](#44-the-upload-route) and the delete-admin pair in
+  [§6.3](#63-admins-settings) are the worked examples.
+- A batch is all-or-nothing. The proxy caps it at `MAX_STATEMENTS = 40` and
+  rejects anything larger with a clean `{"error":"too_many_statements"}` — that
+  guard exists precisely so you never hit the free plan's 50-queries-per-invocation
+  limit, which *would* fail partway. Chunk long work ([§5.4](#54-chunking-for-d1s-limits)).
+- Statement order inside the batch matters when foreign keys or triggers are
+  involved: parents before children, and the referencing row retired before the
+  referenced one ([§4.8](#48-deletion--three-steps-in-this-order)).
 
-```bash
-cd teazo-d1-proxy && npm install
-```
-
-```bash
-npx wrangler d1 migrations apply teazo-db --local
-```
-
-```bash
-npx wrangler d1 execute teazo-db --local --command "SELECT day_of_week, display_text FROM business_hours ORDER BY day_of_week;"
-```
-
-Seven rows, Monday through Sunday, ending `11:00 AM - 8:00 PM`. Now start the
-proxy against that local database:
-
-```bash
-echo "PROXY_TOKEN=local-dev-token" > .dev.vars && npx wrangler dev --port 8787
-```
-
-In a second terminal, prove it answers:
-
-```bash
-curl -s http://127.0.0.1:8787/query -H "authorization: Bearer local-dev-token" -H 'content-type: application/json' -d '{"sql":"SELECT label FROM role ORDER BY id","params":[]}'
-```
-
-You should get `Owner`, `Can Edit`, `Can View`. Then point the app at it:
-
-```bash
-cd ../teazo-site && printf 'D1_PROXY_URL=http://127.0.0.1:8787\nPROXY_TOKEN=local-dev-token\n' > .env.local && npm install && npm run dev
-```
-
-### 2.7 Useful scripts
-
-In `teazo-d1-proxy/package.json` (already there):
-
-```bash
-npm run dev                  # proxy against local D1
-npm run dev:cron             # same, plus a triggerable scheduled handler
-npm run db:migrate:local     # apply migrations to the local D1
-npm run db:migrate:prod      # apply to the remote production D1
-npm run db:backup            # wrangler d1 export -> backup.sql
-npm run deploy               # ship the Worker
-npm run tail                 # live logs from the deployed Worker
-```
-
-There is deliberately no unsuffixed `db:migrate`. `--local` and `--remote`
-should never be one typo apart.
-
-### 2.8 The cost of the hop
+### 2.7 The cost of the hop
 
 Every database read is now Vercel → Worker → D1 instead of a local binding
 call. Budget roughly 30–80 ms per round trip depending on regions, and design
@@ -803,7 +761,7 @@ export async function POST(request: Request) {
   // Resize before storing. This is the single biggest lever on capacity:
   // straight-from-the-phone JPEGs average 1.6 MB, which fills the 10 GB free
   // allowance after ~6,400 photos. Re-encoded to webp at 2000px they average
-  // well under 300 KB, which is ~35,000 photos. See §8.8.
+  // well under 300 KB, which is ~35,000 photos. Capacity maths: OPERATIONS.md.
   // sharp is available on Vercel — this is one of the things that would NOT
   // work on Cloudflare Workers.
   const { data: resized, info } = await sharp(Buffer.from(bytes))
@@ -882,6 +840,9 @@ export function sniffMime(head: Uint8Array): string | null {
 }
 ```
 
+The resize is not optional decoration — photo size is what decides how much the
+bucket holds. Do not remove it.
+
 ### 4.5 Presigned uploads, for files over 4.5 MB
 
 Two round trips, and the bytes never enter a Vercel function.
@@ -910,33 +871,22 @@ a second route that does only the `batch()` from §4.4. That second route
 **must re-validate**: `HEAD` the object to confirm it exists and read its real
 size and content type from R2 rather than trusting the client.
 
-### 4.6 Serving media from the R2 custom domain
+### 4.6 Where the images come from
 
-Attach a custom domain to the bucket: Cloudflare dashboard → R2 → `teazo-media`
-→ Settings → Public access → Custom Domains → `media.teazosf.com`.
+Every `<img>` reads from `https://media.teazosf.com` — the R2 custom domain,
+CDN-cached, no credential, never through Vercel. **It is already set up for
+you:** attaching the custom domain to the bucket and adding the Cache Everything
+rule are Juan's — see OPERATIONS.md. All you do is build the URL with
+`toPublicUrl()` ([§4.1](#41-the-rule-the-database-stores-a-key-never-a-url)).
 
 > **Do not use the `r2.dev` subdomain.** Cloudflare states it is
 > "rate-limited and should only be used for development purposes", and it
 > cannot use WAF rules, caching, or access controls. It must never appear in
 > `R2_PUBLIC_BASE`.
 
-**Add a Cache Rule**, or the custom domain buys you very little: Cloudflare
-caches only a subset of file extensions by default. Dashboard → the zone →
-Rules → Caching → Cache Rules → hostname equals `media.teazosf.com` →
-**Cache Everything**.
-
-Verify it works by requesting the same object twice:
-
-```bash
-curl -sI https://media.teazosf.com/gallery/2026/09/x.webp | grep -i cf-cache-status
-```
-
-The second response should say `HIT`. `DYNAMIC` or `BYPASS` means the rule is
-missing.
-
-This replaces the `/api/media/[id]` route an earlier draft of this guide
-proposed. It is strictly better: no function invocation, no D1 lookup, and
-CDN caching on every read.
+There is deliberately no `/api/media/[id]` route. Serving from the domain is
+strictly better: no function invocation, no D1 lookup, and CDN caching on every
+read.
 
 ### 4.7 `next/image`
 
@@ -956,13 +906,15 @@ export const allowedHosts = [
 ];
 ```
 
+(The cutover that comment refers to is Juan's — see OPERATIONS.md.)
+
 Miss this and every `<Image>` of our own media fails with an "hostname is not
 configured" error at runtime, not at build time.
 
 > `public/carousel_images/dried_leaves.jpg` is **8.1 MB**. The optimizer will
 > serve a resized derivative, but it still has to fetch and process the
-> original on the first request. Resize the carousel images during the
-> migration below rather than shipping 8 MB originals to R2.
+> original on the first request. Those originals get resized when the existing
+> `public/` assets move into R2 — Juan runs that migration, see OPERATIONS.md.
 
 ### 4.8 Deletion — three steps, in this order
 
@@ -997,57 +949,14 @@ await batch([
 ]);
 ```
 
-Bytes are **not** deleted here. The sweeper ([§8.3](#83-the-sweeper)) drains
+Bytes are **not** deleted here. A sweeper running in the proxy Worker drains
 `pending_r2_deletion` after a 24-hour grace period, and that gap is the only
-undo window the media pipeline has — see [§8.6](#86-rollback).
+undo window the media pipeline has. The sweeper is Juan's to deploy and run —
+see OPERATIONS.md. Once it has run, the bytes are gone: R2 has no versioning.
 
 Because the app catches `D1Error` and reads its message, a trigger firing
 anyway (a race, a missed usage check) still produces a sensible 409 rather than
 a 500.
-
-### 4.9 Migrating existing assets
-
-`public/` is 18 MB / 101 files. Split by **who owns the file**, not by type:
-
-| Stays in repo | Moves to R2 |
-|---|---|
-| `admin_icons/` (14), `social_icons/` (4) | `menu_items/` — 65 `.webp`, 6.4 MB |
-| `pdfjs/` (2, vendored) | `carousel_images/` — 5 files, 8.1 MB |
-| logos, `pink_scribble.png` | `promotions/` (1), `teazo-menu.pdf` |
-
-~14.7 MB migrates. A script, not an afternoon of clicking:
-
-```ts
-// scripts/migrate-assets.ts — run with: npx tsx scripts/migrate-assets.ts
-import { readFile } from "node:fs/promises";
-import { glob } from "node:fs/promises";
-import { putObject } from "../app/lib/r2";
-import { prepare, batch } from "../app/lib/d1";
-
-const MIME: Record<string, string> = {
-  ".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-  ".png": "image/png", ".pdf": "application/pdf",
-};
-
-for await (const path of glob("public/menu_items/**/*.webp")) {
-  const bytes = await readFile(path);
-  const ext = path.slice(path.lastIndexOf("."));
-  const key = `menu/items/legacy/${crypto.randomUUID()}${ext}`;
-
-  await putObject(key, bytes.buffer as ArrayBuffer, MIME[ext]);
-  await batch([
-    prepare(
-      `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, original_filename, purpose)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'menu_item')`
-    ).bind(crypto.randomUUID(), process.env.R2_BUCKET_NAME!, key, MIME[ext], bytes.byteLength, path),
-  ]);
-  console.log(key, "←", path);
-}
-```
-
-Resize the five carousel JPEGs before uploading them. Once the rows exist,
-delete the originals from `public/` in the same PR that switches the components
-over — not before, or the site breaks between merges.
 
 ---
 
@@ -1222,22 +1131,10 @@ public page while the admin's curation survives if Square restores it.
 > **A re-created Square item gets a new id**, so its curation is lost. That is
 > inherent to keying on Square ids, and worth telling the client.
 
-### 5.7 Sandbox → production cutover
-
-`app/lib/square.ts:8` hardcodes `SquareEnvironment.Sandbox`. Read it from
-`env.SQUARE_ENV` instead. Then:
-
-1. Set the production Square token as a secret.
-2. `INSERT INTO square_sync_state (key, square_env) VALUES ('catalog','production')`
-   — `last_synced_at` NULL correctly forces a full initial sync.
-3. Run `fullSync` against production. Sandbox rows are untouched: every key
-   includes `square_env`.
-4. Re-create menu sections and curation against production ids. **This is manual
-   work** — sandbox and production share no object ids.
-5. Add the production image host to `app/lib/imageHosts.ts`.
-6. Flip `SQUARE_ENV`.
-
-Cheapest if curation work starts *after* cutover.
+Build everything against `SQUARE_ENV=sandbox`. Moving the site onto the real
+production catalog is a separate, manual piece of work Juan runs — see
+OPERATIONS.md. It matters to you only in that curation you build now is keyed to
+sandbox object ids.
 
 ---
 
@@ -1254,7 +1151,7 @@ Roles are `1 = Owner`, `2 = Can Edit`, `3 = Can View` — matching
 | `GET` | `/api/admin/gallery` | 3 | list with search/tag filter/sort |
 | `POST` | `/api/admin/gallery` | 2 | upload — see [§4.4](#44-the-upload-route) |
 | `PATCH` | `/api/admin/gallery/[id]` | 2 | rename, caption, alt, tags, publish |
-| `DELETE` | `/api/admin/gallery/[id]` | 2 | soft-delete — see [§4.5](#48-deletion--three-steps-in-this-order) |
+| `DELETE` | `/api/admin/gallery/[id]` | 2 | soft-delete — see [§4.8](#48-deletion--three-steps-in-this-order) |
 
 The list query mirrors what `admin-gallery-client.tsx` does today —
 case-insensitive substring over **name and tags**, OR-semantics tag filter:
@@ -1458,349 +1355,46 @@ Sign-in flow: Google returns `sub` → look up `oauth_account` → if none, chec
 
 ---
 
-## 8. Deployment, cron and environments
-
-Three things get deployed, to two vendors, by two toolchains. Most deployment
-confusion on this project is really confusion about which of the three you are
-touching.
-
-### 8.1 The three deployables
-
-| Deployable | Lives in | Deployed by | Holds |
-|---|---|---|---|
-| Next.js app | `teazo-site/` | Vercel (git push) | all UI and API routes |
-| D1 proxy Worker | `teazo-d1-proxy/` | `npx wrangler deploy` | the only Cloudflare bindings; the sweeper |
-| D1 database + R2 bucket | Cloudflare | `wrangler d1/r2 create`, then migrations | the data |
-
-On Vercel, set the project's **Root Directory to `teazo-site`** — the repo root
-is not the app.
-
-### 8.2 Production and preview
-
-| | Production | Preview |
-|---|---|---|
-| D1 | `teazo-db` | `teazo-db-preview` |
-| R2 | `teazo-media` | `teazo-media-preview` |
-| Worker | `wrangler deploy` | `wrangler deploy --env preview` |
-| `PROXY_TOKEN` | one value | **a different value** |
-
-> **Scope every Vercel environment variable.** Vercel applies unscoped
-> variables to preview deployments too, so an unscoped `D1_PROXY_URL` means
-> every pull-request preview writes to the production database. Set each
-> variable twice — once for Production, once for Preview — with different
-> values. This is the single easiest way to lose real data on this stack.
-
-Use separate R2 API tokens per bucket as well, so a preview deployment
-physically cannot write to production media.
-
-### 8.3 The sweeper
-
-D1 has no TTL and no scheduled jobs of its own. Without a sweeper: sessions
-never expire, lapsed invitations keep holding their unique email slot, and
-deleted bytes accumulate in R2 forever.
-
-**It runs as the `scheduled()` handler in the proxy Worker**, not as a Vercel
-Cron route. Four reasons:
-
-1. It needs to delete from R2. Putting it on Vercel means giving the most
-   destructive operation in the system a second set of credentials.
-2. A `scheduled()` handler has **no public URL to defend**. A Vercel cron route
-   is a public endpoint that permanently deletes files, and is safe only if you
-   remember the `CRON_SECRET` guard on its first line.
-3. It talks to D1 through a binding, with no proxy hop and no 100-statement
-   batch ceiling.
-4. Vercel's Hobby tier allows only one cron execution per day, which is far too
-   slow for the invitation-slot problem.
-
-The code is in [`teazo-d1-proxy/src/index.ts`](../teazo-d1-proxy/src/index.ts).
-It does three jobs under `Promise.allSettled`, so one failure does not cancel
-the others:
-
-| Job | What |
-|---|---|
-| `reapDeletedObjects` | deletes R2 bytes queued more than 24 h ago, then marks the row |
-| `expireSessions` | hard-deletes expired or revoked sessions |
-| `expireInvitations` | revokes lapsed invitations, purges settled ones after 90 days |
-
-The schedule is in `wrangler.jsonc`: `"triggers": { "crons": ["0 * * * *"] }`.
-Hourly — set by the invitation case, not by byte reaping.
-
-Test it without waiting an hour:
-
-```bash
-cd teazo-d1-proxy && npx wrangler dev --test-scheduled
-curl "http://127.0.0.1:8787/cdn-cgi/handler/scheduled"
-```
-
-Watch it in production with `npx wrangler tail teazo-d1-proxy`.
-
-> **Never compare a `%fZ` timestamp against `datetime('now', …)`.** Every
-> timestamp column in `0001_init.sql` is written as
-> `strftime('%Y-%m-%dT%H:%M:%fZ','now')` → `2026-09-08T08:05:53.485Z`.
-> `datetime('now','-24 hours')` gives `2026-09-07 08:05:53` — a space where the
-> `T` is, no fraction, no `Z`. SQLite compares these as **strings**, and `'T'`
-> (0x54) sorts above `' '` (0x20), so the comparison is silently wrong for
-> same-day rows instead of failing. Build both sides with the same `strftime`.
-
-### 8.4 Deploy order for a schema change
-
-There is one shared database and, during a rollout, two live app versions —
-Vercel drains the old deployment while the new one serves. So the rule is about
-what the schema must tolerate, not what the new code wants:
-
-> **The schema must be compatible with the outgoing app version and the
-> incoming one at the same time.**
-
-| Change | Order |
-|---|---|
-| New table, index, **nullable** column, or trigger | **migration first, app second** — the old app ignores what it does not know about |
-| Drop a column or table, rename, add `NOT NULL`, add a `CHECK` | **app first, migration second** — two separate deploys, because the old app is still writing that column while it drains |
-
-A **rename** is three phases: add the new column → dual-write and backfill →
-switch reads → stop writing the old one → drop it.
-
-Two D1 complications:
-
-- **Tightening a constraint is never a one-step migration.** SQLite's
-  `ALTER TABLE` cannot add a `CHECK` or a `FOREIGN KEY`; it needs the 12-step
-  table rebuild. That is destructive-class work even though nothing is removed.
-- **Migrations are forward-only.** There are no down migrations and
-  `wrangler d1 migrations` has no revert command.
-
-> **Do not run migrations from the Vercel build.** Vercel builds run on every
-> push to every branch, so every preview build of unmerged work would apply its
-> branch's migrations to a shared database. Migrations are run deliberately, by
-> a person or a CI job gated on merge, with `npm run db:migrate:prod` from
-> `teazo-d1-proxy/`.
-
-### 8.5 Go-live checklist
-
-None of this exists yet — `wrangler.jsonc` still has empty `database_id`
-fields and the buckets have never been created. Work top to bottom.
-
-**Billing**
-
-1. Enable R2: Dashboard → Storage & databases → R2 → Overview → complete the
-   checkout flow. This adds a card to the account but **costs nothing** — the
-   free allowance covers us many times over. No Workers Paid subscription is
-   needed; see [§8.7](#87-running-it-free).
-
-**Cloudflare resources**
-
-2. `npx wrangler d1 create teazo-db` and `… teazo-db-preview`, then paste both
-   ids into `teazo-d1-proxy/wrangler.jsonc` (top level and `env.preview` — both
-   `database_id` fields are empty today).
-3. `npx wrangler r2 bucket create teazo-media` and `… teazo-media-preview`.
-4. Attach the custom domain to each bucket ([§4.6](#46-serving-media-from-the-r2-custom-domain)).
-   Leave `r2.dev` disabled.
-5. Add the **Cache Everything** rule for `media.teazosf.com`.
-
-**Secrets**
-
-6. Mint R2 API tokens — Object Read & Write, **scoped to one bucket each**.
-7. Generate two independent proxy tokens and install each on both sides:
-
-   ```bash
-   openssl rand -base64 32
-   cd teazo-d1-proxy && npx wrangler secret put PROXY_TOKEN
-   npx wrangler secret put PROXY_TOKEN --env preview
-   ```
-
-8. Fill in every Vercel variable from [§2.5](#25-environment-variables), each
-   scoped to Production or Preview.
-
-**Schema**
-
-9. `npm run db:migrate:prod`, and the preview equivalent. `0002_seed.sql` is a
-   migration, so roles, hours, links and content blocks land in the same command.
-10. Verify: seven hour rows, Monday to Sunday, ending `11:00 AM - 8:00 PM`.
-11. Migrate `public/` assets into R2 per [§4.9](#49-migrating-existing-assets).
-
-**Deploy**
-
-12. `npm run deploy` and `npm run deploy:preview` from `teazo-d1-proxy/`.
-13. Smoke-test the proxy before the app depends on it. The first call must fail:
-
-    ```bash
-    curl -s -o /dev/null -w '%{http_code}\n' https://teazo-d1-proxy.<sub>.workers.dev/query
-    ```
-
-    That must print `405` for a GET, and `401` for a POST without the token.
-14. Add `media.teazosf.com` to `app/lib/imageHosts.ts` **before** deploying the app.
-15. Set Vercel's Root Directory to `teazo-site` and push.
-
-**Verify** — each failure points at exactly one step above:
-
-| Check | Fails when |
-|---|---|
-| `/contact` shows the real address and hours | `D1_PROXY_URL` or `PROXY_TOKEN` |
-| a gallery image renders | `R2_PUBLIC_BASE`, custom domain, or `imageHosts.ts` |
-| `curl -sI https://media.teazosf.com/<key>` twice → `cf-cache-status: HIT` | the Cache Everything rule |
-| admin login → upload → image appears | R2 credentials, `/batch` |
-| delete an image → a `pending_r2_deletion` row exists | [§4.8](#48-deletion--three-steps-in-this-order) ordering |
-| `wrangler tail` shows the hourly sweep | the `triggers.crons` entry |
-| open a PR → its preview writes only to `teazo-db-preview` | env var scoping |
-
-16. Last, once all of the above is green: the Square cutover
-    ([§5.7](#57-sandbox--production-cutover)). It goes last because re-creating
-    curation against production object ids is manual work that is wasted if
-    anything before it has to be rebuilt.
-
-### 8.6 Rollback
-
-| Change | Reversible? | How |
-|---|---|---|
-| App deploy | **Yes, instantly** | Vercel Instant Rollback, or `vercel rollback` |
-| Worker deploy | **Yes** | `wrangler versions list` then `wrangler rollback [id]` |
-| Env var change | Yes, but redeploy | running deployments captured the old value |
-| Additive migration | Effectively yes | the new column is unused; leave it |
-| Destructive migration | **No** | forward-only — write a corrective migration |
-| Rows deleted | Only from a backup | below |
-| **R2 objects reaped** | **No** | no versioning; the bytes are gone |
-
-**Back up before every destructive migration.** One command:
-
-```bash
-cd teazo-d1-proxy && npx wrangler d1 export teazo-db --remote --output ./backup-$(date +%F-%H%M).sql
-```
-
-Keep it outside the repo — it contains session hashes and contact-form messages.
-
-Cloudflare **Time Travel** is the other net: on a paid plan D1 restores any
-point in the last 30 days.
-
-```bash
-npx wrangler d1 time-travel restore teazo-db --timestamp=2026-09-08T12:00:00Z
-```
-
-It restores the *whole database*, so it undoes a bad migration well and "one
-admin deleted one image" badly.
-
-**Do not hand-edit an applied migration.** Wrangler tracks applied migrations by
-name, so editing one means the change never runs where it has already been
-applied, and environments silently diverge. Write `0003_fix_whatever.sql`.
-
-**R2 deletion is the genuinely one-way door**, which is why the sweeper waits 24
-hours. Within that window a deletion is undone by clearing `deleted_at` on the
-media row and its owner and deleting the pending row. After it, the only
-recovery is the original file on somebody's laptop.
-
-### 8.7 Running it free
-
-**The entire Cloudflare stack fits in the free tier, and this project is built
-to stay there.** Nothing here needs Workers Paid.
-
-| | Free allowance | What we actually use |
-|---|---|---|
-| Workers requests | 100,000 / day | a few hundred — every D1 read is one request, and public pages are cached |
-| Cron triggers | 5 per account | 1 (hourly sweeper) |
-| D1 storage | 5 GB total | a few MB |
-| D1 rows read | 5,000,000 / day | thousands |
-| D1 rows written | 100,000 / day | tens |
-| R2 storage | 10 GB-month | ~15 MB after the asset migration |
-| R2 Class A (writes) | 1,000,000 / month | a handful of uploads |
-| R2 Class B (reads) | 10,000,000 / month | most reads are CDN cache hits and never touch R2 |
-| R2 egress | **free at any volume** | this is why R2 is in the stack |
-
-Storage and traffic are not close to any limit — this is a one-location shop
-site. What *does* bite on the free plan is a pair of **per-invocation** limits:
-
-| Limit | Free | Workers Paid |
-|---|---|---|
-| D1 queries per Worker invocation | **50** | 1,000 |
-| Subrequests per request | **50** | 1,000 |
-| CPU time per invocation | 10 ms | 30 s |
-
-The proxy is sized for those, and the constants are the enforcement:
-
-- **`MAX_STATEMENTS = 40`** — a `/batch` of N statements costs N D1 queries.
-  Going over 50 fails partway, and because `batch()` is all-or-nothing you get
-  a confusing "nothing happened" rather than a clear limit error.
-- **`REAP_LIMIT = 20`** — each reaped row costs two subrequests (one R2 delete,
-  one D1 update). 20 rows = 40, plus the SELECT and the session/invitation
-  statements = 44. At hourly that drains 480 objects/day, far more than this
-  shop will ever delete, and any backlog simply clears over the next few runs.
-
-CPU time is not a concern: the proxy is I/O-bound, and waiting on D1 or R2 does
-not count against the 10 ms.
-
-**Two things to know before you count on free:**
-
-1. **R2 requires completing a checkout flow** — a card on the account — even
-   though the free allowance costs $0. This is the step that is currently
-   blocking us; the API returns error 10042 until it is done.
-2. **Exceeding a daily D1 limit stops queries**, it does not bill you. The site
-   would break rather than surprise anyone with an invoice. Upgrading to
-   Workers Paid lifts the caps "typically within minutes" if it ever happens.
-
-**When you would need to upgrade** — none of these are near:
-
-- sustained traffic past ~100k Worker requests/day
-- a genuine need to batch more than ~40 statements atomically
-- the database growing past 500 MB (the free per-database ceiling)
-
-**Vercel is the one line item that is not free in principle.** Hobby is $0 and
-technically sufficient for this traffic, but its terms restrict it to
-non-commercial use, and a shop's live website is commercial. That is a
-conversation to have with the client, and it is a Vercel question, not a
-Cloudflare one.
-
-> **Keeping it free is a design constraint, not an accident.** If you raise
-> `MAX_STATEMENTS` or `REAP_LIMIT`, you have quietly moved the project onto a
-> paid plan. Both constants carry a comment saying so.
-
-### 8.8 How much can it actually hold?
-
-Computed from the real code paths, against the free-tier allowances.
-
-**Uploads per day.** The binding limit is D1 rows written (100,000/day) — each
-upload writes a `media_asset` row, a `gallery_image` row, and two rows per tag.
-
-| Tags per photo | D1 rows per upload | Uploads per day |
-|---|---|---|
-| 0 | 2 | 33,333 *(R2 Class A becomes the limit)* |
-| 3 | 8 | **12,500** |
-| 5 | 12 | 8,333 |
-| 10 | 22 | 4,545 |
-
-You would need 12,500 uploads **in a single day** to hit a wall. Karen will
-upload a handful a week.
-
-**Image views.** Effectively unlimited, because of the custom domain. A viewer
-hitting a cached image never reaches R2 — Cloudflare's edge serves it. Only
-cache *misses* count against the 10 M/month Class B budget, and keys are
-immutable UUIDs, so the hit rate should be very high.
-
-| CDN hit rate | Image views/month before R2 Class B runs out |
-|---|---|
-| 0% (Cache Everything rule missing) | 10,000,000 |
-| 90% | 100,000,000 |
-| 99% | ~1,000,000,000 |
-
-Page views are similarly unbounded: with `revalidate = 300` the gallery page
-re-renders at most 288 times a day regardless of traffic, and visitors are served
-cached HTML without ever reaching a Worker.
-
-**The one real ceiling: total R2 storage.** Not a daily rate — a cumulative one,
-and the only number worth watching.
-
-| Average photo size | Photos that fit in 10 GB |
-|---|---|
-| 98 KB — the existing `public/menu_items` `.webp` | ~107,000 |
-| 300 KB — good-quality webp | ~35,000 |
-| 1.6 MB — the existing `carousel_images` JPEGs | ~6,400 |
-| 10 MB — our upload cap | ~1,000 |
-
-That 100× spread is the whole story: **photo size decides capacity, and nothing
-else does.** `public/carousel_images/` averages 1.6 MB and one file is 7.9 MB —
-nearly the entire upload cap in a single image. Straight-from-the-phone uploads
-put you in the 6,000-photo range; resized webp puts you past 100,000.
-
-Which is why the upload route resizes ([§4.4](#44-the-upload-route)). Do not
-remove it.
-
-D1 metadata is a non-issue: 100,000 `media_asset` rows is roughly 30 MB against
-a 500 MB per-database ceiling.
+## 8. Asking for a schema change
+
+You will hit a column that does not exist. That is expected, and the fix is a
+message to Juan, not a file.
+
+**Do not:**
+
+- Add a file to `teazo-site/migrations/`. Wrangler records applied migrations by
+  filename; two people writing `0003_…sql` diverges the databases permanently and
+  there is no revert command.
+- Edit a migration that already exists. It has already been applied somewhere, so
+  editing it means the change never runs there and environments silently diverge.
+- Run anything against production or the shared preview database by hand.
+
+**Do:** ask. It is usually a five-minute change, and going through one person is
+what keeps everyone's database identical. Include:
+
+- **The table** — the existing one it goes on, or the name you want for a new one.
+- **The columns** — name, type (`TEXT`/`INTEGER`/no `BOOLEAN`, no `ENUM`), nullable
+  or not, default, and any `CHECK` or foreign key it needs.
+- **What reads it** — the page or route, and roughly the query, so the index
+  question can be answered at the same time.
+- **What writes it** — which admin screen or sync path, and whether it has to be
+  atomic with anything else (that decides whether it lands in one `/batch`).
+
+Two things worth knowing before you ask, because they change how big the request
+is:
+
+- **Additive is cheap.** A new table, a new index, a **nullable** column or a
+  trigger can ship before the app that uses it — the old app ignores what it does
+  not know about.
+- **Tightening is not.** Dropping or renaming a column, or adding `NOT NULL`,
+  takes two separate deploys, because the outgoing app version is still writing
+  that column while it drains. A rename is three phases. Adding a `CHECK` or a
+  `FOREIGN KEY` is harder still — SQLite's `ALTER TABLE` cannot do it at all, so
+  it needs a full 12-step table rebuild. Ask early for any of these.
+
+Juan applies the migration and tells you when it has landed; you then re-run
+`npm run db:migrate:local` (or reset, [§1.3](#13-your-own-sandbox-database)) to
+pick it up. The deploy sequencing is his — see OPERATIONS.md.
 
 ---
 
@@ -1954,7 +1548,7 @@ is roughly one sprint for one developer and closes a real defect.
 | 4 | Site content | Karen can edit the site without a deploy | [§3](#3-the-read-path--getting-data-to-the-frontend), [§6.4](#64-website-content) |
 | 5 | Square sync + menu | replaces the 787-line mock menu | [§5](#5-syncing-square-into-d1), [§6.5](#65-menu-curation) |
 | 6 | Events | `/admin/events` has nothing to read | [§6.6](#66-events-hours-links-contact-inbox) |
-| 0 | **Proxy Worker + sweeper** | nothing can reach the database without it | [§2.3](#23-the-proxy-worker), [§8.3](#83-the-sweeper) |
+| 0 | **Proxy Worker + sweeper** | nothing can reach the database without it | Juan's — OPERATIONS.md |
 
 Slice 5 depends on the variations fix in [§5.2](#52-prerequisite-fix-the-variations-bug-first).
 The sweeper is small but unowned — give it to someone.

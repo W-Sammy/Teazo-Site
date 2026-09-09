@@ -66,7 +66,8 @@ reads go to a custom domain with Cloudflare CDN caching in front.
 
 **None of this changes the schema.** Every table, index, trigger and CHECK below is
 plain SQLite and is unaffected by where the app runs. What it changes is the wiring,
-and that is documented in [`BUILD-GUIDE.md` §2](./BUILD-GUIDE.md#2-reaching-d1-and-r2-from-vercel).
+and that is documented in [`DEV-GUIDE.md` §2](./DEV-GUIDE.md#2-local-setup-and-the-database-client)
+(for building) and [`OPERATIONS.md`](./OPERATIONS.md) (for deploying).
 
 The cost to be aware of: every database read crosses a network hop. Batch reads, and
 cache public pages with `revalidate`.
@@ -141,7 +142,8 @@ The current code reads a narrow projection of this and throws the rest away —
 Validated against SQLite 3.45 and through wrangler's own migration runner:
 the DDL applies clean and 33 constraint assertions pass.
 
-**For how to build against it, see [`BUILD-GUIDE.md`](./BUILD-GUIDE.md).**
+**For how to build against it, see [`DEV-GUIDE.md`](./DEV-GUIDE.md).
+For how to deploy it, see [`OPERATIONS.md`](./OPERATIONS.md).**
 
 ### Conventions
 
