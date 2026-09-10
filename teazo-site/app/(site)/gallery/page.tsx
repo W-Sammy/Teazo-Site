@@ -16,15 +16,15 @@ const cabinSketch = Cabin_Sketch({
 
 /* Placeholder images using the TEAZO logo */
 const mockImages: GalleryImage[] = [
-  { id: "mock-1", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Signature Drinks" },
-  { id: "mock-2", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Fresh Fruit Tea" },
-  { id: "mock-3", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Matcha Series" },
-  { id: "mock-4", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Soufflé Pancakes" },
-  { id: "mock-5", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Cheezo Tea" },
-  { id: "mock-6", url: "/TEAZO_logo.png", alt: "TEAZO drink", caption: "Desserts" },
-  { id: "mock-7", url: "/TEAZO_logo.png", alt: "TEAZO drink" },
-  { id: "mock-8", url: "/TEAZO_logo.png", alt: "TEAZO drink" },
-  { id: "mock-9", url: "/TEAZO_logo.png", alt: "TEAZO drink" },
+  { id: "mock-1", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Signature Drinks" },
+  { id: "mock-2", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Fresh Fruit Tea" },
+  { id: "mock-3", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Matcha Series" },
+  { id: "mock-4", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Soufflé Pancakes" },
+  { id: "mock-5", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Cheezo Tea" },
+  { id: "mock-6", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Desserts" },
+  { id: "mock-7", url: "/TEAZO_logo.svg", alt: "TEAZO drink" },
+  { id: "mock-8", url: "/TEAZO_logo.svg", alt: "TEAZO drink" },
+  { id: "mock-9", url: "/TEAZO_logo.svg", alt: "TEAZO drink" },
 ];
 
 export default function GalleryPage() {
@@ -40,7 +40,7 @@ export default function GalleryPage() {
         {/* Page header */}
         <section className="flex flex-col items-center text-center">
           <Image
-              src="/TEAZO_logo.png"
+              src="/TEAZO_logo.svg"
               alt=""
               aria-hidden="true"
               width={389}

@@ -142,10 +142,8 @@ export default async function ContactPage() {
   const hoursTimeMinWidth = isMobileRequest
     ? "auto"
     : HOURS_TIME_COLUMN_MIN_WIDTH;
-  const emailHref = isMobileRequest
-    ? `mailto:${location.email}`
-    : `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(location.email)}`;
-  const opensWebmail = !isMobileRequest;
+  const emailHref = `mailto:${location.email}`;
+  const opensWebmail = false;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
@@ -158,7 +156,7 @@ export default async function ContactPage() {
           {/* Use the approved uploaded logo asset rather than reconstructing it
               in code so brand updates can be handled from /public later. */}
           <Image
-            src="/TEAZO_logo.png"
+            src="/TEAZO_logo.svg"
             alt=""
             aria-hidden="true"
             width={389}
@@ -322,7 +320,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_fb_icon.png"
+                    src="/social_icons/social_svg/teazo_fb_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
@@ -338,7 +336,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_email_icon.png"
+                    src="/social_icons/social_svg/teazo_email_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
@@ -354,7 +352,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_insta_icon.png"
+                    src="/social_icons/social_svg/teazo_insta_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
@@ -370,7 +368,7 @@ export default async function ContactPage() {
                   className="block transition hover:opacity-70"
                 >
                   <Image
-                    src="/social_icons/teazo_yelp_icon.png"
+                    src="/social_icons/social_svg/teazo_yelp_icon.svg"
                     alt=""
                     aria-hidden="true"
                     width={64}
