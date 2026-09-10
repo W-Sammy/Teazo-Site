@@ -56,6 +56,7 @@ export default function AdminEventsGrid({
               <span className={`absolute left-3 top-3 z-20 rounded-full px-2 py-1 text-xs font-semibold capitalize shadow-sm ${statusClasses[status]}`}>
                 {status}
               </span>
+              {/* delete button here to call onDelete */}
               <button
                 type="button"
                 onClick={() => onDelete(event)}

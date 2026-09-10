@@ -41,6 +41,8 @@ function createEventId() {
     : `event-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+/* Owns the eventPendingDelete state. Null means the confirmation dialog is closed. */
+/* Passes the state setter to both event views using the prop name onDelete. eventsGrid and eventsList*/
 export default function AdminEventsClient({
   initialEvents,
   categories,

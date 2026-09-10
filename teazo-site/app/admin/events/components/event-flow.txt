@@ -20,18 +20,15 @@ Delete events
 
 admin-events-client.tsx
   /* Owns the eventPendingDelete state. Null means the confirmation dialog is closed. */
-
   const [eventPendingDelete, setEventPendingDelete] = useState<AdminEvent | null>(null);
 
   /* Passes the state setter to both event views using the prop name onDelete. */
-
   <AdminEventsGrid onDelete={setEventPendingDelete} />
   <AdminEventsList onDelete={setEventPendingDelete} />
 
 
 admin-events-grid.tsx OR admin-events-list.tsx
-  /* The user clicks the red delete button for one specific event. */
-  onClick={() => onDelete(event)}
+  /* delete button here to call onDelete */
   /* Because onDelete points to setEventPendingDelete, the line above effectively does: */
   setEventPendingDelete(event);
   /* This does not delete the event yet. It only remembers which event the user wants
@@ -54,58 +51,4 @@ delete-event-dialog.tsx
 
 
 admin-events-client.tsx - current confirmDelete flow
-  1. Stop if there is no selected event.
-  2. Release a temporary browser image URL when necessary.
-  3. Filter the selected event out of the local events array.
-  4. Close the edit drawer if it was editing the same event.
-  5. Set eventPendingDelete to null to close the confirmation dialog.
-  /* Filtering keeps every event whose id does not match the selected event. */
-
-  setEvents((current) =>
-    current.filter((event) => event.id !== eventPendingDelete.id)
-  );
-
-
-Future database/API version of confirmDelete
-
-  async function confirmDelete() {
-    if (!eventPendingDelete) return;
-
-    const response = await fetch(`/api/events/${eventPendingDelete.id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      // Show an error and keep the event in the list.
-      return;
-    }
-
-    // The database deletion succeeded, so now update the visible client state.
-    setEvents((current) =>
-      current.filter((event) => event.id !== eventPendingDelete.id)
-    );
-
-    if (editingEvent?.id === eventPendingDelete.id) {
-      closeDrawer();
-    }
-
-    setEventPendingDelete(null);
-  }
-
-
-Short delete summary
-
-  Delete button clicked
-    -> setEventPendingDelete(event)
-    -> confirmation dialog opens
-    -> user cancels
-       -> setEventPendingDelete(null)
-
-    OR
-
-    -> user confirms
-       -> confirmDelete()
-       -> DELETE /api/events/:id (future)
-       -> remove event from local state only after the API succeeds
-       -> setEventPendingDelete(null)
-       -> confirmation dialog closes
+  confirmDelete here should be finished here. 
