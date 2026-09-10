@@ -45,7 +45,7 @@ type Row = Partial<Record<string, CellValue>>;
     const safeSrc =
       typeof rawSrc === "string" && checkURL(rawSrc)
         ? rawSrc
-        : "/TEAZO_logo.png";
+        : "/TEAZO_logo.svg";
     const cItemName = checkString(itemName) ?? "No Name"
 
 
@@ -59,7 +59,7 @@ type Row = Partial<Record<string, CellValue>>;
         height={40}
         className="w-8 h-8 object-cover rounded shrink-0"
         onError={(e) => {
-          e.currentTarget.src = "/TEAZO_logo.png";
+          e.currentTarget.src = "/TEAZO_logo.svg";
         }}
       />
     );

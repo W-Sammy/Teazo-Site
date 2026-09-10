@@ -49,7 +49,7 @@ export default function Home() {
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
-                    src="/TEAZO_logo.png"
+                    src="/TEAZO_logo.svg"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
@@ -108,16 +108,16 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert.We
                 {/*social media icons*/}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
                     <a href="">
-                    <img src="/social_icons/teazo_fb_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_email_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_insta_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
-                    <img src="/social_icons/teazo_yelp_icon.png" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
 
