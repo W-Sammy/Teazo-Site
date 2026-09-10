@@ -122,6 +122,7 @@ export default function EventForm({
     setPreviewUrl(nextPreviewUrl);
   }
 
+  /* handles the form submission for the event information */
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -143,6 +144,7 @@ export default function EventForm({
       return;
     }
 
+    /* onSave callback to handleSave in admin-events-client where POST/PATCH should be included */
     onSave({
       name: name.trim(),
       description: description.trim(),

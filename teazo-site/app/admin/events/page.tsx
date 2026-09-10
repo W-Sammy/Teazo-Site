@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
+/* loads menu items from square api */
 async function getMenuItems(): Promise<MenuItem[]> {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`,
@@ -21,6 +22,7 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return response.json();
 }
 
+/* loads sample data from local file, change to being pulled from database */
 async function getSampleEvents(): Promise<AdminEvent[]> {
   const filePath = path.join(
     process.cwd(),
@@ -56,6 +58,7 @@ export default async function AdminEventsPage() {
     (a, b) => a.name.localeCompare(b.name),
   );
 
+  /* pass data into admins event client, to become client state, and organize data */
   return (
     <AdminEventsClient
       initialEvents={initialEvents}

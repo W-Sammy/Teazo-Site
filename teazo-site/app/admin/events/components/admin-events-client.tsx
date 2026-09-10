@@ -120,7 +120,8 @@ export default function AdminEventsClient({
     setDrawerOpen(false);
     setEditingEvent(null);
   }
-
+  
+  /*opens new event drawer by setting editingEvent to null and drawerOpen to true */
   function openNewEventDrawer() {
     setEditingEvent(null);
     setDrawerOpen(true);
@@ -143,6 +144,7 @@ export default function AdminEventsClient({
     managedObjectUrls.current.delete(url);
   }
 
+  /* api calls should be completed here, may abstract to separate files in the future */
   function handleSave(values: EventFormValues) {
     const { imageFile, ...eventValues } = values;
     const imageUrl = imageFile
@@ -355,6 +357,7 @@ export default function AdminEventsClient({
         </div>
       </section>
 
+      {/* event form drawer, that opens and handles, editing or creating new events */}
       <AdminForm isOpen={drawerOpen} onClose={closeDrawer}>
         {drawerOpen && (
           <EventForm
