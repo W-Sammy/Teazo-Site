@@ -1,0 +1,46 @@
+[
+  {
+    "id": "event-1",
+    "name": "September Tea Celebration",
+    "description": "Celebrate the start of fall with a seasonal offer available across the entire menu.",
+    "imageUrl": "/carousel_images/fresh_leaf.jpg",
+    "startAt": "2026-09-01T07:00:00.000Z",
+    "endAt": "2026-10-01T06:59:00.000Z",
+    "appliesToAll": true,
+    "categoryIds": [],
+    "itemIds": []
+  },
+  {
+    "id": "event-2",
+    "name": "Mid-Autumn Matcha Week",
+    "description": "A limited-time matcha event featuring selected drinks and seasonal recommendations.",
+    "imageUrl": "/menu_items/strawberry_matcha_cheezo.webp",
+    "startAt": "2026-09-15T17:00:00.000Z",
+    "endAt": "2026-09-22T06:59:00.000Z",
+    "appliesToAll": false,
+    "categoryIds": [],
+    "itemIds": []
+  },
+  {
+    "id": "event-3",
+    "name": "Summer Fruit Tea Finale",
+    "description": "The final summer celebration for refreshing fruit teas and sparkling drinks.",
+    "imageUrl": "/menu_items/super_fruit_tea.webp",
+    "startAt": "2026-08-14T17:00:00.000Z",
+    "endAt": "2026-08-24T06:59:00.000Z",
+    "appliesToAll": false,
+    "categoryIds": [],
+    "itemIds": []
+  },
+  {
+    "id": "event-4",
+    "name": "Holiday Tea Preview",
+    "description": "Preview upcoming holiday flavors, desserts, and special seasonal menu combinations.",
+    "imageUrl": "/promotions/chinese_new_year.png",
+    "startAt": "2026-11-01T17:00:00.000Z",
+    "endAt": "2026-11-16T07:59:00.000Z",
+    "appliesToAll": false,
+    "categoryIds": [],
+    "itemIds": []
+  }
+]
