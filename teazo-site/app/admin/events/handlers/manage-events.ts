@@ -69,7 +69,7 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      /* TODO: Replace this temporary block with PATCH /api/events/:id. */
+      /* replace this temporary block with PATCH /api/events/:id. */
       const { imageFile, ...eventValues } = values;
       const imageUrl = imageFile
         ? createManagedObjectUrl(imageFile)
@@ -110,11 +110,33 @@ export function useEvents(initialEvents: AdminEvent[]) {
     }
   }
 
+  async function deleteEndedEvents() {
+    setErrorMessage("");
+
+    try {
+      /* TODO: Replace this temporary block with the bulk-delete API request. */
+      const endedEvents = events.filter(
+        (event) => Date.parse(event.endAt) < Date.now(),
+      );
+      const endedEventIds = new Set(endedEvents.map((event) => event.id));
+
+      setEvents((current) =>
+        current.filter((event) => !endedEventIds.has(event.id)),
+      );
+      endedEvents.forEach((event) => revokeManagedObjectUrl(event.imageUrl));
+      return true;
+    } catch {
+      setErrorMessage("Failed to delete ended events.");
+      return false;
+    }
+  }
+
   return {
     events,
     errorMessage,
     createEvent,
     updateEvent,
     deleteEvent,
+    deleteEndedEvents,
   };
 }

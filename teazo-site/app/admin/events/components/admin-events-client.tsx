@@ -19,6 +19,7 @@ import type {
 import AdminEventsGrid from "./admin-events-grid";
 import AdminEventsList from "./admin-events-list";
 import DeleteEventDialog from "./delete-event-dialog";
+import DeleteEndedEventsDialog from "./delete-ended-events-dialog";
 import EventForm from "./event-form";
 import { getEventStatus } from "./event-display";
 import { useEvents } from "@/app/admin/events/handlers/manage-events";
@@ -43,8 +44,14 @@ export default function AdminEventsClient({
   categories,
   items,
 }: AdminEventsClientProps) {
-  const { events, errorMessage, createEvent, updateEvent, deleteEvent } =
-    useEvents(initialEvents);
+  const {
+    events,
+    errorMessage,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    deleteEndedEvents,
+  } = useEvents(initialEvents);
   const [search, setSearch] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<EventStatus[]>([]);
   const [sortBy, setSortBy] = useState<EventSortOption>("start-asc");
@@ -54,6 +61,7 @@ export default function AdminEventsClient({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null);
   const [eventPendingDelete, setEventPendingDelete] = useState<AdminEvent | null>(null);
+  const [deleteEndedDialogOpen, setDeleteEndedDialogOpen] = useState(false);
   const categoryNames = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories],
@@ -61,6 +69,10 @@ export default function AdminEventsClient({
   const itemNames = useMemo(
     () => new Map(items.map((item) => [item.id, item.name])),
     [items],
+  );
+  const endedEventCount = useMemo(
+    () => events.filter((event) => getEventStatus(event) === "ended").length,
+    [events],
   );
 
   const filteredEvents = useMemo(() => {
@@ -137,6 +149,22 @@ export default function AdminEventsClient({
 
     if (editingEvent?.id === deletedEvent.id) closeDrawer();
     setEventPendingDelete(null);
+  }
+
+  /* button for deleteing all ended events */
+  async function handleDeleteEndedEvents() {
+    if (endedEventCount === 0) return;
+
+    const deleted = await deleteEndedEvents();
+    if (!deleted) return;
+
+    if (editingEvent && getEventStatus(editingEvent) === "ended") {
+      closeDrawer();
+    }
+    if (eventPendingDelete && getEventStatus(eventPendingDelete) === "ended") {
+      setEventPendingDelete(null);
+    }
+    setDeleteEndedDialogOpen(false);
   }
 
   function clearSearchAndFilters() {
@@ -274,8 +302,18 @@ export default function AdminEventsClient({
         </div>
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4">
-          <div className="mb-3 flex items-center justify-between text-sm text-gray-500">
-            <span>{filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"}</span>
+          <div className="mb-3 flex items-center justify-between gap-3 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center gap-3">
+              <span>{filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"}</span>
+              <button
+                type="button"
+                onClick={() => setDeleteEndedDialogOpen(true)}
+                disabled={endedEventCount === 0}
+                className="cursor-pointer rounded border border-red-300 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
+              >
+                Delete ended events ({endedEventCount})
+              </button>
+            </div>
             {(search || selectedStatuses.length > 0) && (
               <button
                 type="button"
@@ -345,6 +383,13 @@ export default function AdminEventsClient({
         event={eventPendingDelete}
         onCancel={() => setEventPendingDelete(null)}
         onConfirm={confirmDelete}
+      />
+
+      <DeleteEndedEventsDialog
+        isOpen={deleteEndedDialogOpen}
+        eventCount={endedEventCount}
+        onCancel={() => setDeleteEndedDialogOpen(false)}
+        onConfirm={handleDeleteEndedEvents}
       />
     </div>
   );
