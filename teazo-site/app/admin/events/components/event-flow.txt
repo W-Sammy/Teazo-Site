@@ -10,10 +10,18 @@ admin-events-client.tsx
   
 event-from.tsx
   /* handles the form submission for the event information */
-  /* onSave callback to handleSave in admin-events-client where POST/PATCH should be included */
+  /* onSave callback goes to handleSave in admin-events-client */
 
 admin-events-client.tsx
-  /* api calls should be completed here, may abstract to separate files in the future */
+  /* handleSave decides whether to call createEvent or updateEvent */
+
+handlers/use-events.ts
+  /* createEvent is the only function that will need the POST request */
+  /* updateEvent is the only function that will need the PATCH request */
+
+handlers/get-events.ts
+  /* getEvents is the only event-loading function that needs to be changed from
+     sample-events.txt to the database/API */
 
 
 Delete events
@@ -50,5 +58,24 @@ delete-event-dialog.tsx
   /* Confirm calls onConfirm, which points to confirmDelete in admin-events-client.tsx. */
 
 
+
+
 admin-events-client.tsx - current confirmDelete flow
-  confirmDelete here should be finished here. 
+  /* confirmDelete checks that an event was selected, then calls deleteEvent from
+     handlers/use-events.ts. If deletion succeeds, it closes the dialog. */
+
+handlers/use-events.ts
+  /* deleteEvent owns the actual delete operation. Replace its marked temporary
+     block with DELETE /api/events/:id. AdminEventsClient does not need to know
+     how the database deletion works. */
+
+
+Future API locations
+
+handlers/get-events.ts
+  getEvents()       -> GET /api/events
+
+handlers/use-events.ts
+  createEvent()     -> POST /api/events
+  updateEvent()     -> PATCH /api/events/:id
+  deleteEvent()     -> DELETE /api/events/:id

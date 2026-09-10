@@ -10,6 +10,10 @@ export type AdminEvent = {
   itemIds: string[];
 };
 
+export type EventFormValues = Omit<AdminEvent, "id" | "imageUrl"> & {
+  imageFile: File | null;
+};
+
 export type EventCatalogItem = {
   id: string;
   name: string;

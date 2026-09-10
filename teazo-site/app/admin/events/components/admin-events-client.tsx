@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import AdminForm from "@/app/admin/components/admin-form-page";
 import AdminViewToggle, {
   GridViewIcon,
@@ -11,6 +11,7 @@ import type {
   AdminEvent,
   EventCatalogItem,
   EventCategory,
+  EventFormValues,
   EventSortOption,
   EventStatus,
   EventViewMode,
@@ -18,8 +19,9 @@ import type {
 import AdminEventsGrid from "./admin-events-grid";
 import AdminEventsList from "./admin-events-list";
 import DeleteEventDialog from "./delete-event-dialog";
-import EventForm, { type EventFormValues } from "./event-form";
+import EventForm from "./event-form";
 import { getEventStatus } from "./event-display";
+import { useEvents } from "@/app/admin/events/handlers/manage-events";
 
 type AdminEventsClientProps = {
   initialEvents: AdminEvent[];
@@ -33,13 +35,6 @@ const viewOptions: readonly AdminViewOption<EventViewMode>[] = [
 ];
 
 const statuses: EventStatus[] = ["upcoming", "active", "ended"];
-const fallbackEventImage = "/admin_icons/teazo_dash_icon.png";
-
-function createEventId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `event-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 /* Owns the eventPendingDelete state. Null means the confirmation dialog is closed. */
 /* Passes the state setter to both event views using the prop name onDelete. eventsGrid and eventsList*/
@@ -48,7 +43,8 @@ export default function AdminEventsClient({
   categories,
   items,
 }: AdminEventsClientProps) {
-  const [events, setEvents] = useState(initialEvents);
+  const { events, errorMessage, createEvent, updateEvent, deleteEvent } =
+    useEvents(initialEvents);
   const [search, setSearch] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<EventStatus[]>([]);
   const [sortBy, setSortBy] = useState<EventSortOption>("start-asc");
@@ -58,16 +54,6 @@ export default function AdminEventsClient({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AdminEvent | null>(null);
   const [eventPendingDelete, setEventPendingDelete] = useState<AdminEvent | null>(null);
-  const managedObjectUrls = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    const urls = managedObjectUrls.current;
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-      urls.clear();
-    };
-  }, []);
-
   const categoryNames = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories],
@@ -134,48 +120,22 @@ export default function AdminEventsClient({
     setDrawerOpen(true);
   }
 
-  function createManagedObjectUrl(file: File) {
-    const url = URL.createObjectURL(file);
-    managedObjectUrls.current.add(url);
-    return url;
+  async function handleSave(values: EventFormValues) {
+    const saved = editingEvent
+      ? await updateEvent(editingEvent, values)
+      : await createEvent(values);
+
+    if (saved) closeDrawer();
   }
 
-  function revokeManagedObjectUrl(url: string) {
-    if (!managedObjectUrls.current.has(url)) return;
-    URL.revokeObjectURL(url);
-    managedObjectUrls.current.delete(url);
-  }
-
-  /* api calls should be completed here, may abstract to separate files in the future */
-  function handleSave(values: EventFormValues) {
-    const { imageFile, ...eventValues } = values;
-    const imageUrl = imageFile
-      ? createManagedObjectUrl(imageFile)
-      : editingEvent?.imageUrl ?? fallbackEventImage;
-
-    setEvents((current) =>
-      editingEvent
-        ? current.map((event) =>
-            event.id === editingEvent.id
-              ? { ...event, ...eventValues, imageUrl }
-              : event,
-          )
-        : [{ id: createEventId(), ...eventValues, imageUrl }, ...current],
-    );
-
-    if (imageFile && editingEvent) {
-      revokeManagedObjectUrl(editingEvent.imageUrl);
-    }
-    closeDrawer();
-  }
-
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!eventPendingDelete) return;
-    revokeManagedObjectUrl(eventPendingDelete.imageUrl);
-    setEvents((current) =>
-      current.filter((event) => event.id !== eventPendingDelete.id),
-    );
-    if (editingEvent?.id === eventPendingDelete.id) closeDrawer();
+
+    const deletedEvent = eventPendingDelete;
+    const deleted = await deleteEvent(deletedEvent);
+    if (!deleted) return;
+
+    if (editingEvent?.id === deletedEvent.id) closeDrawer();
     setEventPendingDelete(null);
   }
 
@@ -186,6 +146,14 @@ export default function AdminEventsClient({
 
   return (
     <div className="relative flex h-dvh w-full min-w-0 overflow-hidden bg-white">
+      {errorMessage && (
+        <div
+          role="alert"
+          className="fixed right-5 top-5 z-[60] max-w-sm rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg"
+        >
+          {errorMessage}
+        </div>
+      )}
       {mobileFiltersOpen && (
         <button
           type="button"

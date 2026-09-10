@@ -13,11 +13,8 @@ import type {
   AdminEvent,
   EventCatalogItem,
   EventCategory,
+  EventFormValues,
 } from "@/app/types/admin-event";
-
-export type EventFormValues = Omit<AdminEvent, "id" | "imageUrl"> & {
-  imageFile: File | null;
-};
 
 type EventFormProps = {
   initialEvent?: AdminEvent | null;
