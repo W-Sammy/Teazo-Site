@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import WebsiteContentClient from "./components/website-content-client";
 
 export const metadata: Metadata = {
   title: {
@@ -6,10 +7,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminWebsiteContentPage(){
-  return (
-    <div>
-      <h1>Hello World</h1>
-    </div>
-  )
+export default function AdminWebsiteContentPage() {
+  return <WebsiteContentClient />;
 }
