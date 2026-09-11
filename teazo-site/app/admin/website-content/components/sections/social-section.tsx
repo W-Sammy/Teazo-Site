@@ -5,7 +5,7 @@ import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
 import { isValidImageFile, isValidUrlOrEmail } from "../validators";
-import type { SocialLink } from "../types";
+import type { SocialLink } from "@/app/types/website-content";
 
 type FieldTouch = { label?: boolean; url?: boolean };
 

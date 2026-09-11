@@ -10,15 +10,9 @@ import SocialSection from "./sections/social-section";
 import ContactSection from "./sections/contact-section";
 import HoursSection from "./sections/hours-section";
 import HolidaysSection from "./sections/holidays-section";
-import {
-  INITIAL_LOGO,
-  INITIAL_HOURS,
-  INITIAL_HOLIDAYS,
-  INITIAL_SOCIAL_LINKS,
-  INITIAL_STORY,
-  INITIAL_ADDRESS,
-} from "./types";
-import type { DayHours, Holiday, SocialLink, AddressInfo, SectionId } from "./types";
+import { useWebsiteContent } from "../handlers/use-website-content";
+import type { WebsiteContent } from "@/app/types/website-content";
+import type { SectionId } from "./types";
 
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
@@ -29,13 +23,21 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "holidays", label: "Holiday Exceptions", icon: <IconHolidays /> },
 ];
 
-export default function WebsiteContentClient() {
-  const [logo, setLogo] = useState(INITIAL_LOGO);
-  const [holidays, setHolidays] = useState<Holiday[]>(INITIAL_HOLIDAYS);
-  const [hours, setHours] = useState<DayHours[]>(INITIAL_HOURS);
-  const [story, setStory] = useState(INITIAL_STORY);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(INITIAL_SOCIAL_LINKS);
-  const [address, setAddress] = useState<AddressInfo>(INITIAL_ADDRESS);
+export default function WebsiteContentClient({ initialContent }: { initialContent: WebsiteContent }) {
+  const {
+    content,
+    errorMessage,
+    updateLogo,
+    updateStory,
+    updateAddress,
+    updateDay,
+    addSocialLink,
+    updateSocialLink,
+    removeSocialLink,
+    addHoliday,
+    updateHoliday,
+    removeHoliday,
+  } = useWebsiteContent(initialContent);
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
   const sectionRefs = useRef<Partial<Record<SectionId, HTMLDivElement | null>>>({});
 
@@ -57,42 +59,17 @@ export default function WebsiteContentClient() {
     };
   }
 
-  function updateSocialLink(id: string, patch: Partial<SocialLink>) {
-    setSocialLinks((prev) => prev.map((link) => (link.id === id ? { ...link, ...patch } : link)));
-  }
-
-  function addSocialLink() {
-    const id = `social-${Date.now()}`;
-    setSocialLinks((prev) => [...prev, { id, label: "", icon: "", url: "", enabled: true }]);
-  }
-
-  function removeSocialLink(id: string) {
-    setSocialLinks((prev) => prev.filter((link) => link.id !== id));
-  }
-
-  function updateAddress(patch: Partial<AddressInfo>) {
-    setAddress((prev) => ({ ...prev, ...patch }));
-  }
-
-  function updateDay(index: number, patch: Partial<DayHours>) {
-    setHours((prev) => prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
-  }
-
-  function updateHoliday(id: string, patch: Partial<Holiday>) {
-    setHolidays((prev) => prev.map((holiday) => (holiday.id === id ? { ...holiday, ...patch } : holiday)));
-  }
-
-  function removeHoliday(id: string) {
-    setHolidays((prev) => prev.filter((holiday) => holiday.id !== id));
-  }
-
-  function addHoliday() {
-    const id = `holiday-${Date.now()}`;
-    setHolidays((prev) => [...prev, { id, name: "", date: "" }]);
-  }
-
   return (
     <div className="pl-5 pr-5 pt-10 pb-16">
+      {errorMessage && (
+        <div
+          role="alert"
+          className="fixed right-5 top-5 z-[60] max-w-sm rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       <div className="mb-7">
         <h1 className="text-[26px] font-semibold text-[#2b211d]">Website Content</h1>
         <p className="mt-1 text-xs text-gray-400">
@@ -118,23 +95,23 @@ export default function WebsiteContentClient() {
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <LogoSection
-            logo={logo}
+            logo={content.logo}
             isOpen={openSection === "logo"}
             onToggle={() => selectSection("logo")}
             setRef={setSectionRef("logo")}
-            onLogoChange={setLogo}
+            onLogoChange={updateLogo}
           />
 
           <StorySection
-            story={story}
+            story={content.story}
             isOpen={openSection === "story"}
             onToggle={() => selectSection("story")}
             setRef={setSectionRef("story")}
-            onStoryChange={setStory}
+            onStoryChange={updateStory}
           />
 
           <SocialSection
-            socialLinks={socialLinks}
+            socialLinks={content.socialLinks}
             isOpen={openSection === "social"}
             onToggle={() => selectSection("social")}
             setRef={setSectionRef("social")}
@@ -144,7 +121,7 @@ export default function WebsiteContentClient() {
           />
 
           <ContactSection
-            address={address}
+            address={content.address}
             isOpen={openSection === "contact"}
             onToggle={() => selectSection("contact")}
             setRef={setSectionRef("contact")}
@@ -152,7 +129,7 @@ export default function WebsiteContentClient() {
           />
 
           <HoursSection
-            hours={hours}
+            hours={content.hours}
             isOpen={openSection === "hours"}
             onToggle={() => selectSection("hours")}
             setRef={setSectionRef("hours")}
@@ -160,7 +137,7 @@ export default function WebsiteContentClient() {
           />
 
           <HolidaysSection
-            holidays={holidays}
+            holidays={content.holidays}
             isOpen={openSection === "holidays"}
             onToggle={() => selectSection("holidays")}
             setRef={setSectionRef("holidays")}

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { DayHours } from "../types";
+import type { DayHours } from "@/app/types/website-content";
 import { formatHour, hourToTimeValue, timeValueToHour, SNAP_HOURS, MIN_DURATION_HOURS } from "../hours-utils";
 
 export default function BusinessHoursRow({

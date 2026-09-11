@@ -3,7 +3,7 @@
 import { AccordionItem } from "../section-shell";
 import { IconHours } from "../icons";
 import { AXIS_LABELS } from "../hours-utils";
-import type { DayHours } from "../types";
+import type { DayHours } from "@/app/types/website-content";
 import BusinessHoursRow from "./business-hours-row";
 
 export default function HoursSection({

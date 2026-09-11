@@ -2,7 +2,7 @@
 
 import { AccordionItem } from "../section-shell";
 import { IconHolidays } from "../icons";
-import type { Holiday } from "../types";
+import type { Holiday } from "@/app/types/website-content";
 import { isValidHolidayDay } from "../validators";
 import HolidayCard from "./holiday-card";
 

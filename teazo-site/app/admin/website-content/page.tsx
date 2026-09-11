@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import WebsiteContentClient from "./components/website-content-client";
+import { getWebsiteContent } from "./handlers/get-website-content";
 
 export const metadata: Metadata = {
   title: {
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminWebsiteContentPage() {
-  return <WebsiteContentClient />;
+export default async function AdminWebsiteContentPage() {
+  const initialContent = await getWebsiteContent();
+  return <WebsiteContentClient initialContent={initialContent} />;
 }

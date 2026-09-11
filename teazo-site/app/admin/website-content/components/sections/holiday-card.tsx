@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Holiday } from "../types";
+import type { Holiday } from "@/app/types/website-content";
 import { fieldClass, ErrorText } from "../field-controls";
 import { daysInMonth } from "../validators";
 

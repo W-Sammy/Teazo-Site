@@ -5,7 +5,7 @@ import { AccordionItem } from "../section-shell";
 import { IconContact } from "../icons";
 import { fieldClass, FieldLabel, ErrorText } from "../field-controls";
 import { isNonEmpty, isValidEmail, isValidPhone, withinMaxLength } from "../validators";
-import type { AddressInfo } from "../types";
+import type { AddressInfo } from "@/app/types/website-content";
 
 type ContactField = "businessName" | "phone" | "streetAddress" | "locality" | "email";
 type ContactErrors = Partial<Record<ContactField, string>>;
