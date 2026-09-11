@@ -426,16 +426,17 @@ A one-time job, mine, not developer work. `public/` is 18 MB / 101 files. Split 
 
 | Stays in repo | Moves to R2 |
 |---|---|
-| `admin_icons/` (14), `social_icons/` (4) | `menu_items/` — 65 `.webp`, 6.4 MB |
-| `pdfjs/` (2, vendored) | `carousel_images/` — 5 files, 8.1 MB |
-| logos, `pink_scribble.png` | `promotions/` (1), `teazo-menu.pdf` |
+| `admin_icons/` (14), `social_icons/` (4) | `carousel_images/` — 5 files, 8.1 MB |
+| `pdfjs/` (2, vendored) | `promotions/` (1), `teazo-menu.pdf` |
+| logos, `pink_scribble.png` | |
 
-~14.7 MB migrates. A script, not an afternoon of clicking:
+About 8.4 MB migrates — the carousel, one promotion image and the PDF menu.
+**Product photos do not move:** they come from Square, so `public/menu_items` is
+retired once the menu reads from Square. A script, not an afternoon of clicking:
 
 ```ts
 // scripts/migrate-assets.ts — run with: npx tsx scripts/migrate-assets.ts
 import { readFile } from "node:fs/promises";
-import { glob } from "node:fs/promises";
 import { putMedia } from "../app/lib/media";
 import { prepare, batch } from "../app/lib/d1";
 
@@ -444,19 +445,25 @@ const MIME: Record<string, string> = {
   ".png": "image/png", ".pdf": "application/pdf",
 };
 
-for await (const path of glob("public/menu_items/**/*.webp")) {
-  const bytes = await readFile(path);
-  const ext = path.slice(path.lastIndexOf("."));
-  const key = `menu/items/legacy/${crypto.randomUUID()}${ext}`;
+// The home carousel, in the order image-carousel.tsx shows it today.
+// Product photos (public/menu_items) are not migrated: they come from Square.
+const CAROUSEL = ["menu.jpg", "fresh_leaf.jpg", "leaf_basket.jpeg", "dried_leaves.jpg", "drink.jpg"];
 
-  const stored = await putMedia(key, bytes, MIME[ext]);
+for (const [order, name] of CAROUSEL.entries()) {
+  const path = `public/carousel_images/${name}`;
+  const bytes = await readFile(path);
+  const ext = path.slice(path.lastIndexOf(".")).toLowerCase();
+  const stored = await putMedia(`carousel/${crypto.randomUUID()}${ext}`, bytes, MIME[ext]);
+  const mediaId = crypto.randomUUID();
+
   await batch([
     prepare(
       `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, original_filename, purpose)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'menu_item')`
-    ).bind(crypto.randomUUID(), stored.bucket, stored.key, MIME[ext], stored.size, path),
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'carousel')`
+    ).bind(mediaId, stored.bucket, stored.key, MIME[ext], stored.size, path),
+    prepare("INSERT INTO carousel_slide (media_id, sort_order) VALUES (?1, ?2)").bind(mediaId, order),
   ]);
-  console.log(key, "←", path);
+  console.log(stored.key, "←", path);
 }
 ```
 
@@ -783,7 +790,7 @@ to stay there.** Nothing here needs Workers Paid.
 | D1 storage | 5 GB total | a few MB |
 | D1 rows read | 5,000,000 / day | thousands |
 | D1 rows written | 100,000 / day | tens |
-| R2 storage | 10 GB-month | ~15 MB after the asset migration |
+| R2 storage | 10 GB-month | ~8 MB after the asset migration |
 | R2 Class A (writes) | 1,000,000 / month | a handful of uploads |
 | R2 Class B (reads) | 10,000,000 / month | most reads are CDN cache hits and never touch R2 |
 | R2 egress | **free at any volume** | this is why R2 is in the stack |
@@ -878,7 +885,7 @@ and the only number worth watching.
 
 | Average photo size | Photos that fit in 10 GB |
 |---|---|
-| 98 KB — the existing `public/menu_items` `.webp` | ~107,000 |
+| 98 KB — a well-compressed webp (the existing menu photos average this) | ~107,000 |
 | 300 KB — good-quality webp | ~35,000 |
 | 1.6 MB — the existing `carousel_images` JPEGs | ~6,400 |
 | 10 MB — our upload cap | ~1,000 |

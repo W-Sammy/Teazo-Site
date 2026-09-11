@@ -134,7 +134,7 @@ CREATE TABLE media_asset (
   original_filename TEXT,
   alt               TEXT,
   purpose           TEXT NOT NULL DEFAULT 'gallery'
-                      CHECK (purpose IN ('gallery','menu_item','event','document','branding','carousel')),
+                      CHECK (purpose IN ('gallery','event','document','branding','carousel')),
   uploaded_by       TEXT REFERENCES admin_user(id) ON DELETE SET NULL,
   created_at        TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   deleted_at        TEXT
@@ -162,7 +162,6 @@ BEGIN
      OR EXISTS (SELECT 1 FROM content_block     WHERE media_id       = OLD.id)
      OR EXISTS (SELECT 1 FROM site_link         WHERE icon_media_id  = OLD.id)
      OR EXISTS (SELECT 1 FROM event             WHERE flyer_media_id = OLD.id AND deleted_at IS NULL)
-     OR EXISTS (SELECT 1 FROM menu_item_display WHERE image_media_id = OLD.id)
      OR EXISTS (SELECT 1 FROM admin_user        WHERE avatar_media_id = OLD.id AND deleted_at IS NULL);
 END;
 
@@ -333,8 +332,8 @@ CREATE UNIQUE INDEX ux_menu_document_current ON menu_document (is_current)
 -- 5. Square catalog — read-through cache + curation overlay
 --
 -- Square is authoritative for: item name, description, price, variations,
--- categories, modifier lists, per-category ordinal, sold-out state and online
--- visibility. Nothing below may be edited as a competing source of truth.
+-- photos, categories, modifier lists, per-category ordinal, sold-out state and
+-- online visibility. Nothing below may be edited as a competing source of truth.
 -- ---------------------------------------------------------------------------
 
 -- One watermark per environment: at cutover, production gets its own row with
@@ -355,7 +354,7 @@ CREATE TABLE catalog_item_cache (
   square_version   INTEGER,              -- optimistic-concurrency token; staleness check
   name             TEXT,
   description      TEXT,
-  square_image_url TEXT,
+  square_image_url TEXT,                -- Square's own URL: a pointer to Square's copy, never a copy
   categories_json  TEXT CHECK (categories_json IS NULL OR json_valid(categories_json)),
   modifiers_json   TEXT CHECK (modifiers_json  IS NULL OR json_valid(modifiers_json)),
   is_deleted       INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0,1)),
@@ -441,12 +440,11 @@ CREATE TABLE menu_section_item (
 CREATE INDEX ix_menu_section_item_order
   ON menu_section_item (section_id, position, square_catalog_object_id);
 
--- Presentation-only overlay. Deliberately holds NO price, name, availability
--- or modifier data — those would drift against the register.
+-- Presentation-only overlay. Deliberately holds NO price, name, photo,
+-- availability or modifier data — those would drift against the register.
 CREATE TABLE menu_item_display (
   square_catalog_object_id TEXT NOT NULL,
   square_env               TEXT NOT NULL CHECK (square_env IN ('sandbox','production')),
-  image_media_id           TEXT REFERENCES media_asset(id) ON DELETE RESTRICT,
   badge                    TEXT CHECK (badge IS NULL OR badge IN ('new','seasonal','popular','limited')),
   is_featured              INTEGER NOT NULL DEFAULT 0 CHECK (is_featured IN (0,1)),
   hide_on_website          INTEGER NOT NULL DEFAULT 0 CHECK (hide_on_website IN (0,1)),
@@ -554,7 +552,7 @@ BEGIN
 END;
 
 CREATE TRIGGER trg_menu_item_display_touch
-AFTER UPDATE OF image_media_id, badge, is_featured, hide_on_website, allergen_note
+AFTER UPDATE OF badge, is_featured, hide_on_website, allergen_note
 ON menu_item_display FOR EACH ROW
 BEGIN
   UPDATE menu_item_display SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')

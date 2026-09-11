@@ -125,8 +125,7 @@ SELECT
   ci.square_image_url,
   msi.position,
   mid.badge,
-  mid.is_featured,
-  mid.image_media_id
+  mid.is_featured
 FROM menu_section ms
 JOIN menu_section_item msi
   ON msi.section_id = ms.id AND msi.square_env = ms.square_env
@@ -222,11 +221,22 @@ const toInt = (v?: bigint | number | null) => (v == null ? null : Number(v));
 
 ```ts
 // app/lib/square-sync.ts
+import type { CatalogObject } from "square";
+import { squareClient } from "@/app/lib/square";
 import { prepare, batch } from "@/app/lib/d1";
 
 export async function fullSync() {
   const sqEnv = process.env.SQUARE_ENV!; // 'sandbox' | 'production'
-  const items = squareClient.catalog.list({ types: "ITEM" });
+  // Square keeps photo URLs on separate IMAGE objects, so resolve those first.
+  // We store Square's URL — a pointer to Square's copy — never the image.
+  const imageUrl = new Map<string, string>();
+  for await (const obj of await squareClient.catalog.list({ types: "IMAGE" })) {
+    const img = obj as CatalogObject.Image;
+    if (img.id && img.imageData?.url) imageUrl.set(img.id, img.imageData.url);
+  }
+
+  // list() returns a Promise of a page — await it before iterating.
+  const items = await squareClient.catalog.list({ types: "ITEM" });
 
   const itemStmts = [];
   const varStmts = [];
@@ -252,7 +262,7 @@ export async function fullSync() {
       item.id, sqEnv, toInt(item.version),
       item.itemData?.name ?? null,
       item.itemData?.description ?? null,
-      null,
+      imageUrl.get(item.itemData?.imageIds?.[0] ?? "") ?? null,
       JSON.stringify((item.itemData?.categories ?? []).map((c) => ({ id: c.id, ordinal: toInt(c.ordinal) })))
     ));
 
@@ -455,17 +465,16 @@ enforces it. Build the key, do not accept it from the client.
 |---|---|---|---|
 | `PUT` | `/api/admin/menu/sections/[id]` | 2 | title, subtitle, order, publish |
 | `PUT` | `/api/admin/menu/sections/[id]/items` | 2 | membership + `position` |
-| `PUT` | `/api/admin/menu/items/[squareId]/display` | 2 | photo, badge, featured, hide |
+| `PUT` | `/api/admin/menu/items/[squareId]/display` | 2 | badge, featured, hide |
 
 These replace the `console.log` stubs in `admin-list-view.tsx:127-132`. Note the
 overlay upsert must supply `square_env`:
 
 ```sql
 INSERT INTO menu_item_display
-  (square_catalog_object_id, square_env, image_media_id, badge, is_featured, updated_by)
-VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+  (square_catalog_object_id, square_env, badge, is_featured, updated_by)
+VALUES (?1, ?2, ?3, ?4, ?5)
 ON CONFLICT(square_catalog_object_id, square_env) DO UPDATE SET
-  image_media_id = excluded.image_media_id,
   badge          = excluded.badge,
   is_featured    = excluded.is_featured,
   updated_by     = excluded.updated_by;
@@ -508,8 +517,6 @@ The sweeper is already written; it deploys with the Worker.
 ### Still to decide
 
 1. **Hours** — Square Locations or D1? Both can hold them; pick a direction.
-2. **Menu photos** — the 65 local `.webp`, or Square's hosted images? The schema
-   assumes local via `menu_item_display.image_media_id`.
-3. **Cutover date** — curation built before it is keyed to sandbox ids.
-4. **Alt text / captions** — the upload form collects only `{name, tags, file}`.
+2. **Cutover date** — curation built before it is keyed to sandbox ids.
+3. **Alt text / captions** — the upload form collects only `{name, tags, file}`.
    Add the inputs, or accept nulls.

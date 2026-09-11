@@ -37,9 +37,9 @@ your app (Next.js) ──HTTP──▶ proxy Worker ──▶ D1   the database
 - **On your machine, that same Worker runs locally with a simulated database
   and a simulated bucket.** No Cloudflare account, no real credentials, nothing
   shared with anyone. Break it freely.
-- **Square owns the product catalog.** We keep a cached copy for display. Item
-  names, prices, sizes and sold-out state are always edited in Square — never
-  in our database.
+- **Square owns the product catalog, photos included.** We keep a cached copy
+  for display. Item names, prices, sizes, photos and sold-out state are always
+  edited in Square — never in our database.
 
 Today nothing persists: every page renders hardcoded data, and `/login` and
 most of `/admin` are stubs. You are adding the first real reads and writes.
@@ -219,6 +219,11 @@ Four rules:
 
 ## 4. Storing files
 
+**Product photos are not in our storage.** They come straight from Square:
+`catalog_item_cache.square_image_url` holds Square's own URL for each item's
+photo, and `<Image>` loads it from Square. Our bucket is for what Square can't
+hold — gallery photos, the home carousel, event flyers and the PDF menu.
+
 **The database stores a file's key, never its URL.** A key looks like
 `gallery/2026/09/<uuid>.webp`. The URL is built when the page renders, from
 `R2_PUBLIC_BASE` — so the same row works locally, on preview and in production.
@@ -258,8 +263,8 @@ at `http://127.0.0.1:8787/media/<key>`. `next.config.ts` already allows that
 address for `<Image>` in development.
 
 Accepted types: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`.
-Key prefixes: `gallery/`, `menu/items/`, `carousel/`, `events/`,
-`documents/menu/`, `branding/`.
+Key prefixes: `gallery/`, `carousel/`, `events/`, `documents/menu/`,
+`branding/`.
 
 ### 4.1 Saving a file
 
@@ -456,12 +461,12 @@ There is exactly one Owner. `can_invite_users` can only be set on role 2.
 | `carousel_slide` | home page carousel | Website Content | `/` |
 | `menu_document` | the PDF menu, versioned | Website Content | `/static-menu` |
 | `square_sync_state` | where the Square sync is up to | sync | sync |
-| `catalog_item_cache` | Square items, cached | sync | `/menu`, `/admin/menu` |
+| `catalog_item_cache` | Square items, cached — including Square's photo URL | sync | `/menu`, `/admin/menu` |
 | `catalog_variation_cache` | **sizes and prices** | sync | `/menu` |
 | `catalog_category_cache` | Square categories, cached | sync | `/menu` |
 | `menu_section` | menu sections and subtitles | `/admin/menu` | `/menu` |
 | `menu_section_item` | which items, in what order | `/admin/menu` | `/menu` |
-| `menu_item_display` | photo, badge, featured | `/admin/menu` | `/menu` |
+| `menu_item_display` | badge, featured, hidden | `/admin/menu` | `/menu` |
 | `event` | events | `/admin/events` | an events page |
 | `contact_message` | contact form messages | **the public** | an admin inbox |
 

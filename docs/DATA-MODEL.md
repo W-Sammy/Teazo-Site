@@ -115,9 +115,11 @@ The current code reads a narrow projection of this and throws the rest away —
 
 - the synthetic **"TEAZO Special"** grouping — a curated block with no Square CATEGORY
 - section **subtitles** ("Think cottony clouds of heaven that melt in your mouth")
-- the **65 curated local photographs** in `public/menu_items` — a parallel photo set to
-  whatever Square holds, and the one the site actually renders today
 - everything non-catalog: gallery, events, site copy, admin identity, inquiries
+
+**Product photos are served straight from Square** — decided with the team. D1
+caches Square's image URL as a pointer and R2 never holds a copy. R2 is for what
+Square can't hold: the gallery, the home carousel, event flyers and the PDF menu.
 
 ### Three landmines in the current code
 
@@ -202,7 +204,7 @@ job either deletes live objects or leaks dead ones.
 
 Instead, protection is a **trigger**, not the foreign keys. Media is *soft*-deleted,
 so `ON DELETE RESTRICT` never fires on a normal retirement —
-`trg_media_soft_delete_guard` refuses to set `deleted_at` while any of the eight
+`trg_media_soft_delete_guard` refuses to set `deleted_at` while any of the seven
 referencing tables still points at the row. The delete handler should still run an
 explicit usage query first so it can return a helpful 409 naming the holder instead
 of surfacing a raw constraint error.
@@ -266,7 +268,7 @@ highest-value slice for the client: it is what lets Karen change hours without a
 - `menu_section.square_category_id` is **nullable** — that is what makes the "TEAZO
   Special" block representable. Modelling `square_category_id` as the primary key (as
   two drafts did) cannot express the most prominent section on the menu page.
-- `menu_item_display` holds presentation only: local photo override, badge, featured,
+- `menu_item_display` holds presentation only: badge, featured,
   hide-on-website, allergen note. **No price, no name, no availability, no modifiers.**
 - Every one of these is keyed on `square_env`, **including `square_sync_state`** — its
   PK is `(key, square_env)` so both environments hold independent watermarks and a
@@ -325,7 +327,6 @@ inbox.
 
 ```
 gallery/{yyyy}/{mm}/{uuid}.{ext}      gallery photographs
-menu/items/{square_object_id}/{uuid}.{ext}   local menu item photography
 carousel/{uuid}.{ext}                 home-page carousel slides
 events/{event_id}/{uuid}.{ext}        event flyers
 documents/menu/{uuid}.pdf             versioned static menu PDF
@@ -341,12 +342,15 @@ for, and it makes "delete then re-upload the same file" fail on a unique index.
 
 | Stays in the repo (build-time assets) | Moves to R2 (owner-editable content) |
 |---|---|
-| `admin_icons/` (14 files) | `menu_items/` — 65 `.webp`, 6.4 MB |
-| `social_icons/` (4) | `carousel_images/` — 5 files, 8.1 MB |
-| `pdfjs/` (2, vendored lib) | `promotions/` — 1 file |
-| logos, `pink_scribble.png` | `teazo-menu.pdf` |
+| `admin_icons/` (14 files) | `carousel_images/` — 5 files, 8.1 MB |
+| `social_icons/` (4) | `promotions/` — 1 file |
+| `pdfjs/` (2, vendored lib) | `teazo-menu.pdf` |
+| logos, `pink_scribble.png` | |
 
-Roughly **14.7 MB migrates**; the rest is code, not content.
+`menu_items/` — the 65 product photos — moves to neither. Product photos come from
+Square, so those files are retired once the menu reads from Square.
+
+Roughly **8.4 MB migrates**; the rest is code, not content.
 
 ### Derivatives
 
@@ -404,9 +408,6 @@ remaining semester for seven developers. This is 26.
 
 1. **Hours: who wins?** Square Locations, or D1? Both can hold them. Pick one direction
    and make the other a mirror.
-2. **Menu photography: who wins?** The 65 curated `.webp`, or Square's hosted images?
-   The schema assumes local wins via `menu_item_display.image_media_id`, because that
-   is what renders today. If Square wins, drop that column.
-3. **When is the Square production cutover?** Every curation row created before it is
+2. **When is the Square production cutover?** Every curation row created before it is
    keyed to sandbox ids and will need re-mapping. Cheapest if curation starts *after*.
-4. **Alt text and captions** — add the inputs to the upload form, or accept nulls?
+3. **Alt text and captions** — add the inputs to the upload form, or accept nulls?
