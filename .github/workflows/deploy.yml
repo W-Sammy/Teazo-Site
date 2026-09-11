@@ -20,8 +20,10 @@
 # secrets below exist, leave it unset: pull requests are still validated and
 # nothing is deployed. It is also the emergency brake.
 #
-# Setup — secrets, branch protection, the Vercel project, and why vercel.json
-# goes in at the same moment DEPLOYS_ENABLED is set — is in docs/OPERATIONS.md.
+# Setup — the Actions secrets used below, branch protection on `main`, the
+# Vercel project, and adding teazo-site/vercel.json at the same moment
+# DEPLOYS_ENABLED is set — is owned by the infrastructure owner named in
+# .github/CODEOWNERS. Ask before changing any of it.
 
 name: Deploy
 

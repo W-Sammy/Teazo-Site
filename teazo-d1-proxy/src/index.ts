@@ -20,7 +20,8 @@
  *   GET    /media/<key>  public read of an R2 object
  *   PUT    /media/<key>  write an R2 object (token)
  *   DELETE /media/<key>  delete an R2 object (token)
- *   scheduled()          the sweeper (docs/OPERATIONS.md)
+ *   scheduled()          the sweeper: deletes the R2 bytes of files that
+ *                        were queued for deletion more than 24 hours ago
  *
  * TRUST BOUNDARY: this accepts arbitrary SQL from whoever holds the bearer
  * token. That is the same trust level as the Next.js server itself, which is
@@ -64,9 +65,11 @@ const MAX_BODY_BYTES = 1_000_000;
  */
 const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
 
-/** Grace period before bytes are reaped. This gap is the only undo window
- *  the media pipeline has — see docs/OPERATIONS.md §10. Do not shorten it;
- *  queued rows cost nothing. */
+/** Grace period before bytes are reaped. This gap is the only undo window the
+ *  media pipeline has: while it lasts, a deletion is reversed by clearing
+ *  deleted_at on the media row and its owner and removing the pending row.
+ *  Once the bytes are gone they are gone — R2 has no versioning here. Do not
+ *  shorten it; queued rows cost nothing. */
 const REAP_GRACE_HOURS = 24;
 const REAP_CUTOFF = `strftime('%Y-%m-%dT%H:%M:%fZ','now','-${REAP_GRACE_HOURS} hours')`;
 /**
@@ -234,8 +237,9 @@ export default {
       return json({ error: "not_found" }, 404);
     } catch (err) {
       // D1 constraint failures land here. Pass the message through so the app
-      // can recognise e.g. "media_asset is still referenced"
-      // (docs/DEV-GUIDE.md §4.2).
+      // can recognise e.g. "media_asset is still referenced" — raised by the
+      // guard trigger when something still points at the file — and turn it
+      // into a 409 rather than a generic 500.
       return json({ error: "d1_error", message: (err as Error).message }, 400);
     }
   },

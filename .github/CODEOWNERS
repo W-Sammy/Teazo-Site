@@ -7,8 +7,9 @@
 # not need this reviewer.
 #
 # To make that review *required* rather than requested, enable "Require review
-# from Code Owners" in the branch protection rule for `main`. See
-# docs/OPERATIONS.md.
+# from Code Owners" in the branch protection rule for `main`. Note that a sole
+# code owner cannot approve their own pull requests, so add a second owner for
+# these paths before turning that setting on.
 
 /teazo-site/migrations/        @Alexeitor292
 /teazo-d1-proxy/               @Alexeitor292

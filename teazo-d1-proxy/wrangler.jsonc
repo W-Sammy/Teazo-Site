@@ -3,7 +3,9 @@
   //
   // The Next.js app is hosted on VERCEL and has no Cloudflare bindings.
   // This Worker is the only thing that binds D1 and R2, and it exists because
-  // D1 is not reachable from outside a Worker. See ../docs/OPERATIONS.md §3.
+  // D1 is not reachable from outside a Worker — Cloudflare's own docs: "to
+  // access a D1 database outside of a Worker project, you need to create an
+  // API using a Worker".
   //
   // migrations_dir points back into the Next.js app on purpose: the schema is
   // the app's contract, so it lives next to the app. Wrangler accepts a path
