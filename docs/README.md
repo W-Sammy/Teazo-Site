@@ -1,11 +1,10 @@
 # TEAZO documentation
 
-Four documents. Start with the one that matches what you are doing.
+Three documents. Start with the one that matches what you are doing.
 
 | Document | Who it is for | What it covers |
 |---|---|---|
 | **[DEV-GUIDE.md](./DEV-GUIDE.md)** | the whole team | Getting a database running on your laptop, how to query it, how media is stored, how auth works, the table reference. **Start here if you are building a feature.** |
-| **[FEATURE-NOTES.md](./FEATURE-NOTES.md)** | whoever builds that feature | The query each public page needs, the Square sync, the admin API routes, and the build order. |
 | **[OPERATIONS.md](./OPERATIONS.md)** | the infrastructure owner | One-time setup: the Cloudflare resources, secrets, the deploy pipeline, go-live, rollback, cost. After setup, deploys happen by merging — nobody runs them by hand. |
 | **[DATA-MODEL.md](./DATA-MODEL.md)** | anyone curious | *Why* the schema looks like this — the Square boundary, what was deliberately cut, the reasoning behind the odd-looking columns. |
 

@@ -32,12 +32,12 @@ CREATE TABLE admin_user (
   email            TEXT NOT NULL,
   -- SQLite's NOCASE collation folds ASCII only, so normalization is explicit.
   email_normalized TEXT NOT NULL,
-  display_name     TEXT NOT NULL,
+  username         TEXT NOT NULL,          -- the label shown in Settings; sign-in is by Google email
   role_id          INTEGER NOT NULL REFERENCES role(id) ON DELETE RESTRICT,
   -- The Settings UI models this as a per-admin flag that is only meaningful
   -- for role 2 ("Can Edit"): changeRole() forces it false for any other role,
   -- and toggleInvitePermission() refuses unless role === WRITE_ROLE.
-  -- See origin/steven-create-admins:app/admin/settings/handlers/use-admins.ts:19-49
+  -- See teazo-site/app/admin/settings/handlers/use-admins.ts
   can_invite_users INTEGER NOT NULL DEFAULT 0
                      CHECK (can_invite_users IN (0,1))
                      CHECK (can_invite_users = 0 OR role_id = 2),
@@ -61,60 +61,12 @@ CREATE INDEX ix_admin_user_role ON admin_user (role_id) WHERE deleted_at IS NULL
 CREATE UNIQUE INDEX ux_admin_user_single_owner
   ON admin_user (role_id) WHERE role_id = 1 AND deleted_at IS NULL;
 
--- Google SSO identity only. Deliberately stores no access/refresh token:
--- the app never calls a Google API on the user's behalf, it only needs `sub`.
-CREATE TABLE oauth_account (
-  id                  TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(16)))),
-  admin_user_id       TEXT NOT NULL REFERENCES admin_user(id) ON DELETE CASCADE,
-  provider            TEXT NOT NULL CHECK (provider IN ('google')),
-  provider_account_id TEXT NOT NULL,        -- Google `sub`
-  email_at_provider   TEXT,
-  created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-);
-
-CREATE UNIQUE INDEX ux_oauth_provider_account
-  ON oauth_account (provider, provider_account_id);
-CREATE INDEX ix_oauth_user ON oauth_account (admin_user_id);
-
--- Session rows are deliberately write-light: there is no last_seen_at, because
--- one UPDATE per authenticated request is the canonical D1 anti-pattern.
---
--- REVOCATION IS NOT AUTOMATIC. admin_user is soft-deleted, so the CASCADE below
--- never fires for a normal "remove admin" action. Deleting or suspending an
--- admin MUST revoke their sessions in the same db.batch():
---   UPDATE admin_session SET revoked_at = ... WHERE admin_user_id = ?
---                                              AND revoked_at IS NULL;
--- and session validation must join admin_user and require
---   au.deleted_at IS NULL AND au.status = 'active'
--- so that a missed revoke still fails closed.
-CREATE TABLE admin_session (
-  id            TEXT PRIMARY KEY NOT NULL,   -- SHA-256 of the cookie value
-  admin_user_id TEXT NOT NULL REFERENCES admin_user(id) ON DELETE CASCADE,
-  created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-  expires_at    TEXT NOT NULL,
-  revoked_at    TEXT
-);
-
-CREATE INDEX ix_session_live ON admin_session (admin_user_id) WHERE revoked_at IS NULL;
-CREATE INDEX ix_session_expiry ON admin_session (expires_at) WHERE revoked_at IS NULL;
-
-CREATE TABLE admin_invitation (
-  id               TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(16)))),
-  email            TEXT NOT NULL,
-  email_normalized TEXT NOT NULL,
-  role_id          INTEGER NOT NULL REFERENCES role(id) ON DELETE RESTRICT,
-  token_hash       TEXT NOT NULL UNIQUE,
-  invited_by       TEXT REFERENCES admin_user(id) ON DELETE SET NULL,
-  created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-  expires_at       TEXT NOT NULL,
-  accepted_at      TEXT,
-  revoked_at       TEXT
-);
-
--- One live invite per address.
-CREATE UNIQUE INDEX ux_invitation_pending
-  ON admin_invitation (email_normalized)
-  WHERE accepted_at IS NULL AND revoked_at IS NULL;
+-- Sign-in is NextAuth with Google (teazo-site/auth.ts), and it keeps sessions
+-- in a signed cookie. So this database holds no sessions, no OAuth links and
+-- no invitation tokens -- only who is an admin and what they may do.
+-- admin_user is matched to the signed-in Google account by email_normalized.
+-- Adding an admin in Settings inserts a row with status 'invited'; there is
+-- nothing to email, because signing in with that Google address is the invite.
 
 -- ---------------------------------------------------------------------------
 -- 2. Media — D1 holds the metadata, R2 holds the bytes
@@ -161,7 +113,7 @@ BEGIN
      OR EXISTS (SELECT 1 FROM menu_document     WHERE media_id       = OLD.id)
      OR EXISTS (SELECT 1 FROM content_block     WHERE media_id       = OLD.id)
      OR EXISTS (SELECT 1 FROM site_link         WHERE icon_media_id  = OLD.id)
-     OR EXISTS (SELECT 1 FROM event             WHERE flyer_media_id = OLD.id AND deleted_at IS NULL)
+     OR EXISTS (SELECT 1 FROM event             WHERE image_media_id = OLD.id AND deleted_at IS NULL)
      OR EXISTS (SELECT 1 FROM admin_user        WHERE avatar_media_id = OLD.id AND deleted_at IS NULL);
 END;
 
@@ -463,29 +415,49 @@ CREATE INDEX ix_menu_item_featured ON menu_item_display (square_env)
 -- 6. Events & inquiries
 -- ---------------------------------------------------------------------------
 
+-- Mirrors the events admin (teazo-site/app/types/admin-event.ts): an event has
+-- a name, description, image, start and end, and applies either to the whole
+-- menu or to chosen Square items and categories. Its status -- upcoming,
+-- active or ended -- is worked out from the dates, so it is not stored.
 CREATE TABLE event (
   id             TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(16)))),
-  title          TEXT NOT NULL,
-  slug           TEXT NOT NULL,
-  description    TEXT,
-  starts_at      TEXT NOT NULL,
-  ends_at        TEXT,
-  location_text  TEXT,
-  flyer_media_id TEXT REFERENCES media_asset(id) ON DELETE RESTRICT,
-  is_published   INTEGER NOT NULL DEFAULT 0 CHECK (is_published IN (0,1)),
+  name           TEXT NOT NULL,
+  description    TEXT NOT NULL DEFAULT '',
+  image_media_id TEXT REFERENCES media_asset(id) ON DELETE RESTRICT,
+  start_at       TEXT NOT NULL,
+  end_at         TEXT NOT NULL,
+  applies_to_all INTEGER NOT NULL DEFAULT 0 CHECK (applies_to_all IN (0,1)),
   created_at     TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at     TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   created_by     TEXT REFERENCES admin_user(id) ON DELETE SET NULL,
   deleted_at     TEXT,
-  CHECK (ends_at IS NULL OR ends_at >= starts_at)
+  CHECK (end_at >= start_at)
 );
 
-CREATE UNIQUE INDEX ux_event_slug ON event (slug) WHERE deleted_at IS NULL;
-CREATE INDEX ix_event_schedule ON event (starts_at DESC, id)
-  WHERE is_published = 1 AND deleted_at IS NULL;
--- The admin editor lists drafts too, so it needs an index that is not
--- predicated on is_published.
-CREATE INDEX ix_event_admin ON event (starts_at DESC, id) WHERE deleted_at IS NULL;
+-- Serves the admin's start-date sort and "what is on right now".
+CREATE INDEX ix_event_start ON event (start_at DESC, id) WHERE deleted_at IS NULL;
+
+-- The items and categories an event applies to, when applies_to_all is 0.
+-- Deliberately NOT foreign-keyed to the Square cache: an event can be saved
+-- before the catalog sync has ever run. When rendering, skip ids the cache
+-- no longer has.
+CREATE TABLE event_item (
+  event_id                 TEXT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+  square_catalog_object_id TEXT NOT NULL,
+  square_env               TEXT NOT NULL CHECK (square_env IN ('sandbox','production')),
+  PRIMARY KEY (event_id, square_catalog_object_id, square_env)
+);
+
+CREATE TABLE event_category (
+  event_id           TEXT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+  square_category_id TEXT NOT NULL,
+  square_env         TEXT NOT NULL CHECK (square_env IN ('sandbox','production')),
+  PRIMARY KEY (event_id, square_category_id, square_env)
+);
+
+-- "Which events include this item / this category?" -- asked per menu item.
+CREATE INDEX ix_event_item_by_item ON event_item (square_catalog_object_id, square_env);
+CREATE INDEX ix_event_category_by_category ON event_category (square_category_id, square_env);
 
 -- The contact form currently posts to a mailto: with encType="text/plain",
 -- which most browsers drop silently — every inquiry sent so far is lost.
@@ -521,7 +493,7 @@ CREATE INDEX ix_contact_created ON contact_message (created_at DESC);
 -- ---------------------------------------------------------------------------
 
 CREATE TRIGGER trg_admin_user_touch
-AFTER UPDATE OF email, email_normalized, display_name, role_id,
+AFTER UPDATE OF email, email_normalized, username, role_id,
                 can_invite_users, avatar_media_id, status, deleted_at
 ON admin_user FOR EACH ROW
 BEGIN
@@ -537,8 +509,8 @@ BEGIN
 END;
 
 CREATE TRIGGER trg_event_touch
-AFTER UPDATE OF title, slug, description, starts_at, ends_at,
-                location_text, flyer_media_id, is_published, deleted_at
+AFTER UPDATE OF name, description, image_media_id, start_at, end_at,
+                applies_to_all, deleted_at
 ON event FOR EACH ROW
 BEGIN
   UPDATE event SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.id;

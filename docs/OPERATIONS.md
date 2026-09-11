@@ -13,7 +13,7 @@ If this guide and that file disagree, the file wins.
 | | |
 |---|---|
 | Hosting | **Vercel** — the app has no Cloudflare bindings |
-| Database | Cloudflare D1 (SQLite) — 26 tables, 31 indexes, 6 triggers — reached through a proxy Worker |
+| Database | Cloudflare D1 (SQLite) — 25 tables, 26 indexes, 6 triggers — reached through a proxy Worker |
 | Object storage | Cloudflare R2 — bucket `teazo-media`, served from a custom domain |
 | Catalog | Square API (authoritative — we cache it, we do not own it) |
 | Cost | **$0 on Cloudflare** — the whole stack fits the free tier ([§16](#16-running-it-free)) |
@@ -53,7 +53,7 @@ If this guide and that file disagree, the file wins.
 
 Concretely, the state of that work:
 
-- The 26-table schema in `teazo-site/migrations/` — written, validated, **done**.
+- The 25-table schema in `teazo-site/migrations/` — written, validated, **done**.
 - The D1 proxy Worker in `teazo-d1-proxy/` — written and tested locally, **done**.
 - The deploy pipeline — `.github/workflows/deploy.yml` and `.github/CODEOWNERS`
   — written, **done**. Switched off until its secrets exist
@@ -65,8 +65,8 @@ Concretely, the state of that work:
 
 **Most of the team needs no credentials at all.** Public pages, admin screens and
 gallery work all run against a local D1 and a local R2 with a made-up proxy token.
-Only Square work needs a real secret (the sandbox access token). Nobody deploys
-by hand — merging does ([§6](#6-how-deploys-happen)).
+Only two jobs need a real secret: Square work (the sandbox access token) and
+sign-in work (the team's Google OAuth client). Nobody deploys by hand — merging does ([§6](#6-how-deploys-happen)).
 
 Everything else — the read path, the mutation contract, auth, the table reference, the
 query API, local setup — lives in `DEV-GUIDE.md`.
@@ -224,10 +224,21 @@ All server-only except `NEXT_PUBLIC_BASE_URL`. **Never give a secret the
 | `D1_PROXY_URL` | Vercel | `https://teazo-d1-proxy.<sub>.workers.dev` |
 | `PROXY_TOKEN` | Vercel **and** `wrangler secret put` | same value both sides |
 | `R2_PUBLIC_BASE` | Vercel | `https://media.teazosf.com`, or `https://teazo-d1-proxy.<sub>.workers.dev/media` without a custom domain ([§8.1](#81-without-a-custom-domain)) |
-| `SQUARE_ACCESS_TOKEN` | Vercel | sandbox today |
+| `SQUARE_ACCESS_TOKEN` | Vercel | sandbox today. **Needed at build time:** without it `next build` fails at "Collecting page data", so set it for Production **and** Preview |
 | `SQUARE_ENV` | Vercel | `sandbox` \| `production` — see [§14](#14-square-sandbox--production-cutover) |
 | `SQUARE_WEBHOOK_SIGNATURE_KEY` | Vercel | webhook verification |
+| `AUTH_SECRET` | Vercel | NextAuth's signing secret — Auth.js calls it "the only strictly required environment variable". Use the same value in Production and Preview if preview sign-in goes through the redirect proxy below |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Vercel | the Google OAuth client, from whoever owns sign-in |
+| `AUTH_REDIRECT_PROXY_URL` | Vercel | only for Google sign-in on preview deploys, whose URLs keep changing: a stable URL ending in `/api/auth` that Google always redirects to |
 | `NEXT_PUBLIC_BASE_URL` | Vercel | the site's own URL, **ending in `/`** — `/admin/menu` requests `${NEXT_PUBLIC_BASE_URL}api/square/products` |
+
+> **`SQUARE_ACCESS_TOKEN` is needed at *build* time, not just at run time.**
+> Verified: with no environment set, `next build` fails at "Collecting page
+> data" with `SQUARE_ACCESS_TOKEN is not set` — `app/lib/square.ts` throws the
+> moment it is imported, and the build imports every API route. Set it for
+> **Production and Preview**, or pull-request previews stop building. With it
+> set, the build is clean; `AUTH_SECRET` is only needed at run time, but a
+> deploy without it will fail on the first sign-in.
 
 **The app needs no R2 credentials.** Files go through the proxy Worker
 (`/media/*`), which holds the bucket binding and returns the bucket name with
@@ -480,12 +491,11 @@ over — not before, or the site breaks between merges.
 
 ## 10. The sweeper
 
-D1 has no TTL and no scheduled jobs of its own. Without a sweeper: sessions
-never expire, lapsed invitations keep holding their unique email slot, and
-deleted bytes accumulate in R2 forever.
+D1 has no scheduled jobs of its own. Deleting a file only queues it in
+`pending_r2_deletion`; without a sweeper, the bytes would stay in R2 forever.
 
 **It runs as the `scheduled()` handler in the proxy Worker**, not as a Vercel
-Cron route. Four reasons:
+Cron route. Three reasons:
 
 1. It needs to delete from R2. Putting it on Vercel means giving the most
    destructive operation in the system a second set of credentials.
@@ -494,21 +504,13 @@ Cron route. Four reasons:
    remember the `CRON_SECRET` guard on its first line.
 3. It talks to D1 through a binding, with no proxy hop and no 100-statement
    batch ceiling.
-4. Vercel's Hobby tier allows only one cron execution per day, which is far too
-   slow for the invitation-slot problem.
 
 The code is in [`teazo-d1-proxy/src/index.ts`](../teazo-d1-proxy/src/index.ts).
-It does three jobs under `Promise.allSettled`, so one failure does not cancel
-the others:
-
-| Job | What |
-|---|---|
-| `reapDeletedObjects` | deletes R2 bytes queued more than 24 h ago, then marks the row |
-| `expireSessions` | hard-deletes expired or revoked sessions |
-| `expireInvitations` | revokes lapsed invitations, purges settled ones after 90 days |
+It does one job: delete the R2 bytes of files queued more than 24 hours ago,
+then mark their rows done.
 
 The schedule is in `wrangler.jsonc`: `"triggers": { "crons": ["0 * * * *"] }`.
-Hourly — set by the invitation case, not by byte reaping.
+Hourly is plenty — the 24-hour grace period is the real limit.
 
 Test it without waiting an hour:
 
@@ -755,7 +757,7 @@ Cheapest if curation work starts *after* cutover.
 cd teazo-d1-proxy && npx wrangler d1 export teazo-db --remote --output ./backup-$(date +%F-%H%M).sql
 ```
 
-Keep it outside the repo — it contains session hashes and contact-form messages.
+Keep it outside the repo — it contains admin emails and contact-form messages.
 
 Cloudflare **Time Travel** is the other net: on a paid plan D1 restores any
 point in the last 30 days.

@@ -5,7 +5,7 @@
 
 -- ---------------------------------------------------------------------------
 -- Roles — labels are exactly ADMIN_ROLE_LABELS from
--- origin/steven-create-admins:teazo-site/app/types/admin-perms.ts:10-14,
+-- teazo-site/app/types/admin-perms.ts,
 -- which is what the Settings table renders. Do not rename these without
 -- changing the UI: role 2 ("Can Edit") is also the only role for which
 -- admin_user.can_invite_users may be 1.

@@ -72,8 +72,8 @@ const REAP_CUTOFF = `strftime('%Y-%m-%dT%H:%M:%fZ','now','-${REAP_GRACE_HOURS} h
 /**
  * Rows reaped per cron run. Each row costs TWO subrequests (one R2 delete,
  * one D1 update), and the free plan allows 50 subrequests per invocation.
- * 20 rows = 40, plus the initial SELECT and the three session/invitation
- * statements = 44. Under the cap with room to spare.
+ * 20 rows = 40, plus the initial SELECT = 41. Under the cap with room to
+ * spare.
  *
  * At hourly, this drains 480 objects/day — far more than this shop will ever
  * delete. Raise it only alongside Workers Paid.
@@ -233,22 +233,12 @@ export default {
   },
 
   /**
-   * The sweeper. D1 has no TTL and no scheduled jobs of its own, so without
-   * this: sessions never expire, lapsed invitations keep holding their unique
-   * email slot, and deleted bytes accumulate in R2 forever.
+   * The sweeper. Deleting a file only queues it in pending_r2_deletion; this
+   * removes the bytes from R2 once the grace period has passed. D1 has no
+   * scheduled jobs of its own, so without this the bytes would stay forever.
    */
   async scheduled(_c: ScheduledController, env: Env, _ctx: ExecutionContext) {
-    // allSettled, not all: one failing job must not cancel the other two.
-    const outcomes = await Promise.allSettled([
-      reapDeletedObjects(env),
-      expireSessions(env),
-      expireInvitations(env),
-    ]);
-
-    for (const o of outcomes) {
-      if (o.status === "rejected") console.error("sweep job failed:", o.reason);
-      else console.log("sweep job ok:", JSON.stringify(o.value));
-    }
+    console.log("sweep ok:", JSON.stringify(await reapDeletedObjects(env)));
   },
 } satisfies ExportedHandler<Env>;
 
@@ -295,45 +285,4 @@ function note(env: Env, id: string, message: string) {
     .prepare("UPDATE pending_r2_deletion SET last_error = ?2 WHERE id = ?1")
     .bind(id, message.slice(0, 500))
     .run();
-}
-
-async function expireSessions(env: Env) {
-  // Hard delete is safe: session validation already refuses anything expired
-  // or revoked, so a deleted row and a dead row are indistinguishable to auth.
-  // DELETE ... LIMIT needs a compile-time SQLite option; the subquery does not.
-  const res = await env.DB.prepare(
-    `DELETE FROM admin_session
-      WHERE id IN (
-        SELECT id FROM admin_session
-         WHERE expires_at < ${NOW} OR revoked_at IS NOT NULL
-         LIMIT 500)`
-  ).run();
-
-  return { sessionsDeleted: res.meta.changes };
-}
-
-async function expireInvitations(env: Env) {
-  // ux_invitation_pending is UNIQUE(email_normalized) WHERE accepted_at IS NULL
-  // AND revoked_at IS NULL — the predicate ignores expires_at. So a lapsed
-  // invite still holds the slot, and re-inviting that address fails with a
-  // constraint error until this stamps revoked_at.
-  const revoked = await env.DB.prepare(
-    `UPDATE admin_invitation
-        SET revoked_at = ${NOW}
-      WHERE accepted_at IS NULL
-        AND revoked_at IS NULL
-        AND expires_at < ${NOW}`
-  ).run();
-
-  // Then purge settled rows so the table does not grow without bound.
-  const purged = await env.DB.prepare(
-    `DELETE FROM admin_invitation
-      WHERE id IN (
-        SELECT id FROM admin_invitation
-         WHERE (accepted_at IS NOT NULL OR revoked_at IS NOT NULL)
-           AND created_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-90 days')
-         LIMIT 500)`
-  ).run();
-
-  return { invitesRevoked: revoked.meta.changes, invitesPurged: purged.meta.changes };
 }

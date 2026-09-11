@@ -15,8 +15,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
 
-  // Hourly. It is the lapsed-invitation case that sets this frequency, not
-  // the byte reaping — a lapsed invite blocks re-inviting that address.
+  // Hourly is plenty: a file's bytes are only reaped 24 hours after it is
+  // deleted, which is the window for undoing a mistake.
   "triggers": { "crons": ["0 * * * *"] },
 
   // The R2 binding does not expose its own bucket name at runtime (there is no

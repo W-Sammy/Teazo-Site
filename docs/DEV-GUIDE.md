@@ -41,8 +41,9 @@ your app (Next.js) ──HTTP──▶ proxy Worker ──▶ D1   the database
   for display. Item names, prices, sizes, photos and sold-out state are always
   edited in Square — never in our database.
 
-Today nothing persists: every page renders hardcoded data, and `/login` and
-most of `/admin` are stubs. You are adding the first real reads and writes.
+Today nothing persists yet. Google sign-in works, and the Settings admins
+table and the events admin are built on sample data — but every page still
+renders hardcoded values. You are adding the first real reads and writes.
 
 ---
 
@@ -111,18 +112,29 @@ own. Without these two the site still runs; only `/admin/menu` and
 `/api/square/*` fail, because `app/lib/square.ts` throws when the token is
 missing.
 
-### 2.3 Sign in to /admin locally
+### 2.3 Sign in locally
 
-Google sign-in does not exist yet, so give yourself a local admin:
+Sign-in is Google, through NextAuth (`teazo-site/auth.ts`). **Only if you are
+working on sign-in or a page behind it**, add three more lines to
+`teazo-site/.env.local`:
+
+```bash
+AUTH_SECRET=<a long random string — `openssl rand -base64 33` makes one>
+AUTH_GOOGLE_ID=<the team's Google OAuth client id>
+AUTH_GOOGLE_SECRET=<the team's Google OAuth client secret>
+```
+
+The Google client id and secret come from whoever set up sign-in.
+
+To give your Google account an admin role in your own database:
 
 ```bash
 cd teazo-d1-proxy
-npm run db:seed:dev
+npx wrangler d1 execute teazo-db --local --command "INSERT INTO admin_user (id, email, email_normalized, username, role_id) VALUES ('me', 'you@gmail.com', 'you@gmail.com', 'you', 1);"
 ```
 
-Then, in your browser's dev tools on `http://localhost:3000`, add a cookie
-named `teazo_session` with the value `local-dev-session`. You are now signed in
-as the Owner — as soon as the session check in [§5](#5-authentication) exists.
+Put your own address in both email columns, lower-case in `email_normalized`.
+Role `1` is Owner, `2` Can Edit, `3` Can View.
 
 ### 2.4 Reset
 
@@ -134,8 +146,8 @@ rm -rf .wrangler/state
 npm run db:migrate:local
 ```
 
-That also empties your local bucket. Run `npm run db:seed:dev` again if you
-want the admin login back.
+That also empties your local bucket, and removes your admin row — re-run the
+insert from [§2.3](#23-sign-in-locally) if you need your role back.
 
 ---
 
@@ -259,8 +271,23 @@ export async function putMedia(key: string, body: Uint8Array, contentType: strin
 ```
 
 Locally, uploads land in your simulated bucket and are served by your Worker
-at `http://127.0.0.1:8787/media/<key>`. `next.config.ts` already allows that
-address for `<Image>` in development.
+at `http://127.0.0.1:8787/media/<key>`. To show them with `<Image>` in
+development, `next.config.ts` needs this — Next.js 16 refuses to optimize
+images from local addresses unless told to. It is tested, and development-only;
+production keeps the defaults:
+
+```ts
+// teazo-site/next.config.ts
+const isDev = process.env.NODE_ENV === "development";
+
+images: {
+  remotePatterns: [
+    ...allowedHosts.map((hostname) => ({ protocol: "https" as const, hostname })),
+    ...(isDev ? [{ protocol: "http" as const, hostname: "127.0.0.1", port: "8787", pathname: "/media/**" }] : []),
+  ],
+  dangerouslyAllowLocalIP: isDev,
+},
+```
 
 Accepted types: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`.
 Key prefixes: `gallery/`, `carousel/`, `events/`, `documents/menu/`,
@@ -276,10 +303,10 @@ row. Shown here for a gallery upload:
 import sharp from "sharp";
 import { prepare, batch } from "@/app/lib/d1";
 import { putMedia, mintKey } from "@/app/lib/media";
-import { requireAdmin } from "@/app/lib/auth";
+import { getAdmin } from "@/app/lib/admin";
 
 export async function POST(request: Request) {
-  const admin = await requireAdmin(2); // Can Edit or above
+  const admin = await getAdmin(2); // Can Edit or above — see §5
   if (!admin) return Response.json({ error: "unauthorized" }, { status: 401 });
 
   const form = await request.formData();
@@ -308,7 +335,7 @@ export async function POST(request: Request) {
       `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
                                 original_filename, purpose, uploaded_by)
        VALUES (?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8)`
-    ).bind(mediaId, stored.bucket, stored.key, stored.size, info.width, info.height, file.name, admin.admin_id),
+    ).bind(mediaId, stored.bucket, stored.key, stored.size, info.width, info.height, file.name, admin.id),
     prepare(`INSERT INTO gallery_image (id, media_id, name, name_sort_key) VALUES (?1, ?2, ?3, ?4)`)
       .bind(crypto.randomUUID(), mediaId, name, name.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase()),
   ]);
@@ -357,87 +384,65 @@ in use.
 
 ## 5. Authentication
 
-Admins sign in (eventually with Google), and a `teazo_session` cookie
-identifies them. The database stores only the SHA-256 of that cookie, so a
-leaked database row is never a usable session.
+Sign-in is **NextAuth with Google** (`teazo-site/auth.ts`). NextAuth keeps the
+session in a signed cookie, so the database holds no sessions. What it holds
+is **who is an admin and what they may do** — `admin_user` — matched to the
+signed-in Google account by email.
 
-Put this in `teazo-site/app/lib/auth.ts`:
+To get the signed-in admin and their role:
 
 ```ts
-// teazo-site/app/lib/auth.ts
-import { cookies } from "next/headers";
+// teazo-site/app/lib/admin.ts
+import { auth } from "@/auth";
 import { prepare } from "./d1";
 
-type Session = { admin_id: string; display_name: string; role_id: number };
-
-async function sha256Hex(s: string) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/** The signed-in admin, or null. Works in server components and route handlers. */
-export async function getSession(): Promise<Session | null> {
-  const token = (await cookies()).get("teazo_session")?.value;
-  if (!token) return null;
-  return prepare(
-    `SELECT au.id AS admin_id, au.display_name, au.role_id
-       FROM admin_session s
-       JOIN admin_user au ON au.id = s.admin_user_id
-      WHERE s.id = ?1
-        AND s.revoked_at IS NULL
-        AND s.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ','now')
-        AND au.deleted_at IS NULL
-        AND au.status = 'active'`
-  ).bind(await sha256Hex(token)).first<Session>();
-}
+export type Admin = { id: string; username: string; role_id: number; can_invite_users: number };
 
 /** Roles: 1 Owner, 2 Can Edit, 3 Can View. A lower number is more access. */
-export async function requireAdmin(minRole: 1 | 2 | 3) {
-  const s = await getSession();
-  return s && s.role_id <= minRole ? s : null;
+export async function getAdmin(minRole: 1 | 2 | 3): Promise<Admin | null> {
+  const email = (await auth())?.user?.email;
+  if (!email) return null;
+  const admin = await prepare(
+    `SELECT id, username, role_id, can_invite_users
+       FROM admin_user
+      WHERE email_normalized = ?1
+        AND deleted_at IS NULL
+        AND status IN ('active', 'invited')`
+  ).bind(email.trim().toLowerCase()).first<Admin>();
+  return admin && admin.role_id <= minRole ? admin : null;
 }
 ```
 
-**Every admin route and server action calls `requireAdmin` first.** The cookie
-on its own proves nothing:
+Call it first in every admin page, route handler and server action:
 
 ```ts
-const admin = await requireAdmin(2);
+const admin = await getAdmin(2);
 if (!admin) return Response.json({ error: "unauthorized" }, { status: 401 });
 ```
 
-And `teazo-site/proxy.ts` sends anyone without a session cookie away from
-`/admin`. Next.js 16 renamed `middleware.ts` to `proxy.ts` — this file has
-nothing to do with our proxy *Worker*; the name is Next's, not ours.
+Because it reads `admin_user` on every request, removing or suspending an
+admin takes effect immediately.
 
-```ts
-// teazo-site/proxy.ts
-import { NextResponse, type NextRequest } from "next/server";
+An admin added in Settings starts with `status = 'invited'`. There is no
+invitation email: signing in with that Google address is the invitation.
+There is exactly one Owner, and `can_invite_users` can only be set on role 2.
 
-export function proxy(req: NextRequest) {
-  if (!req.cookies.get("teazo_session")) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-  return NextResponse.next();
-}
+> **Heads-up for whoever owns sign-in:** `auth.ts` currently accepts **any**
+> Google account. That grants nothing today, but a check that only asks "is
+> someone signed in?" would let every Google user through. The check has to
+> consult `admin_user` — per request as above, or in NextAuth's `signIn`
+> callback.
 
-export const config = { matcher: ["/admin/:path*"] };
-```
-
-That is only a convenience redirect — it does not check the session is real.
-`requireAdmin` is the actual check.
-
-> **Right now `/admin` and the Square write routes (`/api/square/products`) are
-> open to anyone** — there is no check at all. Adding these two pieces closes
-> that.
-
-There is exactly one Owner. `can_invite_users` can only be set on role 2.
+> **`/admin` and the Square write routes (`/api/square/products`) are open to
+> anyone right now** — no check exists yet. Next.js 16's file for guarding
+> routes is `proxy.ts` (it replaced `middleware.ts`); nothing to do with our
+> proxy Worker.
 
 ---
 
 ## 6. The database
 
-26 tables. The definition is
+25 tables. The definition is
 [`teazo-site/migrations/0001_init.sql`](../teazo-site/migrations/0001_init.sql)
 — open it when you need exact columns.
 
@@ -445,9 +450,6 @@ There is exactly one Owner. `can_invite_users` can only be set on role 2.
 |---|---|---|---|
 | `role` | Owner / Can Edit / Can View | seed | auth |
 | `admin_user` | admin accounts | Settings | auth, every admin route |
-| `oauth_account` | Google identity → admin | sign-in | sign-in |
-| `admin_session` | sessions (hashed cookie) | sign-in, sign-out, removing an admin | auth |
-| `admin_invitation` | pending invites | Settings | sign-in |
 | `media_asset` | one row per stored file | uploads | every image |
 | `pending_r2_deletion` | files waiting to be removed | delete handlers | the scheduled job |
 | `gallery_image` | gallery entries | `/admin/gallery` | `/gallery` |
@@ -467,7 +469,8 @@ There is exactly one Owner. `can_invite_users` can only be set on role 2.
 | `menu_section` | menu sections and subtitles | `/admin/menu` | `/menu` |
 | `menu_section_item` | which items, in what order | `/admin/menu` | `/menu` |
 | `menu_item_display` | badge, featured, hidden | `/admin/menu` | `/menu` |
-| `event` | events | `/admin/events` | an events page |
+| `event` | events: name, image, start and end | `/admin/events` | public pages |
+| `event_item`, `event_category` | which Square items or categories an event covers | `/admin/events` | public pages |
 | `contact_message` | contact form messages | **the public** | an admin inbox |
 
 ### Columns that look odd but matter
@@ -486,6 +489,21 @@ SQLite has no `BOOLEAN` (use `INTEGER` 0/1), no `ENUM` (`TEXT` with a
 `CHECK`), no JSON type (`TEXT`, validated) and no `UUID` (`TEXT` ids).
 Timestamps are ISO-8601 text in UTC, written with
 `strftime('%Y-%m-%dT%H:%M:%fZ','now')`.
+
+### The Square cache
+
+`catalog_item_cache`, `catalog_variation_cache` and `catalog_category_cache`
+are a copy of Square, filled by a sync. Whoever writes that sync:
+
+- Key every row by the Square id **and** `square_env` (`sandbox` or
+  `production`) — the two catalogs share no ids.
+- Store `square_version`, so a stale price can be detected.
+- One `catalog_variation_cache` row per size, never just the first.
+- Never delete a cached row: set `is_deleted = 1`. Menu sections point at
+  cached items.
+- `square_image_url` is Square's own photo URL — the photo stays at Square.
+- Events can name Square items before the sync has ever run, so when showing
+  an event, skip item ids the cache doesn't have.
 
 ---
 
@@ -540,22 +558,25 @@ your branch's migrations yet. Test schema changes locally.
   `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', …)` on both sides.
 - **End every `ORDER BY` with a unique column** (`…, id`), or rows that tie
   can come back in a different order on each request.
-- **Removing an admin does not end their sessions.** Revoke them in the same
-  `batch()`:
-  `UPDATE admin_session SET revoked_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE admin_user_id = ?1 AND revoked_at IS NULL`
+- **Removing an admin locks them out only because pages check `admin_user`.**
+  NextAuth's cookie stays valid until it expires, so always go through
+  `getAdmin()` ([§5](#5-authentication)), which reads `admin_user` on every
+  request.
+- **Google says `redirect_uri_mismatch` on your machine?** The team's OAuth
+  client needs `http://localhost:3000/api/auth/callback/google` added as an
+  authorized redirect URI.
 - **Renaming a gallery image means recomputing `name_sort_key`.**
 - **Tag names are unique ignoring case**, so add them with
   `INSERT … ON CONFLICT(name_normalized) DO NOTHING`.
-- **Building the Square sync?** Fix the `variations[0]` bug first — see
-  FEATURE-NOTES.md.
+- **Building the Square sync?** Read the landmines in
+  [DATA-MODEL.md §3](./DATA-MODEL.md#3-the-square-boundary--the-rule-that-keeps-the-site-and-the-register-agreeing)
+  first — the `variations[0]` truncation and the `BigInt` patch will both
+  corrupt the cache if the sync inherits them.
 
 ---
 
 ## 10. Where everything else lives
 
-- **[FEATURE-NOTES.md](./FEATURE-NOTES.md)** — the query each public page
-  needs, the Square sync, the admin API routes, and the build order. Open the
-  section for your feature.
 - **[DATA-MODEL.md](./DATA-MODEL.md)** — why the schema looks the way it does.
 - **[OPERATIONS.md](./OPERATIONS.md)** — the real Cloudflare setup and the
   deploy pipeline.

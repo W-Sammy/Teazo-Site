@@ -8,7 +8,6 @@
     "tail": "wrangler tail teazo-d1-proxy",
     "typegen": "wrangler types --env-interface Env worker-env.d.ts",
     "db:migrate:local": "wrangler d1 migrations apply teazo-db --local",
-    "db:seed:dev": "wrangler d1 execute teazo-db --local --file dev-seed.sql",
     "db:backup": "wrangler d1 export teazo-db --remote --output ./backup.sql"
   },
   "devDependencies": {

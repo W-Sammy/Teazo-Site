@@ -10,12 +10,13 @@ code, API routes and Square wiring are out of scope here.
 ## 1. What the project actually is today
 
 TEAZO is a Next.js 16 / React 19 app for a single bubble-tea shop at 1050 Taraval St,
-San Francisco. Six public routes, six admin routes, three Square API routes. ~6,100
-lines of TypeScript under `teazo-site/app`.
+San Francisco. Eight routes outside the admin (six public pages, sign-in and an account page),
+six admin routes, three Square API routes plus NextAuth's. ~8,200 lines of
+TypeScript under `teazo-site/app`.
 
 **There is no persistence of any kind.** No database client, no ORM, no storage SDK,
-no `localStorage`. `package.json` dependencies are exactly: `next`, `react`,
-`react-dom`, `pdfjs-dist`, `square`. Every byte the site displays is either a git-tracked
+no `localStorage`. `package.json` dependencies are exactly: `next`, `next-auth`,
+`react`, `react-dom`, `pdfjs-dist`, `square`. Every byte the site displays is either a git-tracked
 file in `public/` or a TypeScript literal in a component.
 
 | Surface | State | What backs it now |
@@ -26,12 +27,13 @@ file in `public/` or a TypeScript literal in a component.
 | `/contact` | built | `contact-content.ts` — real address, phone, hours |
 | `/delivery` | built | 3 hardcoded marketplace deeplinks |
 | `/static-menu` | built | serves `public/teazo-menu.pdf` |
-| `/login` | **shell** | no `onSubmit`, no `onClick`, state never leaves the component |
+| `/login` | partial | **Google sign-in works** (NextAuth). The email/password form above it has no `onSubmit` — it is still decoration |
+| `/account` | built | shows the signed-in name and email; redirects to `/login` otherwise |
 | `/admin` | **stub** | `<h1>Hello World</h1>` |
 | `/admin/menu` | partial | really fetches Square; every mutation is `console.log` |
 | `/admin/gallery` | built UI | fully client-side, uploads die on refresh (`URL.createObjectURL`) |
-| `/admin/events` | **stub** | `<h1>Hello World</h1>` |
-| `/admin/settings` | **stub** | `<h1>Hello World</h1>` (PR #47 adds an Admins table) |
+| `/admin/events` | built UI | events admin on sample data (#49) |
+| `/admin/settings` | built UI | admins table on sample data (#47) |
 | `/admin/website-content` | **stub** | `<h1>Hello World</h1>` |
 
 The Square integration is real but read-mostly and **pinned to Sandbox**
@@ -84,9 +86,9 @@ Worse, `POST /api/square/products` and `PUT|DELETE /api/square/products/[id]` ar
 unauthenticated route handlers that **write to the live Square catalog**. That is a
 production-catalog write endpoint open to the internet, currently pointed at Sandbox.
 
-This is a live hole today, independent of the database work. The `admin_user` /
-`admin_session` tables below are the storage half of the fix; the `proxy.ts` redirect and the per-route session
-check are the other half and should land in the same sprint.
+This is a live hole today, independent of the database work. The `admin_user`
+table below is the storage half of the fix; a `proxy.ts` redirect and a per-route
+role check against it are the other half.
 
 ---
 
@@ -143,9 +145,9 @@ Square can't hold: the gallery, the home carousel, event flyers and the PDF menu
 
 ## 4. Schema
 
-26 tables, 31 indexes, 6 triggers. `migrations/0001_init.sql` and `0002_seed.sql`.
+25 tables, 26 indexes, 6 triggers. `migrations/0001_init.sql` and `0002_seed.sql`.
 Validated against SQLite 3.45 and through wrangler's own migration runner:
-the DDL applies clean and 33 constraint assertions pass.
+the DDL applies clean and its constraint checks pass.
 
 **For how to build against it, see [`DEV-GUIDE.md`](./DEV-GUIDE.md).
 For how to deploy it, see [`OPERATIONS.md`](./OPERATIONS.md).**
@@ -162,34 +164,35 @@ For how to deploy it, see [`OPERATIONS.md`](./OPERATIONS.md).**
 | soft delete | `deleted_at` + **partial** uniques | a plain unique makes "delete then re-add" fail |
 | JSON columns | `TEXT` + `json_valid()` CHECK | no JSONB |
 
-### 4.1 Identity & access — 5 tables
+### 4.1 Identity & access — 2 tables
 
-`role`, `admin_user`, `oauth_account`, `admin_session`, `admin_invitation`
+`role`, `admin_user`
 
-Roles are `1=Owner, 2=Can Edit, 3=Can View` — the exact `ADMIN_ROLE_LABELS`
-from the unmerged `steven-create-admins` branch, which is what the Settings
-table renders.
+Sign-in is NextAuth with Google (`teazo-site/auth.ts`). With no database adapter,
+NextAuth keeps sessions in a signed cookie — confirmed in the installed package:
+`strategy: config.adapter ? "database" : "jwt"`. So the database's job is narrow:
+**who is an admin, and what may they do.** `admin_user` is matched to the signed-in
+Google account by `email_normalized`.
 
-`admin_user.can_invite_users` mirrors the branch's per-admin invite flag. A CHECK
-restricts it to role 2, because `changeRole()` forces it false for any other role
-and `toggleInvitePermission()` refuses unless the role is "Can Edit".
+Roles are `1=Owner, 2=Can Edit, 3=Can View` — the exact `ADMIN_ROLE_LABELS` in
+`teazo-site/app/types/admin-perms.ts`. `admin_user.username` and `can_invite_users`
+mirror the Settings admins table.
 
-- `UNIQUE(email_normalized) WHERE deleted_at IS NULL` — the branch's `addAdmin`
-  currently appends without a duplicate check, so the same email can be added twice.
-  Normalization is an explicit column because SQLite's `NOCASE` folds ASCII only.
+- `UNIQUE(email_normalized) WHERE deleted_at IS NULL` — normalization is an explicit
+  column because SQLite's `NOCASE` folds ASCII only.
 - `UNIQUE(role_id) WHERE role_id = 1` — at most one Owner. *At least* one is not
-  expressible in SQLite; that guard belongs in the delete/demote handler.
-- `oauth_account` stores **only** `provider` + `provider_account_id` (the Google `sub`).
-  No access or refresh tokens: the app never calls a Google API on the user's behalf,
-  and D1 has no column-level encryption.
-- `admin_session` deliberately has **no `last_seen_at`** — one UPDATE per authenticated
-  request is the canonical D1 anti-pattern. It exists to make revocation possible.
-  If sessions get chatty, move them to Workers KV (native TTL) and keep a small
-  revocation table here.
+  expressible in SQLite; the delete/demote handler has to refuse it.
+- `can_invite_users` may only be 1 for role 2, matching the Settings UI.
+- Adding an admin inserts a row with `status = 'invited'`. There are no invitation
+  tokens: signing in with that Google address is the invitation.
 
-> **D1 has no TTL and no scheduled jobs of its own.** `admin_session` and
-> `admin_invitation` accumulate expired rows forever unless a cron-triggered Worker
-> sweeps them. That Worker is a named deliverable, not an afterthought.
+**Deliberately absent:** sessions, OAuth account links and invitation tokens.
+NextAuth owns sign-in; copying its state into D1 would only drift.
+
+> **Security gap in `auth.ts`, for its owner:** it accepts **any** Google account.
+> Nothing grants that account anything today, but a check that only asks "is
+> someone signed in?" would let every Google user in. The role check has to
+> consult `admin_user`.
 
 ### 4.2 Media — 2 tables + a guard trigger
 
@@ -298,9 +301,18 @@ D1 caps a query at roughly 100 bound parameters and ~100 KB of SQL, so a full sy
 71 items cannot be one statement — chunk it and use `db.batch()`, which is D1's only
 transaction primitive.
 
-### 4.6 Events & inquiries — 2 tables
+### 4.6 Events & inquiries — 4 tables
 
-`event`, `contact_message`
+`event`, `event_item`, `event_category`, `contact_message`
+
+`event` follows the events admin (`teazo-site/app/types/admin-event.ts`): a name,
+description, image, start and end, and either the whole menu (`applies_to_all`) or
+chosen Square items and categories, held in `event_item` and `event_category`.
+Status — upcoming, active, ended — is worked out from the dates, not stored.
+
+The item and category links are **not** foreign-keyed to the Square cache, on
+purpose: an event can be saved before the catalog sync has ever run. Showing an
+event should skip ids the cache no longer has.
 
 `contact_message` has six columns matching the five inputs the form actually collects.
 The contact form currently posts to a `mailto:` with `encType="text/plain"`, which most
@@ -374,11 +386,11 @@ Sequenced by what is broken now, not by what is architecturally tidy.
 | # | Slice | Fixes |
 |---|---|---|
 | 1 | `media_asset` + gallery + R2 | uploads that vanish on refresh |
-| 2 | `admin_user` + `admin_session` + **`proxy.ts`** | `/admin` and the Square write routes are open to the internet |
+| 2 | `admin_user` role check + **`proxy.ts`** | `/admin` and the Square write routes are open to the internet |
 | 3 | `contact_message` | the mailto form that silently loses every inquiry |
 | 4 | `business_profile` + hours + `site_link` + `content_block` | Karen can edit the site without a deploy |
 | 5 | `catalog_item_cache` + `menu_section` + `menu_item_display` | replaces the 787-line mock menu |
-| 6 | `event` | `/admin/events` has nothing to read |
+| 6 | `event` + `event_item` + `event_category` | `/admin/events` reads `sample-events.txt`; every edit is lost |
 
 Slices 1–3 are each roughly a sprint of one developer's time and each closes a real
 defect. Slice 5 is the largest and depends on fixing the `variations[0]` truncation
@@ -400,7 +412,7 @@ earn it back.
 | `navigation_item`, `page_metadata` | nav is 5 labels in a container locked to `grid-cols-5`; a DB-driven nav breaks on the 6th item |
 
 The union of everything the analysis proposed was ~68 tables — larger than the
-remaining semester for seven developers. This is 26.
+remaining semester for seven developers. This is 25.
 
 ---
 
