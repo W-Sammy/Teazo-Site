@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 import Footer from "@/app/(site)/components/footer";
@@ -8,7 +8,8 @@ import { BubbleField } from "@/app/components/bubble-field";
 import Link from "next/link";
 import Image from "next/image";
 import { useState} from "react";
-
+import { signIn } from 'next-auth/react'
+import { redirect } from "next/dist/server/api-utils";
 
 
 export default function AdminLoginPage() {
@@ -94,20 +95,22 @@ export default function AdminLoginPage() {
 
         {/* Google SSO container */}
         <div className="relative flex flex-col mb-20 w-full max-w-[470px] bg-white  shadow-sm">
-          <button
-            type="button"
-            className="group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 border border-gray-200 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50"
-          >
-            {/* Google Icon official SVG */}
-            <Image
-              src="/google-color.svg"
-              alt="Google icon"
-              width={22}
-              height={22}
-            />
-            <span className="group-hover:underline">CONTINUE WITH GOOGLE</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/admin"})}
+              className="group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 border border-gray-200 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50"
+            >
+              {/* Google Icon official SVG */}
+              <Image
+                src="/google-color.svg"
+                alt="Google icon"
+                width={22}
+                height={22}
+              />
+              <span className="group-hover:underline">CONTINUE WITH GOOGLE</span>
+            </button>
         </div>
+
       </main>
 
       {/* End of page footer */}

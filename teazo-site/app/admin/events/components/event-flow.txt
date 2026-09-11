@@ -1,0 +1,81 @@
+Add/create items
+page.tsx
+  /* loads menu items from square api */
+  /* loads sample data from local file, change to being pulled from database */
+  /* pass data into admins event client, to become client state, and organize data */
+
+admin-events-client.tsx
+  /* event form drawer, that opens and handles, editing or creating new events */
+  /*opens new event drawer by setting editingEvent to null and drawerOpen to true */
+  
+event-from.tsx
+  /* handles the form submission for the event information */
+  /* onSave callback goes to handleSave in admin-events-client */
+
+admin-events-client.tsx
+  /* handleSave decides whether to call createEvent or updateEvent */
+
+handlers/use-events.ts
+  /* createEvent is the only function that will need the POST request */
+  /* updateEvent is the only function that will need the PATCH request */
+
+handlers/get-events.ts
+  /* getEvents is the only event-loading function that needs to be changed from
+     sample-events.txt to the database/API */
+
+
+Delete events
+
+admin-events-client.tsx
+  /* Owns the eventPendingDelete state. Null means the confirmation dialog is closed. */
+  const [eventPendingDelete, setEventPendingDelete] = useState<AdminEvent | null>(null);
+
+  /* Passes the state setter to both event views using the prop name onDelete. */
+  <AdminEventsGrid onDelete={setEventPendingDelete} />
+  <AdminEventsList onDelete={setEventPendingDelete} />
+
+
+admin-events-grid.tsx OR admin-events-list.tsx
+  /* delete button here to call onDelete */
+  /* Because onDelete points to setEventPendingDelete, the line above effectively does: */
+  setEventPendingDelete(event);
+  /* This does not delete the event yet. It only remembers which event the user wants
+     to delete and causes React to render the confirmation dialog. */
+  /* In the list view, stopPropagation prevents the row's edit click from also running. */
+
+admin-events-client.tsx
+  /* The selected event is passed into the dialog. */
+  <DeleteEventDialog
+    event={eventPendingDelete}
+    onCancel={() => setEventPendingDelete(null)}
+    onConfirm={confirmDelete}
+  />
+
+delete-event-dialog.tsx
+  /* If event is null, the dialog renders nothing. */
+  if (!event) return null;
+  /* Cancel calls onCancel, which sets eventPendingDelete back to null. */
+  /* Confirm calls onConfirm, which points to confirmDelete in admin-events-client.tsx. */
+
+
+
+
+admin-events-client.tsx - current confirmDelete flow
+  /* confirmDelete checks that an event was selected, then calls deleteEvent from
+     handlers/use-events.ts. If deletion succeeds, it closes the dialog. */
+
+handlers/use-events.ts
+  /* deleteEvent owns the actual delete operation. Replace its marked temporary
+     block with DELETE /api/events/:id. AdminEventsClient does not need to know
+     how the database deletion works. */
+
+
+Future API locations
+
+handlers/get-events.ts
+  getEvents()       -> GET /api/events
+
+handlers/use-events.ts
+  createEvent()     -> POST /api/events
+  updateEvent()     -> PATCH /api/events/:id
+  deleteEvent()     -> DELETE /api/events/:id

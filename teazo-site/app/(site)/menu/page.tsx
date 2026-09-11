@@ -54,7 +54,7 @@ function createMenuItem(
 	name: string,
 	priceCents: number,
 	description?: string,
-	imageUrl: string | null = "/TEAZO_logo.png"
+	imageUrl: string | null = "/TEAZO_logo.svg"
 ): MenuItem {
 	const slug = name
 		.toLowerCase()
@@ -709,7 +709,7 @@ export default function MenuPage() {
 			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
 				<section className="flex flex-col items-center text-center">
 					<Image
-						src="/TEAZO_logo.png"
+						src="/TEAZO_logo.svg"
 						alt=""
 						aria-hidden="true"
 						width={389}
