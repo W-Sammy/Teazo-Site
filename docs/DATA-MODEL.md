@@ -198,7 +198,7 @@ and `toggleInvitePermission()` refuses unless the role is "Can Edit".
 D1 holds metadata, R2 holds bytes. `mime_type` is restricted to the three types the
 upload form already accepts (`gallery-upload-form.tsx:27`) plus PDF.
 
-There is **no refcount column** — a hand-maintained counter across eight referencing
+There is **no refcount column** — a hand-maintained counter across seven referencing
 tables drifts the first time a write path forgets to decrement, and then the cleanup
 job either deletes live objects or leaks dead ones.
 

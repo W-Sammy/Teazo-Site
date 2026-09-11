@@ -180,7 +180,7 @@ Use `revalidate` for public pages and full dynamic only for `/admin`.
 | item name, description | section titles & subtitles |
 | variations, prices, currency | the synthetic "TEAZO Special" section |
 | category membership + `ordinal` | display `position` within a section |
-| modifier lists, selection rules | local photo override, badges, featured |
+| modifier lists, selection rules | badges, featured |
 | sold-out state, online visibility | allergen notes, hide-on-website |
 | item images | everything non-catalog |
 
