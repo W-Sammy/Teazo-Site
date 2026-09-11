@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, JSX } from "react";
+import { useState, JSX, useEffect } from "react"; 
 
 export default function ImageCarousel(): JSX.Element {
     const images: string[] = [
@@ -13,6 +13,17 @@ export default function ImageCarousel(): JSX.Element {
     ];
 
     const [index, setIndex] = useState<number>(0);
+
+{/* Transition Timer */}    
+useEffect(() => {
+    const timer = setInterval(() => {
+        setIndex((prev) =>
+            prev === images.length - 1 ? 0 : prev + 1
+        );
+    }, 5000);
+    
+    return () => clearInterval(timer);
+}, [images.length]);
 
     const prevSlide = (): void => {
         setIndex((prev) =>
