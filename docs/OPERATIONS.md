@@ -113,26 +113,18 @@ free: D1 is only reachable from inside a Worker, so we run one.
 ### 3.1 The shape of it
 
 ```
-                    ┌──────────────────────────────┐
-   browser ────────▶│  Vercel — Next.js app        │
-        │           │  teazo-site/                 │
-        │           └───────┬──────────────┬───────┘
-        │                   │              │
-        │       HTTPS +     │              │  S3 API +
-        │       bearer      │              │  R2 access keys
-        │                   ▼              ▼
-        │           ┌───────────────┐  ┌──────────────────┐
-        │           │ Worker        │  │ R2 bucket        │
-        │           │ teazo-d1-proxy│  │ teazo-media      │
-        │           └───────┬───────┘  └──────────────────┘
-        │                   │ binding             ▲
-        │                   ▼                     │ CDN, cached
-        │           ┌───────────────┐             │
-        │           │ D1: teazo-db  │             │
-        │           └───────────────┘             │
-        └─────────────────────────────────────────┘
-              image reads go straight to media.<domain>,
-              never through Vercel
+  browser --> Vercel: Next.js app (teazo-site/)
+                |
+                |  HTTPS + bearer token
+                v
+              Worker: teazo-d1-proxy   /query  /batch  /media/*
+                |                 |
+                | binding         | binding
+                v                 v
+              D1: teazo-db      R2: teazo-media
+                                  |
+  browser <-- image reads --------+  via media.<domain>, CDN-cached
+                                     (or the Worker's /media/, section 8.1)
 ```
 
 Three things follow from this diagram:
@@ -224,21 +216,22 @@ review.
 
 ## 5. Environment variables
 
-All server-only. **Nothing here may be prefixed `NEXT_PUBLIC_`** except
-`R2_PUBLIC_BASE`, which is a public hostname by definition.
+All server-only except `NEXT_PUBLIC_BASE_URL`. **Never give a secret the
+`NEXT_PUBLIC_` prefix** — Next.js ships every such variable to the browser.
 
 | Variable | Where | What |
 |---|---|---|
 | `D1_PROXY_URL` | Vercel | `https://teazo-d1-proxy.<sub>.workers.dev` |
 | `PROXY_TOKEN` | Vercel **and** `wrangler secret put` | same value both sides |
-| `R2_ACCOUNT_ID` | Vercel | Cloudflare account id |
-| `R2_ACCESS_KEY_ID` | Vercel | R2 API token, scoped to one bucket |
-| `R2_SECRET_ACCESS_KEY` | Vercel | ditto |
-| `R2_BUCKET_NAME` | Vercel | `teazo-media` — also written to `media_asset.r2_bucket` |
-| `R2_PUBLIC_BASE` | Vercel | `https://media.teazosf.com` — the R2 custom domain |
+| `R2_PUBLIC_BASE` | Vercel | `https://media.teazosf.com`, or `https://teazo-d1-proxy.<sub>.workers.dev/media` without a custom domain ([§8.1](#81-without-a-custom-domain)) |
 | `SQUARE_ACCESS_TOKEN` | Vercel | sandbox today |
 | `SQUARE_ENV` | Vercel | `sandbox` \| `production` — see [§14](#14-square-sandbox--production-cutover) |
 | `SQUARE_WEBHOOK_SIGNATURE_KEY` | Vercel | webhook verification |
+| `NEXT_PUBLIC_BASE_URL` | Vercel | the site's own URL, **ending in `/`** — `/admin/menu` requests `${NEXT_PUBLIC_BASE_URL}api/square/products` |
+
+**The app needs no R2 credentials.** Files go through the proxy Worker
+(`/media/*`), which holds the bucket binding and returns the bucket name with
+every upload, so there is no access key to mint, store or rotate.
 
 Local dev uses `teazo-site/.env.local` for the app and
 `teazo-d1-proxy/.dev.vars` for the Worker. Both are gitignored.
@@ -368,8 +361,9 @@ identifiers, not secrets, and the pipeline cannot run without them.
 > variable twice — once for Production, once for Preview — with different
 > values. This is the single easiest way to lose real data on this stack.
 
-Use separate R2 API tokens per bucket as well, so a preview deployment
-physically cannot write to production media.
+Media is separated by the Worker, not by credentials: the preview Worker is
+bound to `teazo-media-preview`, so a preview deployment physically cannot
+write to production media.
 
 ---
 
@@ -397,9 +391,25 @@ curl -sI https://media.teazosf.com/gallery/2026/09/x.webp | grep -i cf-cache-sta
 The second response should say `HIT`. `DYNAMIC` or `BYPASS` means the rule is
 missing.
 
-This replaces the `/api/media/[id]` route an earlier draft of this guide
-proposed. It is strictly better: no function invocation, no D1 lookup, and
-CDN caching on every read.
+### 8.1 Without a custom domain
+
+A custom domain needs the domain's DNS to be on Cloudflare. If the client's DNS
+has to stay where it is, **the proxy Worker serves media itself** — no DNS
+change and no extra setup:
+
+```
+R2_PUBLIC_BASE=https://teazo-d1-proxy.<sub>.workers.dev/media
+```
+
+It costs one Worker request for each image view the browser has not already
+cached, against 100,000 free per day. Every response is sent with
+`Cache-Control: public, max-age=31536000, immutable`, so a returning visitor
+downloads each image once. For a one-location shop that is comfortably inside
+the free tier, and moving to a custom domain later is one environment variable:
+no rows change, because the database stores keys, not URLs.
+
+Put the Worker's hostname in `app/lib/imageHosts.ts` instead of
+`media.teazosf.com` in that case.
 
 ---
 
@@ -426,7 +436,7 @@ A one-time job, mine, not developer work. `public/` is 18 MB / 101 files. Split 
 // scripts/migrate-assets.ts — run with: npx tsx scripts/migrate-assets.ts
 import { readFile } from "node:fs/promises";
 import { glob } from "node:fs/promises";
-import { putObject } from "../app/lib/r2";
+import { putMedia } from "../app/lib/media";
 import { prepare, batch } from "../app/lib/d1";
 
 const MIME: Record<string, string> = {
@@ -439,12 +449,12 @@ for await (const path of glob("public/menu_items/**/*.webp")) {
   const ext = path.slice(path.lastIndexOf("."));
   const key = `menu/items/legacy/${crypto.randomUUID()}${ext}`;
 
-  await putObject(key, bytes.buffer as ArrayBuffer, MIME[ext]);
+  const stored = await putMedia(key, bytes, MIME[ext]);
   await batch([
     prepare(
       `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, original_filename, purpose)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'menu_item')`
-    ).bind(crypto.randomUUID(), process.env.R2_BUCKET_NAME!, key, MIME[ext], bytes.byteLength, path),
+    ).bind(crypto.randomUUID(), stored.bucket, stored.key, MIME[ext], stored.size, path),
   ]);
   console.log(key, "←", path);
 }
@@ -625,8 +635,7 @@ fields and the buckets have never been created. Work top to bottom.
 
 **Secrets**
 
-6. Mint R2 API tokens — Object Read & Write, **scoped to one bucket each**.
-7. Generate two independent proxy tokens and install each on both sides:
+6. Generate two independent proxy tokens and install each on both sides:
 
    ```bash
    openssl rand -base64 32
@@ -637,30 +646,30 @@ fields and the buckets have never been created. Work top to bottom.
    Worker secrets are the one thing the pipeline does not deploy: they live in
    Cloudflare, not the repo, and survive every Worker deploy.
 
-8. Fill in every Vercel variable from [§5](#5-environment-variables), each scoped
+7. Fill in every Vercel variable from [§5](#5-environment-variables), each scoped
    to Production or Preview. The preview `D1_PROXY_URL` points at the preview
    Worker, `teazo-d1-proxy-preview.<sub>.workers.dev`.
 
 **Pipeline**
 
-9. Commit both database ids from step 2 into `teazo-d1-proxy/wrangler.jsonc`, in a
+8. Commit both database ids from step 2 into `teazo-d1-proxy/wrangler.jsonc`, in a
    pull request.
-10. Add the five GitHub Actions secrets from [§6.1](#61-setting-the-pipeline-up).
-11. In Vercel, set **Root Directory** to `teazo-site`, and confirm the project's
+9. Add the five GitHub Actions secrets from [§6.1](#61-setting-the-pipeline-up).
+10. In Vercel, set **Root Directory** to `teazo-site`, and confirm the project's
     **production branch** is `main` — the pipeline assumes it.
-12. Add `media.teazosf.com` to `app/lib/imageHosts.ts`, in a pull request,
+11. Add `media.teazosf.com` to `app/lib/imageHosts.ts`, in a pull request,
     **before** the first production deploy — every `<Image>` of our own media
     fails without it.
-13. Turn on branch protection for `main` ([§6.1](#61-setting-the-pipeline-up)).
-14. **Switch the pipeline on** — set `DEPLOYS_ENABLED` and add
+12. Turn on branch protection for `main` ([§6.1](#61-setting-the-pipeline-up)).
+13. **Switch the pipeline on** — set `DEPLOYS_ENABLED` and add
     `teazo-site/vercel.json`, together ([§6.1](#61-setting-the-pipeline-up)).
 
 **First deploy**
 
-15. Merge to `dev`. The pipeline migrates `teazo-db-preview` — `0002_seed.sql` is a
+14. Merge to `dev`. The pipeline migrates `teazo-db-preview` — `0002_seed.sql` is a
     migration, so roles, hours, links and content blocks arrive with the schema —
     and deploys the preview Worker. Follow it in the repository's **Actions** tab.
-16. Smoke-test the preview Worker before anything depends on it. The first call
+15. Smoke-test the preview Worker before anything depends on it. The first call
     must fail:
 
     ```bash
@@ -668,12 +677,12 @@ fields and the buckets have never been created. Work top to bottom.
     ```
 
     That must print `405` for a GET, and `401` for a POST without the token.
-17. Upload the existing `public/` assets per
+16. Upload the existing `public/` assets per
     [§9](#9-migrating-existing-assets-into-r2) — to preview now, to production
-    after step 18.
-18. Merge `dev` into `main`. The pipeline migrates `teazo-db`, deploys the Worker,
+    after step 17.
+17. Merge `dev` into `main`. The pipeline migrates `teazo-db`, deploys the Worker,
     and only then deploys the app to production.
-19. Confirm the seed landed — seven hour rows, Monday to Sunday, ending
+18. Confirm the seed landed — seven hour rows, Monday to Sunday, ending
     `11:00 AM - 8:00 PM`:
 
     ```bash
@@ -695,7 +704,7 @@ fields and the buckets have never been created. Work top to bottom.
 | the `main` run in **Actions** shows migrate → Worker → Vercel, in that order | `teazo-site/vercel.json` missing — Vercel deployed on its own and raced the migration |
 | open a PR → its preview writes only to `teazo-db-preview` | env var scoping |
 
-20. Last, once all of the above is green: the Square cutover
+19. Last, once all of the above is green: the Square cutover
     ([§14](#14-square-sandbox--production-cutover)). It goes last because re-creating
     curation against production object ids is manual work that is wasted if
     anything before it has to be rebuilt.
@@ -778,6 +787,10 @@ to stay there.** Nothing here needs Workers Paid.
 | R2 Class A (writes) | 1,000,000 / month | a handful of uploads |
 | R2 Class B (reads) | 10,000,000 / month | most reads are CDN cache hits and never touch R2 |
 | R2 egress | **free at any volume** | this is why R2 is in the stack |
+
+Uploads also pass through the Worker — one request each, a handful a week.
+Image views cost Worker requests only if media is served through the Worker
+rather than a custom domain ([§8.1](#81-without-a-custom-domain)).
 
 Storage and traffic are not close to any limit — this is a one-location shop
 site. What *does* bite on the free plan is a pair of **per-invocation** limits:

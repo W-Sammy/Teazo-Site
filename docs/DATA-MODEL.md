@@ -57,16 +57,18 @@ So the data path is:
 
 ```
 Vercel (Next.js) --HTTPS + bearer--> teazo-d1-proxy (Worker) --binding--> D1
-Vercel (Next.js) --S3 API + keys--> R2          (uploads)
+Vercel (Next.js) --HTTPS + bearer--> teazo-d1-proxy (Worker) --binding--> R2  (uploads)
 browser          --CDN-cached-----> media.<domain>  (reads, never touches Vercel)
 ```
 
-R2 is the easy half: it speaks the S3 API, so Vercel reaches it directly, and public
-reads go to a custom domain with Cloudflare CDN caching in front.
+Files go through the same Worker, which holds the R2 binding. So the app needs one
+credential, and local development gets a simulated bucket as well as a simulated
+database. Public reads go to a custom domain with Cloudflare's CDN in front — or
+through the Worker itself where there is no custom domain.
 
 **None of this changes the schema.** Every table, index, trigger and CHECK below is
 plain SQLite and is unaffected by where the app runs. What it changes is the wiring,
-and that is documented in [`DEV-GUIDE.md` §2](./DEV-GUIDE.md#2-local-setup-and-the-database-client)
+and that is documented in [`DEV-GUIDE.md` §2](./DEV-GUIDE.md#2-set-up-your-machine)
 (for building) and [`OPERATIONS.md`](./OPERATIONS.md) (for deploying).
 
 The cost to be aware of: every database read crosses a network hop. Batch reads, and
@@ -74,7 +76,8 @@ cache public pages with `revalidate`.
 
 ### Still broken — `/admin` is publicly reachable right now
 
-There is no `middleware.ts` anywhere in the repo, and `app/admin/layout.tsx` is pure
+There is no `proxy.ts` (Next.js 16's name for what used to be `middleware.ts`)
+anywhere in the repo, and `app/admin/layout.tsx` is pure
 presentation with no guard. Anyone who knows the URL can open the admin portal.
 
 Worse, `POST /api/square/products` and `PUT|DELETE /api/square/products/[id]` are
@@ -82,8 +85,8 @@ unauthenticated route handlers that **write to the live Square catalog**. That i
 production-catalog write endpoint open to the internet, currently pointed at Sandbox.
 
 This is a live hole today, independent of the database work. The `admin_user` /
-`admin_session` tables below are the storage half of the fix; the middleware is the
-other half and should land in the same sprint.
+`admin_session` tables below are the storage half of the fix; the `proxy.ts` redirect and the per-route session
+check are the other half and should land in the same sprint.
 
 ---
 
@@ -367,7 +370,7 @@ Sequenced by what is broken now, not by what is architecturally tidy.
 | # | Slice | Fixes |
 |---|---|---|
 | 1 | `media_asset` + gallery + R2 | uploads that vanish on refresh |
-| 2 | `admin_user` + `admin_session` + **middleware** | `/admin` and the Square write routes are open to the internet |
+| 2 | `admin_user` + `admin_session` + **`proxy.ts`** | `/admin` and the Square write routes are open to the internet |
 | 3 | `contact_message` | the mailto form that silently loses every inquiry |
 | 4 | `business_profile` + hours + `site_link` + `content_block` | Karen can edit the site without a deploy |
 | 5 | `catalog_item_cache` + `menu_section` + `menu_item_display` | replaces the 787-line mock menu |

@@ -13,11 +13,14 @@
  * API rate limit applies".
  *
  * So this file is the ONE place in the repo that holds Cloudflare bindings.
- * It exposes exactly two endpoints and one cron:
+ * It exposes:
  *
- *   POST /query   { sql, params }              -> one statement
- *   POST /batch   { statements: [{sql,params}] } -> env.DB.batch(), all-or-nothing
- *   scheduled()                                 -> the sweeper (see §8.3)
+ *   POST   /query        { sql, params }                -> one statement
+ *   POST   /batch        { statements: [{sql,params}] } -> env.DB.batch(), all-or-nothing
+ *   GET    /media/<key>  public read of an R2 object
+ *   PUT    /media/<key>  write an R2 object (token)
+ *   DELETE /media/<key>  delete an R2 object (token)
+ *   scheduled()          the sweeper (docs/OPERATIONS.md)
  *
  * TRUST BOUNDARY: this accepts arbitrary SQL from whoever holds the bearer
  * token. That is the same trust level as the Next.js server itself, which is
@@ -107,8 +110,79 @@ function prepare(env: Env, s: Stmt): D1PreparedStatement {
   return params.length ? stmt.bind(...params) : stmt;
 }
 
+/**
+ * Media. The app writes files to R2 through here rather than through R2's S3
+ * API, for two reasons:
+ *
+ *   1. Local development needs no Cloudflare credentials at all. `wrangler dev`
+ *      simulates R2 behind this binding exactly as it simulates D1, so a fresh
+ *      clone gets a working bucket with nothing to configure.
+ *   2. Vercel needs one secret (PROXY_TOKEN) instead of a second set of R2
+ *      access keys.
+ *
+ *   GET    /media/<key>   public — the site's images are public anyway
+ *   PUT    /media/<key>   token required; body is the file, Content-Type set
+ *   DELETE /media/<key>   token required; idempotent
+ */
+const MAX_MEDIA_BYTES = 10 * 1024 * 1024; // backstop — the app resizes before upload
+const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+/** Keys the app mints look like gallery/2026/09/<uuid>.webp. */
+const KEY_RE = /^[a-z0-9][a-z0-9/_.-]{0,511}$/i;
+
+async function handleMedia(request: Request, env: Env, rawKey: string): Promise<Response> {
+  let key: string;
+  try {
+    key = decodeURIComponent(rawKey);
+  } catch {
+    return json({ error: "bad_key" }, 400);
+  }
+  if (!KEY_RE.test(key) || key.includes("..") || key.includes("//")) {
+    return json({ error: "bad_key" }, 400);
+  }
+
+  if (request.method === "GET" || request.method === "HEAD") {
+    const obj = await env.MEDIA.get(key);
+    if (!obj) return new Response("Not found", { status: 404 });
+    const headers = new Headers();
+    obj.writeHttpMetadata(headers);
+    headers.set("etag", obj.httpEtag);
+    // Keys are UUIDs and never reused, so a cached copy can never go stale.
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+    return new Response(request.method === "HEAD" ? null : obj.body, { headers });
+  }
+
+  if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
+  if (!(await authorized(request, env.PROXY_TOKEN))) return json({ error: "unauthorized" }, 401);
+
+  if (request.method === "PUT") {
+    const type = (request.headers.get("content-type") ?? "").split(";")[0].trim();
+    if (!MEDIA_TYPES.has(type)) return json({ error: "unsupported_type" }, 415);
+    const size = Number(request.headers.get("content-length"));
+    if (!Number.isFinite(size) || size <= 0) return json({ error: "length_required" }, 411);
+    if (size > MAX_MEDIA_BYTES) return json({ error: "payload_too_large", max: MAX_MEDIA_BYTES }, 413);
+    if (!request.body) return json({ error: "empty_body" }, 400);
+    const obj = await env.MEDIA.put(key, request.body, { httpMetadata: { contentType: type } });
+    // The bucket name comes back so the app records media_asset.r2_bucket from
+    // one source of truth, rather than a second env var that could be scoped
+    // wrong and leave the sweeper refusing to reap the object.
+    return json({ key: obj.key, size: obj.size, bucket: env.MEDIA_BUCKET_NAME }, 201);
+  }
+
+  if (request.method === "DELETE") {
+    await env.MEDIA.delete(key); // idempotent: deleting a missing key is not an error
+    return new Response(null, { status: 204 });
+  }
+
+  return json({ error: "method_not_allowed" }, 405);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/media/")) {
+      return handleMedia(request, env, url.pathname.slice("/media/".length));
+    }
+
     if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
     if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
     if (!(await authorized(request, env.PROXY_TOKEN))) {
