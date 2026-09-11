@@ -65,15 +65,15 @@ const MAX_BODY_BYTES = 1_000_000;
 const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ','now')";
 
 /** Grace period before bytes are reaped. This gap is the only undo window
- *  the media pipeline has — see §8.6. Do not shorten it; queued rows cost
- *  nothing. */
+ *  the media pipeline has — see docs/OPERATIONS.md §10. Do not shorten it;
+ *  queued rows cost nothing. */
 const REAP_GRACE_HOURS = 24;
 const REAP_CUTOFF = `strftime('%Y-%m-%dT%H:%M:%fZ','now','-${REAP_GRACE_HOURS} hours')`;
 /**
  * Rows reaped per cron run. Each row costs TWO subrequests (one R2 delete,
  * one D1 update), and the free plan allows 50 subrequests per invocation.
- * 20 rows = 40, plus the initial SELECT = 41. Under the cap with room to
- * spare.
+ * 20 rows = 40, plus the initial SELECT and the stray-row count = 42. Under
+ * the cap with room to spare.
  *
  * At hourly, this drains 480 objects/day — far more than this shop will ever
  * delete. Raise it only alongside Workers Paid.
@@ -188,8 +188,15 @@ export default {
     if (!(await authorized(request, env.PROXY_TOKEN))) {
       return json({ error: "unauthorized" }, 401);
     }
-    if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
-      return json({ error: "payload_too_large" }, 413);
+    // Require the length rather than defaulting it to 0: a request that omits
+    // content-length would otherwise sail past this check and be buffered whole
+    // by request.json() below. The /media PUT path takes the same line.
+    const declared = Number(request.headers.get("content-length"));
+    if (!Number.isFinite(declared) || declared <= 0) {
+      return json({ error: "length_required" }, 411);
+    }
+    if (declared > MAX_BODY_BYTES) {
+      return json({ error: "payload_too_large", max: MAX_BODY_BYTES }, 413);
     }
 
     let body: unknown;
@@ -227,7 +234,8 @@ export default {
       return json({ error: "not_found" }, 404);
     } catch (err) {
       // D1 constraint failures land here. Pass the message through so the app
-      // can recognise e.g. "media_asset is still referenced" (§4.5).
+      // can recognise e.g. "media_asset is still referenced"
+      // (docs/DEV-GUIDE.md §4.2).
       return json({ error: "d1_error", message: (err as Error).message }, 400);
     }
   },
@@ -238,30 +246,38 @@ export default {
    * scheduled jobs of its own, so without this the bytes would stay forever.
    */
   async scheduled(_c: ScheduledController, env: Env, _ctx: ExecutionContext) {
-    console.log("sweep ok:", JSON.stringify(await reapDeletedObjects(env)));
+    const swept = await reapDeletedObjects(env);
+    if (swept.otherBucket > 0) {
+      console.warn(
+        `sweep: ${swept.otherBucket} row(s) are queued against a bucket other than ` +
+        `${env.MEDIA_BUCKET_NAME}; this Worker will never reap them`
+      );
+    }
+    console.log("sweep ok:", JSON.stringify(swept));
   },
 } satisfies ExportedHandler<Env>;
 
 async function reapDeletedObjects(env: Env) {
+  // A preview sweeper must never delete production bytes, which is why
+  // pending_r2_deletion records the bucket and not only the key. That filter
+  // belongs in the SQL, not only in the loop below: a row this Worker cannot
+  // retire would otherwise sit at the head of the queue forever, so once
+  // REAP_LIMIT of them accumulated every run would select the same rows, reap
+  // nothing, and still log "sweep ok" while R2 grew without bound. Filtered
+  // here, they never enter the window and a real backlog keeps draining.
   const { results } = await env.DB.prepare(
     `SELECT id, r2_bucket, r2_key
        FROM pending_r2_deletion
       WHERE deleted_at IS NULL
+        AND r2_bucket = ?1
         AND queued_at < ${REAP_CUTOFF}
       ORDER BY queued_at
       LIMIT ${REAP_LIMIT}`
-  ).all<{ id: string; r2_bucket: string; r2_key: string }>();
+  ).bind(env.MEDIA_BUCKET_NAME).all<{ id: string; r2_bucket: string; r2_key: string }>();
 
   let reaped = 0;
 
   for (const row of results) {
-    // A preview sweeper must never delete production bytes. This is why
-    // pending_r2_deletion records the bucket and not only the key.
-    if (row.r2_bucket !== env.MEDIA_BUCKET_NAME) {
-      await note(env, row.id, `bucket mismatch: row=${row.r2_bucket} worker=${env.MEDIA_BUCKET_NAME}`);
-      continue;
-    }
-
     try {
       // Bytes first, mark second — the mirror image of the upload rule.
       // R2 deletes are idempotent, so crashing here just retries next hour.
@@ -273,11 +289,29 @@ async function reapDeletedObjects(env: Env) {
       ).bind(row.id).run();
       reaped++;
     } catch (err) {
-      await note(env, row.id, String(err));
+      // Recording the failure is itself a D1 write, and D1 is the most likely
+      // thing to be failing at this point. Unguarded, it would throw straight
+      // out of the loop and abandon every row after this one.
+      try {
+        await note(env, row.id, String(err));
+      } catch (noteErr) {
+        console.error("sweep: could not record error for", row.id, err, noteErr);
+      }
     }
   }
 
-  return { reaped, scanned: results.length };
+  // Rows that are due but belong to another bucket are not something the
+  // sweeper can fix — they mean MEDIA_BUCKET_NAME changed or a bucket was
+  // renamed. Count them so the condition is visible rather than silent.
+  const { results: strays } = await env.DB.prepare(
+    `SELECT count(*) AS n
+       FROM pending_r2_deletion
+      WHERE deleted_at IS NULL
+        AND r2_bucket <> ?1
+        AND queued_at < ${REAP_CUTOFF}`
+  ).bind(env.MEDIA_BUCKET_NAME).all<{ n: number }>();
+
+  return { reaped, scanned: results.length, otherBucket: strays[0]?.n ?? 0 };
 }
 
 function note(env: Env, id: string, message: string) {

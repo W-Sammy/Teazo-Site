@@ -49,7 +49,8 @@ renders hardcoded values. You are adding the first real reads and writes.
 
 ## 2. Set up your machine
 
-You need **Node.js 20.9 or newer** and **Git**.
+You need **Node.js 22 or newer** and **Git**. Wrangler refuses to start on
+anything older, and CI builds on 22.
 
 > **Windows: clone to a short path**, such as `C:\dev\Teazo-Site`. The local
 > database lives several folders deep inside the repo; if the full path passes
@@ -99,18 +100,21 @@ npm run dev
 
 The site is at `http://localhost:3000`.
 
-**Only if you are working on Square**, also add these two:
+**If you are working on Square, the menu admin, or the events admin**, also
+add these two:
 
 ```bash
 SQUARE_ACCESS_TOKEN=<the sandbox token>
 NEXT_PUBLIC_BASE_URL=http://localhost:3000/
 ```
 
-The trailing `/` on `NEXT_PUBLIC_BASE_URL` matters: `/admin/menu` builds its
-request as `${NEXT_PUBLIC_BASE_URL}api/square/products`, with no slash of its
-own. Without these two the site still runs; only `/admin/menu` and
-`/api/square/*` fail, because `app/lib/square.ts` throws when the token is
-missing.
+The trailing `/` matters: `/admin/menu` **and `/admin/events`** both build the
+request as `${NEXT_PUBLIC_BASE_URL}api/square/products`, with no slash of their
+own. Without these two the public pages still run, but `/api/square/*`,
+`/admin/menu` and `/admin/events` all fail — `app/lib/square.ts` throws as soon
+as it is imported when the token is missing, and both admin pages throw on the
+failed fetch (`app/admin/events/page.tsx:20`). The events admin is easy to miss
+here: it needs the Square catalog to pick which items an event covers.
 
 ### 2.3 Sign in locally
 
@@ -344,7 +348,10 @@ export async function POST(request: Request) {
 }
 ```
 
-This needs `npm install sharp` in `teazo-site/`.
+The resize step needs `sharp`, which is not in `teazo-site/package.json` today —
+whoever builds the upload route adds it (`npm install sharp` in `teazo-site/`).
+Any equivalent resizer is fine; what matters is that something shrinks the image
+before it is stored.
 
 > **Vercel rejects request bodies over 4.5 MB**, before your route even runs,
 > and phone photos are often bigger. Shrink them in the browser first:
@@ -535,13 +542,19 @@ rebuilt; raise it in the channel before you start.
 
 ## 8. How your code reaches production
 
-Nobody deploys by hand. Merging is deploying.
+Nobody deploys by hand. Merging is deploying — once the pipeline is switched on.
 
 | You merge into | What happens |
 |---|---|
-| a pull request | CI checks the migrations and the Worker. Vercel builds a preview of your branch. |
+| a pull request | CI checks the migrations and the Worker. **This part runs today.** |
 | `dev` | The shared preview database and Worker are updated. |
 | `main` | Production — migrations first, then the Worker, then the app. |
+
+> **The `dev` and `main` rows are not live yet.** Both are gated behind a
+> repository variable that stays unset until the Cloudflare resources exist, and
+> the Vercel project is still being set up. Until then, merging to `dev` does
+> **not** update any shared database — only the pull-request check runs. Do not
+> assume a migration you merged is live anywhere; ask.
 
 A pull request's preview uses the shared preview database, which does not have
 your branch's migrations yet. Test schema changes locally.

@@ -253,7 +253,7 @@ highest-value slice for the client: it is what lets Karen change hours without a
   is_current = 1`, so replacing it is an insert rather than a destructive overwrite of
   a live URL.
 
-### 4.5 Square catalog — 6 tables
+### 4.5 Square catalog — 7 tables
 
 `square_sync_state`, `catalog_item_cache`, `catalog_variation_cache`,
 `catalog_category_cache`, `menu_section`, `menu_section_item`, `menu_item_display`
@@ -350,11 +350,11 @@ for, and it makes "delete then re-upload the same file" fail on a unique index.
 
 ### What moves and what stays
 
-`public/` is 18 MB across 101 files. The split is by **who owns the file**, not by type:
+`public/` is 18.6 MB across 106 files. The split is by **who owns the file**, not by type:
 
 | Stays in the repo (build-time assets) | Moves to R2 (owner-editable content) |
 |---|---|
-| `admin_icons/` (14 files) | `carousel_images/` — 5 files, 8.1 MB |
+| `admin_icons/` (14 files) | `carousel_images/` — 5 files, 8.4 MB |
 | `social_icons/` (4) | `promotions/` — 1 file |
 | `pdfjs/` (2, vendored lib) | `teazo-menu.pdf` |
 | logos, `pink_scribble.png` | |
@@ -362,7 +362,7 @@ for, and it makes "delete then re-upload the same file" fail on a unique index.
 `menu_items/` — the 65 product photos — moves to neither. Product photos come from
 Square, so those files are retired once the menu reads from Square.
 
-Roughly **8.4 MB migrates**; the rest is code, not content.
+Roughly **8.7 MB migrates**; the rest is code, not content.
 
 ### Derivatives
 

@@ -329,8 +329,14 @@ a production deploy:
 > satisfy "Require review from Code Owners". Add a second owner for those paths
 > before turning the setting on.
 
-Apply at least the status check to `dev` as well, so broken SQL cannot reach the
-preview database either.
+On `dev`, consider requiring the status check too — but decide deliberately.
+**Validate** runs on every pull request into `dev`, including ones that touch
+nothing but the Next.js app, because it has no `paths` filter. That is on
+purpose: it takes about a minute, uses no credentials, and cannot fail because
+of application code. Adding a `paths` filter to spare those pull requests looks
+like the obvious fix and is a trap — GitHub leaves a path-skipped **required**
+check pending forever, so the pull request can never merge. Pick one: leave it
+unfiltered, or filter it and do **not** mark it required.
 
 **Commit the database ids.** `wrangler d1 create` prints an id for each database.
 Put both into `teazo-d1-proxy/wrangler.jsonc` in a pull request — they are
@@ -432,16 +438,16 @@ Put the Worker's hostname in `app/lib/imageHosts.ts` instead of
 > migration — so it is run once, by hand, against preview first and production
 > second.
 
-A one-time job, mine, not developer work. `public/` is 18 MB / 101 files. Split by
+A one-time job, mine, not developer work. `public/` is 18.6 MB / 106 files. Split by
 **who owns the file**, not by type:
 
 | Stays in repo | Moves to R2 |
 |---|---|
-| `admin_icons/` (14), `social_icons/` (4) | `carousel_images/` — 5 files, 8.1 MB |
+| `admin_icons/` (14), `social_icons/` (4) | `carousel_images/` — 5 files, 8.4 MB |
 | `pdfjs/` (2, vendored) | `promotions/` (1), `teazo-menu.pdf` |
 | logos, `pink_scribble.png` | |
 
-About 8.4 MB migrates — the carousel, one promotion image and the PDF menu.
+About 8.7 MB migrates — the carousel, one promotion image and the PDF menu.
 **Product photos do not move:** they come from Square, so `public/menu_items` is
 retired once the menu reads from Square. A script, not an afternoon of clicking:
 
@@ -816,9 +822,9 @@ The proxy is sized for those, and the constants are the enforcement:
   Going over 50 fails partway, and because `batch()` is all-or-nothing you get
   a confusing "nothing happened" rather than a clear limit error.
 - **`REAP_LIMIT = 20`** — each reaped row costs two subrequests (one R2 delete,
-  one D1 update). 20 rows = 40, plus the SELECT and the session/invitation
-  statements = 44. At hourly that drains 480 objects/day, far more than this
-  shop will ever delete, and any backlog simply clears over the next few runs.
+  one D1 update). 20 rows = 40, plus the SELECT and the stray-row count = 42.
+  At hourly that drains 480 objects/day, far more than this shop will ever
+  delete, and any backlog simply clears over the next few runs.
 
 CPU time is not a concern: the proxy is I/O-bound, and waiting on D1 or R2 does
 not count against the 10 ms.
@@ -893,12 +899,13 @@ and the only number worth watching.
 | 10 MB — our upload cap | ~1,000 |
 
 That 100× spread is the whole story: **photo size decides capacity, and nothing
-else does.** `public/carousel_images/` averages 1.6 MB and one file is 7.9 MB —
+else does.** `public/carousel_images/` averages 1.7 MB and one file is 8.1 MB —
 nearly the entire upload cap in a single image. Straight-from-the-phone uploads
 put you in the 6,000-photo range; resized webp puts you past 100,000.
 
-Which is why the upload route resizes — see the upload route in DEV-GUIDE.md.
-Do not remove it.
+Which is why the upload route has to resize before storing. The pattern is in
+DEV-GUIDE.md §4.1 — the route itself is not written yet, so this is a note for
+whoever builds it, not a safeguard already in place.
 
 D1 metadata is a non-issue: 100,000 `media_asset` rows is roughly 30 MB against
 a 500 MB per-database ceiling.
