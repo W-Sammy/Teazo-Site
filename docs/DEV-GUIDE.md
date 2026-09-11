@@ -1,13 +1,9 @@
 # TEAZO — Developer Guide
 
-For the six of you who are not Juan. This is everything you need to get a working
-database on your laptop, understand the schema, and build your feature. You will
-never create a Cloudflare resource, never deploy, and never write a migration —
-all of that lives in [`OPERATIONS.md`](./OPERATIONS.md), Juan's runbook (creating
-the D1 databases and R2 buckets, deploying the Worker and the app, migrations,
-backups and rollback, the go-live checklist, cost, and the Square production
-cutover). [`DATA-MODEL.md`](./DATA-MODEL.md) explains *why* the schema looks like
-this. This document explains *how to use it*.
+This is everything you need to get a working database on your laptop,
+understand the schema, and build your feature. Setting up the Cloudflare
+resources and the deploy pipeline is covered in
+[`OPERATIONS.md`](./OPERATIONS.md) — you will not need it day to day.
 
 **Source of truth for the schema is [`teazo-site/migrations/0001_init.sql`](../teazo-site/migrations/0001_init.sql).**
 If this guide and that file disagree, the file wins — tell whoever wrote this.
@@ -34,7 +30,7 @@ database and a local R2, and it will work unchanged when the real ones exist.
 5. [Syncing Square into D1](#5-syncing-square-into-d1)
 6. [Admin writes — the mutation contract](#6-admin-writes--the-mutation-contract)
 7. [Auth and middleware](#7-auth-and-middleware)
-8. [Asking for a schema change](#8-asking-for-a-schema-change)
+8. [Changing the schema](#8-changing-the-schema)
 9. [Table reference](#9-table-reference)
 10. [Gotchas](#10-gotchas)
 11. [Who builds what](#11-who-builds-what)
@@ -55,23 +51,11 @@ This is the part people assume will block them. It does not.
 |---|---|
 | Public pages, admin screens, anything reading or writing the database | **None.** Local database, and a proxy token you make up. |
 | Gallery uploads, media handling | **None** for local work — `wrangler dev` gives you a local R2 too. |
-| Square sync, menu work | The **Square sandbox access token**. Ask Juan. |
-| Deploying anything | You do not deploy. Juan does. |
+| Square sync, menu work | The **Square sandbox access token**. |
+| Deploying anything | **Nothing.** Merging to `main` deploys to production automatically — see [§1.4](#14-how-changes-reach-production). |
 
 So: unless you are touching Square, you can clone the repo and be productive
 without waiting on anyone.
-
-**When you do need a secret**, it comes from Juan directly through a password
-manager or a DM — never in the repo, never pasted into a shared channel, never
-in a commit message. If a token ever lands somewhere public, say so immediately
-rather than quietly deleting the message; it has to be rotated either way.
-
-`.env.local`, `.dev.vars`, and `.wrangler/` are all gitignored. Check before you
-commit anyway:
-
-```bash
-git status --short
-```
 
 ### 1.2 Your own sandbox database
 
@@ -106,23 +90,29 @@ experiment in.
 
 ### 1.3 Working rules — can two people change the database at once?
 
-Short answer: **yes for everyday work, no for schema changes.** The axis that
-matters is *which database* and *schema vs data* — not which tables you touch.
+Short answer: **yes.** Everyday work needs no coordination at all, and schema
+changes go through a pull request like any other code. What matters is *which
+database* you touch — not which tables.
 
 **Everyday development: unlimited parallelism, zero coordination.** Every
 developer has their own local database. Seven people can be inserting, deleting
 and dropping rows at the same second and none of it collides, because none of it
 is the same file. You never need to ask permission to work.
 
-**Schema changes: one person, always Juan.** Not because of locking, but because
-migrations are a shared, ordered, forward-only sequence. Wrangler records applied
-migrations by filename. If two people both write `0003_…sql`, the two databases
-diverge permanently and there is no revert command. So:
+**Schema changes: through a pull request, like everything else.** A migration
+is a new file in `teazo-site/migrations/`, reviewed and merged like any other
+change, and CI applies it when it merges ([§1.4](#14-how-changes-reach-production)).
+Two people adding migrations on separate branches is fine — wrangler tracks
+applied migrations by their full filename, so `0003_add_hours_note.sql` and
+`0003_add_event_rsvp.sql` both apply. How to write one is [§8](#8-changing-the-schema).
 
-- Do not add files to `teazo-site/migrations/`.
-- Do not edit a migration that already exists — it has already been applied
-  somewhere, so editing it means the change never runs there.
-- Ask for the schema change you need. It is fast.
+The one rule that is not negotiable:
+
+- **Never edit a migration that has already been merged.** Wrangler has recorded
+  it as applied and will never run it again, so your edit silently does nothing
+  on every database that already has it — while a fresh database gets the edited
+  version. The environments drift apart with no error anywhere. Write a new
+  migration instead.
 
 **The shared preview database: several people at once is fine.** SQLite
 serializes writes for you, so you cannot corrupt it by writing at the same
@@ -131,15 +121,39 @@ a ghost. Announce it in the channel before you do anything destructive there.
 
 > The intuition that "multiple people are fine as long as they use different
 > tables" is not the right model here. Concurrent *data* writes are safe on any
-> table, because the engine handles them. Concurrent *migrations* are unsafe
-> even on completely unrelated tables, because they share one numbered sequence.
+> table, because the engine handles them. And for *schema* changes the table
+> does not matter either — what matters is that a merged migration is never
+> edited again.
 
 **Production: nobody, ever, by hand.** Not `wrangler d1 execute --remote`, not
-the dashboard console. Changes reach production through a migration Juan applies
-and a deploy. If production data needs fixing, that is a migration too, so there
-is a record of it.
+the dashboard console. Changes reach production by merging to `main`
+([§1.4](#14-how-changes-reach-production)). If production data needs fixing,
+that is a migration too, so there is a record of it.
 
-### 1.4 The one rule
+### 1.4 How changes reach production
+
+Nobody deploys by hand. Merging is deploying.
+
+| When you merge into | What happens, automatically |
+|---|---|
+| a pull request | CI checks that every migration applies cleanly to a fresh database and that the proxy Worker typechecks. Vercel builds a preview of your branch. |
+| `dev` | Migrations are applied to the shared **preview** database, the preview Worker is redeployed, and Vercel rebuilds the `dev` preview. |
+| `main` | Migrations are applied to **production**, the proxy Worker is redeployed, and then the app goes live on Vercel — in that order. |
+
+The order on `main` is deliberate: the schema lands before the code that reads
+it, and if a migration fails, the app does not ship. The whole pipeline is one
+file, `.github/workflows/deploy.yml`.
+
+Two consequences worth knowing:
+
+- **A pull request's Vercel preview uses the shared preview database, which does
+  not have that branch's migrations yet** — they apply only once it merges to
+  `dev`. If your change touches the schema, test it locally, not on its preview
+  URL.
+- **A merge to `main` is a production deploy.** Review pull requests into `main`
+  with that in mind.
+
+### 1.5 The one rule
 
 > **Square owns the catalog. D1 owns a copy plus the curation Square cannot express.**
 
@@ -151,7 +165,7 @@ front of a customer.
 
 What D1 legitimately owns is in [§5.1](#51-what-we-cache-vs-what-we-own).
 
-### 1.5 Where the app stands
+### 1.6 Where the app stands
 
 Worth knowing before you pick something up — much less is wired than it looks:
 
@@ -184,8 +198,8 @@ over HTTP exactly as it will in production.
 Teazo-Site/
 ├── teazo-site/            Next.js app  →  deployed to Vercel
 │   ├── app/               where you work
-│   └── migrations/        the D1 schema — read it, do not add to it (§8)
-└── teazo-d1-proxy/        Cloudflare Worker  →  Juan deploys this
+│   └── migrations/        the D1 schema — changed through pull requests (§8)
+└── teazo-d1-proxy/        Cloudflare Worker  →  deployed by CI on merge
     ├── src/index.ts       /query, /batch, and the scheduled sweeper
     └── wrangler.jsonc     the only file in the repo with Cloudflare bindings
 ```
@@ -252,17 +266,16 @@ In `teazo-d1-proxy/package.json` (already there):
 npm run dev                  # proxy against local D1
 npm run dev:cron             # same, plus a triggerable scheduled handler
 npm run db:migrate:local     # apply migrations to the local D1
-npm run db:migrate:prod      # apply to the remote production D1
-npm run db:backup            # wrangler d1 export -> backup.sql
-npm run deploy               # ship the Worker
+npm run db:backup            # wrangler d1 export -> backup.sql (a read)
 npm run tail                 # live logs from the deployed Worker
 ```
 
 There is deliberately no unsuffixed `db:migrate`. `--local` and `--remote`
 should never be one typo apart.
 
-Of these, you use `dev`, `dev:cron` and `db:migrate:local`. The `:prod`,
-`deploy`, `backup` and `tail` scripts are Juan's — see OPERATIONS.md.
+Of these, you use `dev`, `dev:cron` and `db:migrate:local`; `db:backup` and
+`tail` read from what is deployed. There is no `deploy` script — deploying
+is merging ([§1.4](#14-how-changes-reach-production)).
 
 ### 2.4 Environment variables you need locally
 
@@ -276,16 +289,16 @@ Local dev uses `teazo-site/.env.local` for the app and
 |---|---|---|
 | `D1_PROXY_URL` | `teazo-site/.env.local` | `http://127.0.0.1:8787` — your locally running proxy |
 | `PROXY_TOKEN` | `teazo-site/.env.local` **and** `teazo-d1-proxy/.dev.vars` | same value both sides; locally it is one you make up, e.g. `local-dev-token` |
-| `SQUARE_ACCESS_TOKEN` | `teazo-site/.env.local` | sandbox today — ask Juan |
+| `SQUARE_ACCESS_TOKEN` | `teazo-site/.env.local` | sandbox today |
 | `SQUARE_ENV` | `teazo-site/.env.local` | `sandbox` \| `production` |
 
 If you are doing media work you need nothing else: `wrangler dev` gives you a
 local R2 too. The R2 variables the deployed app uses — `R2_ACCOUNT_ID`,
 `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` (`teazo-media`, also
 written to `media_asset.r2_bucket`) and `R2_PUBLIC_BASE` (`https://media.teazosf.com`,
-the R2 custom domain) — are set by Juan on Vercel. Ask him if you genuinely need
-keys against the real bucket. Production and preview values, and the scoping
-rules for them, are in OPERATIONS.md.
+the R2 custom domain) — are set on the Vercel project, not in your
+`.env.local`. Production and preview values, and the scoping rules for them,
+are in OPERATIONS.md.
 
 ### 2.5 The client
 
@@ -369,8 +382,8 @@ that should ever call them:
 only intended caller is our own Next.js server, which is exactly as trusted as
 the database itself. The security property that matters is therefore *the token
 never reaches the browser* — it is a server-only environment variable and must
-never be named `NEXT_PUBLIC_*`. If you think a token has leaked, tell Juan;
-rotating it is his job.
+never be named `NEXT_PUBLIC_*`. If you think a token has leaked, say so
+immediately so it can be rotated.
 
 ### 2.6 `/batch` is the only transaction
 
@@ -847,7 +860,7 @@ size and content type from R2 rather than trusting the client.
 Every `<img>` reads from `https://media.teazosf.com` — the R2 custom domain,
 CDN-cached, no credential, never through Vercel. **It is already set up for
 you:** attaching the custom domain to the bucket and adding the Cache Everything
-rule are Juan's — see OPERATIONS.md. All you do is build the URL with
+rule are one-time setup, covered in OPERATIONS.md. All you do is build the URL with
 `toPublicUrl()` ([§4.1](#41-the-rule-the-database-stores-a-key-never-a-url)).
 
 > **Do not use the `r2.dev` subdomain.** Cloudflare states it is
@@ -877,7 +890,7 @@ export const allowedHosts = [
 ];
 ```
 
-(The cutover that comment refers to is Juan's — see OPERATIONS.md.)
+(That cutover is covered in OPERATIONS.md.)
 
 Miss this and every `<Image>` of our own media fails with an "hostname is not
 configured" error at runtime, not at build time.
@@ -885,7 +898,7 @@ configured" error at runtime, not at build time.
 > `public/carousel_images/dried_leaves.jpg` is **8.1 MB**. The optimizer will
 > serve a resized derivative, but it still has to fetch and process the
 > original on the first request. Those originals get resized when the existing
-> `public/` assets move into R2 — Juan runs that migration, see OPERATIONS.md.
+> `public/` assets move into R2 — a one-time job, covered in OPERATIONS.md.
 
 ### 4.8 Deletion — three steps, in this order
 
@@ -922,8 +935,9 @@ await batch([
 
 Bytes are **not** deleted here. A sweeper running in the proxy Worker drains
 `pending_r2_deletion` after a 24-hour grace period, and that gap is the only
-undo window the media pipeline has. The sweeper is Juan's to deploy and run —
-see OPERATIONS.md. Once it has run, the bytes are gone: R2 has no versioning.
+undo window the media pipeline has. The sweeper ships inside the proxy Worker,
+so the pipeline deploys it with everything else. Once it has run, the bytes
+are gone: R2 has no versioning.
 
 Because the app catches `D1Error` and reads its message, a trigger firing
 anyway (a race, a missed usage check) still produces a sensible 409 rather than
@@ -1103,7 +1117,7 @@ public page while the admin's curation survives if Square restores it.
 > inherent to keying on Square ids, and worth telling the client.
 
 Build everything against `SQUARE_ENV=sandbox`. Moving the site onto the real
-production catalog is a separate, manual piece of work Juan runs — see
+production catalog is a separate, one-time piece of work — see
 OPERATIONS.md. It matters to you only in that curation you build now is keyed to
 sandbox object ids.
 
@@ -1326,46 +1340,64 @@ Sign-in flow: Google returns `sub` → look up `oauth_account` → if none, chec
 
 ---
 
-## 8. Asking for a schema change
+## 8. Changing the schema
 
-You will hit a column that does not exist. That is expected, and the fix is a
-message to Juan, not a file.
+You will hit a column that does not exist. That is expected. A schema change is
+a migration file, and it goes through a pull request like any other code.
+
+**Writing one:**
+
+1. Add the next-numbered file to `teazo-site/migrations/`. Look at the highest
+   number there and add one, with a descriptive name —
+   `0003_add_event_rsvp.sql`, not `0003.sql`. The name is what keeps two
+   people's migrations from colliding.
+2. Apply it to your own database and check it does what you meant:
+
+   ```bash
+   cd teazo-d1-proxy && npm run db:migrate:local
+   ```
+
+3. Open a pull request. CI applies every migration to a fresh database, so
+   broken SQL fails the check before it can reach anything real. Pull requests
+   that touch `teazo-site/migrations/` automatically request a review from the
+   schema's code owner.
+4. Once it merges, CI applies it — to preview on `dev`, to production on
+   `main`. Everyone else picks it up with `npm run db:migrate:local`, or a
+   reset ([§1.2](#12-your-own-sandbox-database)).
 
 **Do not:**
 
-- Add a file to `teazo-site/migrations/`. Wrangler records applied migrations by
-  filename; two people writing `0003_…sql` diverges the databases permanently and
-  there is no revert command.
-- Edit a migration that already exists. It has already been applied somewhere, so
-  editing it means the change never runs there and environments silently diverge.
+- **Edit a migration that has already been merged.** It is recorded as applied,
+  so the edit never runs anywhere that already has it — while a fresh database
+  gets the edited version. Environments drift apart with no error. Write a new
+  migration instead.
 - Run anything against production or the shared preview database by hand.
 
-**Do:** ask. It is usually a five-minute change, and going through one person is
-what keeps everyone's database identical. Include:
+**Get these right the first time** — SQLite makes several of them expensive to
+change later:
 
-- **The table** — the existing one it goes on, or the name you want for a new one.
-- **The columns** — name, type (`TEXT`/`INTEGER`/no `BOOLEAN`, no `ENUM`), nullable
-  or not, default, and any `CHECK` or foreign key it needs.
-- **What reads it** — the page or route, and roughly the query, so the index
-  question can be answered at the same time.
-- **What writes it** — which admin screen or sync path, and whether it has to be
-  atomic with anything else (that decides whether it lands in one `/batch`).
+- **Types** — `TEXT` or `INTEGER`. There is no `BOOLEAN` (use `INTEGER 0/1` with
+  a `CHECK`) and no `ENUM` (use `TEXT` with a `CHECK`).
+- **Constraints** — nullable or not, the default, and any `CHECK` or foreign
+  key. `ALTER TABLE` cannot add a `CHECK` or `FOREIGN KEY` afterwards.
+- **What reads it** — the page or route and roughly the query, so the index goes
+  in the same migration.
+- **What writes it** — and whether it has to be atomic with anything else,
+  which decides whether the writes share one `/batch`.
 
-Two things worth knowing before you ask, because they change how big the request
-is:
+**How big the change is:**
 
-- **Additive is cheap.** A new table, a new index, a **nullable** column or a
-  trigger can ship before the app that uses it — the old app ignores what it does
-  not know about.
+- **Additive is easy.** A new table, index, **nullable** column or trigger can go
+  in a single pull request. CI applies the migration before the app deploys, so
+  the new code finds its column waiting.
 - **Tightening is not.** Dropping or renaming a column, or adding `NOT NULL`,
-  takes two separate deploys, because the outgoing app version is still writing
-  that column while it drains. A rename is three phases. Adding a `CHECK` or a
-  `FOREIGN KEY` is harder still — SQLite's `ALTER TABLE` cannot do it at all, so
-  it needs a full 12-step table rebuild. Ask early for any of these.
-
-Juan applies the migration and tells you when it has landed; you then re-run
-`npm run db:migrate:local` (or reset, [§1.2](#12-your-own-sandbox-database)) to
-pick it up. The deploy sequencing is his — see OPERATIONS.md.
+  has to be split into **two pull requests merged separately**: first the app
+  change that stops using the column, then the migration. CI always runs
+  migrations *before* the app, which is right for additive changes and wrong for
+  these — merged together, the migration would pull the column out from under
+  the version still serving traffic. A rename is three phases. Adding a `CHECK`
+  or `FOREIGN KEY` needs SQLite's 12-step table rebuild. Raise any of these in
+  the channel before you start.
 
 ---
 
@@ -1519,10 +1551,10 @@ is roughly one sprint for one developer and closes a real defect.
 | 4 | Site content | Karen can edit the site without a deploy | [§3](#3-the-read-path--getting-data-to-the-frontend), [§6.4](#64-website-content) |
 | 5 | Square sync + menu | replaces the 787-line mock menu | [§5](#5-syncing-square-into-d1), [§6.5](#65-menu-curation) |
 | 6 | Events | `/admin/events` has nothing to read | [§6.6](#66-events-hours-links-contact-inbox) |
-| 0 | **Proxy Worker + sweeper** | nothing can reach the database without it | Juan's — OPERATIONS.md |
+| 0 | **Proxy Worker + sweeper** | nothing can reach the database without it | deployed by CI — OPERATIONS.md |
 
 Slice 5 depends on the variations fix in [§5.2](#52-prerequisite-fix-the-variations-bug-first).
-The sweeper is small but unowned — give it to someone.
+The sweeper is already written; it deploys with the Worker.
 
 ### Still to decide
 

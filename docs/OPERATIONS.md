@@ -1,10 +1,10 @@
 # TEAZO — Setup, Deployment and Operations
 
-This is Juan's runbook. It covers the things only one person does on this project:
-creating the Cloudflare resources, writing and applying migrations, deploying the D1
-proxy Worker, holding the secrets, and taking the site live. If you are not Juan, the
-document you want is [`DEV-GUIDE.md`](./DEV-GUIDE.md) — the team's guide to building
-against the database and object storage. [`DATA-MODEL.md`](./DATA-MODEL.md) explains
+This is the runbook for the infrastructure: creating the Cloudflare
+resources, setting up the deploy pipeline and its secrets, and taking the site
+live. After that one-time setup, **deploys happen by merging** — nobody runs them
+by hand. If you are building features, the document you want is
+[`DEV-GUIDE.md`](./DEV-GUIDE.md). [`DATA-MODEL.md`](./DATA-MODEL.md) explains
 *why* the schema looks like this.
 
 **Source of truth for the schema is [`teazo-site/migrations/0001_init.sql`](../teazo-site/migrations/0001_init.sql).**
@@ -28,13 +28,13 @@ If this guide and that file disagree, the file wins.
 3. [The architecture, and why there is a proxy Worker](#3-the-architecture-and-why-there-is-a-proxy-worker)
 4. [The proxy Worker](#4-the-proxy-worker)
 5. [Environment variables](#5-environment-variables)
-6. [The three deployables](#6-the-three-deployables)
+6. [How deploys happen](#6-how-deploys-happen)
 7. [Production and preview](#7-production-and-preview)
 8. [Serving media from the R2 custom domain](#8-serving-media-from-the-r2-custom-domain)
 9. [Migrating existing assets into R2](#9-migrating-existing-assets-into-r2)
 10. [The sweeper](#10-the-sweeper)
 11. [Deploy order for a schema change](#11-deploy-order-for-a-schema-change)
-12. [Handling a schema change request](#12-handling-a-schema-change-request)
+12. [Reviewing a schema change](#12-reviewing-a-schema-change)
 13. [Go-live checklist](#13-go-live-checklist)
 14. [Square sandbox → production cutover](#14-square-sandbox--production-cutover)
 15. [Rollback and backups](#15-rollback-and-backups)
@@ -47,29 +47,26 @@ If this guide and that file disagree, the file wins.
 
 | Area | What that means |
 |---|---|
-| **Database schema & migrations** | Writes and applies every migration. Nobody else adds files to `teazo-site/migrations/`. |
-| **D1 proxy Worker** | Owns `teazo-d1-proxy/`, deploys it, holds its secret. |
-| **Cloudflare resources** | Creates the D1 databases and R2 buckets, attaches the custom domain, sets secrets, applies migrations to preview and production. |
+| **Database schema** | Reviews every migration pull request — `.github/CODEOWNERS` routes them here. Migrations are applied by the pipeline, never by hand. |
+| **D1 proxy Worker** | Owns `teazo-d1-proxy/` and its secret. Deployed by the pipeline. |
+| **Cloudflare resources & the pipeline** | Creates the D1 databases and R2 buckets once, attaches the custom domain, and sets up the deploy pipeline ([§6](#6-how-deploys-happen)). After that, deploys happen on merge. |
 
 Concretely, the state of that work:
 
 - The 26-table schema in `teazo-site/migrations/` — written, validated, **done**.
 - The D1 proxy Worker in `teazo-d1-proxy/` — written and tested locally, **done**.
+- The deploy pipeline — `.github/workflows/deploy.yml` and `.github/CODEOWNERS`
+  — written, **done**. Switched off until its secrets exist
+  ([§6.1](#61-setting-the-pipeline-up)).
 - Creating the real D1 databases and R2 buckets, wiring the custom domain, and
-  applying migrations. **Blocked** — see [§2](#2-blockers-today).
-- Any future schema change. The team is told to ask rather than write migrations
-  themselves — the procedure for handling a request is [§12](#12-handling-a-schema-change-request).
-- Handing out the Square sandbox token and, if anyone needs them, R2 keys.
-
-**Secrets.** They go to a developer directly through a password manager or a DM —
-never in the repo, never pasted into a shared channel, never in a commit message. If a
-token ever lands somewhere public it has to be rotated either way, so a quiet deletion
-helps nobody. `.env.local`, `.dev.vars`, and `.wrangler/` are all gitignored.
+  turning the pipeline on. **Blocked** — see [§2](#2-blockers-today).
+- Reviewing schema changes. The team opens migrations as pull requests;
+  [§12](#12-reviewing-a-schema-change) is what to check before approving one.
 
 **Most of the team needs no credentials at all.** Public pages, admin screens and
 gallery work all run against a local D1 and a local R2 with a made-up proxy token.
-Only Square work needs a real secret (the sandbox access token). Nobody but me
-deploys.
+Only Square work needs a real secret (the sandbox access token). Nobody deploys
+by hand — merging does ([§6](#6-how-deploys-happen)).
 
 Everything else — the read path, the mutation contract, auth, the table reference, the
 query API, local setup — lives in `DEV-GUIDE.md`.
@@ -80,17 +77,22 @@ query API, local setup — lives in `DEV-GUIDE.md`.
 
 **The schema and the proxy Worker are finished and tested. Nothing is deployed.**
 
-Two things are blocking deployment, both outside the code:
+Three things are blocking deployment, all outside the code:
 
 1. **The team's Cloudflare account has to be confirmed.** The one currently
-   authenticated on Juan's machine is personal, and resources created there would
+   authenticated locally is a personal one, and resources created there would
    not be reachable by the rest of you.
 2. **R2 is not enabled yet.** It needs the checkout flow completed in the
    dashboard — a card on the account. It still costs **$0**; the free allowance
    covers this project many times over ([§16](#16-running-it-free)). Until then
    the API returns error 10042.
+3. **Turning the pipeline on needs admin on the GitHub repository.** Actions
+   secrets and branch protection rules can only be set by a repository admin. The
+   repository belongs to the `W-Sammy` account and the infrastructure owner has
+   write access, not admin — so either the repository owner makes those two
+   changes ([§6.1](#61-setting-the-pipeline-up)) or grants admin.
 
-Neither blocks the team. Everything in `DEV-GUIDE.md` can be built against a local
+None of them blocks the team. Everything in `DEV-GUIDE.md` can be built against a local
 database and a local R2, and it will work unchanged when the real ones exist. But
 nothing in [§13](#13-go-live-checklist) can start until both are cleared.
 
@@ -209,14 +211,14 @@ In `teazo-d1-proxy/package.json` (already there):
 npm run dev                  # proxy against local D1
 npm run dev:cron             # same, plus a triggerable scheduled handler
 npm run db:migrate:local     # apply migrations to the local D1
-npm run db:migrate:prod      # apply to the remote production D1
-npm run db:backup            # wrangler d1 export -> backup.sql
-npm run deploy               # ship the Worker
+npm run db:backup            # wrangler d1 export -> backup.sql (a read)
 npm run tail                 # live logs from the deployed Worker
 ```
 
-There is deliberately no unsuffixed `db:migrate`. `--local` and `--remote`
-should never be one typo apart.
+There are deliberately **no `deploy` or `db:migrate:prod` scripts**. Deploys and
+remote migrations run only in the pipeline ([§6](#6-how-deploys-happen)); a
+one-word shortcut for doing either by hand would just be a convenient way around
+review.
 
 ---
 
@@ -247,20 +249,107 @@ way to lose real data on this stack.
 
 ---
 
-## 6. The three deployables
+## 6. How deploys happen
 
-Three things get deployed, to two vendors, by two toolchains. Most deployment
-confusion on this project is really confusion about which of the three you are
-touching.
+Nobody deploys by hand. Merging is deploying, and the whole pipeline is one file:
+`.github/workflows/deploy.yml`.
+
+| When code merges into | The pipeline does |
+|---|---|
+| a pull request into `dev` or `main` | **validate** — typechecks the proxy Worker and applies every migration to a fresh local D1 on the runner. No credentials involved. |
+| `dev` | validate, then **preview**: migrate `teazo-db-preview`, deploy the preview Worker. Vercel builds the `dev` preview itself. |
+| `main` | validate, then **production**, strictly in order: migrate `teazo-db` → deploy the proxy Worker → deploy the app to Vercel production. |
+
+**Why production is sequenced by the pipeline, not by Vercel.** The schema has to
+exist before the app that reads it goes live ([§11](#11-deploy-order-for-a-schema-change)).
+If Vercel deployed `main` on its own the moment the commit landed, it would race the
+migration. So at setup, `teazo-site/vercel.json` switches off Vercel's automatic
+deploy for `main` — and only `main`:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": { "deploymentEnabled": { "main": false } }
+}
+```
+
+That file is deliberately **not in the repo yet** — it goes in at the same moment
+the pipeline is switched on. [§6.1](#61-setting-the-pipeline-up) explains why.
+
+The workflow deploys the app itself, as its last step, only after the migration and
+the Worker have both succeeded. **A failed migration stops the app from shipping.**
+Every other branch — `dev` and every pull request — still gets Vercel's automatic
+preview. This is Vercel's documented pattern for deploying from CI: `vercel pull`,
+`vercel build --prod`, then `vercel deploy --prebuilt --prod`.
+
+**Runs never overlap.** The workflow's `concurrency` group allows one run per branch
+at a time and never cancels one in progress — a half-applied migration run is far
+worse than a queued one.
 
 | Deployable | Lives in | Deployed by | Holds |
 |---|---|---|---|
-| Next.js app | `teazo-site/` | Vercel (git push) | all UI and API routes |
-| D1 proxy Worker | `teazo-d1-proxy/` | `npx wrangler deploy` | the only Cloudflare bindings; the sweeper |
-| D1 database + R2 bucket | Cloudflare | `wrangler d1/r2 create`, then migrations | the data |
+| Next.js app | `teazo-site/` | the pipeline on `main`; Vercel's Git integration for previews | all UI and API routes |
+| D1 proxy Worker | `teazo-d1-proxy/` | the pipeline, on `dev` and `main` | the only Cloudflare bindings; the sweeper |
+| D1 database + R2 bucket | Cloudflare | created once by hand ([§13](#13-go-live-checklist)); schema by the pipeline | the data |
 
-On Vercel, set the project's **Root Directory to `teazo-site`** — the repo root
-is not the app.
+On Vercel, set the project's **Root Directory to `teazo-site`** — the repo root is
+not the app. The pipeline runs `vercel` from the repo root and relies on that
+setting, which `vercel pull` fetches.
+
+### 6.1 Setting the pipeline up
+
+One-time. After this, nobody touches a deploy again. **Everything in this
+subsection needs admin on the repository** — see [§2](#2-blockers-today).
+
+**GitHub Actions secrets** — Settings → Secrets and variables → Actions:
+
+| Secret | What |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | a Cloudflare API token with **Account › D1 › Edit** and **Account › Workers Scripts › Edit** — nothing broader |
+| `CLOUDFLARE_ACCOUNT_ID` | the team Cloudflare account's id |
+| `VERCEL_TOKEN` | a Vercel access token from the team's Vercel account |
+| `VERCEL_ORG_ID` | from `.vercel/project.json`, after running `vercel link` once locally |
+| `VERCEL_PROJECT_ID` | the same file |
+
+**Branch protection on `main`** — Settings → Branches — because a merge to `main` is
+a production deploy:
+
+- Require a pull request before merging, with at least one approval.
+- Require the **Validate schema and Worker** status check to pass.
+- Require review from Code Owners. `.github/CODEOWNERS` routes pull requests that
+  touch the schema, the Worker or the pipeline to their owner.
+- Do not allow bypassing the above.
+
+> **A sole code owner cannot approve their own pull requests.** With only one
+> account listed in `CODEOWNERS`, that person's own schema changes could never
+> satisfy "Require review from Code Owners". Add a second owner for those paths
+> before turning the setting on.
+
+Apply at least the status check to `dev` as well, so broken SQL cannot reach the
+preview database either.
+
+**Commit the database ids.** `wrangler d1 create` prints an id for each database.
+Put both into `teazo-d1-proxy/wrangler.jsonc` in a pull request — they are
+identifiers, not secrets, and the pipeline cannot run without them.
+
+**Switch it on — last, and both together:**
+
+1. Set the repository **variable** `DEPLOYS_ENABLED` to `true` — Settings →
+   Secrets and variables → Actions → Variables. Until it is `true`, the deploy
+   jobs are skipped: pull requests are still validated, and nothing is deployed.
+2. Add `teazo-site/vercel.json`, with the contents shown in
+   [§6](#6-how-deploys-happen), in a pull request.
+
+> **Do these two together, never one alone.** `vercel.json` stops Vercel deploying
+> `main` by itself; `DEPLOYS_ENABLED` lets the pipeline do it instead. The file
+> without the variable means merges to `main` **stop reaching production at all,
+> silently** — which is exactly what would happen if the file were committed
+> today and rode along on an ordinary `dev` → `main` merge before setup is
+> finished. The variable without the file means `main` deploys twice, and Vercel's
+> copy races the migration.
+
+`DEPLOYS_ENABLED` is also the **emergency brake**: set it to anything other than
+`true` and every deploy stops, while pull requests keep being validated.
 
 ---
 
@@ -270,7 +359,7 @@ is not the app.
 |---|---|---|
 | D1 | `teazo-db` | `teazo-db-preview` |
 | R2 | `teazo-media` | `teazo-media-preview` |
-| Worker | `wrangler deploy` | `wrangler deploy --env preview` |
+| Worker | the pipeline, on merge to `main` | the pipeline, on merge to `dev` |
 | `PROXY_TOKEN` | one value | **a different value** |
 
 > **Scope every Vercel environment variable.** Vercel applies unscoped
@@ -315,6 +404,12 @@ CDN caching on every read.
 ---
 
 ## 9. Migrating existing assets into R2
+
+> **This is the one sanctioned by-hand write to production.** Everything else
+> reaches production through the pipeline. Uploading the images that already
+> exist is a one-time bootstrap before launch — R2 objects cannot ship inside a
+> migration — so it is run once, by hand, against preview first and production
+> second.
 
 A one-time job, mine, not developer work. `public/` is 18 MB / 101 files. Split by
 **who owns the file**, not by type:
@@ -431,6 +526,12 @@ what the schema must tolerate, not what the new code wants:
 | New table, index, **nullable** column, or trigger | **migration first, app second** — the old app ignores what it does not know about |
 | Drop a column or table, rename, add `NOT NULL`, add a `CHECK` | **app first, migration second** — two separate deploys, because the old app is still writing that column while it drains |
 
+The pipeline always applies migrations **before** it deploys the app, so the
+first row is automatic. The second is not: a destructive change has to arrive as
+**two pull requests merged separately** — the app change first, the migration once
+that is live. Merged together, the pipeline would drop the column while the
+outgoing version is still using it.
+
 A **rename** is three phases: add the new column → dual-write and backfill →
 switch reads → stop writing the old one → drop it.
 
@@ -442,69 +543,61 @@ Two D1 complications:
 - **Migrations are forward-only.** There are no down migrations and
   `wrangler d1 migrations` has no revert command.
 
-> **Do not run migrations from the Vercel build.** Vercel builds run on every
-> push to every branch, so every preview build of unmerged work would apply its
-> branch's migrations to a shared database. Migrations are run deliberately, by
-> a person or a CI job gated on merge, with `npm run db:migrate:prod` from
-> `teazo-d1-proxy/`.
+> **Never run migrations from the Vercel build.** Vercel builds run on every push
+> to every branch, so every preview build of unmerged work would apply its
+> branch's migrations to a shared database. Migrations run in the GitHub Actions
+> pipeline, gated on merge to `dev` or `main` ([§6](#6-how-deploys-happen)) — and
+> nowhere else.
 
 ---
 
-## 12. Handling a schema change request
+## 12. Reviewing a schema change
 
-The team is told to ask for a column, table or index rather than adding it, because
-migrations are a shared, ordered, forward-only sequence and wrangler records applied
-migrations by filename. If two people both write `0003_…sql`, the databases diverge
-permanently and there is no revert command. So every request comes through here.
+Migrations arrive as pull requests from anyone on the team, and `CODEOWNERS` routes
+every one that touches `teazo-site/migrations/` here. Once it merges, the pipeline
+applies it — to preview on `dev`, to production on `main` — within minutes. So the
+review **is** the control point. Before approving:
 
-**The procedure.**
+1. **It is a new file, not an edit.** Never approve a change to a migration that
+   has already merged. Wrangler tracks applied migrations by full filename and skips
+   anything it has already recorded, so an edited file silently does nothing on
+   every database that already has it — while a fresh database gets the new
+   version. Verified: after editing an applied migration, `wrangler d1 migrations
+   apply` reports *"No migrations to apply!"* and the change never runs. The fix for
+   a bad migration is always a new one.
+2. **Two migrations sharing a number is fine** if the names differ.
+   `0003_add_x.sql` and `0003_add_y.sql` both apply, in filename order — also
+   verified. Check only that neither depends on the other in a way filename order
+   would break.
+3. **Classify it** against [§11](#11-deploy-order-for-a-schema-change). Additive
+   ships in one pull request. Destructive must arrive as two, with the app change
+   already merged and live. A single pull request that both stops using a column and
+   drops it goes back.
+4. **Types and constraints are what the table is stuck with.** SQLite cannot add a
+   `CHECK` or `FOREIGN KEY` afterwards without the 12-step table rebuild.
+5. **Think about the rows already in production.** The **Validate** check proves the
+   migration applies to a fresh, seeded database — not to production's data. A
+   `CREATE UNIQUE INDEX` passes on the seed and fails on a production table that
+   already holds duplicates.
+6. **Back up before merging anything destructive into `main`**
+   ([§15](#15-rollback-and-backups)). The pipeline applies it within minutes of the
+   merge, and destructive migrations are not reversible.
 
-1. **Take the request.** Get the actual column, table or index and what it is for. It
-   is usually a five-minute change.
-2. **Classify it** against the table in [§11](#11-deploy-order-for-a-schema-change).
-   New table, index, nullable column or trigger is additive: **migration first, app
-   second.** Dropping, renaming, adding `NOT NULL` or adding a `CHECK` is destructive:
-   **app first, migration second**, as two separate deploys. A rename is the
-   three-phase dance, not one migration. Adding a `CHECK` or `FOREIGN KEY` needs the
-   12-step table rebuild and counts as destructive work even though nothing is
-   removed.
-3. **Write the next file** in `teazo-site/migrations/` — `000N_*.sql`, taking the next
-   free number. Never edit a migration that already exists: wrangler tracks applied
-   migrations by name, so editing one means the change never runs where it has already
-   been applied, and environments silently diverge. Write `0003_fix_whatever.sql`.
-4. **Back up first if it is destructive** — see [§15](#15-rollback-and-backups).
-   Destructive migrations are not reversible; the only fix is a corrective migration.
-5. **Apply local and verify.**
+After it merges, the team picks it up locally with:
 
-   ```bash
-   cd teazo-d1-proxy && npm run db:migrate:local
-   ```
+```bash
+cd teazo-d1-proxy && npm run db:migrate:local
+```
 
-   Then check the change is actually there:
+or, for a clean seeded database:
 
-   ```bash
-   npx wrangler d1 execute teazo-db --local --command "SELECT day_of_week, display_text FROM business_hours ORDER BY day_of_week;"
-   ```
-
-6. **Apply to preview**, and let whatever depends on it be integration-tested there
-   before it goes near production.
-7. **Apply to production** with `npm run db:migrate:prod` — deliberately, from
-   `teazo-d1-proxy/`, never from a Vercel build.
-8. **Tell the team**, and tell them to re-run their local migrations:
-
-   ```bash
-   cd teazo-d1-proxy && npm run db:migrate:local
-   ```
-
-   A developer who wants a clean seeded database instead can reset:
-
-   ```bash
-   cd teazo-d1-proxy && rm -rf .wrangler/state && npm run db:migrate:local
-   ```
+```bash
+cd teazo-d1-proxy && rm -rf .wrangler/state && npm run db:migrate:local
+```
 
 > **Production: nobody, ever, by hand.** Not `wrangler d1 execute --remote`, not the
-> dashboard console. Changes reach production through a migration and a deploy. If
-> production data needs fixing, that is a migration too, so there is a record of it.
+> dashboard console. Changes reach production by merging to `main`. If production
+> data needs fixing, that is a migration too, so there is a record of it.
 
 ---
 
@@ -541,28 +634,53 @@ fields and the buckets have never been created. Work top to bottom.
    npx wrangler secret put PROXY_TOKEN --env preview
    ```
 
-8. Fill in every Vercel variable from [§5](#5-environment-variables), each
-   scoped to Production or Preview.
+   Worker secrets are the one thing the pipeline does not deploy: they live in
+   Cloudflare, not the repo, and survive every Worker deploy.
 
-**Schema**
+8. Fill in every Vercel variable from [§5](#5-environment-variables), each scoped
+   to Production or Preview. The preview `D1_PROXY_URL` points at the preview
+   Worker, `teazo-d1-proxy-preview.<sub>.workers.dev`.
 
-9. `npm run db:migrate:prod`, and the preview equivalent. `0002_seed.sql` is a
-   migration, so roles, hours, links and content blocks land in the same command.
-10. Verify: seven hour rows, Monday to Sunday, ending `11:00 AM - 8:00 PM`.
-11. Migrate `public/` assets into R2 per [§9](#9-migrating-existing-assets-into-r2).
+**Pipeline**
 
-**Deploy**
+9. Commit both database ids from step 2 into `teazo-d1-proxy/wrangler.jsonc`, in a
+   pull request.
+10. Add the five GitHub Actions secrets from [§6.1](#61-setting-the-pipeline-up).
+11. In Vercel, set **Root Directory** to `teazo-site`, and confirm the project's
+    **production branch** is `main` — the pipeline assumes it.
+12. Add `media.teazosf.com` to `app/lib/imageHosts.ts`, in a pull request,
+    **before** the first production deploy — every `<Image>` of our own media
+    fails without it.
+13. Turn on branch protection for `main` ([§6.1](#61-setting-the-pipeline-up)).
+14. **Switch the pipeline on** — set `DEPLOYS_ENABLED` and add
+    `teazo-site/vercel.json`, together ([§6.1](#61-setting-the-pipeline-up)).
 
-12. `npm run deploy` and `npm run deploy:preview` from `teazo-d1-proxy/`.
-13. Smoke-test the proxy before the app depends on it. The first call must fail:
+**First deploy**
+
+15. Merge to `dev`. The pipeline migrates `teazo-db-preview` — `0002_seed.sql` is a
+    migration, so roles, hours, links and content blocks arrive with the schema —
+    and deploys the preview Worker. Follow it in the repository's **Actions** tab.
+16. Smoke-test the preview Worker before anything depends on it. The first call
+    must fail:
 
     ```bash
-    curl -s -o /dev/null -w '%{http_code}\n' https://teazo-d1-proxy.<sub>.workers.dev/query
+    curl -s -o /dev/null -w '%{http_code}\n' https://teazo-d1-proxy-preview.<sub>.workers.dev/query
     ```
 
     That must print `405` for a GET, and `401` for a POST without the token.
-14. Add `media.teazosf.com` to `app/lib/imageHosts.ts` **before** deploying the app.
-15. Set Vercel's Root Directory to `teazo-site` and push.
+17. Upload the existing `public/` assets per
+    [§9](#9-migrating-existing-assets-into-r2) — to preview now, to production
+    after step 18.
+18. Merge `dev` into `main`. The pipeline migrates `teazo-db`, deploys the Worker,
+    and only then deploys the app to production.
+19. Confirm the seed landed — seven hour rows, Monday to Sunday, ending
+    `11:00 AM - 8:00 PM`:
+
+    ```bash
+    npx wrangler d1 execute teazo-db --remote --command "SELECT day_of_week, display_text FROM business_hours ORDER BY day_of_week;"
+    ```
+
+    That is a read, so it is no exception to "nobody touches production by hand".
 
 **Verify** — each failure points at exactly one step above:
 
@@ -574,9 +692,10 @@ fields and the buckets have never been created. Work top to bottom.
 | admin login → upload → image appears | R2 credentials, `/batch` |
 | delete an image → a `pending_r2_deletion` row exists | the deletion ordering in DEV-GUIDE.md |
 | `wrangler tail` shows the hourly sweep | the `triggers.crons` entry |
+| the `main` run in **Actions** shows migrate → Worker → Vercel, in that order | `teazo-site/vercel.json` missing — Vercel deployed on its own and raced the migration |
 | open a PR → its preview writes only to `teazo-db-preview` | env var scoping |
 
-16. Last, once all of the above is green: the Square cutover
+20. Last, once all of the above is green: the Square cutover
     ([§14](#14-square-sandbox--production-cutover)). It goes last because re-creating
     curation against production object ids is manual work that is wasted if
     anything before it has to be rebuilt.

@@ -1,0 +1,143 @@
+# Deploys on merge. Nobody deploys by hand.
+#
+#   pull request -> validate:   every migration applies cleanly to a fresh D1,
+#                               and the proxy Worker typechecks
+#   push to dev  -> preview:    migrate teazo-db-preview, deploy the preview Worker
+#                               (Vercel builds the dev preview itself, through
+#                               its own Git integration)
+#   push to main -> production, strictly in this order:
+#                     1. migrate teazo-db
+#                     2. deploy the proxy Worker
+#                     3. deploy the app to Vercel production
+#
+# The order is the point. The schema has to exist before the app that reads
+# it goes live, so at setup Vercel's automatic production deploy is switched
+# off (teazo-site/vercel.json) and the app is deployed from here, last, only
+# after the first two steps succeed. A failed migration stops the app shipping.
+#
+# OFF SWITCH: the preview and production jobs run only while the repository
+# variable DEPLOYS_ENABLED is "true". Until the Cloudflare resources and the
+# secrets below exist, leave it unset: pull requests are still validated and
+# nothing is deployed. It is also the emergency brake.
+#
+# Setup — secrets, branch protection, the Vercel project, and why vercel.json
+# goes in at the same moment DEPLOYS_ENABLED is set — is in docs/OPERATIONS.md.
+
+name: Deploy
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+# One run per branch at a time, and never cancel one mid-flight: a
+# half-applied migration run is far worse than a queued one.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate schema and Worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: teazo-d1-proxy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: teazo-d1-proxy/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck the Worker
+        run: npx tsc --noEmit
+
+      # Catches broken SQL before it can reach a real database. Runs against a
+      # throwaway local D1 on the runner — no credentials involved.
+      - name: Apply every migration to a fresh local D1
+        run: npx wrangler d1 migrations apply teazo-db --local
+
+  preview:
+    name: Deploy preview
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/dev' &&
+      vars.DEPLOYS_ENABLED == 'true'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: preview
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Migrate teazo-db-preview
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          workingDirectory: teazo-d1-proxy
+          command: d1 migrations apply teazo-db-preview --env preview --remote
+
+      - name: Deploy preview Worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          workingDirectory: teazo-d1-proxy
+          command: deploy --env preview
+
+  production:
+    name: Deploy production
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.DEPLOYS_ENABLED == 'true'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 1 · Migrate teazo-db
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          workingDirectory: teazo-d1-proxy
+          command: d1 migrations apply teazo-db --remote
+
+      - name: 2 · Deploy the proxy Worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          workingDirectory: teazo-d1-proxy
+          command: deploy
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Vercel's documented pattern for deploying from CI with automatic Git
+      # deployments disabled. Run from the repo root: the Vercel project's
+      # Root Directory setting (teazo-site) is pulled down by `vercel pull`.
+      - name: 3 · Deploy the app to Vercel production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install --global vercel@latest
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

@@ -5,13 +5,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "dev:cron": "wrangler dev --test-scheduled",
-    "deploy": "wrangler deploy",
-    "deploy:preview": "wrangler deploy --env preview",
     "tail": "wrangler tail teazo-d1-proxy",
     "typegen": "wrangler types --env-interface Env worker-env.d.ts",
     "db:migrate:local": "wrangler d1 migrations apply teazo-db --local",
-    "db:migrate:preview": "wrangler d1 migrations apply teazo-db-preview --env preview --remote",
-    "db:migrate:prod": "wrangler d1 migrations apply teazo-db --remote",
     "db:backup": "wrangler d1 export teazo-db --remote --output ./backup.sql"
   },
   "devDependencies": {
