@@ -37,6 +37,12 @@ const mediumMontserrat = Montserrat({
     weight: ['500']
 });
 
+const socialLinks = {
+  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
+  instagram: "https://www.instagram.com/teazosf/",
+  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
+};
+
 export default function Home() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
@@ -107,16 +113,17 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
 
                 {/*social media icons*/}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
-                    <a href="">
+                    
+                    <a href= {socialLinks.facebook}>
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href="">
                     <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={socialLinks.instagram}>
                     <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={socialLinks.yelp}>
                     <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
