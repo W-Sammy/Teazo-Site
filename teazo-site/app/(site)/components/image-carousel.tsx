@@ -37,8 +37,9 @@ useEffect(() => {
         );
     };
 
+    const leftImage = images[(index - 1 + images.length) % images.length] || "/fallback.png";
     const currentImage = images[index] || "/fallback.png";
-    const nextImage = images[(index + 1) % images.length] || "/fallback.png"; {/* for 2-image carousel like in Figma */}
+    const rightImage = images[(index + 1) % images.length] || "/fallback.png"; 
 
     return (
         <div className="relative w-full flex justify-center">
@@ -54,7 +55,19 @@ useEffect(() => {
                 </button>
 
                 {/* Left */}
-                <div className = "relative w-[400px] h-[600px]">
+                <div className = "absolute w-[300px] h-[500px] -translate-x-[250px] -rotate-6 z-10">
+
+                <Image
+                    src={leftImage}
+                    alt="previous image-carousel"
+                    fill
+                    className="object-cover rounded-xl" 
+                /> 
+                </div>
+
+                {/* Center */}  
+                <div className = " absolute w-[400px] h-[600px] z-30">
+
                 <Image
                     src={currentImage}
                     alt="image-carousel"
@@ -64,9 +77,9 @@ useEffect(() => {
                 </div>
 
                 {/* Right */}
-                <div className = "relative w-[400px] h-[600px] ml-2">
+                <div className = "absolute w-[300px] h-[500px] translate-x-[250px] rotate-6 z-10">
                 <Image
-                    src={nextImage}
+                    src={rightImage}
                     alt="image-carousel"
                     fill
                     className="object-cover rounded-xl"
