@@ -38,30 +38,45 @@ useEffect(() => {
     };
 
     const currentImage = images[index] || "/fallback.png";
+    const nextImage = images[(index + 1) % images.length] || "/fallback.png"; {/* for 2-image carousel like in Figma */}
 
     return (
-        <div className="relative w-full flex flex-col items-center">
+        <div className="relative w-full flex justify-center">
             {/* Image */}
-            <div className="relative w-full h-[300px] sm:h-[400px]">
-                <Image
-                    src={currentImage}
-                    alt="image-carousel"
-                    fill
-                    className="object-contain rounded-xl"
-                />
-                
+            <div className="flex items-center gap-20 justify-center"> {/* need images to fit next to each other */}
+
                 {/* LEFT BUTTON */}
                 <button
                     onClick={prevSlide}
-                    className="absolute left-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
+                    className=" bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60 mr-4 z-10"
                 >
                     ◀
                 </button>
 
+                {/* Left */}
+                <div className = "relative w-[400px] h-[600px]">
+                <Image
+                    src={currentImage}
+                    alt="image-carousel"
+                    fill
+                    className="object-cover rounded-xl" 
+                />  {/* switch to object-cover */}
+                </div>
+
+                {/* Right */}
+                <div className = "relative w-[400px] h-[600px] ml-2">
+                <Image
+                    src={nextImage}
+                    alt="image-carousel"
+                    fill
+                    className="object-cover rounded-xl"
+                />
+                </div>
+
                 {/* RIGHT BUTTON */}
                 <button
                     onClick={nextSlide}
-                    className="absolute right-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
+                    className=" bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60 m1-4 z-10"
                 >
                     ▶
                 </button>

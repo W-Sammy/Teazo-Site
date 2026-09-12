@@ -86,7 +86,7 @@ export default function Home() {
             </div>
 
             {/*import image carousel*/}
-                <div className="relative z-10 flex justify-center items-center px-4">
+                <div className="relative z-10 flex justify-center px-4">
                 <ImageCarousel />
             </div>       
         
