@@ -63,7 +63,7 @@ export default function HolidayCard({
         <button
           type="button"
           onClick={onRemove}
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2]"
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2]"
         >
           <span className="text-[10px] leading-none">✕</span>
         </button>
@@ -86,7 +86,7 @@ export default function HolidayCard({
           <select
             value={month || ""}
             onChange={(e) => setMonth(e.target.value)}
-            className={`${fieldClass(Boolean(dateError))} bg-white`}
+            className={`${fieldClass(Boolean(dateError))} cursor-pointer bg-white`}
           >
             <option value="" disabled>
               Month
@@ -101,7 +101,7 @@ export default function HolidayCard({
             value={day || ""}
             onChange={(e) => setDay(e.target.value)}
             disabled={!month}
-            className={`${fieldClass(Boolean(dateError))} !w-[70px] bg-white disabled:text-gray-400`}
+            className={`${fieldClass(Boolean(dateError))} !w-[70px] cursor-pointer bg-white disabled:cursor-default disabled:text-gray-400`}
           >
             <option value="" disabled>
               Day

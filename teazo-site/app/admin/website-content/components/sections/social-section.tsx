@@ -139,7 +139,7 @@ export default function SocialSection({
                 <button
                   type="button"
                   onClick={() => onRemoveLink(link.id)}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2]"
+                  className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2]"
                 >
                   <span className="text-[10px] leading-none">✕</span>
                 </button>
