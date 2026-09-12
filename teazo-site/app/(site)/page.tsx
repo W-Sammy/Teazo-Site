@@ -116,16 +116,16 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                 {/*social media icons*/}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
                     
-                    <a href= {socialLinks.facebook}>
+                    <a href= {socialLinks.facebook} target="_blank">
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href={emailHref}>
                     <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href={socialLinks.instagram}>
+                    <a href={socialLinks.instagram} target="_blank">
                     <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href={socialLinks.yelp}>
+                    <a href={socialLinks.yelp} target="_blank">
                     <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
