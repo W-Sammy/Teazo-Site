@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, JSX } from "react";
+import { useState, JSX, useEffect } from "react"; 
 
 export default function ImageCarousel(): JSX.Element {
     const images: string[] = [
@@ -13,6 +13,17 @@ export default function ImageCarousel(): JSX.Element {
     ];
 
     const [index, setIndex] = useState<number>(0);
+
+{/* Transition Timer */}    
+useEffect(() => {
+    const timer = setInterval(() => {
+        setIndex((prev) =>
+            prev === images.length - 1 ? 0 : prev + 1
+        );
+    }, 5000);
+    
+    return () => clearInterval(timer);
+}, [images.length]);
 
     const prevSlide = (): void => {
         setIndex((prev) =>
@@ -26,34 +37,49 @@ export default function ImageCarousel(): JSX.Element {
         );
     };
 
+    const leftImage = images[(index - 1 + images.length) % images.length] || "/fallback.png";
     const currentImage = images[index] || "/fallback.png";
+    const rightImage = images[(index + 1) % images.length] || "/fallback.png"; 
 
     return (
-        <div className="relative w-full flex flex-col items-center">
+        <div className="relative w-full flex justify-center">
             {/* Image */}
-            <div className="relative w-full h-[300px] sm:h-[400px]">
+            <div className="flex items-center gap-20 justify-center"> {/* need images to fit next to each other */}
+
+                {/* Left */}
+                <div className = "absolute w-75 h-125 -translate-x-62.5 -rotate-6 z-10">
+
+                <Image
+                    src={leftImage}
+                    alt="previous image-carousel"
+                    fill
+                    sizes = "10w"
+                    className="object-cover rounded-xl" 
+                /> 
+                </div>
+
+                {/* Center */}  
+                <div className = " absolute w-100 h-150 z-30">
+
                 <Image
                     src={currentImage}
                     alt="image-carousel"
                     fill
-                    className="object-contain rounded-xl"
-                />
-                
-                {/* LEFT BUTTON */}
-                <button
-                    onClick={prevSlide}
-                    className="absolute left-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
-                >
-                    ◀
-                </button>
+                    sizes = "12w"
+                    className="object-cover rounded-xl" 
+                />  {/* switch to object-cover */}
+                </div>
 
-                {/* RIGHT BUTTON */}
-                <button
-                    onClick={nextSlide}
-                    className="absolute right-1/4 top-1/2 -translate-y-1/2 bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60"
-                >
-                    ▶
-                </button>
+                {/* Right */}
+                <div className = "absolute w-75 h-125 translate-x-62.5 rotate-6 z-10">
+                <Image
+                    src={rightImage}
+                    alt="image-carousel"
+                    fill
+                    sizes = "10w"
+                    className="object-cover rounded-xl"
+                />
+                </div>
             </div>
         </div>
         

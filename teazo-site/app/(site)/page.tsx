@@ -37,6 +37,14 @@ const mediumMontserrat = Montserrat({
     weight: ['500']
 });
 
+const socialLinks = {
+  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
+  instagram: "https://www.instagram.com/teazosf/",
+  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
+};
+
+const emailHref = 'mailto:$(location.email)'
+
 export default function Home() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
@@ -77,7 +85,7 @@ export default function Home() {
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
             <div className="mt-6 flex w-full items-center justify-center">
-                <GeneralButton text="ORDER NOW" href="" />    
+                <GeneralButton text="ORDER NOW" href="/menu" />    
                 </div>
         </section>
 
@@ -86,12 +94,12 @@ export default function Home() {
             </div>
 
             {/*import image carousel*/}
-                <div className="relative z-10 flex justify-center items-center px-4">
+                <div className="relative z-10 flex justify-center items-center px-4 py-75">
                 <ImageCarousel />
             </div>       
         
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-7 xl:max-w-[900px]"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -100,23 +108,24 @@ export default function Home() {
                 <p> TEAZO is specializing in bringing you high qualities drink, snack and dessert.</p>
 
                 <p> We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used.From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!
-TEAZO is specializing in bringing you high qualities drink, snack and dessert.We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used.</p>
+TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used.</p>
                 
                 <p> From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!</p>
 
 
                 {/*social media icons*/}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
-                    <a href="">
+                    
+                    <a href= {socialLinks.facebook} target="_blank">
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={emailHref}>
                     <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={socialLinks.instagram} target="_blank">
                     <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={socialLinks.yelp} target="_blank">
                     <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
