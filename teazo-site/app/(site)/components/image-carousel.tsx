@@ -46,14 +46,6 @@ useEffect(() => {
             {/* Image */}
             <div className="flex items-center gap-20 justify-center"> {/* need images to fit next to each other */}
 
-                {/* LEFT BUTTON */}
-                <button
-                    onClick={prevSlide}
-                    className=" bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60 mr-4 z-10"
-                >
-                    ◀
-                </button>
-
                 {/* Left */}
                 <div className = "absolute w-[300px] h-[500px] -translate-x-[250px] -rotate-6 z-10">
 
@@ -85,14 +77,6 @@ useEffect(() => {
                     className="object-cover rounded-xl"
                 />
                 </div>
-
-                {/* RIGHT BUTTON */}
-                <button
-                    onClick={nextSlide}
-                    className=" bg-black/40 text-white px-3 py-2 rounded-full hover:bg-black/60 m1-4 z-10"
-                >
-                    ▶
-                </button>
             </div>
         </div>
         
