@@ -120,7 +120,7 @@ export default function BusinessHoursRow({
         <button
           type="button"
           onClick={() => onChange({ closed: !entry.closed })}
-          className={`relative h-[18px] w-8 shrink-0 rounded-full transition-colors ${
+          className={`relative h-[18px] w-8 shrink-0 cursor-pointer rounded-full transition-colors ${
             entry.closed ? "bg-[#dbb082]" : "bg-[#6f8f6a]"
           }`}
         >
@@ -141,7 +141,7 @@ export default function BusinessHoursRow({
               onChange({ start: Math.max(0, Math.min(hour, entry.end - MIN_DURATION_HOURS)) });
             }
           }}
-          className="w-[92px] rounded border border-[#ecdfd7] px-1.5 py-1 text-xs text-gray-700 disabled:text-gray-400"
+          className="w-[92px] cursor-pointer rounded border border-[#ecdfd7] px-1.5 py-1 text-xs text-gray-700 disabled:cursor-default disabled:text-gray-400"
         />
         <span className="text-xs text-gray-400">–</span>
         <input
@@ -154,7 +154,7 @@ export default function BusinessHoursRow({
               onChange({ end: Math.min(24, Math.max(hour, entry.start + MIN_DURATION_HOURS)) });
             }
           }}
-          className="w-[92px] rounded border border-[#ecdfd7] px-1.5 py-1 text-xs text-gray-700 disabled:text-gray-400"
+          className="w-[92px] cursor-pointer rounded border border-[#ecdfd7] px-1.5 py-1 text-xs text-gray-700 disabled:cursor-default disabled:text-gray-400"
         />
       </div>
     </div>

@@ -29,7 +29,7 @@ export function TocItem({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-3 rounded-lg border-l-[3px] px-3 py-2.5 text-left text-[13.5px] font-medium transition-colors ${
+      className={`flex cursor-pointer items-center gap-3 rounded-lg border-l-[3px] px-3 py-2.5 text-left text-[13.5px] font-medium transition-colors ${
         active
           ? "border-[#c98a52] bg-[#c98a52]/[0.14] font-bold text-[#a5652b]"
           : "border-transparent text-[#4a3418] hover:bg-white/60"
@@ -64,7 +64,7 @@ export function AccordionItem({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        className="flex w-full cursor-pointer items-center justify-between px-5 py-4 text-left"
       >
         <span className="flex items-center gap-3">
           <span className="text-[#c98a52]">{icon}</span>

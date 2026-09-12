@@ -126,7 +126,7 @@ export default function SocialSection({
                 <button
                   type="button"
                   onClick={() => onUpdateLink(link.id, { enabled: !link.enabled })}
-                  className={`relative h-[18px] w-8 shrink-0 rounded-full transition-colors ${
+                  className={`relative h-[18px] w-8 shrink-0 cursor-pointer rounded-full transition-colors ${
                     link.enabled ? "bg-[#6f8f6a]" : "bg-[#dbb082]"
                   }`}
                 >
