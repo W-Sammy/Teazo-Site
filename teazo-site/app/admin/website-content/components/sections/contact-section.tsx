@@ -49,6 +49,8 @@ export default function ContactSection({
   const [touched, setTouched] = useState<Partial<Record<ContactField, boolean>>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
 
+  // only revalidates fields already touched (post-blur), so typing into an untouched
+  // field doesn't flash an error before the user's had a chance to finish it
   function handleChange(field: ContactField, value: string) {
     onUpdateAddress({ [field]: value } as Partial<AddressInfo>);
     if (touched[field]) {

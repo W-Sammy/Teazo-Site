@@ -14,6 +14,7 @@ export default function BusinessHoursRow({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
+  // maps an absolute pointer X to an hour value snapped to the nearest SNAP_HOURS increment
   function hourFromClientX(clientX: number) {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return 0;
@@ -31,6 +32,8 @@ export default function BusinessHoursRow({
       const target = e.currentTarget;
       target.setPointerCapture(e.pointerId);
 
+      // captured once at drag start so "move" can compute an absolute new
+      // position from the total pointer delta instead of drifting on relative deltas
       const initStart = entry.start;
       const initEnd = entry.end;
       const startClientX = e.clientX;
@@ -38,12 +41,14 @@ export default function BusinessHoursRow({
 
       function handleMove(ev: PointerEvent) {
         if (mode === "move") {
+          // preserve duration while sliding so the bar can't grow/shrink by dragging its body
           const duration = initEnd - initStart;
           const rawDeltaHour = ((ev.clientX - startClientX) / trackWidth) * 24;
           let start = Math.round((initStart + rawDeltaHour) / SNAP_HOURS) * SNAP_HOURS;
           start = Math.max(0, Math.min(24 - duration, start));
           onChange({ start, end: start + duration });
         } else if (mode === "start") {
+          // clamp against the opposite edge minus MIN_DURATION_HOURS so the two handles can't cross
           const hour = hourFromClientX(ev.clientX);
           onChange({ start: Math.max(0, Math.min(hour, initEnd - MIN_DURATION_HOURS)) });
         } else {
@@ -67,6 +72,7 @@ export default function BusinessHoursRow({
   const widthPct = ((entry.end - entry.start) / 24) * 100;
 
   return (
+      // grid-cols must match HoursSection's axis-label header row so the columns stay aligned
       <div className="grid grid-cols-[46px_minmax(0,1fr)_260px] items-center gap-3">
       <span className="text-[12.5px] font-bold">{entry.day}</span>
 

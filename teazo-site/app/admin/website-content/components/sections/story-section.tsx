@@ -24,6 +24,7 @@ export default function StorySection({
   const [touched, setTouched] = useState(false);
 
   let error: string | undefined;
+  // gated on touched so an empty story doesn't show as an error before the user's first blur
   if (touched) {
     if (!isNonEmpty(story)) error = "Story can't be empty";
     else if (!withinMaxLength(story, MAX_STORY_LENGTH)) error = `Keep it under ${MAX_STORY_LENGTH} characters`;

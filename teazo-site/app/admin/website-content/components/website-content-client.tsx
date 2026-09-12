@@ -14,6 +14,7 @@ import { useWebsiteContent } from "../handlers/use-website-content";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { SectionId } from "./types";
 
+// single source of order/labels for both the sidebar TocItems and the accordion cards below
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
   { id: "story", label: "Our Story", icon: <IconStory /> },
@@ -41,10 +42,13 @@ export default function WebsiteContentClient({ initialContent }: { initialConten
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
   const sectionRefs = useRef<Partial<Record<SectionId, HTMLDivElement | null>>>({});
 
+  // clicking the already-open section's TocItem/header collapses it instead of no-op re-opening
   function selectSection(id: SectionId) {
     setOpenSection((prev) => {
       const next = prev === id ? null : id;
       if (next) {
+        // rAF-deferred: wait for the accordion to expand (and its ref to reflect the new height)
+        // before scrolling, otherwise scrollIntoView targets the pre-expand layout
         requestAnimationFrame(() => {
           sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
@@ -53,6 +57,8 @@ export default function WebsiteContentClient({ initialContent }: { initialConten
     });
   }
 
+  // per-section ref setter so AccordionItem's setRef prop can target sectionRefs.current[id]
+  // without each section needing to know about the shared ref map
   function setSectionRef(id: SectionId) {
     return (el: HTMLDivElement | null) => {
       sectionRefs.current[id] = el;

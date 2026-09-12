@@ -13,6 +13,7 @@ export function Chevron({ open }: { open: boolean }) {
   );
 }
 
+// sidebar nav row; `active` mirrors the currently open AccordionItem so the two stay in sync
 export function TocItem({
   label,
   icon,
@@ -40,6 +41,7 @@ export function TocItem({
   );
 }
 
+// setRef exposes the card's DOM node to the parent so selectSection can scrollIntoView on open
 export function AccordionItem({
   id,
   label,

@@ -30,6 +30,8 @@ export default function LogoSection({
       return;
     }
 
+    // stored as a data URL for now since there's no upload endpoint/R2 wired yet;
+    // onLogoChange just carries this string until backend persistence lands
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -53,6 +55,7 @@ export default function LogoSection({
           <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
             Edit
           </span>
+          {/* visually hidden; the styled label above is the actual click target that opens the file picker */}
           <input
             id="website-logo-upload"
             type="file"

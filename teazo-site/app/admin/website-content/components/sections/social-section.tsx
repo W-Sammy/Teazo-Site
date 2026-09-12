@@ -33,6 +33,8 @@ export default function SocialSection({
     setTouched((prev) => ({ ...prev, [id]: { ...prev[id], [field]: true } }));
   }
 
+  // label/url are only required of each other, not independently, so a fully blank
+  // row (freshly added, untouched) doesn't error, but a half-filled one does
   function fieldErrors(link: SocialLink) {
     const t = touched[link.id] ?? {};
     const labelEmpty = !link.label.trim();
@@ -96,6 +98,7 @@ export default function SocialSection({
                   <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[9px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
                     Edit
                   </span>
+                  {/* visually hidden; the styled label above is the actual click target that opens the file picker */}
                   <input
                     id={`social-icon-${link.id}`}
                     type="file"

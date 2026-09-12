@@ -43,6 +43,7 @@ export default function HolidayCard({
     dateError = "Select both a month and a day";
   }
 
+  // re-clamp the already-picked day if switching to a shorter month would make it invalid (e.g. 31 -> Feb)
   function setMonth(newMonth: string) {
     const newMonthNum = newMonth ? Number(newMonth) : null;
     const clampedDay = day ? Math.min(Number(day), daysInMonth(newMonthNum)) : null;

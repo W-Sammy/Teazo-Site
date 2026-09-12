@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+// shared here so every section's inputs/errors look and behave identically
 export const inputClass =
   "w-full rounded border border-[#ecdfd7] px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#dbb082] focus:outline-none";
 

@@ -6,6 +6,8 @@ import type { Holiday } from "@/app/types/website-content";
 import { isValidHolidayDay } from "../validators";
 import HolidayCard from "./holiday-card";
 
+// tallies how many holidays land on each valid month-day so HolidayCard can flag
+// duplicates (invalid/incomplete dates are excluded, they get their own error instead)
 function countValidDates(holidays: Holiday[]) {
   const counts = new Map<string, number>();
   for (const holiday of holidays) {
