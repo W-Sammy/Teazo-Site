@@ -27,8 +27,8 @@ const MOCK_CONTENT: WebsiteContent = {
     { day: "Sat", start: 10, end: 14, closed: false },
   ],
   holidays: [
-    { id: "christmas", name: "Christmas", date: "12-25" },
-    { id: "presidents", name: "Presidents Day", date: "02-16" },
+    { id: "christmas", name: "Christmas", date: "12-25", closed: true },
+    { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
 };
 

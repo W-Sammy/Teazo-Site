@@ -129,7 +129,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       const id = createTemporaryId("holiday");
       setContent((prev) => ({
         ...prev,
-        holidays: [...prev.holidays, { id, name: "", date: "" }],
+        holidays: [...prev.holidays, { id, name: "", date: "", closed: true }],
       }));
       return true;
     } catch {

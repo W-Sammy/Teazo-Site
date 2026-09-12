@@ -4,6 +4,10 @@ import { useState } from "react";
 import type { Holiday } from "@/app/types/website-content";
 import { fieldClass, ErrorText } from "../field-controls";
 import { daysInMonth } from "../validators";
+import { hourToTimeValue, timeValueToHour, MIN_DURATION_HOURS } from "../hours-utils";
+
+const DEFAULT_START = 9;
+const DEFAULT_END = 17;
 
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
@@ -55,7 +59,7 @@ export default function HolidayCard({
   }
 
   return (
-    <div className="flex w-[220px] flex-col gap-2.5 rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">
+    <div className="flex w-[245px] flex-col gap-2.5 rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">
       <div className="flex items-start justify-between gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-[#a99584]">
           {formatHolidayDate(holiday.date)} · repeats yearly
@@ -115,6 +119,62 @@ export default function HolidayCard({
         </div>
         {dateError && <ErrorText>{dateError}</ErrorText>}
       </div>
+
+      <div className="flex items-center justify-center gap-2">
+        <span className={`text-xs ${holiday.closed ? "font-semibold text-[#4a3418]" : "text-gray-400"}`}>
+          Closed
+        </span>
+        <button
+          type="button"
+          onClick={() =>
+            onChange(
+              holiday.closed
+                ? { closed: false, start: holiday.start ?? DEFAULT_START, end: holiday.end ?? DEFAULT_END }
+                : { closed: true }
+            )
+          }
+          className={`relative h-[18px] w-8 shrink-0 cursor-pointer rounded-full transition-colors ${
+            holiday.closed ? "bg-[#dbb082]" : "bg-[#6f8f6a]"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-all ${
+              holiday.closed ? "left-0.5" : "left-4"
+            }`}
+          />
+        </button>
+        <span className={`text-xs ${holiday.closed ? "text-gray-400" : "font-semibold text-[#4a3418]"}`}>
+          Adjusted Hours
+        </span>
+      </div>
+
+      {!holiday.closed && (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="time"
+            value={hourToTimeValue(holiday.start ?? DEFAULT_START)}
+            onChange={(e) => {
+              const hour = timeValueToHour(e.target.value);
+              if (!Number.isNaN(hour)) {
+                onChange({ start: Math.max(0, Math.min(hour, (holiday.end ?? DEFAULT_END) - MIN_DURATION_HOURS)) });
+              }
+            }}
+            className="w-0 min-w-0 flex-1 cursor-pointer rounded border border-[#ecdfd7] bg-white px-1.5 py-1.5 text-xs text-gray-700"
+          />
+          <span className="text-xs text-gray-400">–</span>
+          <input
+            type="time"
+            value={hourToTimeValue(holiday.end ?? DEFAULT_END)}
+            onChange={(e) => {
+              const hour = timeValueToHour(e.target.value);
+              if (!Number.isNaN(hour)) {
+                onChange({ end: Math.min(24, Math.max(hour, (holiday.start ?? DEFAULT_START) + MIN_DURATION_HOURS)) });
+              }
+            }}
+            className="w-0 min-w-0 flex-1 cursor-pointer rounded border border-[#ecdfd7] bg-white px-1.5 py-1.5 text-xs text-gray-700"
+          />
+        </div>
+      )}
     </div>
   );
 }

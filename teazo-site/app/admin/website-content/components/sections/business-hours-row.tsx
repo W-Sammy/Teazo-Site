@@ -2,14 +2,16 @@
 
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { DayHours } from "@/app/types/website-content";
+import type { DayHours, Holiday } from "@/app/types/website-content";
 import { formatHour, hourToTimeValue, timeValueToHour, SNAP_HOURS, MIN_DURATION_HOURS } from "../hours-utils";
 
 export default function BusinessHoursRow({
   entry,
+  holiday,
   onChange,
 }: {
   entry: DayHours;
+  holiday?: Holiday;
   onChange: (patch: Partial<DayHours>) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -74,7 +76,17 @@ export default function BusinessHoursRow({
   return (
       // grid-cols must match HoursSection's axis-label header row so the columns stay aligned
       <div className="grid grid-cols-[46px_minmax(0,1fr)_260px] items-center gap-3">
-      <span className="text-[12.5px] font-bold">{entry.day}</span>
+      <div className="flex flex-col">
+        <span className="text-[12.5px] font-bold">{entry.day}</span>
+        {holiday && (
+          <span
+            className="truncate text-[8.5px] font-semibold text-[#c0553f]"
+            title={`${holiday.name}: ${holiday.closed ? "closed" : `${formatHour(holiday.start ?? 0)} – ${formatHour(holiday.end ?? 0)}`}`}
+          >
+            {holiday.name}
+          </span>
+        )}
+      </div>
 
       <div
         ref={trackRef}

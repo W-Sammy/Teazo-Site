@@ -9,6 +9,9 @@ export type Holiday = {
   id: string;
   name: string;
   date: string; // "MM-DD", no year — these repeat annually
+  closed: boolean; // true = fully closed, false = adjusted hours (see start/end)
+  start?: number; // adjusted-hours open time, 24hr scale; only meaningful when closed is false
+  end?: number; // adjusted-hours close time, 24hr scale; only meaningful when closed is false
 };
 
 export type SocialLink = {

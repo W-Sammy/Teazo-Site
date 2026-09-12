@@ -136,6 +136,7 @@ export default function WebsiteContentClient({ initialContent }: { initialConten
 
           <HoursSection
             hours={content.hours}
+            holidays={content.holidays}
             isOpen={openSection === "hours"}
             onToggle={() => selectSection("hours")}
             setRef={setSectionRef("hours")}
