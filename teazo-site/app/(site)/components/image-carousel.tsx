@@ -53,7 +53,7 @@ useEffect(() => {
                     src={leftImage}
                     alt="previous image-carousel"
                     fill
-                    sizes = "100w"
+                    sizes = "10w"
                     className="object-cover rounded-xl" 
                 /> 
                 </div>
@@ -65,7 +65,7 @@ useEffect(() => {
                     src={currentImage}
                     alt="image-carousel"
                     fill
-                    sizes = "125w"
+                    sizes = "12w"
                     className="object-cover rounded-xl" 
                 />  {/* switch to object-cover */}
                 </div>
@@ -76,7 +76,7 @@ useEffect(() => {
                     src={rightImage}
                     alt="image-carousel"
                     fill
-                    sizes = "100w"
+                    sizes = "10w"
                     className="object-cover rounded-xl"
                 />
                 </div>
