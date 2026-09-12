@@ -29,9 +29,9 @@
     {
       "binding": "DB",
       "database_name": "teazo-db",
-      // Filled in by `npx wrangler d1 create teazo-db`. Empty is fine for
-      // --local, which does not use it.
-      "database_id": "",
+      // Created on the team Cloudflare account. Not a secret, and the
+      // Worker cannot deploy from a fresh clone without it.
+      "database_id": "de4f8bf8-4a40-4397-9468-588951d7275c",
       "migrations_dir": "../teazo-site/migrations"
     }
   ],
@@ -45,7 +45,7 @@
         {
           "binding": "DB",
           "database_name": "teazo-db-preview",
-          "database_id": "",
+          "database_id": "acfbbe45-5ee1-4a23-a365-b71badfdf50a",
           "migrations_dir": "../teazo-site/migrations"
         }
       ],
