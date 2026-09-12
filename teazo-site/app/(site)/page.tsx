@@ -43,6 +43,8 @@ const socialLinks = {
   yelp: "https://www.yelp.com/biz/teazo-san-francisco",
 };
 
+const emailHref = 'mailto:$(location.email)'
+
 export default function Home() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
@@ -83,7 +85,7 @@ export default function Home() {
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
             <div className="mt-6 flex w-full items-center justify-center">
-                <GeneralButton text="ORDER NOW" href="" />    
+                <GeneralButton text="ORDER NOW" href="/menu" />    
                 </div>
         </section>
 
@@ -117,7 +119,7 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                     <a href= {socialLinks.facebook}>
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href="">
+                    <a href={emailHref}>
                     <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href={socialLinks.instagram}>
