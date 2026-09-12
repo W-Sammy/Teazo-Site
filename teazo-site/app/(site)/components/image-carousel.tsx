@@ -47,7 +47,7 @@ useEffect(() => {
             <div className="flex items-center gap-20 justify-center"> {/* need images to fit next to each other */}
 
                 {/* Left */}
-                <div className = "absolute w-[300px] h-[500px] -translate-x-[250px] -rotate-6 z-10">
+                <div className = "absolute w-75 h-125 -translate-x-62.5 -rotate-6 z-10">
 
                 <Image
                     src={leftImage}
@@ -58,7 +58,7 @@ useEffect(() => {
                 </div>
 
                 {/* Center */}  
-                <div className = " absolute w-[400px] h-[600px] z-30">
+                <div className = " absolute w-100 h-150 z-30">
 
                 <Image
                     src={currentImage}
@@ -69,7 +69,7 @@ useEffect(() => {
                 </div>
 
                 {/* Right */}
-                <div className = "absolute w-[300px] h-[500px] translate-x-[250px] rotate-6 z-10">
+                <div className = "absolute w-75 h-125 translate-x-62.5 rotate-6 z-10">
                 <Image
                     src={rightImage}
                     alt="image-carousel"
