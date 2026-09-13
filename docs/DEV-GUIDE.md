@@ -165,53 +165,18 @@ insert from §2.3 if you need your role back.
 
 ## 3. Talking to the database
 
-Put this in `teazo-site/app/lib/d1.ts`. It is the only way the app reaches the
-database.
+`teazo-site/app/lib/d1.ts` is already in the repository, and it is the only way
+the app reaches the database. Import from it. Do not copy code out of this guide
+into your own files, because the real file has fixes this page does not show.
 
-```ts
-// teazo-site/app/lib/d1.ts
-const URL_ = process.env.D1_PROXY_URL!;
-const TOKEN = process.env.PROXY_TOKEN!;
+It exports:
 
-type Stmt = { sql: string; params: unknown[] };
-type D1Result<T> = { results: T[]; success: boolean; meta: { changes: number } };
-
-export class D1Error extends Error {}
-
-async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${URL_}${path}`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-  const json = await res.json();
-  // Database errors come back with their message intact, e.g.
-  // "UNIQUE constraint failed: ..." or "media_asset is still referenced".
-  if (!res.ok) throw new D1Error(json.message ?? json.error ?? res.statusText);
-  return json as T;
-}
-
-export function prepare(sql: string) {
-  let params: unknown[] = [];
-  const api = {
-    bind(...p: unknown[]) { params = p; return api; },
-    async all<T>() { return post<D1Result<T>>("/query", { sql, params }); },
-    async first<T>() {
-      const r = await post<D1Result<T>>("/query", { sql, params });
-      return r.results[0] ?? null;
-    },
-    async run() { return post<D1Result<unknown>>("/query", { sql, params }); },
-    toStmt(): Stmt { return { sql, params }; },
-  };
-  return api;
-}
-
-/** All or nothing: every statement commits, or none does. */
-export async function batch(stmts: Array<{ toStmt(): Stmt }>) {
-  return post<{ results: unknown[] }>("/batch", { statements: stmts.map((s) => s.toStmt()) });
-}
-```
+| Export | What it does |
+|---|---|
+| `prepare(sql)` | Builds one statement. Chain `.bind(...)`, then `.all()`, `.first()` or `.run()` |
+| `batch([...])` | Runs up to 40 statements as one transaction |
+| `D1Error` | Thrown on failure, with the database's own message and the HTTP `status` |
+| `MAX_STATEMENTS` | The batch limit, 40 |
 
 Using it:
 
@@ -239,6 +204,72 @@ Four rules:
 - **Every call is a network round trip.** Fetch what a page needs in as few
   calls as you can, and cache public pages with `export const revalidate = 300`.
 
+### 3.1 Writing queries for your feature
+
+Put the SQL for your feature in its own file under `teazo-site/app/lib/queries/`,
+one file per feature: `gallery.ts`, `events.ts`, `settings.ts` and so on. Write
+one function for each thing a page needs, named for what it does. Pages call
+those functions and never contain SQL themselves.
+
+That keeps each table's rules in one place, so nobody has to remember them in
+every page, and when a column changes there is exactly one file to update.
+Whoever builds a feature writes its query file, in the same pull request as the
+feature.
+
+```ts
+// teazo-site/app/lib/queries/gallery.ts
+import { prepare } from "@/app/lib/d1";
+
+type Image = { id: string; name: string; media_id: string };
+
+export function listGalleryImages() {
+  return prepare(
+    `SELECT id, name, media_id FROM gallery_image
+     WHERE deleted_at IS NULL ORDER BY name_sort_key, id`
+  ).all<Image>();
+}
+
+export function getGalleryImage(id: string) {
+  return prepare(
+    `SELECT id, name, media_id FROM gallery_image
+     WHERE id = ?1 AND deleted_at IS NULL`
+  ).bind(id).first<Image>();
+}
+
+export function renameGalleryImage(id: string, name: string) {
+  return prepare("UPDATE gallery_image SET name = ?1, name_sort_key = ?2 WHERE id = ?3")
+    .bind(name, sortKey(name), id)
+    .run();
+}
+
+function sortKey(name: string) {
+  return name.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+```
+
+Calling it from a page:
+
+```ts
+import { listGalleryImages } from "@/app/lib/queries/gallery";
+
+const { results: images } = await listGalleryImages();
+```
+
+Rules for query files:
+
+- **Server code only.** Call them from server components, route handlers and
+  server actions, never from a `"use client"` component.
+- **Pass values with `?1`, `?2` and `.bind()`.** Never build SQL by pasting
+  values into the string.
+- **Filter out deleted rows.** Add `WHERE deleted_at IS NULL` when reading
+  `gallery_image`, `event`, `media_asset` or `admin_user`.
+- **End every `ORDER BY` with `, id`**, so rows that tie keep a stable order.
+- **Group writes that belong together** in one `batch([...])`.
+- **Set the computed columns when you write.** `gallery_image.name_sort_key`,
+  `gallery_tag.name_normalized` and `admin_user.email_normalized` are not filled
+  in for you.
+- **Deleting anything with a file attached** takes ordered steps. Follow §4.2.
+
 ---
 
 ## 4. Storing files
@@ -252,35 +283,19 @@ hold: gallery photos, the home carousel, event flyers and the PDF menu.
 `gallery/2026/09/<uuid>.webp`. The URL is built when the page renders, from
 `R2_PUBLIC_BASE`, so the same row works locally, on preview and in production.
 
-Put this in `teazo-site/app/lib/media.ts`:
+`teazo-site/app/lib/media.ts` is already in the repository. Import from it
+rather than copying code out of this guide.
 
-```ts
-// teazo-site/app/lib/media.ts
-const PROXY = process.env.D1_PROXY_URL!;
-const TOKEN = process.env.PROXY_TOKEN!;
-const PUBLIC_BASE = process.env.R2_PUBLIC_BASE!;
+| Export | What it does |
+|---|---|
+| `putMedia(key, bytes, type)` | Stores a file and returns `{ key, size, bucket }`. Record `bucket` in `media_asset.r2_bucket` |
+| `mintKey(prefix, ext)` | Creates a new key such as `gallery/2026/09/<uuid>.webp`. Keys are never reused |
+| `toPublicUrl(key)` | Builds the public URL for a key. The only place a URL is ever built |
+| `deleteMediaNow(key)` | Removes bytes immediately. Feature code should follow §4.2 instead |
+| `MediaError` | Thrown on failure, with the HTTP `status` |
 
-/** The only place a URL is ever built. */
-export const toPublicUrl = (key: string) => `${PUBLIC_BASE}/${key}`;
-
-/** gallery/2026/09/<uuid>.webp. Keys are never reused, so they cache forever. */
-export function mintKey(prefix: string, ext: string) {
-  const d = new Date();
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return `${prefix}/${d.getUTCFullYear()}/${month}/${crypto.randomUUID()}.${ext}`;
-}
-
-/** Stores the bytes. Returns the bucket too; record it in media_asset.r2_bucket. */
-export async function putMedia(key: string, body: Uint8Array, contentType: string) {
-  const res = await fetch(`${PROXY}/media/${key}`, {
-    method: "PUT",
-    headers: { authorization: `Bearer ${TOKEN}`, "content-type": contentType },
-    body,
-  });
-  if (!res.ok) throw new Error(`upload failed: ${res.status} ${await res.text()}`);
-  return (await res.json()) as { key: string; size: number; bucket: string };
-}
-```
+`putMedia` accepts a Node `Buffer`, so the output of `sharp` can be passed
+straight in.
 
 Locally, uploads land in your simulated bucket and are served by your Worker
 at `http://127.0.0.1:8787/media/<key>`. To show them with `<Image>` in
