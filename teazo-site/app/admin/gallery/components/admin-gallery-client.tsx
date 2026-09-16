@@ -665,6 +665,7 @@ export default function AdminGalleryClient({
       <AdminForm
         isOpen={drawerOpen}
         onClose={closeDrawer}
+        mobileFullscreen
       >
         {drawerOpen && (
           <GalleryUploadForm
