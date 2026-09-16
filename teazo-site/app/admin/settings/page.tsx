@@ -7,17 +7,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminSettingsPage(){
+export default function AdminSettingsPage() {
   return (
-    <div className="pl-5 pt-10">
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr] md:gap-12">
-        <h2 className="text-lg font-medium font-bold text-slate-700">Admins</h2>
-        <AdminsTable />
+    <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden px-4 pb-12 pt-6 sm:px-6 md:px-8 md:pt-10">
+      <section className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+        <h2 className="text-xl font-bold text-slate-700">
+          Admins
+        </h2>
+
+        <div className="min-w-0">
+          <AdminsTable />
+        </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr] md:gap-12">
-        <h2 className="text-lg font-medium font-bold text-slate-700 pt-6">Ownership Transfer</h2>
+      <section className="mt-10 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+        <h2 className="text-xl font-bold text-slate-700">
+          Ownership Transfer
+        </h2>
+
+        <div className="min-w-0">
+          {/* Ownership transfer controls can be added here later. */}
+        </div>
       </section>
     </div>
-  )
+  );
 }
