@@ -16,6 +16,7 @@ import type {
   EventFormValues,
 } from "@/app/types/admin-event";
 
+// Collect values locally and pass them to the parent, which handles saving.
 type EventFormProps = {
   initialEvent?: AdminEvent | null;
   categories: EventCategory[];
@@ -24,17 +25,20 @@ type EventFormProps = {
   onSave: (values: EventFormValues) => void;
 };
 
+// Client-side checks use the selected file's declared MIME type and size.
 const acceptedImageTypes = [
   "image/jpeg",
   "image/png",
   "image/webp",
 ];
 
+// File-size limit in bytes; the interface labels this as 10 MB.
 const maxFileSize = 10 * 1024 * 1024;
 
 const fallbackImageUrl =
   "/admin_icons/teazo_dash_icon.png";
 
+// Format a stored date for datetime-local using the browser's local clock.
 function toDateTimeLocal(value?: string) {
   if (!value) {
     return "";
@@ -46,6 +50,7 @@ function toDateTimeLocal(value?: string) {
     return "";
   }
 
+  // Shift by the local offset before taking the ISO date/time portion without Z.
   const offset =
     date.getTimezoneOffset() * 60_000;
 
@@ -54,6 +59,7 @@ function toDateTimeLocal(value?: string) {
     .slice(0, 16);
 }
 
+// Toggle an ID without mutating the existing category or item selection.
 function toggleValue(
   values: string[],
   value: string,
@@ -72,6 +78,7 @@ export default function EventForm({
   onCancel,
   onSave,
 }: EventFormProps) {
+  // The parent remounts this form when switching records, reseeding these defaults.
   const initialPreviewUrl =
     initialEvent?.imageUrl?.trim() ||
     fallbackImageUrl;
@@ -108,6 +115,7 @@ export default function EventForm({
       initialEvent?.itemIds ?? [],
     );
 
+  // A null imageFile means no replacement file has been chosen in this form.
   const [imageFile, setImageFile] =
     useState<File | null>(null);
 
@@ -120,12 +128,15 @@ export default function EventForm({
   const [error, setError] =
     useState<string | null>(null);
 
+  // The visible Choose File button triggers this hidden native file input.
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
 
+  // Track only the temporary blob URL created here, not an existing saved image URL.
   const temporaryPreviewUrl =
     useRef<string | null>(null);
 
+  // Release the remaining temporary preview when the form unmounts.
   useEffect(() => {
     return () => {
       if (temporaryPreviewUrl.current) {
@@ -136,6 +147,7 @@ export default function EventForm({
     };
   }, []);
 
+  // Count each current item once, even if both a category and an explicit ID match.
   const affectedItemCount = useMemo(() => {
     if (appliesToAll) {
       return items.length;
@@ -159,6 +171,7 @@ export default function EventForm({
     items,
   ]);
 
+  // The default icon is contained; selected event photos fill the preview area.
   const usesFallbackImage =
     previewUrl === fallbackImageUrl;
 
@@ -169,6 +182,7 @@ export default function EventForm({
       ? "Current image selected"
       : "No file chosen");
 
+  // Reject invalid files without replacing a previously valid selection or preview.
   function selectImage(file: File) {
     setImageError(null);
 
@@ -194,6 +208,7 @@ export default function EventForm({
       );
     }
 
+    // Create a local preview only; this does not upload the file.
     const nextPreviewUrl =
       URL.createObjectURL(file);
 
@@ -204,6 +219,7 @@ export default function EventForm({
     setPreviewUrl(nextPreviewUrl);
   }
 
+  // Use only the first selected file.
   function handleFileChange(
     event: ChangeEvent<HTMLInputElement>,
   ) {
@@ -220,6 +236,7 @@ export default function EventForm({
     event.target.value = "";
   }
 
+  // Validate required text and date ordering before handing values to the parent.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -254,6 +271,7 @@ export default function EventForm({
       return;
     }
 
+    // Convert local inputs to UTC ISO strings and omit specific targets for all-items events.
     onSave({
       name: name.trim(),
       description: description.trim(),
@@ -270,6 +288,7 @@ export default function EventForm({
     });
   }
 
+  // noValidate lets the form display its own validation messages.
   return (
     <form
       onSubmit={handleSubmit}
@@ -364,6 +383,7 @@ export default function EventForm({
             />
           </div>
 
+          {/* Keep the native chooser hidden and open it with the styled button below. */}
           <input
             ref={fileInputRef}
             id="event-image"
@@ -485,6 +505,7 @@ export default function EventForm({
             </span>
           </label>
 
+          {/* Specific selections remain in state while hidden, but are omitted on save. */}
           {!appliesToAll && (
             <>
               <p className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -585,6 +606,7 @@ export default function EventForm({
           </p>
         </fieldset>
 
+        {/* Announce submit-level validation errors separately from image errors. */}
         {error && (
           <p
             role="alert"
@@ -594,6 +616,7 @@ export default function EventForm({
           </p>
         )}
 
+        {/* Actions remain sticky on smaller screens and return to normal flow on desktop. */}
         {/* Form actions */}
         <div className="sticky bottom-0 z-10 -mx-1 mt-auto grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-2 pt-5 md:static md:mx-0 md:flex md:items-center md:justify-between md:border-0 md:px-0 md:pb-0 md:pt-8">
           <button

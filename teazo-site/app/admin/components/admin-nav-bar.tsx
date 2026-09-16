@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// The layout owns mobile navigation state; callbacks keep this sidebar reusable.
 type SidebarProps = {
   mobileOpen?: boolean;
   onMobileToggle?: () => void;
@@ -15,14 +16,17 @@ export default function Sidebar({
   onMobileToggle = () => {},
   onMobileClose = () => {},
 }: SidebarProps) {
+  // Active pages use colored icons; inactive pages use the black variants.
   const colorIconRoot =
     "/admin_icons/";
 
   const blackIconRoot =
     "/admin_icons/black_icons/";
 
+  // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
 
+  // Keep labels, destinations, and icon filenames together for each primary link.
   const adminPages = [
     {
       id: "dashboard",
@@ -66,6 +70,7 @@ export default function Sidebar({
     },
   ];
 
+  // These are links only. Logout currently navigates home; it does not call sign-out.
   const controls = [
     {
       id: "website-content",
@@ -84,6 +89,7 @@ export default function Sidebar({
     },
   ];
 
+  // Reserve a narrow mobile rail while the expanded fixed navigation overlays content.
   return (
     <div className="relative h-dvh w-16 shrink-0 md:w-auto">
       <nav
@@ -147,6 +153,7 @@ export default function Sidebar({
           className="flex flex-col gap-2"
         >
           {adminPages.map((page) => {
+            // Dashboard matches exactly; other sections also match their nested routes.
             const isActive =
               page.href === "/admin"
                 ? pathname === "/admin"
@@ -216,6 +223,7 @@ export default function Sidebar({
           })}
         </div>
 
+        {/* Secondary links stay at the bottom and hide when mobile navigation is collapsed. */}
         <div
           className={`mt-auto flex-col pb-6 md:flex md:pb-20 ${
             mobileOpen

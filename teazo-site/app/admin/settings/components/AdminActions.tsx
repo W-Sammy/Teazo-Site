@@ -6,28 +6,34 @@ import {
   useState,
 } from "react";
 
+// The parent handles deletion; the username identifies the action button.
 type AdminActionsProps = {
   username: string;
   onDelete: () => void;
 };
 
+// Three-dot action menu for an individual administrator.
 export function AdminActions({
   username,
   onDelete,
 }: AdminActionsProps) {
+  // Track whether this row's action menu is visible.
   const [open, setOpen] =
     useState(false);
 
+  // Include both the trigger and menu when checking for outside interactions.
   const containerRef =
     useRef<HTMLDivElement | null>(
       null,
     );
 
+  // Register dismissal handlers only while the menu is open.
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    // Close the menu when a pointer interaction occurs outside its container.
     function handlePointerDown(
       event: PointerEvent,
     ) {
@@ -41,6 +47,7 @@ export function AdminActions({
       }
     }
 
+    // Allow the menu to be dismissed with the Escape key.
     function handleKeyDown(
       event: KeyboardEvent,
     ) {
@@ -59,6 +66,7 @@ export function AdminActions({
       handleKeyDown,
     );
 
+    // Remove listeners when the menu closes or the component unmounts.
     return () => {
       document.removeEventListener(
         "pointerdown",
@@ -77,6 +85,7 @@ export function AdminActions({
       ref={containerRef}
       className="relative"
     >
+      {/* Identify whose actions are shown and expose the menu's expanded state. */}
       <button
         type="button"
         aria-label={`Actions for ${username}`}
@@ -89,6 +98,7 @@ export function AdminActions({
         }
         className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"
       >
+        {/* Draw the three-dot icon with SVG instead of relying on a text glyph. */}
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
@@ -115,6 +125,7 @@ export function AdminActions({
         </svg>
       </button>
 
+      {/* Mount the popup only when open and align it below the trigger's right edge. */}
       {open && (
         <div
           role="menu"
@@ -124,6 +135,7 @@ export function AdminActions({
             type="button"
             role="menuitem"
             onClick={() => {
+              // Close the popup before handing the delete request to the parent.
               setOpen(false);
               onDelete();
             }}

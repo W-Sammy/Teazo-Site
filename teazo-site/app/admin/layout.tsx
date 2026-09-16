@@ -7,16 +7,19 @@ import {
 } from "react";
 import Sidebar from "@/app/admin/components/admin-nav-bar";
 
+// Shared admin shell: navigation stays beside the active page content.
 export default function AdminLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  // The layout owns mobile navigation so its backdrop and sidebar stay in sync.
   const [
     mobileNavOpen,
     setMobileNavOpen,
   ] = useState(false);
 
+  // Listen for Escape only while mobile navigation is open, and remove the listener afterward.
   useEffect(() => {
     if (!mobileNavOpen) {
       return;
@@ -45,6 +48,7 @@ export default function AdminLayout({
 
   return (
     <div className="relative flex h-dvh min-w-0 overflow-hidden bg-white text-black">
+      {/* The mobile backdrop sits below the sidebar and dismisses it on click. */}
       {mobileNavOpen && (
         <button
           type="button"
@@ -56,6 +60,7 @@ export default function AdminLayout({
         />
       )}
 
+      {/* Navigation links can close the mobile drawer through the supplied callback. */}
       <Sidebar
         mobileOpen={mobileNavOpen}
         onMobileToggle={() =>
@@ -68,6 +73,7 @@ export default function AdminLayout({
         }
       />
 
+      {/* Let page content shrink within the flex layout and scroll without widening the shell. */}
       <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
         {children}
       </main>

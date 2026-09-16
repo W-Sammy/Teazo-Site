@@ -16,6 +16,7 @@ import type {
 } from "@/app/types/admin-perms";
 import { InviteSwitch } from "./InviteSwitch";
 
+// The parent handles adding users, canceling the dialog, and displaying permission errors.
 type AddAdminModalProps = {
   onAdd: (
     input: NewAdminInput,
@@ -31,6 +32,7 @@ export function AddAdminModal({
   onCancel,
   onError,
 }: AddAdminModalProps) {
+  // Keep form values local until submission; default to read access without invitations.
   const [username, setUsername] =
     useState("");
 
@@ -45,6 +47,7 @@ export function AddAdminModal({
     setCanInviteUsers,
   ] = useState(false);
 
+  // Pass the entered values to the parent; this component does not create the user itself.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -58,6 +61,7 @@ export function AddAdminModal({
     });
   }
 
+  // Cancel on a pointer event only when its target is the outer backdrop itself.
   return (
     <div
       className="fixed inset-0 z-[70] overflow-y-auto bg-black/30 p-3 sm:p-4"
@@ -111,6 +115,7 @@ export function AddAdminModal({
             </p>
           </div>
 
+          {/* Controlled identity fields are passed to onAdd as entered. */}
           <label
             className="mb-4 block text-sm font-medium text-gray-600"
             htmlFor="new-admin-username"
@@ -172,6 +177,7 @@ export function AddAdminModal({
               onChange={(
                 event: ChangeEvent<HTMLSelectElement>,
               ) => {
+                // Native select values are strings; role constants are numeric.
                 const nextRole =
                   Number(
                     event.target.value,
@@ -179,6 +185,7 @@ export function AddAdminModal({
 
                 setRole(nextRole);
 
+                // Removing write access must also clear invitation permission in this form.
                 if (
                   nextRole !==
                   WRITE_ROLE
@@ -219,6 +226,7 @@ export function AddAdminModal({
               </p>
             </div>
 
+            {/* Guard the invitation toggle here as well as marking it unavailable. */}
             <InviteSwitch
               checked={canInviteUsers}
               unavailable={
@@ -243,6 +251,7 @@ export function AddAdminModal({
             />
           </div>
 
+          {/* Keep the action row reachable when the modal scrolls on small screens. */}
           <div className="sticky bottom-0 -mx-1 grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-1 pt-4 sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:px-0 sm:pb-0">
             <button
               type="button"

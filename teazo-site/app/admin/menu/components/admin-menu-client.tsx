@@ -5,6 +5,7 @@ import type { ItemCategory } from "@/app/types/menu-item";
 import ListView from "@/app/admin/components/admin-list-view";
 import AdminForm from "@/app/admin/components/admin-form-page";
 
+// Menu rows passed to the shared responsive ListView.
 type DisplayedMenuItem = {
   id: string;
   img: string;
@@ -19,6 +20,7 @@ type Category = {
   name: string;
 };
 
+// Restrict sort state to the options shown in the filter panel.
 type MenuSortOption =
   | "name-asc"
   | "name-desc"
@@ -34,29 +36,35 @@ export default function AdminMenuClient({
   items,
   categories,
 }: AdminMenuClientProps) {
+  // Search, category selection, and sorting derive a visible subset of the supplied items.
   const [search, setSearch] = useState("");
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const [sortBy, setSortBy] = useState<MenuSortOption>("name-asc");
 
+  // Desktop collapse is separate from the mobile overlay's visibility.
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Upload drawer state; the filename is display-only, not an implemented upload.
   const [open, setOpen] = useState(false);
 
   const [uploadFileName, setUploadFileName] = useState("");
 
+  // Move focus to the mobile close button; the other ref opens the native file chooser.
   const mobileFilterCloseRef = useRef<HTMLButtonElement | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Escape closes either panel. Cleanup restores the previously focused element when possible.
   useEffect(() => {
     if (!mobileFiltersOpen && !open) {
       return;
     }
 
+    // Capture focus before moving it into the mobile filter panel.
     const previousFocus =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -86,6 +94,7 @@ export default function AdminMenuClient({
     };
   }, [mobileFiltersOpen, open]);
 
+  // An item can match any selected category; an empty selection allows every category.
   function toggleCategory(id: string) {
     setSelectedCategories((current) =>
       current.includes(id)
@@ -94,6 +103,7 @@ export default function AdminMenuClient({
     );
   }
 
+  // Combine category matching with a case-insensitive name/description search.
   const filteredItems = useMemo(() => {
     const query = search.toLowerCase();
 
@@ -111,6 +121,7 @@ export default function AdminMenuClient({
       return matchesCategory && matchesSearch;
     });
 
+    // Sort a new array rather than mutating the items supplied by the parent.
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "name-desc":
@@ -129,6 +140,7 @@ export default function AdminMenuClient({
     });
   }, [items, search, selectedCategories, sortBy]);
 
+  // Avoid competing mobile overlays and clear the previous filename label.
   function openUploadForm() {
     setMobileFiltersOpen(false);
     setUploadFileName("");
@@ -358,6 +370,7 @@ export default function AdminMenuClient({
                 Menu file
               </label>
 
+              {/* accept filters chooser options; no file validation or upload is implemented here. */}
               <input
                 ref={fileInputRef}
                 id="menu-upload-file"

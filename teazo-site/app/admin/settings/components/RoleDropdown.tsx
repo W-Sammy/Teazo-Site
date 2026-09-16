@@ -12,6 +12,7 @@ import {
 } from "@/app/types/admin-perms";
 import type { AdminRole } from "@/app/types/admin-perms";
 
+// The parent supplies the selected role and handles requests to change it.
 type RoleDropdownProps = {
   role: AdminRole;
   onChange: (
@@ -19,6 +20,7 @@ type RoleDropdownProps = {
   ) => void;
 };
 
+// Only Write and Read are selectable here; ownership is not assigned by this menu.
 const roles: AdminRole[] = [
   WRITE_ROLE,
   READ_ROLE,
@@ -28,19 +30,23 @@ export function RoleDropdown({
   role,
   onChange,
 }: RoleDropdownProps) {
+  // Menu visibility is local; the selected role remains controlled by the parent.
   const [open, setOpen] =
     useState(false);
 
+  // Reference both the trigger and popup for outside-interaction detection.
   const containerRef =
     useRef<HTMLDivElement | null>(
       null,
     );
 
+  // Listen for dismissal events only while the dropdown is open.
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    // Close when the pointer target is a DOM node outside this dropdown.
     function handlePointerDown(
       event: PointerEvent,
     ) {
@@ -54,6 +60,7 @@ export function RoleDropdown({
       }
     }
 
+    // Escape closes the menu without requesting a role change.
     function handleKeyDown(
       event: KeyboardEvent,
     ) {
@@ -72,6 +79,7 @@ export function RoleDropdown({
       handleKeyDown,
     );
 
+    // Clean up document listeners when the menu closes or the component unmounts.
     return () => {
       document.removeEventListener(
         "pointerdown",
@@ -90,6 +98,7 @@ export function RoleDropdown({
       ref={containerRef}
       className="relative w-full md:inline-block md:w-auto"
     >
+      {/* Use a full-width control on mobile and a compact trigger on desktop. */}
       <button
         type="button"
         onClick={() =>
@@ -105,10 +114,12 @@ export function RoleDropdown({
         aria-haspopup="menu"
         aria-expanded={open}
       >
+        {/* Convert the stored role value to its shared display label. */}
         <span>
           {ADMIN_ROLE_LABELS[role]}
         </span>
 
+        {/* Rotate the caret while the dropdown is open. */}
         <svg
           aria-hidden="true"
           width="14"
@@ -127,6 +138,7 @@ export function RoleDropdown({
         </svg>
       </button>
 
+      {/* Position the menu below the trigger without moving surrounding row content. */}
       {open && (
         <div
           role="menu"
@@ -139,6 +151,7 @@ export function RoleDropdown({
                 type="button"
                 role="menuitem"
                 onClick={() => {
+                  // Send the selected value to the parent, then close the menu.
                   onChange(
                     roleOption,
                   );

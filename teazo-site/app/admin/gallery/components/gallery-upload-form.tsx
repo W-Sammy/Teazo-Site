@@ -12,6 +12,7 @@ import {
 } from "react";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 
+// A null file lets edits keep the existing image while updating its name or tags.
 export type GalleryUploadValues = {
   name: string;
   tags: string[];
@@ -24,6 +25,7 @@ type GalleryUploadFormProps = {
   onSave: (values: GalleryUploadValues) => void;
 };
 
+// Client-side constraints for file selection and tag entry.
 const acceptedImageTypes = [
   "image/jpeg",
   "image/png",
@@ -34,10 +36,12 @@ const maxFileSize = 10 * 1024 * 1024;
 const maxTags = 12;
 const maxTagLength = 30;
 
+// Remove outer whitespace and collapse repeated whitespace inside a tag.
 function normalizeTag(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
+// Suggest a readable name by removing the extension and replacing separators.
 function fileNameToTitle(fileName: string) {
   const withoutExtension = fileName.replace(
     /\.[^/.]+$/,
@@ -58,6 +62,7 @@ export default function GalleryUploadForm({
   onCancel,
   onSave,
 }: GalleryUploadFormProps) {
+  // Seed local form fields from the image being edited, or start a blank new image.
   const [name, setName] = useState(
     initialImage?.name ?? "",
   );
@@ -79,6 +84,7 @@ export default function GalleryUploadForm({
   const [isDragging, setIsDragging] =
     useState(false);
 
+  // Keep field-specific messages beside the control that needs attention.
   const [nameError, setNameError] =
     useState<string | null>(null);
 
@@ -91,9 +97,11 @@ export default function GalleryUploadForm({
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
 
+  // Only blob URLs created by this form should be revoked by this form.
   const temporaryPreviewUrl =
     useRef<string | null>(null);
 
+  // Free the latest local preview when the form closes or switches records.
   useEffect(() => {
     return () => {
       if (temporaryPreviewUrl.current) {
@@ -104,6 +112,7 @@ export default function GalleryUploadForm({
     };
   }, []);
 
+  // Both the file picker and drag-and-drop use the same file checks and preview setup.
   function selectFile(file: File) {
     setImageError(null);
 
@@ -127,6 +136,7 @@ export default function GalleryUploadForm({
       );
     }
 
+    // Previewing creates a local object URL; saving is delegated to the parent.
     const nextPreviewUrl =
       URL.createObjectURL(file);
 
@@ -136,6 +146,7 @@ export default function GalleryUploadForm({
     setSelectedFile(file);
     setPreviewUrl(nextPreviewUrl);
 
+    // Suggest a filename-based title only when the user has not entered a name.
     if (!name.trim()) {
       setName(fileNameToTitle(file.name));
       setNameError(null);
@@ -158,6 +169,7 @@ export default function GalleryUploadForm({
     event.target.value = "";
   }
 
+  // Prevent browser navigation and process only the first dropped file.
   function handleDrop(
     event: DragEvent<HTMLDivElement>,
   ) {
@@ -171,6 +183,7 @@ export default function GalleryUploadForm({
     }
   }
 
+  // Add one normalized tag, enforcing length, count, and case-insensitive uniqueness.
   function addTag(rawValue = tagInput) {
     const nextTag = normalizeTag(rawValue);
 
@@ -216,6 +229,8 @@ export default function GalleryUploadForm({
     return true;
   }
 
+  // Enter/comma add a tag instead of submitting.
+  // Backspace removes the last tag when the input is empty.
   function handleTagKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
@@ -238,6 +253,7 @@ export default function GalleryUploadForm({
     }
   }
 
+  // Remove only the requested tag and clear any previous tag validation message.
   function removeTag(tagToRemove: string) {
     setTags((currentTags) =>
       currentTags.filter(
@@ -248,6 +264,7 @@ export default function GalleryUploadForm({
     setTagError(null);
   }
 
+  // Validate the image/name and include an unfinished tag before invoking onSave.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -274,6 +291,7 @@ export default function GalleryUploadForm({
       return;
     }
 
+    // Include typed text even when Add was not clicked; ignore an existing duplicate.
     const pendingTag = normalizeTag(tagInput);
 
     if (pendingTag) {
@@ -305,6 +323,7 @@ export default function GalleryUploadForm({
       }
     }
 
+    // Pass the file itself, not this form's short-lived preview URL.
     onSave({
       name: cleanName,
       tags: submittedTags,
@@ -312,6 +331,7 @@ export default function GalleryUploadForm({
     });
   }
 
+  // This checks basic readiness only; submission still validates a pending tag.
   const canSave = Boolean(
     name.trim() && previewUrl,
   );
@@ -535,6 +555,7 @@ export default function GalleryUploadForm({
           )}
         </div>
 
+        {/* Keep actions reachable while the mobile form content scrolls. */}
         {/* Form actions */}
         <div className="sticky bottom-0 z-10 -mx-1 mt-auto grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-1 pt-5 md:static md:mx-0 md:flex md:items-center md:justify-between md:border-0 md:px-0 md:pb-0 md:pt-8">
           <button

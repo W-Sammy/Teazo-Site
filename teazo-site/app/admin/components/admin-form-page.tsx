@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+// Shared form shell: the caller supplies form contents and controls visibility.
 type AdminFormProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -15,6 +16,8 @@ export default function AdminForm({
   children,
   mobileFullscreen = false,
 }: AdminFormProps) {
+  // The mobileFullscreen variant overlays small screens and becomes inline on desktop.
+  // The default variant stays inline and opens or closes by changing its width.
   const drawerClasses = mobileFullscreen
     ? `fixed inset-y-0 right-0 z-50 h-dvh w-full max-w-md overflow-hidden bg-white shadow-xl transition-transform duration-300 md:static md:z-auto md:h-full md:max-w-none md:shrink-0 md:transition-[width] ${
         isOpen
@@ -27,6 +30,7 @@ export default function AdminForm({
 
   return (
     <>
+      {/* Only the mobile overlay variant displays a clickable backdrop. */}
       {mobileFullscreen && isOpen && (
         <button
           type="button"
@@ -36,12 +40,14 @@ export default function AdminForm({
         />
       )}
 
+      {/* The shell remains mounted; callers decide whether to mount its children. */}
       <aside
         className={drawerClasses}
         role="dialog"
         aria-modal={mobileFullscreen ? true : undefined}
         aria-hidden={!isOpen}
       >
+        {/* Scroll the form independently and keep the close control inside the drawer. */}
         <div className="relative h-full min-w-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
           <button
             type="button"
@@ -63,6 +69,7 @@ export default function AdminForm({
             </svg>
           </button>
 
+          {/* Render the page-specific form supplied by the parent. */}
           {children}
         </div>
       </aside>

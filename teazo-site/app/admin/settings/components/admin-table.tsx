@@ -44,10 +44,13 @@ const initialAdmins: Admin[] = [
   },
 ];
 
+// Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
+  // Mount the Add New User modal only while it is needed.
   const [showModal, setShowModal] =
     useState(false);
 
+  // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
     errorMessage,
@@ -59,6 +62,7 @@ export default function AdminsTable() {
     toggleInvitePermission,
   } = useAdmins(initialAdmins);
 
+  // Automatically clear a displayed error after 3.5 seconds.
   useEffect(() => {
     if (!errorMessage) {
       return;
@@ -69,11 +73,13 @@ export default function AdminsTable() {
       3500,
     );
 
+    // Cancel the previous timer when dependencies change or the component unmounts.
     return () => {
       window.clearTimeout(timeout);
     };
   }, [clearError, errorMessage]);
 
+  // Keep the form open unless the hook reports that adding the admin succeeded.
   function handleAddAdmin(
     input: NewAdminInput,
   ) {
@@ -84,6 +90,7 @@ export default function AdminsTable() {
     }
   }
 
+  // Ask for confirmation before forwarding a delete request to the hook.
   function handleDeleteAdmin(
     admin: Admin,
   ) {
@@ -98,6 +105,7 @@ export default function AdminsTable() {
 
   return (
     <>
+      {/* Surface the shared error message in an alert above the page content. */}
       {errorMessage && (
         <div
           role="alert"
@@ -109,6 +117,7 @@ export default function AdminsTable() {
 
       <div className="w-full min-w-0 max-w-5xl">
         {/* Desktop column headings */}
+        {/* Keep these column widths aligned with the desktop grid in AdminRow. */}
         <div className="hidden grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
           <div className="text-sm font-semibold text-gray-500">
             Username
@@ -126,10 +135,12 @@ export default function AdminsTable() {
             Invite users
           </div>
 
+          {/* Reserve the final column for each row's action menu. */}
           <div aria-hidden="true" />
         </div>
 
         {/* Admin rows become cards on mobile. */}
+        {/* Bind each row's callbacks to the corresponding administrator. */}
         <div className="space-y-3 md:space-y-0">
           {admins.map((admin) => (
             <AdminRow
@@ -155,6 +166,7 @@ export default function AdminsTable() {
           ))}
         </div>
 
+        {/* Open the creation modal without changing the current admin list. */}
         <button
           type="button"
           onClick={() =>
@@ -172,6 +184,10 @@ export default function AdminsTable() {
         </button>
       </div>
 
+      {/*
+       * Unmount the modal on close so its local form state resets when reopened.
+       * Route modal errors through the same error state used by the table.
+       */}
       {showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}

@@ -30,12 +30,14 @@ import {
   getEventStatus,
 } from "./event-display";
 
+// Initial records and target choices are supplied by the parent page.
 type AdminEventsClientProps = {
   initialEvents: AdminEvent[];
   categories: EventCategory[];
   items: EventCatalogItem[];
 };
 
+// Options consumed by the shared card/list view toggle.
 const viewOptions: readonly AdminViewOption<EventViewMode>[] =
   [
     {
@@ -61,6 +63,7 @@ export default function AdminEventsClient({
   categories,
   items,
 }: AdminEventsClientProps) {
+  // Delegate event operations and their error messages to the events hook.
   const {
     events,
     errorMessage,
@@ -70,6 +73,7 @@ export default function AdminEventsClient({
     deleteEndedEvents,
   } = useEvents(initialEvents);
 
+  // Search, status selection, sorting, and view mode control the visible results.
   const [search, setSearch] =
     useState("");
 
@@ -84,6 +88,7 @@ export default function AdminEventsClient({
   const [viewMode, setViewMode] =
     useState<EventViewMode>("grid");
 
+  // Desktop collapse and mobile overlay visibility are independent.
   const [filtersOpen, setFiltersOpen] =
     useState(true);
 
@@ -92,12 +97,14 @@ export default function AdminEventsClient({
     setMobileFiltersOpen,
   ] = useState(false);
 
+  // A null editingEvent means the drawer is creating a new event.
   const [drawerOpen, setDrawerOpen] =
     useState(false);
 
   const [editingEvent, setEditingEvent] =
     useState<AdminEvent | null>(null);
 
+  // Store deletion candidates until the corresponding confirmation is accepted.
   const [
     eventPendingDelete,
     setEventPendingDelete,
@@ -108,6 +115,7 @@ export default function AdminEventsClient({
     setDeleteEndedDialogOpen,
   ] = useState(false);
 
+  // Resolve target IDs to names without repeatedly searching the source arrays.
   const categoryNames = useMemo(
     () =>
       new Map(
@@ -130,6 +138,7 @@ export default function AdminEventsClient({
     [items],
   );
 
+  // Bulk deletion counts the full collection, not only the currently filtered results.
   const endedEventCount = useMemo(
     () =>
       events.filter(
@@ -139,6 +148,7 @@ export default function AdminEventsClient({
     [events],
   );
 
+  // Match any selected status AND the search query, then order the matching events.
   const filteredEvents = useMemo(() => {
     const query = search
       .trim()
@@ -153,6 +163,7 @@ export default function AdminEventsClient({
           selectedStatuses.length === 0 ||
           selectedStatuses.includes(status);
 
+        // Include linked category and item names in addition to event text.
         const searchableTargets = [
           ...event.categoryIds.map(
             (id) =>
@@ -183,6 +194,7 @@ export default function AdminEventsClient({
       },
     );
 
+    // Sort a copy so the source event order is not mutated.
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "name-asc":
@@ -218,6 +230,7 @@ export default function AdminEventsClient({
     sortBy,
   ]);
 
+  // Add or remove a status using a new selection array.
   function toggleStatus(
     status: EventStatus,
   ) {
@@ -230,16 +243,19 @@ export default function AdminEventsClient({
     );
   }
 
+  // Clear the edit selection when closing so the next new-event form starts fresh.
   function closeDrawer() {
     setDrawerOpen(false);
     setEditingEvent(null);
   }
 
+  // Opening a new event must not reuse an earlier edit selection.
   function openNewEventDrawer() {
     setEditingEvent(null);
     setDrawerOpen(true);
   }
 
+  // Pass the selected event into the same form used for creation.
   function openEditDrawer(
     event: AdminEvent,
   ) {
@@ -247,6 +263,7 @@ export default function AdminEventsClient({
     setDrawerOpen(true);
   }
 
+  // Close the form only when the events hook reports that saving succeeded.
   async function handleSave(
     values: EventFormValues,
   ) {
@@ -262,6 +279,7 @@ export default function AdminEventsClient({
     }
   }
 
+  // Leave the confirmation open when deletion fails; clear it after success.
   async function confirmDelete() {
     if (!eventPendingDelete) {
       return;
@@ -288,6 +306,7 @@ export default function AdminEventsClient({
     setEventPendingDelete(null);
   }
 
+  // Delete ended events, then clear any editor or pending dialog for an ended event.
   async function handleDeleteEndedEvents() {
     if (endedEventCount === 0) {
       return;
@@ -320,6 +339,7 @@ export default function AdminEventsClient({
     setDeleteEndedDialogOpen(false);
   }
 
+  // Reset matching criteria without changing the selected sort or view mode.
   function clearSearchAndFilters() {
     setSearch("");
     setSelectedStatuses([]);
@@ -327,6 +347,7 @@ export default function AdminEventsClient({
 
   return (
     <div className="relative flex h-dvh w-full min-w-0 overflow-hidden bg-white">
+      {/* Surface operation errors from useEvents above the page controls. */}
       {errorMessage && (
         <div
           role="alert"
@@ -336,6 +357,7 @@ export default function AdminEventsClient({
         </div>
       )}
 
+      {/* Tapping the shaded area dismisses the mobile filter overlay. */}
       {mobileFiltersOpen && (
         <button
           type="button"
@@ -484,6 +506,7 @@ export default function AdminEventsClient({
 
       {/* Main event area */}
       <section className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Stack toolbar controls on narrow screens instead of allowing overlap. */}
         <div className="shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
@@ -579,6 +602,7 @@ export default function AdminEventsClient({
             )}
           </div>
 
+          {/* Distinguish an empty collection from a search with no matches. */}
           {filteredEvents.length > 0 ? (
             viewMode === "grid" ? (
               <AdminEventsGrid
@@ -634,6 +658,7 @@ export default function AdminEventsClient({
       </section>
 
       {/* Create/edit event form */}
+      {/* Conditional rendering and the record key reset form state between selections. */}
       <AdminForm
         isOpen={drawerOpen}
         onClose={closeDrawer}
@@ -654,6 +679,7 @@ export default function AdminEventsClient({
         )}
       </AdminForm>
 
+      {/* Deletion happens only through the confirmation callbacks. */}
       <DeleteEventDialog
         event={eventPendingDelete}
         onCancel={() =>

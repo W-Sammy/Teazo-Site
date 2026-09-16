@@ -5,6 +5,7 @@ import { useState } from "react";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { ItemCategory } from "@/app/types/menu-item";
 
+// Supported values for the shared list. Rows may omit individual fields.
 type CellValue =
   | string
   | string[]
@@ -18,6 +19,7 @@ type Row = Partial<Record<string, CellValue>>;
 
 const fallbackImage = "/TEAZO_logo.svg";
 
+// Keep ordinary desktop cells compact; images and categories have separate renderers.
 function checkCell(value: unknown): string {
   if (value == null) {
     return "N/A";
@@ -32,6 +34,7 @@ function checkCell(value: unknown): string {
       return String(value[0]);
     }
 
+    // Summarize arrays with multiple entries instead of expanding the table cell.
     return "...";
   }
 
@@ -42,6 +45,7 @@ function checkCell(value: unknown): string {
     : text;
 }
 
+// Mobile cards have room to show the complete value of additional fields.
 function fullCell(value: unknown): string {
   if (value == null) {
     return "N/A";
@@ -56,12 +60,14 @@ function fullCell(value: unknown): string {
   return String(value);
 }
 
+// Reuse a readable name for headings, image alt text, and action labels.
 function getItemName(item: Row): string {
   return typeof item.name === "string" && item.name.trim()
     ? item.name
     : "Unnamed item";
 }
 
+// Narrow unknown data to category objects with the fields this component reads.
 function getCategories(value: unknown): ItemCategory[] {
   if (!Array.isArray(value)) {
     return [];
@@ -81,6 +87,7 @@ function getCategories(value: unknown): ItemCategory[] {
   );
 }
 
+// Use local assets or approved HTTPS hosts; fall back for missing or invalid sources.
 function getImageSrc(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) {
     return fallbackImage;
@@ -100,6 +107,7 @@ function getImageSrc(value: unknown): string {
   try {
     const url = new URL(source);
 
+    // Accept an exact approved hostname or one of its subdomains.
     const allowed = allowedHosts.some(
       (hostname) =>
         url.hostname === hostname ||
@@ -123,6 +131,7 @@ function ItemThumbnail({
   itemName: string;
   compact?: boolean;
 }) {
+  // Remember which URL failed without preventing a different URL from being tried.
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
   const source = getImageSrc(value);
@@ -152,6 +161,7 @@ function ItemThumbnail({
   );
 }
 
+// Show one category directly or expose multiple names through a hover/focus list.
 function DesktopCategories({ value }: { value: unknown }) {
   const categories = getCategories(value);
 
@@ -195,6 +205,7 @@ function DesktopCategories({ value }: { value: unknown }) {
   );
 }
 
+// Use an SVG cross rather than depending on a text glyph for the delete icon.
 function DeleteIcon() {
   return (
     <svg
@@ -227,6 +238,7 @@ export default function ListView({ items }: { items: Row[] }) {
     (key) => key !== "id" && key !== "category_id",
   );
 
+  // Preserve extra data fields on cards without repeating the standard menu fields.
   const additionalKeys = keys.filter(
     (key) =>
       ![
@@ -367,6 +379,7 @@ export default function ListView({ items }: { items: Row[] }) {
       {/* Desktop table, shown only when there is enough space. */}
       <div className="hidden min-w-0 @min-[700px]/menu-list:block">
         <table className="w-full table-fixed border-collapse">
+          {/* Reserve predictable widths for action buttons, thumbnails, and prices. */}
           <colgroup>
             <col className="w-8" />
             <col className="w-16" />
@@ -407,6 +420,7 @@ export default function ListView({ items }: { items: Row[] }) {
             </tr>
           </thead>
 
+          {/* Row clicks edit; action buttons stop bubbling to avoid a second action. */}
           <tbody>
             {items.map((item, index) => {
               const itemName = getItemName(item);
@@ -445,6 +459,7 @@ export default function ListView({ items }: { items: Row[] }) {
                     </button>
                   </td>
 
+                  {/* Render known field types specially and compact other values. */}
                   {keys.map((key) => (
                     <td
                       key={key}
