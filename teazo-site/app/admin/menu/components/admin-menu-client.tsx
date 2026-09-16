@@ -4,8 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ItemCategory } from "@/app/types/menu-item";
 import ListView from "@/app/admin/components/admin-list-view";
 import AdminForm from "@/app/admin/components/admin-form-page";
+import AdminViewToggle, {
+  GridViewIcon,
+  ListViewIcon,
+  type AdminViewOption,
+} from "@/app/admin/components/admin-view-toggle";
 
-// Menu rows passed to the shared responsive ListView.
 type DisplayedMenuItem = {
   id: string;
   img: string;
@@ -20,51 +24,48 @@ type Category = {
   name: string;
 };
 
-// Restrict sort state to the options shown in the filter panel.
 type MenuSortOption =
   | "name-asc"
   | "name-desc"
   | "price-asc"
   | "price-desc";
 
+type MenuViewMode = "grid" | "list";
+
 type AdminMenuClientProps = {
   items: DisplayedMenuItem[];
   categories: Category[];
 };
 
+const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
+  { value: "grid", label: "Card View", icon: <GridViewIcon /> },
+  { value: "list", label: "List View", icon: <ListViewIcon /> },
+];
+
 export default function AdminMenuClient({
   items,
   categories,
 }: AdminMenuClientProps) {
-  // Search, category selection, and sorting derive a visible subset of the supplied items.
   const [search, setSearch] = useState("");
-
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-
   const [sortBy, setSortBy] = useState<MenuSortOption>("name-asc");
 
-  // Desktop collapse is separate from the mobile overlay's visibility.
+  // Desktop starts in List View. Mobile defaults to cards.
+  const [viewMode, setViewMode] = useState<MenuViewMode>("list");
+
   const [filtersOpen, setFiltersOpen] = useState(true);
-
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  // Upload drawer state; the filename is display-only, not an implemented upload.
   const [open, setOpen] = useState(false);
-
   const [uploadFileName, setUploadFileName] = useState("");
 
-  // Move focus to the mobile close button; the other ref opens the native file chooser.
   const mobileFilterCloseRef = useRef<HTMLButtonElement | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Escape closes either panel. Cleanup restores the previously focused element when possible.
   useEffect(() => {
     if (!mobileFiltersOpen && !open) {
       return;
     }
 
-    // Capture focus before moving it into the mobile filter panel.
     const previousFocus =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -94,7 +95,6 @@ export default function AdminMenuClient({
     };
   }, [mobileFiltersOpen, open]);
 
-  // An item can match any selected category; an empty selection allows every category.
   function toggleCategory(id: string) {
     setSelectedCategories((current) =>
       current.includes(id)
@@ -103,7 +103,6 @@ export default function AdminMenuClient({
     );
   }
 
-  // Combine category matching with a case-insensitive name/description search.
   const filteredItems = useMemo(() => {
     const query = search.toLowerCase();
 
@@ -121,7 +120,6 @@ export default function AdminMenuClient({
       return matchesCategory && matchesSearch;
     });
 
-    // Sort a new array rather than mutating the items supplied by the parent.
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "name-desc":
@@ -140,7 +138,6 @@ export default function AdminMenuClient({
     });
   }, [items, search, selectedCategories, sortBy]);
 
-  // Avoid competing mobile overlays and clear the previous filename label.
   function openUploadForm() {
     setMobileFiltersOpen(false);
     setUploadFileName("");
@@ -149,7 +146,7 @@ export default function AdminMenuClient({
 
   return (
     <div className="relative flex h-dvh w-full min-w-0 overflow-hidden bg-white">
-      {/* Mobile filters overlay; it does not push the menu sideways. */}
+      {/* Mobile filters overlay: it does not push the menu sideways. */}
       {mobileFiltersOpen && (
         <button
           type="button"
@@ -160,17 +157,13 @@ export default function AdminMenuClient({
         />
       )}
 
-      {/* Filters: overlay on mobile, collapsible sidebar on desktop. */}
+      {/* Overlay on mobile; collapsible sidebar on desktop. */}
       <aside
         id="menu-filter-panel"
         aria-labelledby="menu-filter-heading"
         className={`absolute inset-y-0 left-0 z-40 h-full w-64 max-w-[calc(100%_-_1rem)] flex-col overflow-y-auto overscroll-contain border-r border-[#dbb082] bg-white p-4 shadow-xl md:static md:z-auto md:flex md:max-w-none md:shrink-0 md:shadow-none ${
           mobileFiltersOpen ? "flex" : "hidden"
-        } ${
-          filtersOpen
-            ? "md:w-48 md:p-4"
-            : "md:w-10 md:p-2"
-        }`}
+        } ${filtersOpen ? "md:w-48 md:p-4" : "md:w-10 md:p-2"}`}
       >
         <div className="mb-4 flex items-center justify-between gap-2">
           <h2
@@ -182,7 +175,6 @@ export default function AdminMenuClient({
             Filters
           </h2>
 
-          {/* Mobile close button */}
           <button
             ref={mobileFilterCloseRef}
             type="button"
@@ -203,14 +195,11 @@ export default function AdminMenuClient({
             </svg>
           </button>
 
-          {/* Desktop collapse button */}
           <button
             type="button"
             onClick={() => setFiltersOpen((current) => !current)}
             className="hidden cursor-pointer rounded py-1 text-lg font-bold hover:bg-gray-100 md:inline-flex"
-            aria-label={
-              filtersOpen ? "Collapse filters" : "Expand filters"
-            }
+            aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
             aria-expanded={filtersOpen}
             aria-controls="menu-filter-controls"
           >
@@ -220,11 +209,8 @@ export default function AdminMenuClient({
 
         <div
           id="menu-filter-controls"
-          className={`space-y-3 ${
-            filtersOpen ? "md:block" : "md:hidden"
-          }`}
+          className={`space-y-3 ${filtersOpen ? "md:block" : "md:hidden"}`}
         >
-          {/* Sorting */}
           <div>
             <label
               htmlFor="menu-sort"
@@ -257,7 +243,6 @@ export default function AdminMenuClient({
             Clear filters
           </button>
 
-          {/* Category filters */}
           <div className="space-y-1">
             {categories.map((category) => (
               <label
@@ -282,15 +267,11 @@ export default function AdminMenuClient({
         </div>
       </aside>
 
-      {/* Main menu content */}
       <section className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        {/*
-         * The toolbar responds to its own available width.
-         * This also prevents overlap when the upload drawer is open.
-         */}
+        {/* Use two toolbar rows when the menu area is too narrow for one. */}
         <div className="@container/menu-toolbar shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
-          <div className="flex min-w-0 flex-col gap-3 @min-[580px]/menu-toolbar:flex-row @min-[580px]/menu-toolbar:items-center @min-[580px]/menu-toolbar:justify-between">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 @min-[580px]/menu-toolbar:max-w-64 @min-[580px]/menu-toolbar:flex-1">
+          <div className="flex min-w-0 flex-col gap-3 @min-[800px]/menu-toolbar:flex-row @min-[800px]/menu-toolbar:items-center">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 @min-[800px]/menu-toolbar:max-w-64 @min-[800px]/menu-toolbar:flex-1">
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(true)}
@@ -313,28 +294,41 @@ export default function AdminMenuClient({
               />
             </div>
 
-            <div className="grid w-full min-w-0 grid-cols-1 gap-2 @min-[260px]/menu-toolbar:grid-cols-2 @min-[580px]/menu-toolbar:flex @min-[580px]/menu-toolbar:w-auto @min-[580px]/menu-toolbar:shrink-0">
-              {/* Existing placeholder: no Add Item handler has been added. */}
-              <button
-                type="button"
-                className="min-w-0 cursor-pointer rounded-lg px-4 py-2 text-center [overflow-wrap:anywhere]"
-              >
-                Add Item
-              </button>
+            <div className="flex min-w-0 flex-col gap-3 @min-[520px]/menu-toolbar:flex-row @min-[520px]/menu-toolbar:items-center @min-[520px]/menu-toolbar:justify-between @min-[800px]/menu-toolbar:flex-1">
+              {/* Keep the existing mobile toolbar and cards unchanged. */}
+              <div className="hidden min-w-0 md:block">
+                <AdminViewToggle
+                  value={viewMode}
+                  options={menuViewOptions}
+                  onChange={setViewMode}
+                  ariaLabel="Menu view"
+                  className="max-w-full @max-[260px]/menu-toolbar:flex-col @max-[260px]/menu-toolbar:[&>button]:w-full @max-[260px]/menu-toolbar:[&>button]:flex-wrap @max-[260px]/menu-toolbar:[&>button>span:last-child]:max-w-full @max-[260px]/menu-toolbar:[&>button>span:last-child]:whitespace-normal"
+                />
+              </div>
 
-              <button
-                type="button"
-                onClick={openUploadForm}
-                className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] [overflow-wrap:anywhere]"
-              >
-                Upload Menu
-              </button>
+              <div className="grid w-full min-w-0 grid-cols-1 gap-2 @min-[260px]/menu-toolbar:grid-cols-2 @min-[520px]/menu-toolbar:ml-auto @min-[520px]/menu-toolbar:flex @min-[520px]/menu-toolbar:w-auto @min-[520px]/menu-toolbar:shrink-0">
+                {/* Placeholder: no Add Item handler has been added. */}
+                <button
+                  type="button"
+                  className="min-w-0 cursor-pointer rounded-lg px-4 py-2 text-center [overflow-wrap:anywhere]"
+                >
+                  Add Item
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openUploadForm}
+                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] [overflow-wrap:anywhere]"
+                >
+                  Upload Menu
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <ListView items={filteredItems} />
+          <ListView items={filteredItems} viewMode={viewMode} />
         </div>
       </section>
 
@@ -351,7 +345,7 @@ export default function AdminMenuClient({
             onSubmit={(event) => {
               event.preventDefault();
 
-              // Existing placeholder. No upload request is sent.
+              // Placeholder: No upload request is sent.
               console.log("upload logic here");
             }}
           >
@@ -370,7 +364,6 @@ export default function AdminMenuClient({
                 Menu file
               </label>
 
-              {/* accept filters chooser options; no file validation or upload is implemented here. */}
               <input
                 ref={fileInputRef}
                 id="menu-upload-file"
@@ -378,9 +371,7 @@ export default function AdminMenuClient({
                 type="file"
                 accept="image/*,.jpg,.jpeg,.png,.webp,.pdf"
                 onChange={(event) =>
-                  setUploadFileName(
-                    event.target.files?.[0]?.name ?? "",
-                  )
+                  setUploadFileName(event.target.files?.[0]?.name ?? "")
                 }
                 className="hidden"
               />

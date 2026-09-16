@@ -5,7 +5,6 @@ import { useState } from "react";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { ItemCategory } from "@/app/types/menu-item";
 
-// Supported values for the shared list. Rows may omit individual fields.
 type CellValue =
   | string
   | string[]
@@ -17,9 +16,15 @@ type CellValue =
 
 type Row = Partial<Record<string, CellValue>>;
 
+type ListViewProps = {
+  items: Row[];
+
+  // If omitted, automatically choose cards or a table based on available width.
+  viewMode?: "auto" | "grid" | "list";
+};
+
 const fallbackImage = "/TEAZO_logo.svg";
 
-// Keep ordinary desktop cells compact; images and categories have separate renderers.
 function checkCell(value: unknown): string {
   if (value == null) {
     return "N/A";
@@ -34,7 +39,6 @@ function checkCell(value: unknown): string {
       return String(value[0]);
     }
 
-    // Summarize arrays with multiple entries instead of expanding the table cell.
     return "...";
   }
 
@@ -45,7 +49,6 @@ function checkCell(value: unknown): string {
     : text;
 }
 
-// Mobile cards have room to show the complete value of additional fields.
 function fullCell(value: unknown): string {
   if (value == null) {
     return "N/A";
@@ -60,14 +63,12 @@ function fullCell(value: unknown): string {
   return String(value);
 }
 
-// Reuse a readable name for headings, image alt text, and action labels.
 function getItemName(item: Row): string {
   return typeof item.name === "string" && item.name.trim()
     ? item.name
     : "Unnamed item";
 }
 
-// Narrow unknown data to category objects with the fields this component reads.
 function getCategories(value: unknown): ItemCategory[] {
   if (!Array.isArray(value)) {
     return [];
@@ -87,7 +88,6 @@ function getCategories(value: unknown): ItemCategory[] {
   );
 }
 
-// Use local assets or approved HTTPS hosts; fall back for missing or invalid sources.
 function getImageSrc(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) {
     return fallbackImage;
@@ -95,7 +95,6 @@ function getImageSrc(value: unknown): string {
 
   const source = value.trim();
 
-  // Allow local public assets without treating them as external URLs.
   if (
     source.startsWith("/") &&
     !source.startsWith("//") &&
@@ -107,7 +106,6 @@ function getImageSrc(value: unknown): string {
   try {
     const url = new URL(source);
 
-    // Accept an exact approved hostname or one of its subdomains.
     const allowed = allowedHosts.some(
       (hostname) =>
         url.hostname === hostname ||
@@ -131,7 +129,6 @@ function ItemThumbnail({
   itemName: string;
   compact?: boolean;
 }) {
-  // Remember which URL failed without preventing a different URL from being tried.
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
   const source = getImageSrc(value);
@@ -152,7 +149,6 @@ function ItemThumbnail({
         compact ? "h-8 w-8" : "h-16 w-16"
       }`}
       onError={() => {
-        // Do not repeatedly retry a fallback that also fails to load.
         if (displayedSource !== fallbackImage) {
           setFailedSource(source);
         }
@@ -161,7 +157,6 @@ function ItemThumbnail({
   );
 }
 
-// Show one category directly or expose multiple names through a hover/focus list.
 function DesktopCategories({ value }: { value: unknown }) {
   const categories = getCategories(value);
 
@@ -205,7 +200,6 @@ function DesktopCategories({ value }: { value: unknown }) {
   );
 }
 
-// Use an SVG cross rather than depending on a text glyph for the delete icon.
 function DeleteIcon() {
   return (
     <svg
@@ -222,7 +216,10 @@ function DeleteIcon() {
   );
 }
 
-export default function ListView({ items }: { items: Row[] }) {
+export default function ListView({
+  items,
+  viewMode = "auto",
+}: ListViewProps) {
   if (!items || items.length === 0) {
     return (
       <div className="px-4 py-4">
@@ -231,14 +228,12 @@ export default function ListView({ items }: { items: Row[] }) {
     );
   }
 
-  // Keep the shared component's existing dynamic-column interface.
   const keys = Array.from(
     new Set(items.flatMap((item) => Object.keys(item))),
   ).filter(
     (key) => key !== "id" && key !== "category_id",
   );
 
-  // Preserve extra data fields on cards without repeating the standard menu fields.
   const additionalKeys = keys.filter(
     (key) =>
       ![
@@ -250,7 +245,23 @@ export default function ListView({ items }: { items: Row[] }) {
       ].includes(key),
   );
 
-  // Existing placeholders: these do not edit or delete saved menu data.
+  // Explicit List View overrides the old 700px switch on desktop only.
+  // Below md, the menu still uses the same mobile cards.
+  const cardVisibility =
+    viewMode === "auto"
+      ? "grid @min-[700px]/menu-list:hidden"
+      : viewMode === "list"
+        ? "grid md:hidden"
+        : "grid";
+
+  const tableVisibility =
+    viewMode === "auto"
+      ? "hidden @min-[700px]/menu-list:block"
+      : viewMode === "list"
+        ? "hidden md:block"
+        : "hidden";
+
+  // Existing placeholders: no saved menu data is edited or deleted here.
   function editHandler(item: Row) {
     console.log("edit", item);
   }
@@ -261,9 +272,8 @@ export default function ListView({ items }: { items: Row[] }) {
 
   return (
     <div className="@container/menu-list w-full min-w-0">
-      {/* Cards are used whenever the list has less than 700px available. */}
       <ul
-        className="grid min-w-0 grid-cols-1 gap-3 p-3 sm:p-4 @min-[700px]/menu-list:hidden"
+        className={`${cardVisibility} min-w-0 grid-cols-1 gap-3 p-3 sm:p-4`}
         aria-label="Menu items"
       >
         {items.map((item, index) => {
@@ -276,7 +286,6 @@ export default function ListView({ items }: { items: Row[] }) {
               className="min-w-0"
             >
               <article className="min-w-0 rounded-xl border border-[#dbb082]/60 bg-white p-3 shadow-sm">
-                {/* Name and price remain separate from the image. */}
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <h2 className="font-semibold text-gray-900 [overflow-wrap:anywhere]">
@@ -294,7 +303,6 @@ export default function ListView({ items }: { items: Row[] }) {
                   />
                 </div>
 
-                {/* Full description on mobile */}
                 <div className="mt-3 min-w-0">
                   <h3 className="text-xs font-semibold text-gray-500">
                     Description
@@ -308,7 +316,6 @@ export default function ListView({ items }: { items: Row[] }) {
                   </p>
                 </div>
 
-                {/* All category names remain visible on mobile. */}
                 <div className="mt-3 min-w-0">
                   <h3 className="text-xs font-semibold text-gray-500">
                     Categories
@@ -332,11 +339,13 @@ export default function ListView({ items }: { items: Row[] }) {
                   )}
                 </div>
 
-                {/* Preserve any additional fields supplied to this shared list. */}
                 {additionalKeys.length > 0 && (
                   <dl className="mt-3 space-y-2">
                     {additionalKeys.map((key) => (
-                      <div key={key} className="min-w-0">
+                      <div
+                        key={key}
+                        className="min-w-0"
+                      >
                         <dt className="text-xs font-semibold text-gray-500">
                           {key}
                         </dt>
@@ -349,7 +358,6 @@ export default function ListView({ items }: { items: Row[] }) {
                   </dl>
                 )}
 
-                {/* Separate mobile actions prevent accidental row clicks. */}
                 <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#dbb082]/30 pt-3">
                   <button
                     type="button"
@@ -376,10 +384,18 @@ export default function ListView({ items }: { items: Row[] }) {
         })}
       </ul>
 
-      {/* Desktop table, shown only when there is enough space. */}
-      <div className="hidden min-w-0 @min-[700px]/menu-list:block">
-        <table className="w-full table-fixed border-collapse">
-          {/* Reserve predictable widths for action buttons, thumbnails, and prices. */}
+      {/* Any overflow in an unusually narrow desktop panel stays in this region. */}
+      <div
+        className={`${tableVisibility} w-full min-w-0 max-w-full overscroll-x-contain @max-[560px]/menu-list:overflow-x-auto`}
+        role="region"
+        aria-label="Menu items list"
+        tabIndex={0}
+      >
+        <table className="w-full min-w-[560px] table-fixed border-collapse">
+          <caption className="sr-only">
+            Menu items
+          </caption>
+
           <colgroup>
             <col className="w-8" />
             <col className="w-16" />
@@ -420,7 +436,6 @@ export default function ListView({ items }: { items: Row[] }) {
             </tr>
           </thead>
 
-          {/* Row clicks edit; action buttons stop bubbling to avoid a second action. */}
           <tbody>
             {items.map((item, index) => {
               const itemName = getItemName(item);
@@ -459,13 +474,11 @@ export default function ListView({ items }: { items: Row[] }) {
                     </button>
                   </td>
 
-                  {/* Render known field types specially and compact other values. */}
                   {keys.map((key) => (
                     <td
                       key={key}
                       title={
-                        typeof item[key] === "string" &&
-                        key !== "img"
+                        typeof item[key] === "string" && key !== "img"
                           ? item[key]
                           : undefined
                       }

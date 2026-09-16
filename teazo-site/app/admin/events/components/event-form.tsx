@@ -616,8 +616,10 @@ export default function EventForm({
           </p>
         )}
 
-        {/* Actions remain sticky on smaller screens and return to normal flow on desktop. */}
-        {/* Form actions */}
+        {/* Keep Cancel and Save visible near the bottom while scrolling on mobile.
+          * On larger screens, let the buttons scroll normally with the form.
+          */}
+        {/*Form actions */}
         <div className="sticky bottom-0 z-10 -mx-1 mt-auto grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-2 pt-5 md:static md:mx-0 md:flex md:items-center md:justify-between md:border-0 md:px-0 md:pb-0 md:pt-8">
           <button
             type="button"
