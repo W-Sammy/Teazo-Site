@@ -78,8 +78,9 @@ export default function AdminGalleryClient({
   const [sortBy, setSortBy] =
     useState<GallerySortOption>("name-asc");
 
+  // Start in List View on both mobile and desktop.
   const [viewMode, setViewMode] =
-    useState<GalleryViewMode>("grid");
+    useState<GalleryViewMode>("list");
 
   /*
    * Desktop filters use a collapsible sidebar.

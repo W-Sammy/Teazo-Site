@@ -30,6 +30,14 @@ type ListViewProps<T extends Row = Row> = {
 
 const fallbackImage = "/TEAZO_logo.svg";
 
+const columnLabels: Record<string, string> = {
+  img: "Image",
+  name: "Name",
+  price: "Price",
+  description: "Description",
+  categories: "Categories",
+};
+
 function checkCell(value: unknown): string {
   if (value == null) {
     return "N/A";
@@ -160,7 +168,7 @@ function ItemThumbnail({
         displayedSource.startsWith("blob:")
       }
       className={`shrink-0 rounded object-cover ${
-        compact ? "h-8 w-8" : "h-16 w-16"
+        compact ? "h-11 w-11" : "h-16 w-16"
       }`}
       onError={() => {
         if (displayedSource !== fallbackImage) {
@@ -171,61 +179,25 @@ function ItemThumbnail({
   );
 }
 
-function DesktopCategories({ value }: { value: unknown }) {
+// Keep every category visible inside the scrollable table instead of using a hover popup.
+function TableCategories({ value }: { value: unknown }) {
   const categories = getCategories(value);
 
   if (categories.length === 0) {
-    return <>N/A</>;
-  }
-
-  if (categories.length === 1) {
-    return <>{categories[0].name ?? "Unnamed category"}</>;
+    return <span className="text-gray-400">N/A</span>;
   }
 
   return (
-    <>
-      {/* Mobile shows all category names instead of requiring a hover. */}
-      <span className="md:hidden [overflow-wrap:anywhere]">
-        {categories
-          .map(
-            (category) =>
-              category.name ?? "Unnamed category",
-          )
-          .join(", ")}
-      </span>
-
-      <div
-        className="group relative hidden md:inline-block"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="cursor-pointer font-bold text-blue-600 hover:underline focus-visible:underline"
-          aria-label={`Show ${categories.length} categories`}
-          title={categories
-            .map(
-              (category) =>
-                category.name ?? "Unnamed category",
-            )
-            .join(", ")}
+    <div className="flex min-w-0 flex-wrap gap-1.5">
+      {categories.map((category) => (
+        <span
+          key={category.id}
+          className="max-w-full rounded-full bg-[#fff0f2] px-2 py-1 text-xs text-gray-700 [overflow-wrap:anywhere]"
         >
-          {categories.length}
-        </button>
-
-        <div className="absolute right-0 top-full z-20 mt-1 hidden w-48 rounded border border-[#dbb082] bg-white p-2 shadow-lg group-hover:block group-focus-within:block">
-          <ul className="space-y-1 text-sm text-gray-700">
-            {categories.map((category) => (
-              <li
-                key={category.id}
-                className="[overflow-wrap:anywhere]"
-              >
-                {category.name ?? "Unnamed category"}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </>
+          {category.name ?? "Unnamed category"}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -434,127 +406,136 @@ export default function ListView<T extends Row = Row>({
         })}
       </ul>
 
-      {/* Swipe sideways inside this region without moving the whole page. */}
-      <div
-        className={`${tableVisibility} w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain md:overflow-x-visible md:@max-[560px]/menu-list:overflow-x-auto`}
-        role="region"
-        aria-label="Menu items list"
-        tabIndex={0}
-      >
-        <table className="w-full min-w-[700px] table-fixed border-collapse md:min-w-[560px]">
-          <caption className="sr-only">
-            Menu items
-          </caption>
+      {/* Match the spacing and rounded table frame used by Gallery and Events. */}
+      <div className={`${tableVisibility} min-w-0 p-3 sm:p-4`}>
+        {/* Horizontal scrolling stays inside the table, not the surrounding page. */}
+        <div
+          className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-[#dbb082]/60 bg-white"
+          role="region"
+          aria-label="Menu items list"
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[760px] table-fixed border-collapse">
+            <caption className="sr-only">
+              Menu items
+            </caption>
 
-          <colgroup>
-            <col className="w-8" />
-            <col className="w-16" />
-
-            {keys.map((key) => (
-              <col
-                key={key}
-                className={
-                  key === "img"
-                    ? "w-14"
-                    : key === "price"
-                      ? "w-24"
-                      : undefined
-                }
-              />
-            ))}
-          </colgroup>
-
-          <thead>
-            <tr className="border-b border-[#dbb082]">
-              <th scope="col">
-                <span className="sr-only">Delete</span>
-              </th>
-
-              <th scope="col">
-                <span className="sr-only">Edit</span>
-              </th>
+            <colgroup>
+              <col className="w-14" />
+              <col className="w-20" />
 
               {keys.map((key) => (
-                <th
+                <col
                   key={key}
-                  scope="col"
-                  className="py-2 pr-2 text-left [overflow-wrap:anywhere]"
-                >
-                  {checkCell(key)}
-                </th>
+                  className={
+                    key === "img"
+                      ? "w-20"
+                      : key === "price"
+                        ? "w-24"
+                        : undefined
+                  }
+                />
               ))}
-            </tr>
-          </thead>
+            </colgroup>
 
-          <tbody>
-            {items.map((item, index) => {
-              const itemName = getItemName(item);
+            <thead>
+              <tr className="border-b border-[#dbb082] bg-[#fffaf6] text-left text-sm text-gray-700">
+                <th scope="col" className="px-3 py-3">
+                  <span className="sr-only">Delete</span>
+                </th>
 
-              return (
-                <tr
-                  key={String(item.id ?? index)}
-                  onClick={() => editHandler(item)}
-                  className="cursor-pointer border-b border-[#dbb082]/50 hover:bg-[#dbb082]/25"
-                >
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        deleteHandler(item);
-                      }}
-                      aria-label={`Delete ${itemName}`}
-                      className="flex h-8 w-8 cursor-pointer items-center justify-center text-red-500 hover:text-red-700"
-                    >
-                      <DeleteIcon />
-                    </button>
-                  </td>
+                <th scope="col" className="px-3 py-3">
+                  <span className="sr-only">Edit</span>
+                </th>
 
-                  <td className="py-2 pr-2">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        editHandler(item);
-                      }}
-                      aria-label={`Edit ${itemName}`}
-                      className="cursor-pointer rounded bg-[#dbb082] px-1.5 py-0.5 text-xs font-bold text-white"
-                    >
-                      EDIT
-                    </button>
-                  </td>
+                {keys.map((key) => (
+                  <th
+                    key={key}
+                    scope="col"
+                    className="px-3 py-3 [overflow-wrap:anywhere]"
+                  >
+                    {columnLabels[key] ?? checkCell(key)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-                  {keys.map((key) => (
-                    <td
-                      key={key}
-                      title={
-                        typeof item[key] === "string" &&
-                        key !== "img"
-                          ? String(item[key])
-                          : undefined
-                      }
-                      className="py-2 pr-2 [overflow-wrap:anywhere]"
-                    >
-                      {key === "price" ? (
-                        `$${Number(item[key] ?? 0).toFixed(2)}`
-                      ) : key === "img" ? (
-                        <ItemThumbnail
-                          value={item[key]}
-                          itemName={itemName}
-                          compact
-                        />
-                      ) : key === "categories" ? (
-                        <DesktopCategories value={item[key]} />
-                      ) : (
-                        checkCell(item[key])
-                      )}
+            <tbody>
+              {items.map((item, index) => {
+                const itemName = getItemName(item);
+
+                return (
+                  <tr
+                    key={String(item.id ?? index)}
+                    onClick={() => editHandler(item)}
+                    className="cursor-pointer border-b border-[#dbb082]/40 text-sm text-gray-700 last:border-b-0 hover:bg-[#dbb082]/15"
+                  >
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          deleteHandler(item);
+                        }}
+                        aria-label={`Delete ${itemName}`}
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-red-500 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <DeleteIcon />
+                      </button>
                     </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          editHandler(item);
+                        }}
+                        aria-label={`Edit ${itemName}`}
+                        className="cursor-pointer rounded bg-[#dbb082] px-2 py-1 text-xs font-bold text-white hover:bg-[#c89968]"
+                      >
+                        EDIT
+                      </button>
+                    </td>
+
+                    {keys.map((key) => (
+                      <td
+                        key={key}
+                        title={
+                          typeof item[key] === "string" &&
+                          key !== "img"
+                            ? String(item[key])
+                            : undefined
+                        }
+                        className={`px-3 py-2 [overflow-wrap:anywhere] ${
+                          key === "name"
+                            ? "font-medium text-gray-900"
+                            : key === "description"
+                              ? "text-gray-600"
+                              : ""
+                        }`}
+                      >
+                        {key === "price" ? (
+                          `$${Number(item[key] ?? 0).toFixed(2)}`
+                        ) : key === "img" ? (
+                          <ItemThumbnail
+                            value={item[key]}
+                            itemName={itemName}
+                            compact
+                          />
+                        ) : key === "categories" ? (
+                          <TableCategories value={item[key]} />
+                        ) : (
+                          checkCell(item[key])
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

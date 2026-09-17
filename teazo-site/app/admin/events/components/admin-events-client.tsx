@@ -85,8 +85,9 @@ export default function AdminEventsClient({
   const [sortBy, setSortBy] =
     useState<EventSortOption>("start-asc");
 
+  // Start in List View on both mobile and desktop.
   const [viewMode, setViewMode] =
-    useState<EventViewMode>("grid");
+    useState<EventViewMode>("list");
 
   // Desktop collapse and mobile overlay visibility are independent.
   const [filtersOpen, setFiltersOpen] =
