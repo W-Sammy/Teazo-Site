@@ -525,7 +525,8 @@ export default function AdminEventsClient({
         <div className="shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="flex min-w-0 items-center gap-2 lg:max-w-72 lg:flex-1">
+              {/* Match Gallery's desktop search-width limits without changing the mobile row. */}
+              <div className="flex min-w-0 items-center gap-2 lg:min-w-40 lg:max-w-64 lg:flex-1">
                 <button
                   type="button"
                   onClick={() =>

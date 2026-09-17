@@ -643,10 +643,10 @@ export default function AdminMenuClient({
       </aside>
 
       <section className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Stack toolbar controls when there is not enough room for one row. */}
+        {/* Keep mobile sizing; match Gallery controls on desktop and stack when space is limited. */}
         <div className="@container/menu-toolbar shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
           <div className="flex min-w-0 flex-col gap-3 @min-[800px]/menu-toolbar:flex-row @min-[800px]/menu-toolbar:items-center">
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 @min-[800px]/menu-toolbar:max-w-64 @min-[800px]/menu-toolbar:flex-1">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:max-w-64 @min-[800px]/menu-toolbar:max-w-64 @min-[800px]/menu-toolbar:flex-1">
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(true)}
@@ -668,7 +668,7 @@ export default function AdminMenuClient({
                 onChange={(event) =>
                   setSearch(event.target.value)
                 }
-                className="min-w-0 flex-[1_1_12rem] rounded bg-gray-200 px-3 py-2 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-[#FFBDC7]/50"
+                className="min-w-0 flex-[1_1_12rem] rounded bg-gray-200 px-3 py-2 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-[#FFBDC7]/50 md:text-sm"
               />
             </div>
 
@@ -686,8 +686,8 @@ export default function AdminMenuClient({
                   />
                 </div>
 
-                {/* Desktop: keep the existing compact toggle and toolbar layout. */}
-                <div className="hidden md:block">
+                {/* A flex wrapper avoids extra baseline space below the desktop toggle. */}
+                <div className="hidden md:flex">
                   <AdminViewToggle
                     value={viewMode ?? "list"}
                     options={menuViewOptions}
@@ -702,7 +702,7 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openAddItemForm}
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] [overflow-wrap:anywhere]"
+                  className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Add Item
                 </button>
@@ -710,7 +710,7 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openUploadForm}
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] [overflow-wrap:anywhere]"
+                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Upload Menu
                 </button>
