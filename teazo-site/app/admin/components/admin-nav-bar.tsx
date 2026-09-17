@@ -178,12 +178,16 @@ export default function Sidebar({
                 }
                 className="block"
               >
+                {/*
+                 * Keep collapsed mobile icons centered.
+                 * On desktop, left-align every icon and label consistently.
+                 */}
                 <div
                   className={`flex items-center rounded-lg py-3 transition-all duration-200 ${
                     mobileOpen
                       ? "gap-3 px-2"
                       : "justify-center px-1"
-                  } md:gap-3 md:px-2`}
+                  } md:justify-start md:gap-3 md:px-2`}
                   style={{
                     color: isActive
                       ? "#dbb082"
