@@ -139,15 +139,23 @@ export default function AdminEventsClient({
     [items],
   );
 
-  // Bulk deletion counts the full collection, not only the currently filtered results.
-  const endedEventCount = useMemo(
-    () =>
-      events.filter(
-        (event) =>
-          getEventStatus(event) === "ended",
-      ).length,
-    [events],
-  );
+  // Count every event by status, independent of search and selected filters.
+  const statusCounts = useMemo(() => {
+    const counts: Record<EventStatus, number> = {
+      upcoming: 0,
+      active: 0,
+      ended: 0,
+    };
+
+    events.forEach((event) => {
+      counts[getEventStatus(event)] += 1;
+    });
+
+    return counts;
+  }, [events]);
+
+  // Use the same ended count for the sidebar and bulk-delete controls.
+  const endedEventCount = statusCounts.ended;
 
   // Match any selected status AND the search query, then order the matching events.
   const filteredEvents = useMemo(() => {
@@ -475,7 +483,7 @@ export default function AdminEventsClient({
             {statuses.map((status) => (
               <label
                 key={status}
-                className="flex cursor-pointer items-center gap-2 py-1 text-sm capitalize"
+                className="flex min-w-0 cursor-pointer items-center gap-2 py-1 text-sm capitalize"
               >
                 <input
                   type="checkbox"
@@ -485,10 +493,16 @@ export default function AdminEventsClient({
                   onChange={() =>
                     toggleStatus(status)
                   }
-                  className="accent-[#b98555]"
+                  className="shrink-0 accent-[#b98555]"
                 />
 
-                {status}
+                <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                  {status}
+                </span>
+
+                <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-gray-400">
+                  ({statusCounts[status]})
+                </span>
               </label>
             ))}
           </div>

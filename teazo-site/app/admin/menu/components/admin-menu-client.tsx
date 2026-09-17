@@ -147,6 +147,27 @@ export default function AdminMenuClient({
     [items, editedItems, temporaryItems, deletedItemIds],
   );
 
+  // Count category membership across the full current collection, not filtered results.
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    allItems.forEach((item) => {
+      // Count an item only once per category, even if its category ID is repeated.
+      const itemCategoryIds = new Set(
+        item.categories.map((category) => category.id),
+      );
+
+      itemCategoryIds.forEach((categoryId) => {
+        counts.set(
+          categoryId,
+          (counts.get(categoryId) ?? 0) + 1,
+        );
+      });
+    });
+
+    return counts;
+  }, [allItems]);
+
   const editingItem =
     drawer?.kind === "edit-item" ? drawer.item : null;
 
@@ -608,8 +629,12 @@ export default function AdminMenuClient({
                   className="mt-0.5 h-4 w-4 shrink-0 accent-[#b98555]"
                 />
 
-                <span className="min-w-0 [overflow-wrap:anywhere]">
+                <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                   {category.name}
+                </span>
+
+                <span className="mt-0.5 shrink-0 whitespace-nowrap text-xs tabular-nums text-gray-400">
+                  ({categoryCounts.get(category.id) ?? 0})
                 </span>
               </label>
             ))}
@@ -695,6 +720,15 @@ export default function AdminMenuClient({
         </div>
 
         <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+          {/* Count the matching items in either view, including local additions and deletions. */}
+          {/* ListView supplies the gap below; offset its extra desktop padding by one spacing unit. */}
+          <div className="flex items-center justify-between gap-3 px-3 pt-3 text-sm text-gray-500 sm:-mb-1 sm:px-4 sm:pt-4">
+            <span role="status" aria-live="polite" aria-atomic="true">
+              {filteredItems.length}{" "}
+              {filteredItems.length === 1 ? "item" : "items"}
+            </span>
+          </div>
+
           {localNotice && (
             <div className="m-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700 sm:m-4">
               <p
