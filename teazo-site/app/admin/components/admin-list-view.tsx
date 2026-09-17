@@ -16,11 +16,16 @@ type CellValue =
 
 type Row = Partial<Record<string, CellValue>>;
 
-type ListViewProps = {
-  items: Row[];
+type ListViewProps<T extends Row = Row> = {
+  items: T[];
+
+  // Optional so other pages can keep using this shared component unchanged.
+  onEdit?: (item: T) => void;
+  onDelete?: (item: T) => void;
 
   // If omitted, automatically choose cards or a table based on available width.
-  viewMode?: "auto" | "grid" | "list";
+  // "responsive" uses mobile cards and a desktop table until the user chooses a view.
+  viewMode?: "auto" | "responsive" | "grid" | "list";
 };
 
 const fallbackImage = "/TEAZO_logo.svg";
@@ -95,6 +100,11 @@ function getImageSrc(value: unknown): string {
 
   const source = value.trim();
 
+  // Temporary images selected on this page use browser-local blob URLs.
+  if (source.startsWith("blob:")) {
+    return source;
+  }
+
   if (
     source.startsWith("/") &&
     !source.startsWith("//") &&
@@ -129,7 +139,8 @@ function ItemThumbnail({
   itemName: string;
   compact?: boolean;
 }) {
-  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const [failedSource, setFailedSource] =
+    useState<string | null>(null);
 
   const source = getImageSrc(value);
 
@@ -144,7 +155,10 @@ function ItemThumbnail({
       alt={itemName}
       width={64}
       height={64}
-      unoptimized={displayedSource === fallbackImage}
+      unoptimized={
+        displayedSource === fallbackImage ||
+        displayedSource.startsWith("blob:")
+      }
       className={`shrink-0 rounded object-cover ${
         compact ? "h-8 w-8" : "h-16 w-16"
       }`}
@@ -169,34 +183,49 @@ function DesktopCategories({ value }: { value: unknown }) {
   }
 
   return (
-    <div
-      className="group relative inline-block"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="cursor-pointer font-bold text-blue-600 hover:underline focus-visible:underline"
-        aria-label={`Show ${categories.length} categories`}
-        title={categories
-          .map((category) => category.name ?? "Unnamed category")
+    <>
+      {/* Mobile shows all category names instead of requiring a hover. */}
+      <span className="md:hidden [overflow-wrap:anywhere]">
+        {categories
+          .map(
+            (category) =>
+              category.name ?? "Unnamed category",
+          )
           .join(", ")}
-      >
-        {categories.length}
-      </button>
+      </span>
 
-      <div className="absolute right-0 top-full z-20 mt-1 hidden w-48 rounded border border-[#dbb082] bg-white p-2 shadow-lg group-hover:block group-focus-within:block">
-        <ul className="space-y-1 text-sm text-gray-700">
-          {categories.map((category) => (
-            <li
-              key={category.id}
-              className="[overflow-wrap:anywhere]"
-            >
-              {category.name ?? "Unnamed category"}
-            </li>
-          ))}
-        </ul>
+      <div
+        className="group relative hidden md:inline-block"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="cursor-pointer font-bold text-blue-600 hover:underline focus-visible:underline"
+          aria-label={`Show ${categories.length} categories`}
+          title={categories
+            .map(
+              (category) =>
+                category.name ?? "Unnamed category",
+            )
+            .join(", ")}
+        >
+          {categories.length}
+        </button>
+
+        <div className="absolute right-0 top-full z-20 mt-1 hidden w-48 rounded border border-[#dbb082] bg-white p-2 shadow-lg group-hover:block group-focus-within:block">
+          <ul className="space-y-1 text-sm text-gray-700">
+            {categories.map((category) => (
+              <li
+                key={category.id}
+                className="[overflow-wrap:anywhere]"
+              >
+                {category.name ?? "Unnamed category"}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -216,10 +245,12 @@ function DeleteIcon() {
   );
 }
 
-export default function ListView({
+export default function ListView<T extends Row = Row>({
   items,
   viewMode = "auto",
-}: ListViewProps) {
+  onEdit,
+  onDelete,
+}: ListViewProps<T>) {
   if (!items || items.length === 0) {
     return (
       <div className="px-4 py-4">
@@ -229,7 +260,9 @@ export default function ListView({
   }
 
   const keys = Array.from(
-    new Set(items.flatMap((item) => Object.keys(item))),
+    new Set(
+      items.flatMap((item) => Object.keys(item)),
+    ),
   ).filter(
     (key) => key !== "id" && key !== "category_id",
   );
@@ -245,29 +278,43 @@ export default function ListView({
       ].includes(key),
   );
 
-  // Explicit List View overrides the old 700px switch on desktop only.
-  // Below md, the menu still uses the same mobile cards.
+  // Explicit Card/List choices apply on every screen size.
+  // "responsive" supplies the menu's initial mobile/desktop defaults.
+  // "auto" preserves the original container-width behavior for other callers.
   const cardVisibility =
     viewMode === "auto"
       ? "grid @min-[700px]/menu-list:hidden"
-      : viewMode === "list"
+      : viewMode === "responsive"
         ? "grid md:hidden"
-        : "grid";
+        : viewMode === "grid"
+          ? "grid"
+          : "hidden";
 
   const tableVisibility =
     viewMode === "auto"
       ? "hidden @min-[700px]/menu-list:block"
-      : viewMode === "list"
+      : viewMode === "responsive"
         ? "hidden md:block"
-        : "hidden";
+        : viewMode === "list"
+          ? "block"
+          : "hidden";
 
-  // Existing placeholders: no saved menu data is edited or deleted here.
-  function editHandler(item: Row) {
-    console.log("edit", item);
+  // Both card and table Edit buttons delegate to the page that owns the data.
+  function editHandler(item: T) {
+    if (onEdit) {
+      onEdit(item);
+    } else {
+      console.log("edit", item);
+    }
   }
 
-  function deleteHandler(item: Row) {
-    console.log("delete", item);
+  // Both delete controls use the same parent callback and confirmation flow.
+  function deleteHandler(item: T) {
+    if (onDelete) {
+      onDelete(item);
+    } else {
+      console.log("delete", item);
+    }
   }
 
   return (
@@ -370,7 +417,10 @@ export default function ListView({
 
                   <button
                     type="button"
-                    onClick={() => deleteHandler(item)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      deleteHandler(item);
+                    }}
                     aria-label={`Delete ${itemName}`}
                     className="inline-flex min-w-0 cursor-pointer flex-wrap items-center justify-center gap-1 rounded border border-red-200 px-2 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
                   >
@@ -384,14 +434,14 @@ export default function ListView({
         })}
       </ul>
 
-      {/* Any overflow in an unusually narrow desktop panel stays in this region. */}
+      {/* Swipe sideways inside this region without moving the whole page. */}
       <div
-        className={`${tableVisibility} w-full min-w-0 max-w-full overscroll-x-contain @max-[560px]/menu-list:overflow-x-auto`}
+        className={`${tableVisibility} w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain md:overflow-x-visible md:@max-[560px]/menu-list:overflow-x-auto`}
         role="region"
         aria-label="Menu items list"
         tabIndex={0}
       >
-        <table className="w-full min-w-[560px] table-fixed border-collapse">
+        <table className="w-full min-w-[700px] table-fixed border-collapse md:min-w-[560px]">
           <caption className="sr-only">
             Menu items
           </caption>
@@ -478,8 +528,9 @@ export default function ListView({
                     <td
                       key={key}
                       title={
-                        typeof item[key] === "string" && key !== "img"
-                          ? item[key]
+                        typeof item[key] === "string" &&
+                        key !== "img"
+                          ? String(item[key])
                           : undefined
                       }
                       className="py-2 pr-2 [overflow-wrap:anywhere]"

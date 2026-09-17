@@ -522,6 +522,7 @@ export default function AdminEventsClient({
                   Filters
                 </button>
 
+                {/* Explicit text and placeholder colors keep this field readable across browsers. */}
                 <input
                   id="event-search"
                   name="eventSearch"
@@ -536,7 +537,7 @@ export default function AdminEventsClient({
                   }
                   placeholder="Search events"
                   aria-label="Search events"
-                  className="min-w-0 flex-1 rounded bg-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFBDC7]/50"
+                  className="min-w-0 flex-1 rounded bg-gray-200 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-500 placeholder:opacity-100 focus:ring-2 focus:ring-[#FFBDC7]/50"
                 />
               </div>
 
