@@ -79,10 +79,10 @@ export default function AdminMenuClient({
   const [sortBy, setSortBy] =
     useState<MenuSortOption>("name-asc");
 
-  // Until a view is chosen, show cards on mobile and a list on desktop.
-  // A manual choice then stays selected when the screen size changes.
+  // Start in List View on both mobile and desktop.
+  // Users can switch views without their choice changing on resize.
   const [viewMode, setViewMode] =
-    useState<MenuViewMode | null>(null);
+    useState<MenuViewMode>("list");
 
   const [filtersOpen, setFiltersOpen] = useState(true);
 
