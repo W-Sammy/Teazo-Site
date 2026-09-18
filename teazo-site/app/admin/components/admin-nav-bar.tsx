@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
-  const colorIconRoot = "/admin_icons/";
+  const colorIconRoot = "/admin_icons/"; // will eventually change this to "/admin_icons/admin_svg/"
   const blackIconRoot = "/admin_icons/black_icons/";
   const pathname = usePathname();
 
@@ -13,28 +13,28 @@ export default function Sidebar() {
     {
       id: "dashboard",
       label: "Dashboard",
-      img: "teazo_dash_icon.png",
+      img: "admin_svg/teazo_dash_icon.svg",
       img_b: "teazo_dash_icon_black.png",
       href: "/admin",
     },
     {
       id: "menu",
       label: "Menu",
-      img: "teazo_menu_icon.png",
+      img: "admin_svg/teazo_menu_icon.svg",
       img_b: "teazo_menu_icon_black.png",
       href: "/admin/menu",
     },
     {
       id: "gallery",
       label: "Gallery",
-      img: "teazo_gallery_icon.png",
+      img: "admin_svg/teazo_gallery_icon.svg",
       img_b: "teazo_gallery_icon_black.png",
       href: "/admin/gallery",
     },
     {
       id: "events",
       label: "Events",
-      img: "teazo_event_icon.png",
+      img: "admin_svg/teazo_event_icon.svg",
       img_b: "teazo_event_icon_black.png",
       href: "/admin/events",
     },
@@ -77,6 +77,8 @@ export default function Sidebar() {
             page.href === "/admin"
               ? pathname === "/admin"
               : pathname.startsWith(page.href);
+
+          // idk prolly put the logic here for img_b or svg
 
           return (
             <Link key={page.id} href={page.href}>

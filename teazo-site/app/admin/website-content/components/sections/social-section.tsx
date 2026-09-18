@@ -92,7 +92,11 @@ export default function SocialSection({
                     <img src={link.icon} alt={link.label} className="h-6 w-6 object-contain" />
                   ) : (
                     <span className="text-[#a99584]">
-                      <IconSocial />
+                      <img 
+                        src="/admin_icons/admin_svg/teazo_share_icon.svg"
+                        alt="Default Icon"
+                        className="h-6 w-6"
+                      /> 
                     </span>
                   )}
                   <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[9px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
