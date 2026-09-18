@@ -2,7 +2,12 @@
 
 import { AccordionItem } from "../section-shell";
 import { IconHours } from "../icons";
-import { AXIS_LABELS, getCurrentWeekLabel, getWeekDates, toMonthDay } from "../hours-utils";
+import {
+  AXIS_LABELS,
+  getCurrentWeekLabel,
+  getWeekDates,
+  toMonthDay,
+} from "../hours-utils";
 import type { DayHours, Holiday } from "@/app/types/website-content";
 import BusinessHoursRow from "./business-hours-row";
 
@@ -26,11 +31,21 @@ export default function HoursSection({
   const weekDates = getWeekDates(now);
 
   return (
-    <AccordionItem id="hours" label="Business Hours" icon={<IconHours />} isOpen={isOpen} onToggle={onToggle} setRef={setRef}>
-      <p className="mb-3.5 text-[15px] font-semibold text-blue-500">Week: {weekLabel}</p>
+    <AccordionItem
+      id="hours"
+      label="Business Hours"
+      icon={<IconHours />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      setRef={setRef}
+    >
+      <p className="mb-3.5 break-words text-[15px] font-semibold text-blue-500">
+        Week: {weekLabel}
+      </p>
 
       {/* grid-cols must match BusinessHoursRow's so axis labels line up with the drag bars below */}
-      <div className="mb-2 grid grid-cols-[46px_minmax(0,1fr)_260px] gap-3">
+      {/* The shared axis is only shown with the desktop three-column rows. */}
+      <div className="mb-2 hidden grid-cols-[46px_minmax(0,1fr)_260px] gap-3 lg:grid">
         <span />
         <div className="flex justify-between font-mono text-[9.5px] text-gray-400">
           {AXIS_LABELS.map((label, i) => (
@@ -40,14 +55,22 @@ export default function HoursSection({
         <span />
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex min-w-0 flex-col gap-3 lg:gap-2.5">
         {hours.map((entry, i) => {
           // groundwork for Holiday Exceptions overriding Business Hours: flag which row falls
           // on a holiday this week so it can be visually called out (edit still happens on the
           // Holiday Exceptions card; actual override-on-save merge needs the backend to land)
-          const holiday = holidays.find((h) => h.date === toMonthDay(weekDates[i]));
+          const holiday = holidays.find(
+            (h) => h.date === toMonthDay(weekDates[i])
+          );
+
           return (
-            <BusinessHoursRow key={entry.day} entry={entry} holiday={holiday} onChange={(patch) => onUpdateDay(i, patch)} />
+            <BusinessHoursRow
+              key={entry.day}
+              entry={entry}
+              holiday={holiday}
+              onChange={(patch) => onUpdateDay(i, patch)}
+            />
           );
         })}
       </div>

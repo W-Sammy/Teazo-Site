@@ -24,30 +24,53 @@ export default function StorySection({
   const [touched, setTouched] = useState(false);
 
   let error: string | undefined;
+
   // gated on touched so an empty story doesn't show as an error before the user's first blur
   if (touched) {
-    if (!isNonEmpty(story)) error = "Story can't be empty";
-    else if (!withinMaxLength(story, MAX_STORY_LENGTH)) error = `Keep it under ${MAX_STORY_LENGTH} characters`;
+    if (!isNonEmpty(story)) {
+      error = "Story can't be empty";
+    } else if (!withinMaxLength(story, MAX_STORY_LENGTH)) {
+      error = `Keep it under ${MAX_STORY_LENGTH} characters`;
+    }
   }
 
   return (
-    <AccordionItem id="story" label="Our Story" icon={<IconStory />} isOpen={isOpen} onToggle={onToggle} setRef={setRef}>
+    <AccordionItem
+      id="story"
+      label="Our Story"
+      icon={<IconStory />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      setRef={setRef}
+    >
       <p className="mb-2.5 text-xs text-gray-400">
         Shown on the homepage under the &quot;OUR STORY&quot; heading.
       </p>
-      <div className="rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-3">
+
+      <div className="min-w-0 rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-3">
         <textarea
           value={story}
           onChange={(e) => onStoryChange(e.target.value)}
           onBlur={() => setTouched(true)}
           rows={6}
-          className={`w-full resize-y rounded-lg border bg-white px-3 py-2.5 text-sm leading-relaxed text-gray-700 focus:outline-none ${
-            error ? "border-red-400 focus:border-red-400" : "border-[#ecdfd7] focus:border-[#dbb082]"
+          aria-label="Our Story"
+          className={`block w-full min-w-0 max-w-full resize-y rounded-lg border bg-white px-3 py-2.5 text-base leading-relaxed text-gray-700 focus:outline-none sm:text-sm ${
+            error
+              ? "border-red-400 focus:border-red-400"
+              : "border-[#ecdfd7] focus:border-[#dbb082]"
           }`}
         />
-        <div className="mt-1 flex items-center justify-between gap-3">
+
+        <div className="mt-1 flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
           {error ? <ErrorText>{error}</ErrorText> : <span />}
-          <span className={`shrink-0 text-[11px] ${story.length > MAX_STORY_LENGTH ? "text-red-600" : "text-gray-400"}`}>
+
+          <span
+            className={`ml-auto shrink-0 text-[11px] ${
+              story.length > MAX_STORY_LENGTH
+                ? "text-red-600"
+                : "text-gray-400"
+            }`}
+          >
             {story.length}/{MAX_STORY_LENGTH}
           </span>
         </div>

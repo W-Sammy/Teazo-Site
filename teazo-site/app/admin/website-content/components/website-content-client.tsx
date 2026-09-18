@@ -1,9 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { TocItem } from "./section-shell";
-import { IconLogo, IconStory, IconSocial, IconContact, IconHours, IconHolidays } from "./icons";
+import {
+  IconLogo,
+  IconStory,
+  IconSocial,
+  IconContact,
+  IconHours,
+  IconHolidays,
+} from "./icons";
 import LogoSection from "./sections/logo-section";
 import StorySection from "./sections/story-section";
 import SocialSection from "./sections/social-section";
@@ -14,7 +21,7 @@ import { useWebsiteContent } from "../handlers/use-website-content";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { SectionId } from "./types";
 
-// single source of order/labels for both the sidebar TocItems and the accordion cards below
+// single source of order/labels for both the sidebar TocItems and the mobile dropdown
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
   { id: "story", label: "Our Story", icon: <IconStory /> },
@@ -24,7 +31,11 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "holidays", label: "Holiday Exceptions", icon: <IconHolidays /> },
 ];
 
-export default function WebsiteContentClient({ initialContent }: { initialContent: WebsiteContent }) {
+export default function WebsiteContentClient({
+  initialContent,
+}: {
+  initialContent: WebsiteContent;
+}) {
   const {
     content,
     errorMessage,
@@ -39,22 +50,31 @@ export default function WebsiteContentClient({ initialContent }: { initialConten
     updateHoliday,
     removeHoliday,
   } = useWebsiteContent(initialContent);
+
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
-  const sectionRefs = useRef<Partial<Record<SectionId, HTMLDivElement | null>>>({});
+  const sectionRefs = useRef<
+    Partial<Record<SectionId, HTMLDivElement | null>>
+  >({});
+
+  // Scroll after React has rendered the expanded section.
+  useEffect(() => {
+    if (!openSection) return;
+
+    // rAF-deferred: wait for the accordion to expand (and its ref to reflect the new height)
+    // before scrolling, otherwise scrollIntoView targets the pre-expand layout
+    const frame = requestAnimationFrame(() => {
+      sectionRefs.current[openSection]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [openSection]);
 
   // clicking the already-open section's TocItem/header collapses it instead of no-op re-opening
   function selectSection(id: SectionId) {
-    setOpenSection((prev) => {
-      const next = prev === id ? null : id;
-      if (next) {
-        // rAF-deferred: wait for the accordion to expand (and its ref to reflect the new height)
-        // before scrolling, otherwise scrollIntoView targets the pre-expand layout
-        requestAnimationFrame(() => {
-          sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      }
-      return next;
-    });
+    setOpenSection((previous) => (previous === id ? null : id));
   }
 
   // per-section ref setter so AccordionItem's setRef prop can target sectionRefs.current[id]
@@ -66,40 +86,75 @@ export default function WebsiteContentClient({ initialContent }: { initialConten
   }
 
   return (
-    <div className="pl-5 pr-5 pt-10 pb-16">
+    <div className="w-full min-w-0 px-3 pb-16 pt-6 sm:px-5 sm:pt-10">
       {errorMessage && (
         <div
           role="alert"
-          className="fixed right-5 top-5 z-[60] max-w-sm rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg"
+          className="fixed left-20 right-3 top-3 z-[60] break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
         >
           {errorMessage}
         </div>
       )}
 
-      <div className="mb-7">
-        <h1 className="text-[26px] font-semibold text-[#2b211d]">Website Content</h1>
-        <p className="mt-1 text-xs text-gray-400">
-          Sections on the left jump to and expand the matching card on the right.
+      <div className="mb-5 min-w-0 sm:mb-7">
+        <h1 className="break-words text-2xl font-semibold leading-tight text-[#2b211d] sm:text-[26px]">
+          Website Content
+        </h1>
+        <p className="mt-2 text-xs leading-relaxed text-gray-400">
+          Choose a section to open and edit its settings.
         </p>
       </div>
 
-      <div className="flex items-start gap-7">
-        <nav className="sticky top-10 flex w-[216px] shrink-0 flex-col gap-1 rounded-2xl border border-[#ecdfd7] bg-[#fbf3ea] p-2.5">
-          <span className="px-3 pb-2 pt-1 font-mono text-[10px] font-bold uppercase tracking-[1.5px] text-[#a99584]">
-            Sections
-          </span>
-          {SECTIONS.map((s) => (
-            <TocItem
-              key={s.id}
-              label={s.label}
-              icon={s.icon}
-              active={openSection === s.id}
-              onClick={() => selectSection(s.id)}
-            />
-          ))}
+      {/* Only place the menu beside the cards when there is enough room. */}
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-6 xl:grid-cols-[216px_minmax(0,1fr)] xl:gap-7">
+        <nav
+          aria-label="Website content sections"
+          className="w-full min-w-0 rounded-2xl border border-[#ecdfd7] bg-[#fbf3ea] p-3 xl:sticky xl:top-10 xl:p-2.5"
+        >
+          {/* A full-width dropdown replaces the section sidebar on smaller screens. */}
+          <div className="min-w-0 xl:hidden">
+            <label
+              htmlFor="website-content-section"
+              className="mb-2 block font-mono text-[10px] font-bold uppercase tracking-[1.5px] text-[#a99584]"
+            >
+              Sections
+            </label>
+            <select
+              id="website-content-section"
+              value={openSection ?? ""}
+              onChange={(event) =>
+                selectSection(event.target.value as SectionId)
+              }
+              className="block min-h-11 w-full min-w-0 max-w-full cursor-pointer rounded-lg border border-[#ecdfd7] bg-white px-2.5 py-2 text-base text-[#4a3418] focus:border-[#dbb082] focus:outline-none"
+            >
+              <option value="" disabled>
+                Choose a section
+              </option>
+              {SECTIONS.map((section) => (
+                <option key={section.id} value={section.id}>
+                  {section.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="hidden flex-col gap-1 xl:flex">
+            <span className="px-3 pb-2 pt-1 font-mono text-[10px] font-bold uppercase tracking-[1.5px] text-[#a99584]">
+              Sections
+            </span>
+            {SECTIONS.map((section) => (
+              <TocItem
+                key={section.id}
+                label={section.label}
+                icon={section.icon}
+                active={openSection === section.id}
+                onClick={() => selectSection(section.id)}
+              />
+            ))}
+          </div>
         </nav>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex w-full min-w-0 flex-col gap-3">
           <LogoSection
             logo={content.logo}
             isOpen={openSection === "logo"}
