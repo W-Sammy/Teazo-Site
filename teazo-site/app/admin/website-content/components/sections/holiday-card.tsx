@@ -296,7 +296,7 @@ export default function HolidayCard({
                     ),
                   });
                 }
-              }}
+              }} 
               className={timeInputClass}
             />
           </label>

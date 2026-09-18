@@ -252,4 +252,4 @@ export default function SocialSection({
       </button>
     </AccordionItem>
   );
-}
+} 

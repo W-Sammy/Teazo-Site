@@ -41,4 +41,4 @@ export function Logo({ src }: { src: string }) {
       </div>
     </div>
   );
-}
+} 
