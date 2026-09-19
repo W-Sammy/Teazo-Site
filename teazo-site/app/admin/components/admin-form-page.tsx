@@ -8,6 +8,7 @@ type AdminFormProps = {
   onClose: () => void;
   children: ReactNode;
   mobileFullscreen?: boolean;
+  closeDisabled?: boolean;
 };
 
 export default function AdminForm({
@@ -15,6 +16,7 @@ export default function AdminForm({
   onClose,
   children,
   mobileFullscreen = false,
+  closeDisabled = false,
 }: AdminFormProps) {
   // The mobileFullscreen variant overlays small screens and becomes inline on desktop.
   // The default variant stays inline and opens or closes by changing its width.
@@ -35,6 +37,7 @@ export default function AdminForm({
         <button
           type="button"
           onClick={onClose}
+          disabled={closeDisabled}
           className="fixed inset-0 z-40 bg-black/30 md:hidden"
           aria-label="Close form"
         />
@@ -52,7 +55,8 @@ export default function AdminForm({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black"
+            disabled={closeDisabled}
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Close form"
             title="Close"
           >

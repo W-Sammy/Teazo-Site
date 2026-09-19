@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import ListView from "@/app/admin/components/admin-list-view"
+import { redirect } from "next/navigation";
+import { getAdmin } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
 
@@ -46,6 +47,10 @@ function getUniqueCategories(items: ReturnType<typeof filterMenuItems>) {
 }
 
 export default async function AdminMenuPage(){
+  // Can View may open the page. The upload endpoint separately requires Can Edit.
+  const admin = await getAdmin(3);
+  if (!admin) redirect("/login");
+
   const menuItems = await getMenuItems();
   const displayedMenuItems = filterMenuItems(menuItems);
   //what will be used for the filters
@@ -56,6 +61,7 @@ export default async function AdminMenuPage(){
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
+        canUploadMenu={admin.role_id <= 2}
       />
     </div>
   )

@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type FormEvent,
 } from "react";
 import type { ItemCategory } from "@/app/types/menu-item";
 import ListView from "@/app/admin/components/admin-list-view";
@@ -18,6 +19,12 @@ import MenuItemForm, {
   type MenuItemFormValues,
 } from "./menu-item-form";
 import DeleteMenuItemDialog from "./delete-menu-item-dialog";
+import {
+  CURRENT_MENU_PDF_URL,
+  getMenuFileError,
+  isMenuUploadResponse,
+  MENU_PDF_SIZE_LABEL,
+} from "@/app/lib/menu-upload";
 
 type DisplayedMenuItem = {
   id: string;
@@ -50,6 +57,7 @@ type MenuDrawer =
 type AdminMenuClientProps = {
   items: DisplayedMenuItem[];
   categories: Category[];
+  canUploadMenu: boolean;
 };
 
 const fallbackImage = "/TEAZO_logo.svg";
@@ -70,6 +78,7 @@ const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
 export default function AdminMenuClient({
   items,
   categories,
+  canUploadMenu,
 }: AdminMenuClientProps) {
   const [search, setSearch] = useState("");
 
@@ -110,7 +119,12 @@ export default function AdminMenuClient({
 
   const [localNotice, setLocalNotice] = useState("");
   const [drawer, setDrawer] = useState<MenuDrawer>(null);
-  const [uploadFileName, setUploadFileName] = useState("");
+  // PDF uploads persist; keep their feedback separate from local item edits.
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const uploadPendingRef = useRef(false);
 
   const mobileFilterCloseRef =
     useRef<HTMLButtonElement | null>(null);
@@ -255,6 +269,12 @@ export default function AdminMenuClient({
         return;
       }
 
+      // Do not dismiss the upload while publication is still being confirmed.
+      if (uploadPendingRef.current) {
+        event.preventDefault();
+        return;
+      }
+
       setMobileFiltersOpen(false);
       setDrawer(null);
     }
@@ -319,22 +339,93 @@ export default function AdminMenuClient({
   ]);
 
   function openUploadForm() {
+    if (!canUploadMenu || uploadPendingRef.current) return;
     setMobileFiltersOpen(false);
-    setUploadFileName("");
+    setUploadFile(null);
+    setUploadError("");
+    setUploadSuccess("");
     setDrawer({ kind: "upload-menu" });
   }
 
+  function closeDrawer() {
+    if (!uploadPendingRef.current) setDrawer(null);
+  }
+
+  async function handleMenuUpload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (uploadPendingRef.current) return;
+
+    if (!canUploadMenu) {
+      setUploadError("Owner or Can Edit access is required to upload a menu.");
+      return;
+    }
+    if (!uploadFile) {
+      setUploadError("Please choose a PDF first.");
+      return;
+    }
+    const fileError = getMenuFileError(uploadFile);
+    if (fileError) {
+      setUploadError(fileError);
+      return;
+    }
+
+    uploadPendingRef.current = true;
+    setIsUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
+
+    try {
+      const form = new FormData();
+      form.append("file", uploadFile);
+
+      // Do not set Content-Type manually; the browser adds the multipart boundary.
+      const response = await fetch("/api/admin/menu/upload", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const result: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = result && typeof result === "object" &&
+          "error" in result && typeof result.error === "string"
+          ? result.error
+          : response.status === 413
+            ? `The PDF must be ${MENU_PDF_SIZE_LABEL} or smaller.`
+            : "The upload could not be confirmed. Check the public menu before retrying.";
+        throw new Error(message);
+      }
+      if (!isMenuUploadResponse(result)) {
+        throw new Error("The server returned an unexpected response. Check the public menu before retrying.");
+      }
+
+      setUploadSuccess(`“${uploadFile.name}” was uploaded and published as the PDF menu.`);
+      setUploadFile(null);
+      setDrawer(null);
+    } catch (error) {
+      setUploadError(error instanceof Error && !(error instanceof TypeError)
+        ? error.message
+        : "The upload could not be confirmed. Check the public menu before retrying.");
+    } finally {
+      uploadPendingRef.current = false;
+      setIsUploading(false);
+    }
+  }
+
   function openAddItemForm() {
+    if (uploadPendingRef.current) return;
     setMobileFiltersOpen(false);
     setDrawer({ kind: "add-item" });
   }
 
   function openEditItemForm(item: DisplayedMenuItem) {
+    if (uploadPendingRef.current) return;
     setMobileFiltersOpen(false);
     setDrawer({ kind: "edit-item", item });
   }
 
   function requestDeleteItem(item: DisplayedMenuItem) {
+    if (uploadPendingRef.current) return;
     const currentItem = allItems.find(
       (entry) => entry.id === item.id,
     );
@@ -675,10 +766,10 @@ export default function AdminMenuClient({
             <div className="flex min-w-0 flex-col gap-3 md:@min-[520px]/menu-toolbar:flex-row md:@min-[520px]/menu-toolbar:items-center md:@min-[520px]/menu-toolbar:justify-between @min-[800px]/menu-toolbar:flex-1">
               {/* Mobile: full-width toggle below search and above the action buttons. */}
               <div className="w-full min-w-0 md:w-auto">
-                {/* CSS selects the correct default without reading window during rendering. */}
+                {/* Both layouts share the same List View default and manual selection. */}
                 <div className="md:hidden">
                   <AdminViewToggle
-                    value={viewMode ?? "grid"}
+                    value={viewMode}
                     options={menuViewOptions}
                     onChange={setViewMode}
                     ariaLabel="Menu view"
@@ -689,7 +780,7 @@ export default function AdminMenuClient({
                 {/* A flex wrapper avoids extra baseline space below the desktop toggle. */}
                 <div className="hidden md:flex">
                   <AdminViewToggle
-                    value={viewMode ?? "list"}
+                    value={viewMode}
                     options={menuViewOptions}
                     onChange={setViewMode}
                     ariaLabel="Menu view"
@@ -702,7 +793,8 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openAddItemForm}
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
+                  disabled={isUploading}
+                  className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Add Item
                 </button>
@@ -710,7 +802,9 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openUploadForm}
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
+                  disabled={!canUploadMenu || isUploading}
+                  title={canUploadMenu ? "Upload a PDF menu" : "Owner or Can Edit access is required"}
+                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Upload Menu
                 </button>
@@ -728,6 +822,20 @@ export default function AdminMenuClient({
               {filteredItems.length === 1 ? "item" : "items"}
             </span>
           </div>
+
+          {uploadSuccess && (
+            <div className="m-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900 sm:m-4">
+              <p role="status" className="[overflow-wrap:anywhere]">{uploadSuccess}</p>
+              <a
+                href={CURRENT_MENU_PDF_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block font-semibold underline"
+              >
+                Open uploaded PDF
+              </a>
+            </div>
+          )}
 
           {localNotice && (
             <div className="m-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700 sm:m-4">
@@ -759,7 +867,7 @@ export default function AdminMenuClient({
 
           <ListView
             items={filteredItems}
-            viewMode={viewMode ?? "responsive"}
+            viewMode={viewMode}
             onEdit={openEditItemForm}
             onDelete={requestDeleteItem}
           />
@@ -779,7 +887,8 @@ export default function AdminMenuClient({
                 : drawer.kind
             }
             isOpen
-            onClose={() => setDrawer(null)}
+            onClose={closeDrawer}
+            closeDisabled={isUploading}
             mobileFullscreen
           >
             {drawer.kind !== "upload-menu" ? (
@@ -807,12 +916,8 @@ export default function AdminMenuClient({
               <form
                 className="flex min-h-full w-full min-w-0 flex-col gap-4 pt-4"
                 aria-labelledby="menu-upload-heading"
-                onSubmit={(event) => {
-                  event.preventDefault();
-
-                  // Placeholder: No upload request is sent.
-                  console.log("upload logic here");
-                }}
+                aria-busy={isUploading}
+                onSubmit={handleMenuUpload}
               >
                 <h2
                   id="menu-upload-heading"
@@ -820,6 +925,16 @@ export default function AdminMenuClient({
                 >
                   Upload Menu
                 </h2>
+
+                <p id="menu-upload-help" className="text-sm text-gray-600">
+                  Choose a PDF of {MENU_PDF_SIZE_LABEL} or less. A successful upload
+                  replaces the public PDF menu, not the individual Square items.
+                </p>
+                {uploadError && (
+                  <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 [overflow-wrap:anywhere]">
+                    {uploadError}
+                  </p>
+                )}
 
                 <div className="min-w-0">
                   <label
@@ -834,12 +949,14 @@ export default function AdminMenuClient({
                     id="menu-upload-file"
                     name="menuUploadFile"
                     type="file"
-                    accept="image/*,.jpg,.jpeg,.png,.webp,.pdf"
-                    onChange={(event) =>
-                      setUploadFileName(
-                        event.target.files?.[0]?.name ?? "",
-                      )
-                    }
+                    accept="application/pdf,.pdf"
+                    disabled={isUploading}
+                    aria-describedby="menu-upload-help"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      setUploadFile(file);
+                      setUploadError(file ? getMenuFileError(file) ?? "" : "");
+                    }}
                     className="hidden"
                   />
 
@@ -849,7 +966,8 @@ export default function AdminMenuClient({
                       onClick={() =>
                         fileInputRef.current?.click()
                       }
-                      className="w-full cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+                      disabled={isUploading}
+                      className="w-full cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Choose File
                     </button>
@@ -858,25 +976,33 @@ export default function AdminMenuClient({
                       aria-live="polite"
                       className="mt-2 text-sm text-gray-700 [overflow-wrap:anywhere]"
                     >
-                      {uploadFileName || "No file chosen"}
+                      {uploadFile?.name || "No file chosen"}
                     </p>
                   </div>
                 </div>
 
+                {isUploading && (
+                  <p role="status" className="text-sm text-gray-600">
+                    Uploading and publishing the menu. Please keep this page open.
+                  </p>
+                )}
+
                 <div className="mt-auto grid grid-cols-2 gap-3 pt-6">
                   <button
                     type="button"
-                    onClick={() => setDrawer(null)}
-                    className="min-w-0 cursor-pointer rounded bg-gray-400 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
+                    onClick={closeDrawer}
+                    disabled={isUploading}
+                    className="min-w-0 cursor-pointer rounded bg-gray-400 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="min-w-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+                    disabled={isUploading || !canUploadMenu || !uploadFile || !!getMenuFileError(uploadFile)}
+                    className="min-w-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Upload
+                    {isUploading ? "Uploading…" : "Upload"}
                   </button>
                 </div>
               </form>
