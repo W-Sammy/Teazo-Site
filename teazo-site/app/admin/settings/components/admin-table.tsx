@@ -1,14 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import type { Admin, AdminRole, NewAdminInput,} from "@/app/types/admin-perms";
-import { OWNER_ROLE, READ_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
+import type {
+  Admin,
+  AdminRole,
+  NewAdminInput,
+} from "@/app/types/admin-perms";
+import {
+  OWNER_ROLE,
+  READ_ROLE,
+  WRITE_ROLE,
+} from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 
-/* temporary data */
+/* Temporary front-end data. */
 const initialAdmins: Admin[] = [
   {
     id: 1,
@@ -33,9 +44,13 @@ const initialAdmins: Admin[] = [
   },
 ];
 
-/* fully put together admin table code */
+// Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
-  const [showModal, setShowModal] = useState(false);
+  // Mount the Add New User modal only while it is needed.
+  const [showModal, setShowModal] =
+    useState(false);
+
+  // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
     errorMessage,
@@ -47,78 +62,138 @@ export default function AdminsTable() {
     toggleInvitePermission,
   } = useAdmins(initialAdmins);
 
+  // Automatically clear a displayed error after 3.5 seconds.
   useEffect(() => {
-    if (!errorMessage) return;
+    if (!errorMessage) {
+      return;
+    }
 
-    const timeout = window.setTimeout(clearError, 3500);
-    return () => window.clearTimeout(timeout);
-  }, [clearError, errorMessage]);
-
-  /* create function to call addAdmin in the hoooks */
-  const handleAddAdmin = (input: NewAdminInput) => {
-    const added = addAdmin(input);
-    if (added) setShowModal(false);
-  };
-
-  const handleDeleteAdmin = (admin: Admin) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${admin.username}?`
+    const timeout = window.setTimeout(
+      clearError,
+      3500,
     );
 
-    if (confirmed) deleteAdmin(admin);
-  };
+    // Cancel the previous timer when dependencies change or the component unmounts.
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [clearError, errorMessage]);
+
+  // Keep the form open unless the hook reports that adding the admin succeeded.
+  function handleAddAdmin(
+    input: NewAdminInput,
+  ) {
+    const added = addAdmin(input);
+
+    if (added) {
+      setShowModal(false);
+    }
+  }
+
+  // Ask for confirmation before forwarding a delete request to the hook.
+  function handleDeleteAdmin(
+    admin: Admin,
+  ) {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${admin.username}?`,
+    );
+
+    if (confirmed) {
+      deleteAdmin(admin);
+    }
+  }
 
   return (
     <>
+      {/* Surface the shared error message in an alert above the page content. */}
       {errorMessage && (
         <div
           role="alert"
-          className="fixed right-5 top-5 z-[60] max-w-sm rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg"
+          className="fixed left-3 right-3 top-3 z-[70] rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
         >
           {errorMessage}
         </div>
       )}
 
-      <div className="w-full max-w-5xl">
-        {/*top row */}
-        <div className="grid grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4">
-          <div className="text-sm font-semibold text-gray-500">Username</div>
-          <div className="text-sm font-semibold text-gray-500">Email (SSO)</div>
-          <div className="text-sm font-semibold text-gray-500">Role</div>
-          <div className="text-sm font-semibold text-gray-500">Invite users</div>
+      <div className="w-full min-w-0 max-w-5xl">
+        {/* Desktop column headings */}
+        {/* Keep these column widths aligned with the desktop grid in AdminRow. */}
+        <div className="hidden grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
+          <div className="text-sm font-semibold text-gray-500">
+            Username
+          </div>
+
+          <div className="text-sm font-semibold text-gray-500">
+            Email (SSO)
+          </div>
+
+          <div className="text-sm font-semibold text-gray-500">
+            Role
+          </div>
+
+          <div className="text-sm font-semibold text-gray-500">
+            Invite users
+          </div>
+
+          {/* Reserve the final column for each row's action menu. */}
           <div aria-hidden="true" />
         </div>
 
-        {/*mapping of all the admins */}
-        <div>
+        {/* Admin rows become cards on mobile. */}
+        {/* Bind each row's callbacks to the corresponding administrator. */}
+        <div className="space-y-3 md:space-y-0">
           {admins.map((admin) => (
             <AdminRow
               key={admin.id}
               admin={admin}
-              onRoleChange={(role: AdminRole) =>
-                changeRole(admin.id, role)
+              onRoleChange={(
+                role: AdminRole,
+              ) =>
+                changeRole(
+                  admin.id,
+                  role,
+                )
               }
-              onToggleInvite={() => toggleInvitePermission(admin)}
-              onDelete={() => handleDeleteAdmin(admin)}
+              onToggleInvite={() =>
+                toggleInvitePermission(
+                  admin,
+                )
+              }
+              onDelete={() =>
+                handleDeleteAdmin(admin)
+              }
             />
           ))}
         </div>
 
-        {/*add user button*/}
+        {/* Open the creation modal without changing the current admin list. */}
         <button
           type="button"
-          onClick={() => setShowModal(true)}
-          className="mt-2 rounded-md bg-pink-300 px-5 py-2 text-xs font-semibold text-white transition hover:bg-pink-400"
+          onClick={() =>
+            setShowModal(true)
+          }
+          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-pink-300 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-pink-400 sm:w-auto"
         >
-          New User <span className="ml-1 text-sm">+</span>
+          New User
+          <span
+            className="ml-2 text-base"
+            aria-hidden="true"
+          >
+            +
+          </span>
         </button>
       </div>
 
-      {/*add user modal that gets the input and passes addAdmin function*/}
+      {/*
+       * Unmount the modal on close so its local form state resets when reopened.
+       * Route modal errors through the same error state used by the table.
+       */}
       {showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
-          onCancel={() => setShowModal(false)}
+          onCancel={() =>
+            setShowModal(false)
+          }
           onError={setError}
         />
       )}
