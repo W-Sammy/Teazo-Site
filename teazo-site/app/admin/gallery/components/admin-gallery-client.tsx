@@ -29,6 +29,7 @@ type AdminGalleryClientProps = {
   initialImages: AdminGalleryImage[];
 };
 
+// Filter labels include counts across the complete current image collection.
 type TagOption = {
   name: string;
   count: number;
@@ -47,6 +48,7 @@ const galleryViewOptions: readonly AdminViewOption<GalleryViewMode>[] = [
   },
 ];
 
+// Prefer a UUID, with a timestamp/random fallback when randomUUID is unavailable.
 function createImageId() {
   if (
     typeof crypto !== "undefined" &&
@@ -63,9 +65,11 @@ function createImageId() {
 export default function AdminGalleryClient({
   initialImages,
 }: AdminGalleryClientProps) {
+  // Gallery changes are local component state only; no server persistence occurs here.
   const [images, setImages] =
     useState<AdminGalleryImage[]>(initialImages);
 
+  // Matching controls are independent of the chosen image/list presentation.
   const [search, setSearch] = useState("");
 
   const [selectedTags, setSelectedTags] =
@@ -74,8 +78,9 @@ export default function AdminGalleryClient({
   const [sortBy, setSortBy] =
     useState<GallerySortOption>("name-asc");
 
+  // Start in List View on both mobile and desktop.
   const [viewMode, setViewMode] =
-    useState<GalleryViewMode>("grid");
+    useState<GalleryViewMode>("list");
 
   /*
    * Desktop filters use a collapsible sidebar.
@@ -92,6 +97,7 @@ export default function AdminGalleryClient({
     setMobileFiltersOpen,
   ] = useState(false);
 
+  // A null editingImage selects create mode; deletion waits for confirmation.
   const [drawerOpen, setDrawerOpen] =
     useState(false);
 
@@ -103,9 +109,11 @@ export default function AdminGalleryClient({
     setImagePendingDelete,
   ] = useState<AdminGalleryImage | null>(null);
 
+  // These URLs belong to the gallery, separate from the upload form's preview URLs.
   const managedObjectUrls =
     useRef<Set<string>>(new Set());
 
+  // Release all gallery-owned blob URLs when leaving this component.
   useEffect(() => {
     const urls = managedObjectUrls.current;
 
@@ -118,6 +126,7 @@ export default function AdminGalleryClient({
     };
   }, []);
 
+  // Rebuild alphabetized tag counts whenever the local image collection changes.
   const tagOptions = useMemo<TagOption[]>(() => {
     const counts = new Map<string, number>();
 
@@ -141,6 +150,7 @@ export default function AdminGalleryClient({
     );
   }, [images]);
 
+  // Match any selected tag AND a case-insensitive name/tag search.
   const filteredImages = useMemo(() => {
     const query = search
       .trim()
@@ -167,6 +177,7 @@ export default function AdminGalleryClient({
       return matchesTags && matchesSearch;
     });
 
+    // Sort a copy without rearranging the source state array.
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "name-desc":
@@ -196,6 +207,7 @@ export default function AdminGalleryClient({
     sortBy,
   ]);
 
+  // Toggle one tag without mutating the existing selected-tags array.
   function toggleTag(tagName: string) {
     setSelectedTags((currentTags) =>
       currentTags.includes(tagName)
@@ -206,6 +218,7 @@ export default function AdminGalleryClient({
     );
   }
 
+  // Remove selected filters whose tags disappeared after an edit or deletion.
   function keepAvailableSelectedTags(
     nextImages: AdminGalleryImage[],
   ) {
@@ -222,16 +235,19 @@ export default function AdminGalleryClient({
     );
   }
 
+  // Clear the edit target so a later create action starts with a blank form.
   function closeDrawer() {
     setDrawerOpen(false);
     setEditingImage(null);
   }
 
+  // Explicitly reset edit mode before opening the create form.
   function openNewImageDrawer() {
     setEditingImage(null);
     setDrawerOpen(true);
   }
 
+  // Reuse the upload form to edit the selected image's metadata or file.
   function openEditDrawer(
     image: AdminGalleryImage,
   ) {
@@ -239,6 +255,7 @@ export default function AdminGalleryClient({
     setDrawerOpen(true);
   }
 
+  // Keep a saved local preview alive after the upload form unmounts.
   function createManagedObjectUrl(file: File) {
     const url = URL.createObjectURL(file);
 
@@ -247,6 +264,7 @@ export default function AdminGalleryClient({
     return url;
   }
 
+  // Revoke only URLs created here; leave supplied asset and remote URLs untouched.
   function revokeManagedObjectUrl(
     url: string,
   ) {
@@ -258,12 +276,14 @@ export default function AdminGalleryClient({
     managedObjectUrls.current.delete(url);
   }
 
+  // Update local records and preview URLs only; this is not a network upload.
   function handleSave(
     values: GalleryUploadValues,
   ) {
     let nextImages: AdminGalleryImage[];
 
     if (editingImage) {
+      // Keep the existing URL unless a replacement file was selected.
       const nextUrl = values.file
         ? createManagedObjectUrl(values.file)
         : editingImage.url;
@@ -289,6 +309,7 @@ export default function AdminGalleryClient({
         return;
       }
 
+      // New records require a file and receive a local ID plus a creation timestamp.
       const newImage: AdminGalleryImage = {
         id: createImageId(),
         name: values.name,
@@ -307,6 +328,7 @@ export default function AdminGalleryClient({
     closeDrawer();
   }
 
+  // Remove the confirmed record, free its local URL, and close a matching editor.
   function confirmDelete() {
     if (!imagePendingDelete) {
       return;
@@ -334,10 +356,12 @@ export default function AdminGalleryClient({
     setImagePendingDelete(null);
   }
 
+  // Clear only tag matching; preserve search text, sorting, and view mode.
   function clearTagFilters() {
     setSelectedTags([]);
   }
 
+  // Reset search as well as tags, without changing presentation preferences.
   function clearAllSearchAndFilters() {
     setSearch("");
     clearTagFilters();
@@ -662,9 +686,11 @@ export default function AdminGalleryClient({
       </section>
 
       {/* Right-side upload/edit form */}
+      {/* Mount a fresh form for each selected record, and unmount its contents on close. */}
       <AdminForm
         isOpen={drawerOpen}
         onClose={closeDrawer}
+        mobileFullscreen
       >
         {drawerOpen && (
           <GalleryUploadForm
@@ -679,6 +705,7 @@ export default function AdminGalleryClient({
         )}
       </AdminForm>
 
+      {/* Selecting Delete opens this dialog before the local record is removed. */}
       <DeleteImageDialog
         image={imagePendingDelete}
         onCancel={() =>
