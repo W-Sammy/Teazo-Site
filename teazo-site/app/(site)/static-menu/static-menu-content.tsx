@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 import PdfPreview from "@/app/components/pdf-preview";
 import GeneralButton from "@/app/components/general-button";
+import { CURRENT_MENU_PDF_URL } from "@/app/lib/menu-upload";
 
 /* Font used for the button and helper text. */
 const montserrat = Montserrat({
@@ -45,7 +46,7 @@ export default function StaticMenuContent() {
 		<>
 			{/* Opens the PDF in a new tab. */}
 			<div className="mt-8 flex w-full justify-center">
-				<GeneralButton text="OPEN PDF" href="/teazo-menu.pdf" />
+				<GeneralButton text="OPEN PDF" href={CURRENT_MENU_PDF_URL} />
 			</div>
 
 			{/* Simple helper message for the PDF button. */}
@@ -58,7 +59,7 @@ export default function StaticMenuContent() {
 			{/* Renders the PDF preview when supported. */}
 			{shouldRenderPreview && (
 				<div className="mt-10 w-full max-w-[900px]">
-					<PdfPreview fileUrl="/teazo-menu.pdf" />
+					<PdfPreview fileUrl={CURRENT_MENU_PDF_URL} />
 				</div>
 			)}
 		</>
