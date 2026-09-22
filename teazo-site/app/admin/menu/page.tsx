@@ -48,20 +48,22 @@ function getUniqueCategories(items: ReturnType<typeof filterMenuItems>) {
 
 export default async function AdminMenuPage(){
   // Can View may open the page. The upload endpoint separately requires Can Edit.
-  const admin = await getAdmin(3);
-  if (!admin) redirect("/login");
+  //const admin = await getAdmin(3);
+  //if (!admin) redirect("/login");
 
   const menuItems = await getMenuItems();
   const displayedMenuItems = filterMenuItems(menuItems);
   //what will be used for the filters
   const categories = getUniqueCategories(displayedMenuItems);
 
+
+  //canUploadMenu={admin.role_id <= 2}
   return (
     <div>
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
-        canUploadMenu={admin.role_id <= 2}
+        canUploadMenu={false}
       />
     </div>
   )
