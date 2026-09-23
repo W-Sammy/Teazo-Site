@@ -64,7 +64,7 @@ export default function Sidebar({
     {
       id: "settings",
       label: "Settings",
-      img: "teazo_setting_icon.png",
+      img: "admin_svg/teazo_setting_icon.svg",
       img_b:
         "teazo_setting_icon_black.png",
       href: "/admin/settings",
@@ -212,7 +212,9 @@ export default function Sidebar({
                     height={24}
                     className="h-6 w-6 shrink-0 object-contain"
                     // filter svg black if on page/is active
-                    style={{filter: !isActive && page.img.endsWith(".svg") ? "brightness(0)" : "none"}}
+                    style={{filter: !isActive && page.img.endsWith(".svg") 
+                      ? "brightness(0)" 
+                      : "none"}}
                   />
 
                   <span
