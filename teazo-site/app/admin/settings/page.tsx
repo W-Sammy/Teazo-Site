@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import AdminsTable from "@/app/admin/settings/components/admin-table";
+import { requireAdminPage } from "@/app/lib/admin";
 
 // Define the page title for the admin settings route.
 export const metadata: Metadata = {
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 };
 
 // Arrange settings sections while AdminsTable handles the interactive admin controls.
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireAdminPage(3)
+  
   return (
     <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden px-4 pb-12 pt-6 sm:px-6 md:px-8 md:pt-10">
       {/*
