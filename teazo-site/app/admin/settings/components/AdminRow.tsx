@@ -47,7 +47,7 @@ export function AdminRow({
 
         {/* Allow long usernames to wrap rather than widen the card or column. */}
         <div
-          className="break-words text-sm text-gray-500 transition-colors [overflow-wrap:anywhere] group-hover/row:text-pink-300"
+          className="break-words text-sm text-gray-500 transition-colors [overflow-wrap:anywhere] group-hover/row:text-[#b98555]"
           title={admin.username}
         >
           {admin.username}
@@ -61,7 +61,7 @@ export function AdminRow({
         </span>
 
         <div
-          className="break-words text-sm text-gray-400 transition-colors [overflow-wrap:anywhere] group-hover/row:text-pink-300"
+          className="break-words text-sm text-gray-400 transition-colors [overflow-wrap:anywhere] group-hover/row:text-[#b98555]"
           title={admin.email}
         >
           {admin.email}
@@ -76,7 +76,7 @@ export function AdminRow({
 
         {/* Show the owner's role as text; other admins receive the role dropdown. */}
         {isOwner ? (
-          <span className="block text-sm text-gray-400 transition-colors group-hover/row:text-pink-300">
+          <span className="block text-sm text-gray-400 transition-colors group-hover/row:text-[#b98555]">
             {
               ADMIN_ROLE_LABELS[
                 admin.role

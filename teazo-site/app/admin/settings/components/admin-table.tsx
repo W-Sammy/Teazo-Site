@@ -172,7 +172,7 @@ export default function AdminsTable() {
           onClick={() =>
             setShowModal(true)
           }
-          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-pink-300 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-pink-400 sm:w-auto"
+          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
         >
           New User
           <span

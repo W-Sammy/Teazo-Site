@@ -136,7 +136,7 @@ export function AddAdminModal({
               }
               placeholder="Username"
               autoComplete="username"
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
@@ -160,7 +160,7 @@ export function AddAdminModal({
               }
               placeholder="email@example.com"
               autoComplete="email"
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
@@ -195,7 +195,7 @@ export function AddAdminModal({
                   );
                 }
               }}
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-base text-gray-600 outline-none focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-base text-gray-600 outline-none focus:border-[#dbb082] sm:text-sm"
             >
               <option value={READ_ROLE}>
                 {
@@ -263,7 +263,7 @@ export function AddAdminModal({
 
             <button
               type="submit"
-              className="w-full cursor-pointer rounded-md bg-pink-300 px-5 py-2 text-sm font-semibold text-white hover:bg-pink-400 sm:w-auto"
+              className="w-full cursor-pointer rounded-md bg-[#dbb082] px-5 py-2 text-sm font-semibold text-white hover:bg-[#c99a6e] sm:w-auto"
             >
               Add User
             </button>
