@@ -193,6 +193,7 @@ CREATE TABLE business_profile (
   email                 TEXT,
   map_query             TEXT NOT NULL,
   timezone              TEXT NOT NULL DEFAULT 'America/Los_Angeles',
+  contact_form_enabled  INTEGER NOT NULL DEFAULT 1 CHECK (contact_form_enabled IN (0,1)),
   square_location_id    TEXT,
   synced_from_square_at TEXT,
   updated_at            TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),

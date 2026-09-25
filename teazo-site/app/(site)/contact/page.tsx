@@ -3,11 +3,7 @@ import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { headers } from "next/headers";
 import { BubbleField } from "@/app/components/bubble-field";
-import {
-  directionsHref,
-  getContactContent,
-  mapEmbedSrc,
-} from "./contact-content";
+import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 
 // Keep route metadata local to the contact page so the rest of the site can
@@ -144,6 +140,12 @@ export default async function ContactPage() {
     : HOURS_TIME_COLUMN_MIN_WIDTH;
   const emailHref = `mailto:${location.email}`;
   const opensWebmail = false;
+  const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
+    location.mapQuery,
+  )}&z=15&output=embed`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    location.mapQuery,
+  )}`;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
@@ -185,7 +187,7 @@ export default async function ContactPage() {
               <div className="overflow-hidden rounded-[16px] border border-[#e6ddd8] bg-[#efe7e0]">
                 <iframe
                   title={`${location.businessName} map`}
-                  src={mapEmbedSrc}
+                  src={embedSrc}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="h-[320px] w-full border-0 sm:h-[380px] lg:h-[430px]"
@@ -236,7 +238,7 @@ export default async function ContactPage() {
 
                   <div className="flex items-start justify-start sm:justify-end sm:pr-16">
                     <a
-                      href={directionsHref}
+                      href={directionsUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-block whitespace-nowrap text-sm font-semibold uppercase tracking-[0.08em] text-[#cd8f84] transition hover:opacity-70"

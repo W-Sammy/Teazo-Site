@@ -25,11 +25,23 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   const [content, setContent] = useState(initialContent);
   const [errorMessage, setErrorMessage] = useState("");
 
+  async function persistPatch(patch: Partial<WebsiteContent>) {
+    try {
+      await fetch("/api/website-content", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+    } catch {
+      // Graceful fallback for offline / test environments
+    }
+  }
+
   function updateLogo(dataUrl: string) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content { logo }. */
       setContent((prev) => ({ ...prev, logo: dataUrl }));
+      persistPatch({ logo: dataUrl });
       return true;
     } catch {
       setErrorMessage("Failed to update the logo.");
@@ -40,8 +52,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateStory(story: string) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content { story }. */
       setContent((prev) => ({ ...prev, story }));
+      persistPatch({ story });
       return true;
     } catch {
       setErrorMessage("Failed to update the story.");
@@ -52,8 +64,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateAddress(patch: Partial<AddressInfo>) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content { address }. */
-      setContent((prev) => ({ ...prev, address: { ...prev.address, ...patch } }));
+      const updatedAddress = { ...content.address, ...patch };
+      setContent((prev) => ({ ...prev, address: updatedAddress }));
+      persistPatch({ address: updatedAddress });
       return true;
     } catch {
       setErrorMessage("Failed to update contact info.");
@@ -64,11 +77,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateDay(index: number, patch: Partial<DayHours>) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content { hours } (send the full 7-day array). */
-      setContent((prev) => ({
-        ...prev,
-        hours: prev.hours.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
-      }));
+      const updatedHours = content.hours.map((entry, i) =>
+        i === index ? { ...entry, ...patch } : entry,
+      );
+      setContent((prev) => ({ ...prev, hours: updatedHours }));
+      persistPatch({ hours: updatedHours });
       return true;
     } catch {
       setErrorMessage("Failed to update business hours.");
@@ -79,12 +92,13 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function addSocialLink() {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with POST /api/website-content/social-links. */
       const id = createTemporaryId("social");
-      setContent((prev) => ({
-        ...prev,
-        socialLinks: [...prev.socialLinks, { id, label: "", icon: "", url: "", enabled: true }],
-      }));
+      const updatedLinks = [
+        ...content.socialLinks,
+        { id, label: "", icon: "", url: "", enabled: true },
+      ];
+      setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
+      persistPatch({ socialLinks: updatedLinks });
       return true;
     } catch {
       setErrorMessage("Failed to add the social link.");
@@ -95,11 +109,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateSocialLink(id: string, patch: Partial<SocialLink>) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content/social-links/:id. */
-      setContent((prev) => ({
-        ...prev,
-        socialLinks: prev.socialLinks.map((link) => (link.id === id ? { ...link, ...patch } : link)),
-      }));
+      const updatedLinks = content.socialLinks.map((link) =>
+        link.id === id ? { ...link, ...patch } : link,
+      );
+      setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
+      persistPatch({ socialLinks: updatedLinks });
       return true;
     } catch {
       setErrorMessage("Failed to update the social link.");
@@ -110,11 +124,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function removeSocialLink(id: string) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with DELETE /api/website-content/social-links/:id. */
-      setContent((prev) => ({
-        ...prev,
-        socialLinks: prev.socialLinks.filter((link) => link.id !== id),
-      }));
+      const updatedLinks = content.socialLinks.filter((link) => link.id !== id);
+      setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
+      persistPatch({ socialLinks: updatedLinks });
       return true;
     } catch {
       setErrorMessage("Failed to remove the social link.");
@@ -125,12 +137,13 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function addHoliday() {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with POST /api/website-content/holidays. */
       const id = createTemporaryId("holiday");
-      setContent((prev) => ({
-        ...prev,
-        holidays: [...prev.holidays, { id, name: "", date: "", closed: true }],
-      }));
+      const updatedHolidays = [
+        ...content.holidays,
+        { id, name: "", date: "", closed: true },
+      ];
+      setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
+      persistPatch({ holidays: updatedHolidays });
       return true;
     } catch {
       setErrorMessage("Failed to add the holiday.");
@@ -141,11 +154,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateHoliday(id: string, patch: Partial<Holiday>) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content/holidays/:id. */
-      setContent((prev) => ({
-        ...prev,
-        holidays: prev.holidays.map((holiday) => (holiday.id === id ? { ...holiday, ...patch } : holiday)),
-      }));
+      const updatedHolidays = content.holidays.map((holiday) =>
+        holiday.id === id ? { ...holiday, ...patch } : holiday,
+      );
+      setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
+      persistPatch({ holidays: updatedHolidays });
       return true;
     } catch {
       setErrorMessage("Failed to update the holiday.");
@@ -156,11 +169,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function removeHoliday(id: string) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with DELETE /api/website-content/holidays/:id. */
-      setContent((prev) => ({
-        ...prev,
-        holidays: prev.holidays.filter((holiday) => holiday.id !== id),
-      }));
+      const updatedHolidays = content.holidays.filter((holiday) => holiday.id !== id);
+      setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
+      persistPatch({ holidays: updatedHolidays });
       return true;
     } catch {
       setErrorMessage("Failed to remove the holiday.");
@@ -171,15 +182,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateContactFormEnabled(enabled: boolean) {
     setErrorMessage("");
     try {
-      /* TODO: Replace this temporary block with PATCH /api/website-content { contactFormEnabled }. */
       setContent((prev) => ({ ...prev, contactFormEnabled: enabled }));
-      fetch("/api/website-content", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactFormEnabled: enabled }),
-      }).catch(() => {
-        // Fallback gracefully in dev/test/offline environments
-      });
+      persistPatch({ contactFormEnabled: enabled });
       return true;
     } catch {
       setErrorMessage("Failed to update Contact Us form setting.");

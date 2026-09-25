@@ -1,4 +1,4 @@
-import { getContactFormSetting } from "@/app/admin/website-content/handlers/get-website-content";
+import { getContactContent as getLiveContactContent } from "@/app/lib/website-content";
 
 export type ContactHour = {
   day: string;
@@ -46,16 +46,13 @@ export const contactContent: ContactContent = {
 };
 
 /**
- * Loads contact content including the contactFormEnabled setting.
- * Allows the customer-facing Contact page to easily retrieve configuration.
+ * Loads contact content including location, formatted hours, and contactFormEnabled setting.
+ * Allows the customer-facing Contact page to retrieve live configuration from D1/admin.
  */
 export async function getContactContent(): Promise<ContactContent> {
   try {
-    const formEnabled = await getContactFormSetting();
-    return {
-      ...contactContent,
-      contactFormEnabled: formEnabled,
-    };
+    const liveContent = await getLiveContactContent();
+    return liveContent;
   } catch {
     return contactContent;
   }
