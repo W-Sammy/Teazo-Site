@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { headers } from "next/headers";
+import { unstable_rethrow } from "next/navigation";
 import { BubbleField } from "@/app/components/bubble-field";
 import {
   contactContent,
@@ -9,6 +10,8 @@ import {
   mapEmbedSrc,
 } from "./contact-content";
 import Subtitle from "../components/sub-title";
+import { isContactFormEnabled } from "@/app/lib/queries/contact";
+import ContactForm from "./contact-form";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -131,6 +134,25 @@ function ClockIcon() {
   );
 }
 
+let warnedAboutContactSetting = false;
+
+// Keep the page working when the database cannot be reached, for example on a
+// machine without the proxy Worker running. The form stays visible, matching
+// the database default, and a failed submission explains itself.
+async function readContactFormEnabled(): Promise<boolean> {
+  try {
+    return await isContactFormEnabled();
+  } catch (error) {
+    // Let Next.js internal signals, such as "this page is dynamic", pass through.
+    unstable_rethrow(error);
+    if (!warnedAboutContactSetting) {
+      warnedAboutContactSetting = true;
+      console.warn("Could not read the contact form setting, showing the form:", error);
+    }
+    return true;
+  }
+}
+
 export default async function ContactPage() {
   const requestHeaders = await headers();
   const userAgent = requestHeaders.get("user-agent") ?? "";
@@ -144,6 +166,7 @@ export default async function ContactPage() {
     : HOURS_TIME_COLUMN_MIN_WIDTH;
   const emailHref = `mailto:${location.email}`;
   const opensWebmail = false;
+  const showContactForm = await readContactFormEnabled();
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
@@ -389,66 +412,20 @@ export default async function ContactPage() {
           </div>
         </section>
 
-        <div className="relative mt-14 flex items-center justify-center sm:mt-16">
-          <Subtitle text="CONTACT US" />
-        </div>
-
-        <section
-          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-white px-5 py-7 shadow-sm sm:px-6 sm:py-8 lg:px-8 lg:py-9`}
-        >
-          <form
-            action={`mailto:${location.email}`}
-            method="post"
-            encType="text/plain"
-            className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-5"
-          >
-            <div className="grid w-full gap-5 md:grid-cols-2">
-              <input
-                type="text"
-                name="firstName"
-                placeholder="FIRST NAME"
-                aria-label="First name"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="LAST NAME"
-                aria-label="Last name"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="EMAIL"
-                aria-label="Email"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="text"
-                name="subject"
-                placeholder="SUBJECT"
-                aria-label="Subject"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
+        {/* Hidden when business_profile.contact_form_enabled is 0. */}
+        {showContactForm && (
+          <>
+            <div className="relative mt-14 flex items-center justify-center sm:mt-16">
+              <Subtitle text="CONTACT US" />
             </div>
 
-            <textarea
-              name="message"
-              placeholder="MESSAGE"
-              aria-label="Message"
-              rows={8}
-              className="min-h-[250px] w-full resize-y border-2 border-[#b9aaa4] bg-white px-4 py-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-            />
-
-            <button
-              type="submit"
-              className="mt-1 flex h-[66px] w-[210px] cursor-pointer items-center justify-center bg-black text-[1rem] font-bold tracking-[0.12em] text-white transition hover:bg-[#FFBDC7]"
+            <section
+              className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-white px-5 py-7 shadow-sm sm:px-6 sm:py-8 lg:px-8 lg:py-9`}
             >
-              SUBMIT
-            </button>
-          </form>
-        </section>
+              <ContactForm fallbackEmail={location.email} />
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
