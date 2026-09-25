@@ -42,5 +42,27 @@
     "appliesToAll": false,
     "categoryIds": [],
     "itemIds": []
+  },
+  {
+    "id": "event-5",
+    "name": "Drink of the Week",
+    "description": "A featured drink promotion available for a limited time.",
+    "imageUrl": "/menu_items/mango_matcha_cheezo.webp",
+    "startAt": "2026-09-20T07:00:00.000Z",
+    "endAt": "2026-09-30T06:59:00.000Z",
+    "appliesToAll": false,
+    "categoryIds": [],
+    "itemIds": []
+  },
+  {
+    "id": "event-6",
+    "name": "Happy Hour Specials",
+    "description": "Enjoy special pricing on selected drinks and snacks during happy hour.",
+    "imageUrl": "/menu_items/boba_milk_tea.webp",
+    "startAt": "2026-09-24T07:00:00.000Z",
+    "endAt": "2026-10-05T06:59:00.000Z",
+    "appliesToAll": true,
+    "categoryIds": [],
+    "itemIds": []
   }
 ]
