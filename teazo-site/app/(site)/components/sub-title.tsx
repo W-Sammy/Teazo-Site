@@ -17,7 +17,7 @@ export default function Subtitle({ text }: Editables) {
             {/* pink scribble */}
             <Image
                 src="/pink_scribble.svg"
-                alt="Pink Silhouette of a Chalk Scribble"
+                alt="Pink Silhouette of a Drink Splash"
                 aria-hidden="true"
                 width={750}
                 height={134}
