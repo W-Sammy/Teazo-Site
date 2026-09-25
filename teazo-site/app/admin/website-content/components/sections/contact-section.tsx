@@ -7,7 +7,7 @@ import { fieldClass, FieldLabel, ErrorText } from "../field-controls";
 import { isNonEmpty, isValidEmail, isValidPhone, withinMaxLength } from "../validators";
 import type { AddressInfo } from "@/app/types/website-content";
 
-type ContactField = "businessName" | "phone" | "streetAddress" | "locality" | "email";
+type ContactField = "businessName" | "phone" | "streetAddress" | "locality" | "email" | "mapQuery";
 type ContactErrors = Partial<Record<ContactField, string>>;
 
 function validateField(field: ContactField, value: string): string | undefined {
@@ -29,6 +29,8 @@ function validateField(field: ContactField, value: string): string | undefined {
     case "email":
       if (!isNonEmpty(value)) return "Email is required";
       if (!isValidEmail(value)) return "Enter a valid email address";
+      return undefined;
+    case "mapQuery":
       return undefined;
   }
 }
@@ -119,6 +121,17 @@ export default function ContactSection({
                 className={`${fieldClass(Boolean(errors.locality))} bg-white`}
               />
               {errors.locality && <ErrorText>{errors.locality}</ErrorText>}
+            </div>
+            <div>
+              <input
+                type="text"
+                value={address.mapQuery ?? ""}
+                onChange={(e) => handleChange("mapQuery", e.target.value)}
+                onBlur={(e) => handleBlur("mapQuery", e.target.value)}
+                placeholder="Google Maps search query (optional, e.g. 1050 Taraval St, San Francisco, CA 94116)"
+                className={`${fieldClass(Boolean(errors.mapQuery))} bg-white`}
+              />
+              {errors.mapQuery && <ErrorText>{errors.mapQuery}</ErrorText>}
             </div>
           </div>
         </div>

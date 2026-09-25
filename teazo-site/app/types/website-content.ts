@@ -28,12 +28,14 @@ export type AddressInfo = {
   locality: string;
   phone: string;
   email: string;
+  mapQuery?: string;
 };
 
 export type WebsiteContent = {
   logo: string;
   story: string;
   socialLinks: SocialLink[];
+  deliveryLinks?: SocialLink[];
   address: AddressInfo;
   hours: DayHours[];
   holidays: Holiday[];
