@@ -26,6 +26,7 @@ export default function AdminsTable() {
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
+    canEdit,
     errorMessage,
     clearError,
     addAdmin,
@@ -135,7 +136,7 @@ export default function AdminsTable() {
           </div>
 
           <div className="text-sm font-semibold text-gray-500">
-            Invite users
+            Manage Admins
           </div>
 
           {/* Reserve the final column for each row's action menu. */}
@@ -149,6 +150,7 @@ export default function AdminsTable() {
             <AdminRow
               key={admin.id}
               admin={admin}
+              canEdit={canEdit}
               onRoleChange={(
                 role: AdminRole,
               ) =>
@@ -170,7 +172,7 @@ export default function AdminsTable() {
         </div>
 
         {/* Open the creation modal without changing the current admin list. */}
-        <button
+        {canEdit && <button
           type="button"
           onClick={() =>
             setShowModal(true)
@@ -184,7 +186,7 @@ export default function AdminsTable() {
           >
             +
           </span>
-        </button>
+        </button>}
       </div>
 
       {/*

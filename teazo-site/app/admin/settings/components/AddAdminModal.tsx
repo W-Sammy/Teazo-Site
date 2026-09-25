@@ -45,8 +45,8 @@ export function AddAdminModal({
     useState<AdminRole>(READ_ROLE);
 
   const [
-    canInviteUsers,
-    setCanInviteUsers,
+    canManageAdmins,
+    setCanManageAdmins,
   ] = useState(false);
 
   // Pass the entered values to the parent; this component does not create the user itself.
@@ -59,7 +59,7 @@ export function AddAdminModal({
       username,
       email,
       role,
-      canInviteUsers,
+      canManageAdmins,
     });
   }
 
@@ -201,7 +201,7 @@ export function AddAdminModal({
                   nextRole !==
                   WRITE_ROLE
                 ) {
-                  setCanInviteUsers(
+                  setCanManageAdmins(
                     false,
                   );
                 }
@@ -229,7 +229,7 @@ export function AddAdminModal({
           <div className="mb-6 flex min-w-0 flex-col items-start gap-3 rounded-md border border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="break-words text-sm font-medium text-gray-600">
-                Allow user invitations
+                Manage Admins
               </p>
 
               <p className="mt-0.5 break-words text-xs text-gray-400">
@@ -239,7 +239,7 @@ export function AddAdminModal({
 
             {/* Guard the invitation toggle here as well as marking it unavailable. */}
             <InviteSwitch
-              checked={canInviteUsers}
+              checked={canManageAdmins}
               unavailable={
                 role !== WRITE_ROLE
               }
@@ -254,7 +254,7 @@ export function AddAdminModal({
                   return;
                 }
 
-                setCanInviteUsers(
+                setCanManageAdmins(
                   (current) =>
                     !current,
                 );

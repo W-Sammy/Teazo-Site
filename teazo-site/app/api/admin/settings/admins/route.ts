@@ -7,9 +7,16 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function GET() {
-  if (!await getAdmin(3)) return errorResponse("Unauthorized.", 401);
   try {
-    return Response.json({ admins: await listSettingsAdmins() }, { headers: { "Cache-Control": "no-store" } });
+    const viewer = await getAdmin(3);
+    return Response.json(
+      {
+        admins: await listSettingsAdmins(),
+        canEdit: viewer?.role_id === 1 ||
+          (viewer?.role_id === 2 && viewer.can_invite_users === 1),
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("Could not load admins:", error);
     return errorResponse("The admins could not be loaded.", 503);

@@ -7,20 +7,20 @@ export type SettingsAdmin = {
   username: string;
   email: string;
   role: AdminRole;
-  canInviteUsers: boolean;
+  canManageAdmins: boolean;
 };
 
-type SettingsAdminRow = Omit<SettingsAdmin, "canInviteUsers"> & {
-  canInviteUsers: number;
+type SettingsAdminRow = Omit<SettingsAdmin, "canManageAdmins"> & {
+  canManageAdmins: number;
 };
 
 function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
-  return { ...admin, canInviteUsers: admin.canInviteUsers === 1 };
+  return { ...admin, canManageAdmins: admin.canManageAdmins === 1 };
 }
 
 const adminSelect = `
   SELECT id, username, email, role_id AS role,
-         can_invite_users AS canInviteUsers
+         can_invite_users AS canManageAdmins
     FROM admin_user
    WHERE deleted_at IS NULL`;
 
@@ -35,13 +35,13 @@ export async function createSettingsAdmin(input: NewAdminInput): Promise<Setting
   const username = input.username.trim();
   const email = input.email.trim();
   const id = crypto.randomUUID();
-  const canInviteUsers = input.role === 2 && input.canInviteUsers ? 1 : 0;
+  const canManageAdmins = input.role === 2 && input.canManageAdmins ? 1 : 0;
 
   await prepare(
     `INSERT INTO admin_user
        (id, email, email_normalized, username, role_id, can_invite_users, status)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'invited')`,
-  ).bind(id, email, email.toLowerCase(), username, input.role, canInviteUsers).run();
+  ).bind(id, email, email.toLowerCase(), username, input.role, canManageAdmins).run();
 
   return requireSettingsAdmin(id);
 }
@@ -57,16 +57,16 @@ export async function updateSettingsAdminRole(id: string, role: AdminRole) {
   return requireSettingsAdmin(id);
 }
 
-export async function updateSettingsAdminInvitePermission(
+export async function updateSettingsAdminManagePermission(
   id: string,
-  canInviteUsers: boolean,
+  canManageAdmins: boolean,
 ) {
   await prepare(
     `UPDATE admin_user
         SET can_invite_users = ?1,
             updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?2 AND deleted_at IS NULL AND role_id = 2`,
-  ).bind(canInviteUsers ? 1 : 0, id).run();
+  ).bind(canManageAdmins ? 1 : 0, id).run();
   return requireSettingsAdmin(id);
 }
 

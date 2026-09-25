@@ -1,6 +1,11 @@
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 
-async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+export type AdminsResponse = {
+  admins: Admin[];
+  canEdit: boolean;
+};
+
+async function request<T>(input: RequestInfo, init?: RequestInit, unwrap = true): Promise<T> {
   const response = await fetch(input, {
     ...init,
     headers: { "content-type": "application/json", ...init?.headers },
@@ -11,11 +16,11 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     admins?: T;
   };
   if (!response.ok) throw new Error(body.error || "The settings request failed.");
-  return (body.admin ?? body.admins ?? body) as T;
+  return (unwrap ? (body.admin ?? body.admins ?? body) : body) as T;
 }
 
-export function fetchAdmins(): Promise<Admin[]> {
-  return request<Admin[]>("/api/admin/settings/admins", { cache: "no-store" });
+export function fetchAdmins(): Promise<AdminsResponse> {
+  return request<AdminsResponse>("/api/admin/settings/admins", { cache: "no-store" }, false);
 }
 
 export function createAdmin(input: NewAdminInput): Promise<Admin> {
@@ -32,10 +37,10 @@ export function updateAdminRole(id: string, role: AdminRole): Promise<Admin> {
   });
 }
 
-export function updateInvitePermission(id: string, canInviteUsers: boolean): Promise<Admin> {
+export function updateManageAdminsPermission(id: string, canManageAdmins: boolean): Promise<Admin> {
   return request<Admin>(`/api/admin/settings/admins/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ canInviteUsers }),
+    body: JSON.stringify({ canManageAdmins }),
   });
 }
 

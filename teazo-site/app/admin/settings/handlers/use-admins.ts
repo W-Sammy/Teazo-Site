@@ -5,20 +5,23 @@ import {
   fetchAdmins,
   removeAdmin,
   updateAdminRole,
-  updateInvitePermission,
+  updateManageAdminsPermission,
 } from "@/app/api/admin/settings/admins-api";
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { OWNER_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
 
 export function useAdmins(initialAdmins: Admin[] = []) {
   const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
+  const [canEdit, setCanEdit] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const clearError = useCallback(() => setErrorMessage(""), []);
   const setError = useCallback((message: string) => setErrorMessage(message), []);
 
   const loadAdmins = useCallback(async () => {
     try {
-      setAdmins(await fetchAdmins());
+      const response = await fetchAdmins();
+      setAdmins(response.admins);
+      setCanEdit(response.canEdit);
     } catch (error) {
       setError(error instanceof Error ? error.message : "The admins could not be loaded.");
     }
@@ -40,16 +43,16 @@ export function useAdmins(initialAdmins: Admin[] = []) {
   const toggleInvitePermission = async (admin: Admin) => {
     if (admin.role === OWNER_ROLE) return;
     if (admin.role !== WRITE_ROLE) {
-      setError(`${admin.username} needs Edit access before they can invite users.`);
+      setError(`${admin.username} needs Edit access before they can manage admins.`);
       return;
     }
     try {
-      const updatedAdmin = await updateInvitePermission(admin.id, !admin.canInviteUsers);
+      const updatedAdmin = await updateManageAdminsPermission(admin.id, !admin.canManageAdmins);
       setAdmins((currentAdmins) => currentAdmins.map((currentAdmin) =>
         currentAdmin.id === admin.id ? updatedAdmin : currentAdmin,
       ));
     } catch (error) {
-      setError(error instanceof Error ? error.message : "The invitation permission could not be updated.");
+      setError(error instanceof Error ? error.message : "The Manage Admins permission could not be updated.");
     }
   };
 
@@ -86,5 +89,5 @@ export function useAdmins(initialAdmins: Admin[] = []) {
     }
   };
 
-  return { admins, errorMessage, clearError, setError, loadAdmins, addAdmin, deleteAdmin, changeRole, toggleInvitePermission };
+  return { admins, canEdit, errorMessage, clearError, setError, loadAdmins, addAdmin, deleteAdmin, changeRole, toggleInvitePermission };
 }

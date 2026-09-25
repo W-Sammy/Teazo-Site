@@ -5,7 +5,7 @@ export interface Admin {
   username: string;
   email: string;
   role: AdminRole;
-  canInviteUsers: boolean;
+  canManageAdmins: boolean;
 }
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
@@ -18,7 +18,7 @@ export type NewAdminInput = {
   username: string;
   email: string;
   role: AdminRole;
-  canInviteUsers: boolean;
+  canManageAdmins: boolean;
 };
 
 export const OWNER_ROLE: AdminRole = 1;

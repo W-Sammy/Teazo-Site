@@ -1,5 +1,5 @@
 import { getAdmin } from "@/app/lib/admin";
-import { removeSettingsAdmin, updateSettingsAdminInvitePermission, updateSettingsAdminRole } from "@/app/lib/queries/settings";
+import { removeSettingsAdmin, updateSettingsAdminManagePermission, updateSettingsAdminRole } from "@/app/lib/queries/settings";
 import type { AdminRole } from "@/app/types/admin-perms";
 
 function errorResponse(message: string, status: number) {
@@ -7,11 +7,14 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await getAdmin(1)) return errorResponse("Only the owner can change admin access.", 403);
+  const viewer = await getAdmin(2);
+  if (!viewer || (viewer.role_id === 2 && viewer.can_invite_users !== 1)) {
+    return errorResponse("You do not have permission to change admin access.", 403);
+  }
   try {
     const { id } = await context.params;
-    const input = await request.json() as { role?: AdminRole; canInviteUsers?: boolean };
-    if (input.role === undefined && input.canInviteUsers === undefined) {
+    const input = await request.json() as { role?: AdminRole; canManageAdmins?: boolean };
+    if (input.role === undefined && input.canManageAdmins === undefined) {
       return errorResponse("No admin change was provided.", 400);
     }
     if (input.role !== undefined && ![1, 2, 3].includes(input.role)) {
@@ -19,7 +22,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
     const admin = input.role !== undefined
       ? await updateSettingsAdminRole(id, input.role)
-      : await updateSettingsAdminInvitePermission(id, input.canInviteUsers === true);
+      : await updateSettingsAdminManagePermission(id, input.canManageAdmins === true);
     return Response.json({ admin });
   } catch (error) {
     console.error("Could not update admin:", error);
@@ -28,7 +31,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await getAdmin(1)) return errorResponse("Only the owner can delete admins.", 403);
+  const viewer = await getAdmin(2);
+  if (!viewer || (viewer.role_id === 2 && viewer.can_invite_users !== 1)) {
+    return errorResponse("You do not have permission to delete admins.", 403);
+  }
   try {
     const { id } = await context.params;
     await removeSettingsAdmin(id);
