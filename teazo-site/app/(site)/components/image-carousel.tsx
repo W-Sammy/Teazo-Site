@@ -54,7 +54,7 @@ useEffect(() => {
                 <div className = {`
                             absolute w-75 h-125 z-10 
                             transition-all duration-500 ease-in-out
-                            ${isCenterHovered ? "-translate-x-200" : "-translate-x-62.5"}
+                            ${isCenterHovered ? "-translate-x-95" : "-translate-x-65"}
                             `}
                 >
 
@@ -68,10 +68,9 @@ useEffect(() => {
                 </div>
 
                 {/* Center */}  
-                <div className = {`absolute w-100 h-150 z-30
+                <div className = {`absolute w-100 h-150 z-30`}
                                    onMouseEnter={() => setIsCenterHovered(true)} 
-                                   onMouseLeave={() => setIsCenterHovered(false)}
-                                `}
+                                   onMouseLeave={() => setIsCenterHovered(false)}             
                 >
 
                 <Image
@@ -87,7 +86,7 @@ useEffect(() => {
                 <div className = {`
                             absolute w-75 h-125 z-10
                             transition-all duration-500 ease-in-out
-                            ${isCenterHovered ? "translate-x-100" : "translate-x-62.5"}
+                            ${isCenterHovered ? "translate-x-95" : "translate-x-65"}
                             `}
                 >
                     
