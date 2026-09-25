@@ -35,7 +35,7 @@ export function StorageWarnings({ usage }: { usage: StorageUsage[] }) {
 
 export default function StorageUsage({ usage }: { usage: StorageUsage[] }) {
   return (
-    <section className="mt-8 rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgba(43,33,29,0.04)] sm:p-7" aria-labelledby="storage-heading">
+    <section className="mt-8 rounded-2xl bg-white p-5 sm:p-7" aria-labelledby="storage-heading">
       <div className="mb-6"><h2 id="storage-heading" className="text-lg font-bold text-[#374151]">Storage usage</h2><p className="mt-1 text-sm text-slate-400">Current usage compared with your service limits.</p></div>
       <div className="grid gap-6">
         {usage.map((item) => {
