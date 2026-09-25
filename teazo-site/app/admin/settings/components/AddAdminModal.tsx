@@ -25,12 +25,14 @@ type AddAdminModalProps = {
   onError: (
     message: string,
   ) => void;
+  errorMessage: string;
 };
 
 export function AddAdminModal({
   onAdd,
   onCancel,
   onError,
+  errorMessage,
 }: AddAdminModalProps) {
   // Keep form values local until submission; default to read access without invitations.
   const [username, setUsername] =
@@ -113,6 +115,15 @@ export function AddAdminModal({
               Add an administrator to
               your website.
             </p>
+
+            {errorMessage && (
+              <p
+                role="alert"
+                className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {errorMessage}
+              </p>
+            )}
           </div>
 
           {/* Controlled identity fields are passed to onAdd as entered. */}

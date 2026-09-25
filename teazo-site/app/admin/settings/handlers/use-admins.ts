@@ -70,16 +70,17 @@ export function useAdmins(initialAdmins: Admin[] = []) {
     const username = input.username.trim();
     const email = input.email.trim();
     if (!username || !email) {
-      setError("Please enter both a username and email.");
-      return false;
+      return { success: false as const, error: "Please enter both a username and email." };
     }
     try {
       const newAdmin = await createAdmin({ ...input, username, email });
       setAdmins((currentAdmins) => [...currentAdmins, newAdmin]);
-      return true;
+      return { success: true as const };
     } catch (error) {
-      setError(error instanceof Error ? error.message : "The admin could not be added.");
-      return false;
+      return {
+        success: false as const,
+        error: error instanceof Error ? error.message : "The admin could not be added.",
+      };
     }
   };
 

@@ -15,13 +15,16 @@ export default function AdminsTable() {
   // Mount the Add New User modal only while it is needed.
   const [showModal, setShowModal] =
     useState(false);
+  const [modalError, setModalError] =
+    useState("");
+  const [successMessage, setSuccessMessage] =
+    useState("");
 
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
     errorMessage,
     clearError,
-    setError,
     addAdmin,
     loadAdmins,
     deleteAdmin,
@@ -50,14 +53,29 @@ export default function AdminsTable() {
     };
   }, [clearError, errorMessage]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timeout = window.setTimeout(
+      () => setSuccessMessage(""),
+      3500,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [successMessage]);
+
   // Keep the form open unless the hook reports that adding the admin succeeded.
   async function handleAddAdmin(
     input: NewAdminInput,
   ) {
-    const added = await addAdmin(input);
+    const result = await addAdmin(input);
 
-    if (added) {
+    if (result.success) {
+      setModalError("");
       setShowModal(false);
+      setSuccessMessage("Invitation added successfully.");
+    } else {
+      setModalError(result.error);
     }
   }
 
@@ -83,6 +101,16 @@ export default function AdminsTable() {
           className="fixed left-3 right-3 top-3 z-[70] rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
         >
           {errorMessage}
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed right-3 top-3 z-[70] rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 shadow-lg sm:right-5 sm:top-5"
+        >
+          {successMessage}
         </div>
       )}
 
@@ -162,10 +190,12 @@ export default function AdminsTable() {
       {showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
-          onCancel={() =>
-            setShowModal(false)
-          }
-          onError={setError}
+          onCancel={() => {
+            setModalError("");
+            setShowModal(false);
+          }}
+          onError={setModalError}
+          errorMessage={modalError}
         />
       )}
     </>
