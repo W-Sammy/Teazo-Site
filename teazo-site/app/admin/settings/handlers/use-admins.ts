@@ -56,13 +56,15 @@ export function useAdmins(initialAdmins: Admin[] = []) {
   const deleteAdmin = async (admin: Admin) => {
     if (admin.role === OWNER_ROLE) {
       setError("The owner cannot be deleted.");
-      return;
+      return false;
     }
     try {
       await removeAdmin(admin.id);
       setAdmins((currentAdmins) => currentAdmins.filter((currentAdmin) => currentAdmin.id !== admin.id));
+      return true;
     } catch (error) {
       setError(error instanceof Error ? error.message : "The admin could not be deleted.");
+      return false;
     }
   };
 

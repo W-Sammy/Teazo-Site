@@ -8,6 +8,7 @@ import {
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
+import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 
 // Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
@@ -19,6 +20,8 @@ export default function AdminsTable() {
     useState("");
   const [successMessage, setSuccessMessage] =
     useState("");
+  const [adminToDelete, setAdminToDelete] =
+    useState<Admin | null>(null);
 
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
@@ -79,17 +82,18 @@ export default function AdminsTable() {
     }
   }
 
-  // Ask for confirmation before forwarding a delete request to the hook.
+  // Open the shared-style confirmation dialog before forwarding a delete request.
   function handleDeleteAdmin(
     admin: Admin,
   ) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${admin.username}?`,
-    );
+    setAdminToDelete(admin);
+  }
 
-    if (confirmed) {
-      deleteAdmin(admin);
-    }
+  async function confirmDeleteAdmin() {
+    if (!adminToDelete) return;
+
+    const deleted = await deleteAdmin(adminToDelete);
+    if (deleted) setAdminToDelete(null);
   }
 
   return (
@@ -198,6 +202,12 @@ export default function AdminsTable() {
           errorMessage={modalError}
         />
       )}
+
+      <DeleteAdminDialog
+        admin={adminToDelete}
+        onCancel={() => setAdminToDelete(null)}
+        onConfirm={confirmDeleteAdmin}
+      />
     </>
   );
 }
