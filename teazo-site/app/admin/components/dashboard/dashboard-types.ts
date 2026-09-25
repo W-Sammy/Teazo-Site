@@ -1,8 +1,9 @@
 import type { AdminEvent } from "@/app/types/admin-event";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { DashboardMetrics, DashboardPeriod, MenuItemMetric } from "@/app/types/dashboard";
+import type { StorageUsage } from "@/app/types/storage-usage";
 
-export type DashboardClientProps = { metrics: DashboardMetrics; events: AdminEvent[]; websiteContent: WebsiteContent };
+export type DashboardClientProps = { metrics: DashboardMetrics; events: AdminEvent[]; websiteContent: WebsiteContent; storageUsage: StorageUsage[] };
 export type DashboardPeriodOption = { value: DashboardPeriod; label: string };
 export const periodOptions: DashboardPeriodOption[] = [
   { value: "24-hours", label: "Past 24 hours" },
