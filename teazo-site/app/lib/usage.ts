@@ -1,7 +1,8 @@
 /**
  * Server side client for storage usage: how full the D1 database and the R2
- * bucket are against the free-plan limits. Wraps the proxy Worker's GET /usage.
- * See docs/ENDPOINTS.md.
+ * bucket are against their limits, and whether the Worker's billing hard stops
+ * are currently refusing uploads. Wraps the proxy Worker's GET /usage. See
+ * docs/ENDPOINTS.md.
  *
  * SERVER ONLY. PROXY_TOKEN carries full access to the database and must never
  * reach the browser.
@@ -18,10 +19,23 @@ export type StorageUsage = {
     bucket: string;
     bytes: number;
     objects: number;
-    freeBytes: number;
-    percentOfFree: number;
-    /** False when the bucket had more files than one listing covers. Totals are then a lower bound. */
+    /** Uploads are refused once stored files would pass this. */
+    limitBytes: number;
+    remainingBytes: number;
+    percentUsed: number;
+    /** R2 uploads and listings today (UTC), against the daily budget. */
+    classAToday: { used: number; budget: number };
+    /** True when no upload can succeed right now. */
+    uploadsBlocked: boolean;
+  };
+  /** Present only when requested with { verify: true }. */
+  verify?: {
+    bytes: number;
+    objects: number;
+    pages: number;
     complete: boolean;
+    driftBytes: number | null;
+    driftObjects: number | null;
   };
 };
 
@@ -51,15 +65,21 @@ function config(): { url: string; token: string } {
 }
 
 /**
- * Measure storage now. Each call lists the bucket, which costs one R2 operation
- * per 1,000 files, so call it when a page loads rather than on a timer.
+ * Measure storage now. By default this reads the Worker's own records and
+ * costs no R2 operations, so it is fine on every page load.
+ *
+ * `verify: true` also lists the bucket to check those records. That costs one
+ * R2 operation per 1,000 files from the daily budget, so keep it occasional.
  */
-export async function getStorageUsage(): Promise<StorageUsage> {
+export async function getStorageUsage(
+  options: { verify?: boolean } = {},
+): Promise<StorageUsage> {
   const { url, token } = config();
+  const path = options.verify ? "/usage?verify=1" : "/usage";
 
   let res: Response;
   try {
-    res = await fetch(`${url}/usage`, {
+    res = await fetch(`${url}${path}`, {
       headers: { authorization: `Bearer ${token}` },
       cache: "no-store",
     });

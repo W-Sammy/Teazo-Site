@@ -45,7 +45,7 @@ a year.
 | GET, HEAD | `/media/<key>` | **public** | Read a stored file |
 | PUT | `/media/<key>` | bearer token | Store a file |
 | DELETE | `/media/<key>` | bearer token | Remove a file |
-| GET | `/usage` | bearer token | Storage used against the free-plan limits |
+| GET | `/usage` | bearer token | Storage used, and whether uploads are allowed |
 | cron | no URL | not reachable | Hourly, deletes files queued more than 24 hours ago |
 
 Two database endpoints, three media endpoints, one usage endpoint, and one
@@ -166,6 +166,13 @@ check cannot run otherwise.
 Accepted content types: `image/jpeg`, `image/png`, `image/webp`,
 `application/pdf`. Anything else returns 415.
 
+Before storing anything, the Worker checks its billing hard stops (see
+[The billing hard stops](#the-billing-hard-stops)). The upload is refused with
+507 `storage_full` if it would take stored files past this deployment's cap,
+and with 429 `r2_daily_limit` once the day's R2 upload budget is used up. The
+budget resets at midnight UTC. If the limits cannot be checked at all, the
+upload is refused with 503 `limits_unavailable` rather than risk a charge.
+
 Keys must match `^[a-z0-9][a-z0-9/_.-]{0,511}$` and may not contain `..` or
 `//`. The prefixes in use are `gallery/`, `carousel/`, `events/`,
 `documents/menu/` and `branding/`.
@@ -182,8 +189,9 @@ window the system has.
 
 ### GET `/usage`
 
-How much of the free plan the database and file storage are using. Token
-required. Meant for the admin dashboard's storage warnings.
+How much of their limits the database and file storage are using, and whether
+uploads are currently allowed. Token required. Meant for the admin dashboard's
+warnings.
 
 Response, 200:
 
@@ -195,24 +203,72 @@ Response, 200:
     "bucket": "teazo-media",
     "bytes": 17401,
     "objects": 1,
-    "freeBytes": 10000000000,
-    "percentOfFree": 0,
-    "complete": true
+    "limitBytes": 8000000000,
+    "remainingBytes": 7999982599,
+    "percentUsed": 0,
+    "classAToday": { "used": 1, "budget": 25000 },
+    "uploadsBlocked": false
   }
 }
 ```
 
-The two limits mean different things. At the D1 limit, writes start failing. R2
-has no cap: storage past the free amount is billed to the account, so its
-figure is a cost warning rather than a hard stop.
+`d1` and `r2` have the same three core fields, so one warning component can
+show both. Limits are in decimal units. At the D1 limit, writes start failing.
+At the R2 limit, uploads are refused, as described below. `uploadsBlocked` is
+`true` when no upload can succeed right now, from either limit.
 
-Limits are the free plan's, in decimal units, so warnings come slightly early.
-R2 has no "bucket size" call, so its figures are the sum of a listing. Each
-request lists up to 20 pages of 1,000 files. With more files than that,
-`complete` is `false` and the R2 totals are a lower bound.
+The R2 figures come from the Worker's own record of what it has stored, which
+is exactly what the hard stops enforce. This request costs no R2 operations, so
+it is safe to call on every dashboard load.
 
-Listing costs one R2 operation per page, so fetch this when the dashboard
-loads, not on a timer.
+Add `?verify=1` to also list the bucket itself and compare. The response then
+includes:
+
+```json
+"verify": { "bytes": 17401, "objects": 1, "pages": 1, "complete": true, "driftBytes": 0, "driftObjects": 0 }
+```
+
+Listing costs one R2 upload-class operation per 1,000 files, taken from the
+daily budget, so keep it for occasional checks. `complete` is `false` if the
+listing stopped early, at 20 pages or because the budget ran out, and the drift
+fields are then `null`. A positive drift means R2 holds files the Worker has no
+record of, such as files stored before the hard stops existed.
+
+### The billing hard stops
+
+Cloudflare has no spending cap for R2, so the Worker enforces its own, one for
+each thing R2 bills:
+
+| R2 bills for | Free each month | What stops it |
+|---|---|---|
+| Storage | 10 GB | Uploads refused past the cap (507) |
+| Uploads and listings (Class A) | 1 million | A daily budget, so no 31 days can pass 1 million (429) |
+| Reads (Class B) | 10 million | Each Worker request makes at most one read, and the free Workers plan refuses requests past 100,000 a day, so reads cannot pass 3.1 million |
+| Deletes | always free | nothing needed |
+
+The free amounts belong to the Cloudflare account, and production and preview
+share it. Each deployment gets a share, set in `teazo-d1-proxy/wrangler.jsonc`:
+
+| Deployment | Storage cap | Uploads and listings a day |
+|---|---|---|
+| production | 8 GB | 25,000 |
+| preview | 1 GB | 5,000 |
+| **total** | **9 GB** | **30,000**, at most 930,000 in any 31 days |
+
+If you change a share, keep the totals within 9 GB and 30,000. Neither Worker
+can see the other's numbers, so nothing checks the sum. Each Worker does refuse
+to go above the account totals on its own, and refuses all uploads if its
+values are missing.
+
+D1 and Workers never bill on the free plans; they refuse requests at their
+limits instead. The cost of that is availability: past 100,000 Worker requests
+in a day, the Worker, and with it the database and images, stops answering until
+midnight UTC.
+
+The guarantee holds while two things stay true. The account stays on the free
+Workers plan, and nothing reaches the buckets except these Workers. Serving a
+bucket from a public custom domain, or uploading with `wrangler r2` or the
+Cloudflare dashboard, would bypass the checks.
 
 ### The scheduled job
 
@@ -233,6 +289,8 @@ against a different bucket rather than acting on it.
 | `Content-Length` | required | `/query`, `/batch`, `PUT /media` |
 | Upload types | jpeg, png, webp, pdf | `PUT /media` |
 | Key length | 512 characters | all `/media` routes |
+| Total stored in R2 | 8 GB production, 1 GB preview | `PUT /media` |
+| R2 uploads and listings | 25,000 a day production, 5,000 preview, reset at midnight UTC | `PUT /media`, `/usage?verify=1` |
 
 Two limits come from outside the Worker and are worth knowing. Vercel rejects
 request bodies over 4.5 MB before a route runs, so large images are resized in
@@ -262,7 +320,11 @@ extra field.
 | 411 | `length_required` | No `Content-Length` header |
 | 413 | `payload_too_large` | Over the size limit. Includes `max` |
 | 415 | `unsupported_type` | Upload content type not accepted |
+| 429 | `r2_daily_limit` | Today's R2 upload budget is used up. Includes `budget` |
+| 502 | `storage_error` | R2 rejected the upload. Includes `message` |
+| 503 | `limits_unavailable` | The billing limits could not be checked, so the upload was refused. Includes `message` |
 | 503 | `usage_unavailable` | Storage could not be measured. Includes `message` |
+| 507 | `storage_full` | The upload would pass the storage cap. Includes `capBytes` and `usedBytes` |
 | 500 | `proxy_misconfigured` | The Worker has no token configured |
 
 `d1_error` passes the database's own message through, so constraint failures

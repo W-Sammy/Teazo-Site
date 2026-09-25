@@ -325,6 +325,12 @@ Accepted types: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`.
 Key prefixes: `gallery/`, `carousel/`, `events/`, `documents/menu/`,
 `branding/`.
 
+An upload can also be refused so the client is never billed for storage: 507
+when the bucket is at its cap, and 429 when the day's upload budget is used
+up. `putMedia` then throws a `MediaError` with that `status`, so show the admin
+a clear message rather than a generic failure. `docs/ENDPOINTS.md` has the
+details.
+
 ### 4.1 Saving a file
 
 Every file follows the same three steps: resize, store the bytes, record the
@@ -477,8 +483,8 @@ There is exactly one Owner, and `can_invite_users` can only be set on role 2.
 
 ## 6. The database
 
-25 tables, defined in `teazo-site/migrations/0001_init.sql`. Open it when you
-need exact columns.
+27 tables. Most are defined in `teazo-site/migrations/0001_init.sql`, and the
+later migrations beside it add the rest. Open them when you need exact columns.
 
 | Table | Holds | Written by | Read by |
 |---|---|---|---|
@@ -486,6 +492,7 @@ need exact columns.
 | `admin_user` | admin accounts | Settings | auth, every admin route |
 | `media_asset` | one row per stored file | uploads | every image |
 | `pending_r2_deletion` | files waiting to be removed | delete handlers | the scheduled job |
+| `r2_object`, `r2_class_a_day` | what is stored in R2, and R2 uploads per day | **the Worker only**, never app code | the Worker's billing limits |
 | `gallery_image` | gallery entries | `/admin/gallery` | `/gallery` |
 | `gallery_tag` | tag names | uploads | gallery filter |
 | `gallery_image_tag` | image ↔ tag | uploads | gallery filter |

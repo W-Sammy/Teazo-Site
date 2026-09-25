@@ -23,7 +23,17 @@
 
   // The R2 binding does not expose its own bucket name at runtime (there is no
   // env.MEDIA.name), and the sweeper needs it to refuse cross-bucket deletes.
-  "vars": { "MEDIA_BUCKET_NAME": "teazo-media" },
+  //
+  // The two R2_ limits are this deployment's share of R2's free allowance, which
+  // belongs to the whole ACCOUNT. Production and preview share it, so their
+  // values must add up to no more than 9 GB (9000000000) and 30000 a day. The
+  // Worker cannot see the other deployment's values, so nothing checks the sum
+  // for you. See BILLING HARD STOPS in src/index.ts.
+  "vars": {
+    "MEDIA_BUCKET_NAME": "teazo-media",
+    "R2_STORAGE_CAP_BYTES": "8000000000",
+    "R2_CLASS_A_DAILY_BUDGET": "25000"
+  },
 
   "d1_databases": [
     {
@@ -40,7 +50,12 @@
 
   "env": {
     "preview": {
-      "vars": { "MEDIA_BUCKET_NAME": "teazo-media-preview" },
+      // vars are not inherited, so every one is repeated here.
+      "vars": {
+        "MEDIA_BUCKET_NAME": "teazo-media-preview",
+        "R2_STORAGE_CAP_BYTES": "1000000000",
+        "R2_CLASS_A_DAILY_BUDGET": "5000"
+      },
       "d1_databases": [
         {
           "binding": "DB",
