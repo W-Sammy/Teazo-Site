@@ -5,6 +5,8 @@ import { type MenuItem } from "../components/menu-item-card";
 import MenuItemsSection from "../components/menu-items-section";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
+import Subtitle from "../components/sub-title";
+
 
 export const metadata: Metadata = {
 	title: "Menu",
@@ -742,17 +744,12 @@ export default function MenuPage() {
 						</div>
 					</div>
 
-					<div className="relative mt-10 inline-flex items-center justify-center sm:mt-12">
-						<PaintStroke />
-						<h2
-							className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
-						>
-							Drinks, Desserts &amp; Specials
-						</h2>
+					<div className="relative mt-16 inline-flex items-center justify-center sm:mt-12">
+						<Subtitle text={"Drinks, Desserts & Specials "} />
 					</div>
 
 					<p
-						className={`${montserrat.className} mt-6 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
+						className={`${montserrat.className} mt-17 sm:mt-6 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
 					>
 						Explore TEAZO menu categories and featured specials.
 					</p>
@@ -762,7 +759,7 @@ export default function MenuPage() {
 				<MenuItemsSection
 					title="TEAZO Special"
 					items={specials}
-					className="mx-auto mt-16 max-w-[1320px] lg:mt-20"
+					className="mx-auto mt-12 max-w-[1320px] lg:mt-20"
 					headingClassName={cabinSketch.className}
 					bodyClassName={montserrat.className}
 				/>
