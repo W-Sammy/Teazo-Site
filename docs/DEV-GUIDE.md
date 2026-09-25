@@ -138,15 +138,20 @@ AUTH_GOOGLE_SECRET=<the team's Google OAuth client secret>
 
 The Google client id and secret come from whoever set up sign-in.
 
-To give your Google account an admin role in your own database:
+Your Google account also needs an admin row in your own database. Without
+one, you cannot get into the admin pages. One command creates it, and applies
+any new migrations first:
 
 ```bash
 cd teazo-d1-proxy
-npx wrangler d1 execute teazo-db --local --command "INSERT INTO admin_user (id, email, email_normalized, username, role_id) VALUES ('me', 'you@gmail.com', 'you@gmail.com', 'you', 1);"
+npm run db:seed:local -- you@gmail.com
 ```
 
-Put your own address in both email columns, lower-case in `email_normalized`.
-Role `1` is Owner, `2` Can Edit, `3` Can View.
+Use the Google address you sign in with. The first address you seed becomes
+the Owner, and any address added after that gets Can Edit. Pass `--role 2`
+(Can Edit) or `--role 3` (Can View) to choose. Running it again for an address
+you already added keeps its role unless you pass `--role`, and never adds a
+second row. It only ever touches your local database.
 
 ### 2.4 Reset
 
@@ -158,8 +163,8 @@ rm -rf .wrangler/state
 npm run db:migrate:local
 ```
 
-That also empties your local bucket and removes your admin row, so re-run the
-insert from §2.3 if you need your role back.
+That also empties your local bucket and removes your admin row, so run
+`npm run db:seed:local -- you@gmail.com` again to get your role back.
 
 ---
 
