@@ -17,12 +17,8 @@ export default function Sidebar({
   onMobileClose = () => {},
 }: SidebarProps) {
   // Active pages use colored icons; inactive pages use the black variants.
-  const colorIconRoot =
-    "/admin_icons/"; // will eventually change this to "/admin_icons/admin_svg/"
-
-  const blackIconRoot =
-    "/admin_icons/black_icons/"; // remove later once all admin svgs are completed
-
+  const iconRoot =
+    "/admin_icons/admin_svg/"; // will eventually change this to "/admin_icons/admin_svg/"
 
   // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
@@ -32,41 +28,31 @@ export default function Sidebar({
     {
       id: "dashboard",
       label: "Dashboard",
-      img: "admin_svg/teazo_dash_icon.svg",
-      img_b:
-        "teazo_dash_icon_black.png",
+      img: "teazo_dash_icon.svg",
       href: "/admin",
     },
     {
       id: "menu",
       label: "Menu",
-      img: "admin_svg/teazo_menu_icon.svg",
-      img_b:
-        "teazo_menu_icon_black.png",
+      img: "teazo_menu_icon.svg",
       href: "/admin/menu",
     },
     {
       id: "gallery",
       label: "Gallery",
-      img: "admin_svg/teazo_gallery_icon.svg",
-      img_b:
-        "teazo_gallery_icon_black.png",
+      img: "teazo_gallery_icon.svg",
       href: "/admin/gallery",
     },
     {
       id: "events",
       label: "Events",
-      img: "admin_svg/teazo_event_icon.svg",
-      img_b:
-        "teazo_event_icon_black.png",
+      img: "teazo_event_icon.svg",
       href: "/admin/events",
     },
     {
       id: "settings",
       label: "Settings",
-      img: "admin_svg/teazo_setting_icon.svg",
-      img_b:
-        "teazo_setting_icon_black.png",
+      img: "teazo_setting_icon.svg",
       href: "/admin/settings",
     },
   ];
@@ -200,19 +186,13 @@ export default function Sidebar({
                   }}
                 >
                   <Image
-                    src={
-                      isActive || page.img.endsWith(".svg") // OR prevents svg from using img_b
-                        ? colorIconRoot +
-                          page.img
-                        : blackIconRoot +
-                          page.img_b
-                    }
+                    src={iconRoot +  page.img}
                     alt={`${page.label} icon`}
                     width={24}
                     height={24}
                     className="h-6 w-6 shrink-0 object-contain"
                     // filter svg black if on page/is active
-                    style={{filter: !isActive && page.img.endsWith(".svg") 
+                    style={{filter: !isActive
                       ? "brightness(0)" 
                       : "none"}}
                   />
