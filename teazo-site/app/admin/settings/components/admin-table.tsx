@@ -5,44 +5,10 @@ import {
   useState,
 } from "react";
 
-import type {
-  Admin,
-  AdminRole,
-  NewAdminInput,
-} from "@/app/types/admin-perms";
-import {
-  OWNER_ROLE,
-  READ_ROLE,
-  WRITE_ROLE,
-} from "@/app/types/admin-perms";
+import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
-
-/* Temporary front-end data. */
-const initialAdmins: Admin[] = [
-  {
-    id: 1,
-    username: "You",
-    email: "temp@teazo.com",
-    role: OWNER_ROLE,
-    canInviteUsers: true,
-  },
-  {
-    id: 2,
-    username: "Person1",
-    email: "Person1@teazo.com",
-    role: WRITE_ROLE,
-    canInviteUsers: false,
-  },
-  {
-    id: 3,
-    username: "Person2",
-    email: "Person2@teazo.com",
-    role: READ_ROLE,
-    canInviteUsers: false,
-  },
-];
 
 // Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
@@ -57,10 +23,15 @@ export default function AdminsTable() {
     clearError,
     setError,
     addAdmin,
+    loadAdmins,
     deleteAdmin,
     changeRole,
     toggleInvitePermission,
-  } = useAdmins(initialAdmins);
+  } = useAdmins();
+
+  useEffect(() => {
+    void loadAdmins();
+  }, [loadAdmins]);
 
   // Automatically clear a displayed error after 3.5 seconds.
   useEffect(() => {
@@ -80,10 +51,10 @@ export default function AdminsTable() {
   }, [clearError, errorMessage]);
 
   // Keep the form open unless the hook reports that adding the admin succeeded.
-  function handleAddAdmin(
+  async function handleAddAdmin(
     input: NewAdminInput,
   ) {
-    const added = addAdmin(input);
+    const added = await addAdmin(input);
 
     if (added) {
       setShowModal(false);

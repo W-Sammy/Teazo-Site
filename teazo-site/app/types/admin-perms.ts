@@ -1,7 +1,7 @@
 export type AdminRole = 1 | 2 | 3;
 
 export interface Admin {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: AdminRole;
