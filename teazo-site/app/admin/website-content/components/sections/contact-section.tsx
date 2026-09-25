@@ -35,16 +35,20 @@ function validateField(field: ContactField, value: string): string | undefined {
 
 export default function ContactSection({
   address,
+  contactFormEnabled = true,
   isOpen,
   onToggle,
   setRef,
   onUpdateAddress,
+  onUpdateContactFormEnabled,
 }: {
   address: AddressInfo;
+  contactFormEnabled?: boolean;
   isOpen: boolean;
   onToggle: () => void;
   setRef: (el: HTMLDivElement | null) => void;
   onUpdateAddress: (patch: Partial<AddressInfo>) => void;
+  onUpdateContactFormEnabled?: (enabled: boolean) => void;
 }) {
   const [touched, setTouched] = useState<Partial<Record<ContactField, boolean>>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
@@ -129,6 +133,55 @@ export default function ContactSection({
             className={fieldClass(Boolean(errors.email))}
           />
           {errors.email && <ErrorText>{errors.email}</ErrorText>}
+        </div>
+
+        <div className="rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FieldLabel>Contact Us Form</FieldLabel>
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide ${
+                    contactFormEnabled
+                      ? "bg-[#6f8f6a]/15 text-[#3e6837]"
+                      : "bg-[#dbb082]/25 text-[#735129]"
+                  }`}
+                >
+                  {contactFormEnabled ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Display the Contact Us form on the customer-facing Contact page. Disable this toggle if the form starts receiving spam.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-end sm:self-center">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={contactFormEnabled}
+                aria-label={`Toggle Contact Us form (currently ${
+                  contactFormEnabled ? "enabled" : "disabled"
+                })`}
+                onClick={() =>
+                  onUpdateContactFormEnabled?.(!contactFormEnabled)
+                }
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg lg:h-[18px] lg:w-8"
+              >
+                <span
+                  className={`relative block h-[18px] w-8 rounded-full transition-colors ${
+                    contactFormEnabled ? "bg-[#6f8f6a]" : "bg-[#dbb082]"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-all ${
+                      contactFormEnabled ? "left-4" : "left-0.5"
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </AccordionItem>

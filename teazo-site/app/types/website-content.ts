@@ -37,4 +37,6 @@ export type WebsiteContent = {
   address: AddressInfo;
   hours: DayHours[];
   holidays: Holiday[];
+  contactFormEnabled: boolean;
 };
+
