@@ -49,6 +49,7 @@ export default function WebsiteContentClient({
     addHoliday,
     updateHoliday,
     removeHoliday,
+    updateContactFormEnabled,
   } = useWebsiteContent(initialContent);
 
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
@@ -183,10 +184,12 @@ export default function WebsiteContentClient({
 
           <ContactSection
             address={content.address}
+            contactFormEnabled={content.contactFormEnabled}
             isOpen={openSection === "contact"}
             onToggle={() => selectSection("contact")}
             setRef={setSectionRef("contact")}
             onUpdateAddress={updateAddress}
+            onUpdateContactFormEnabled={updateContactFormEnabled}
           />
 
           <HoursSection

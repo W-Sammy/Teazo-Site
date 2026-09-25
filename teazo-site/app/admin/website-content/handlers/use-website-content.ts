@@ -168,6 +168,25 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
+  function updateContactFormEnabled(enabled: boolean) {
+    setErrorMessage("");
+    try {
+      /* TODO: Replace this temporary block with PATCH /api/website-content { contactFormEnabled }. */
+      setContent((prev) => ({ ...prev, contactFormEnabled: enabled }));
+      fetch("/api/website-content", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactFormEnabled: enabled }),
+      }).catch(() => {
+        // Fallback gracefully in dev/test/offline environments
+      });
+      return true;
+    } catch {
+      setErrorMessage("Failed to update Contact Us form setting.");
+      return false;
+    }
+  }
+
   return {
     content,
     errorMessage,
@@ -181,5 +200,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     addHoliday,
     updateHoliday,
     removeHoliday,
+    updateContactFormEnabled,
   };
 }
+

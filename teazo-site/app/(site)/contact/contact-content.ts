@@ -1,3 +1,5 @@
+import { getContactFormSetting } from "@/app/admin/website-content/handlers/get-website-content";
+
 export type ContactHour = {
   day: string;
   hours: string;
@@ -15,6 +17,7 @@ export type ContactContent = {
     mapQuery: string;
   };
   hours: ContactHour[];
+  contactFormEnabled: boolean;
 };
 
 // Keep the page content in one route-local module so it can later be swapped
@@ -39,7 +42,24 @@ export const contactContent: ContactContent = {
     { day: "Saturday", hours: "11:00 AM - 10:00 PM" },
     { day: "Sunday", hours: "11:00 AM - 8:00 PM" },
   ],
+  contactFormEnabled: true,
 };
+
+/**
+ * Loads contact content including the contactFormEnabled setting.
+ * Allows the customer-facing Contact page to easily retrieve configuration.
+ */
+export async function getContactContent(): Promise<ContactContent> {
+  try {
+    const formEnabled = await getContactFormSetting();
+    return {
+      ...contactContent,
+      contactFormEnabled: formEnabled,
+    };
+  } catch {
+    return contactContent;
+  }
+}
 
 // Google Maps embed URL for the iframe on the left side of the contact card.
 export const mapEmbedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
