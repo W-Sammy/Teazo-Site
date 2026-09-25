@@ -71,22 +71,12 @@ export default function DashboardClient({
   return (
     <div className="min-h-full bg-white px-5 pb-14 pt-8 text-[#273142] sm:px-8 lg:px-12 lg:pt-10">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="mb-10">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#dbb082]">Overview</p>
             <h1 className="text-3xl font-bold tracking-tight text-[#2b211d]">Dashboard</h1>
             <p className="mt-2 text-sm text-slate-500">See how guests are engaging with your restaurant.</p>
           </div>
-          <label className="flex items-center gap-3 text-sm font-medium text-slate-500">
-            <span className="sr-only">Visit period</span>
-            <select
-              value={period}
-              onChange={(event) => setPeriod(event.target.value as DashboardPeriod)}
-              className="rounded-lg border border-[#ead8c5] bg-[#fffaf5] px-3 py-2.5 text-sm font-semibold text-[#b88554] outline-none focus:ring-2 focus:ring-[#dbb082]/30"
-            >
-              {periodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
         </div>
 
         <section aria-label="Visit summary" className="grid gap-4 sm:grid-cols-3">
