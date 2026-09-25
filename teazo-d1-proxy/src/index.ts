@@ -20,6 +20,7 @@
  *   GET    /media/<key>  public read of an R2 object
  *   PUT    /media/<key>  write an R2 object (token)
  *   DELETE /media/<key>  delete an R2 object (token)
+ *   GET    /usage        storage used against the free-plan limits (token)
  *   scheduled()          the sweeper: deletes the R2 bytes of files that
  *                        were queued for deletion more than 24 hours ago
  *
@@ -179,11 +180,89 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
   return json({ error: "method_not_allowed" }, 405);
 }
 
+/**
+ * Storage usage, for the admin dashboard's "running out of space" warnings.
+ *
+ * Limits are the free plan's, in decimal units, so a warning comes slightly
+ * early rather than late. Update them if the account moves to Workers Paid.
+ *
+ *   D1: 500 MB per database. At the limit, writes start failing.
+ *   R2: 10 GB-month of storage is free. There is no cap: usage beyond it is
+ *       billed to the account's card, so it is a cost warning, not a hard stop.
+ */
+const D1_LIMIT_BYTES = 500 * 1000 * 1000;
+const R2_FREE_BYTES = 10 * 1000 * 1000 * 1000;
+
+/**
+ * R2 has no "bucket size" call from a Worker, so usage is the sum of a listing.
+ * Each page is one Class A operation and one subrequest, returning up to 1,000
+ * objects. 20 pages covers 20,000 files while staying well under the free
+ * plan's 50 subrequests per invocation; past that the result is marked
+ * incomplete rather than failing.
+ */
+const R2_LIST_MAX_PAGES = 20;
+
+const percent = (part: number, whole: number) =>
+  Math.round((part / whole) * 10_000) / 100;
+
+async function measureUsage(env: Env) {
+  // D1 reports the database size on every query result.
+  const probe = await env.DB.prepare("SELECT 1").run();
+  const d1Bytes = probe.meta.size_after;
+
+  let r2Bytes = 0;
+  let objects = 0;
+  let pages = 0;
+  let cursor: string | undefined;
+
+  do {
+    const page = await env.MEDIA.list({ cursor, limit: 1000 });
+    for (const object of page.objects) {
+      r2Bytes += object.size;
+      objects++;
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+    pages++;
+  } while (cursor && pages < R2_LIST_MAX_PAGES);
+
+  return {
+    measuredAt: new Date().toISOString(),
+    d1: {
+      bytes: d1Bytes,
+      limitBytes: D1_LIMIT_BYTES,
+      percentUsed: percent(d1Bytes, D1_LIMIT_BYTES),
+    },
+    r2: {
+      bucket: env.MEDIA_BUCKET_NAME,
+      bytes: r2Bytes,
+      objects,
+      freeBytes: R2_FREE_BYTES,
+      percentOfFree: percent(r2Bytes, R2_FREE_BYTES),
+      // False only if the listing stopped at R2_LIST_MAX_PAGES. The totals are
+      // then a lower bound.
+      complete: cursor === undefined,
+    },
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/media/")) {
       return handleMedia(request, env, url.pathname.slice("/media/".length));
+    }
+
+    if (url.pathname === "/usage") {
+      if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+      if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
+      if (!(await authorized(request, env.PROXY_TOKEN))) {
+        return json({ error: "unauthorized" }, 401);
+      }
+      try {
+        return json(await measureUsage(env));
+      } catch (err) {
+        return json({ error: "usage_unavailable", message: (err as Error).message }, 503);
+      }
     }
 
     if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);

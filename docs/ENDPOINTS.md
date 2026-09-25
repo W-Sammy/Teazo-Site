@@ -45,10 +45,11 @@ a year.
 | GET, HEAD | `/media/<key>` | **public** | Read a stored file |
 | PUT | `/media/<key>` | bearer token | Store a file |
 | DELETE | `/media/<key>` | bearer token | Remove a file |
+| GET | `/usage` | bearer token | Storage used against the free-plan limits |
 | cron | no URL | not reachable | Hourly, deletes files queued more than 24 hours ago |
 
-Two database endpoints, three media endpoints, and one scheduled job that has no
-URL at all.
+Two database endpoints, three media endpoints, one usage endpoint, and one
+scheduled job that has no URL at all.
 
 **Base URL.** In development the Worker runs on your own machine at
 `http://127.0.0.1:8787`. In production it is a `workers.dev` URL, supplied to
@@ -179,6 +180,40 @@ the rows deleted and inserting a row into `pending_r2_deletion`, which lets the
 scheduled job remove the bytes 24 hours later. That delay is the only undo
 window the system has.
 
+### GET `/usage`
+
+How much of the free plan the database and file storage are using. Token
+required. Meant for the admin dashboard's storage warnings.
+
+Response, 200:
+
+```json
+{
+  "measuredAt": "2026-09-25T18:04:11.532Z",
+  "d1": { "bytes": 360448, "limitBytes": 500000000, "percentUsed": 0.07 },
+  "r2": {
+    "bucket": "teazo-media",
+    "bytes": 17401,
+    "objects": 1,
+    "freeBytes": 10000000000,
+    "percentOfFree": 0,
+    "complete": true
+  }
+}
+```
+
+The two limits mean different things. At the D1 limit, writes start failing. R2
+has no cap: storage past the free amount is billed to the account, so its
+figure is a cost warning rather than a hard stop.
+
+Limits are the free plan's, in decimal units, so warnings come slightly early.
+R2 has no "bucket size" call, so its figures are the sum of a listing. Each
+request lists up to 20 pages of 1,000 files. With more files than that,
+`complete` is `false` and the R2 totals are a lower bound.
+
+Listing costs one R2 operation per page, so fetch this when the dashboard
+loads, not on a timer.
+
 ### The scheduled job
 
 The Worker also runs an hourly cron handler. It has no URL and cannot be
@@ -227,6 +262,7 @@ extra field.
 | 411 | `length_required` | No `Content-Length` header |
 | 413 | `payload_too_large` | Over the size limit. Includes `max` |
 | 415 | `unsupported_type` | Upload content type not accepted |
+| 503 | `usage_unavailable` | Storage could not be measured. Includes `message` |
 | 500 | `proxy_misconfigured` | The Worker has no token configured |
 
 `d1_error` passes the database's own message through, so constraint failures
@@ -254,7 +290,8 @@ const profile = await prepare("SELECT * FROM business_profile WHERE id = ?1").bi
 `prepare(sql).bind(...).all()` maps onto `POST /query`. `batch([...])` maps onto
 `POST /batch`. For files, `putMedia()` in `app/lib/media.ts` maps onto
 `PUT /media/<key>`, and `toPublicUrl(key)` builds a read URL from
-`R2_PUBLIC_BASE`.
+`R2_PUBLIC_BASE`. `getStorageUsage()` in `app/lib/usage.ts` maps onto
+`GET /usage`.
 
 These helpers run in server components, route handlers and server actions.
 `PROXY_TOKEN` is a server side environment variable and is never prefixed with
