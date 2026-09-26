@@ -4,6 +4,8 @@ import {
   updateWebsiteContent,
 } from "@/app/lib/website-content";
 
+import { revalidatePath } from "next/cache";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -22,6 +24,13 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     const updated = await updateWebsiteContent(body);
+
+    // Invalidate cached pages so customer-facing changes appear immediately
+    revalidatePath("/");
+    revalidatePath("/contact");
+    revalidatePath("/delivery");
+    revalidatePath("/admin/website-content");
+
     return NextResponse.json(updated);
   } catch {
     return NextResponse.json(
