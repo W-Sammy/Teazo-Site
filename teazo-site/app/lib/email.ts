@@ -6,7 +6,7 @@
  *   MAILPIT_URL set     delivered to a local Mailpit inbox (optional, development)
  *   neither             printed in the terminal in development, skipped elsewhere
  *
- * Setup for each case is in docs/DEV-GUIDE.md (sections 2.2 and 8.1).
+ * Setup for each case is in docs/DEV-GUIDE.md (sections 2.5 and 8.1).
  *
  * SERVER ONLY. BREVO_API_KEY can send mail as the shop, so it is never named
  * NEXT_PUBLIC_ and must never reach the browser.

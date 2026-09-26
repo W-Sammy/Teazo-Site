@@ -13,6 +13,14 @@ Commands assume a bash shell. On Windows, use **Git Bash**, not PowerShell.
 
 1. [The stack in one minute](#1-the-stack-in-one-minute)
 2. [Set up your machine](#2-set-up-your-machine)
+   - [2.1 Start the database and storage](#21-start-the-database-and-storage)
+   - [2.2 Start the app](#22-start-the-app)
+   - [2.3 Sign in locally](#23-sign-in-locally)
+   - [2.4 Reset](#24-reset)
+   - [2.5 Set up and test the new features](#25-set-up-and-test-the-new-features): email, the bot check, the contact form, admin roles, storage limits
+   - [2.6 Every environment variable](#26-every-environment-variable)
+   - [2.7 Scripts](#27-scripts)
+   - [2.8 Checking a production build locally](#28-checking-a-production-build-locally)
 3. [Talking to the database](#3-talking-to-the-database)
 4. [Storing files](#4-storing-files)
 5. [Authentication](#5-authentication)
@@ -47,8 +55,8 @@ machine:
 |---|---|---|
 | Google (through NextAuth) | Admin sign-in | The team's OAuth client id and secret (§2.3) |
 | Square | The product catalog | The team's sandbox token, only for Square, menu admin or events work (§2.2) |
-| Cloudflare Turnstile | The contact form's bot check | Nothing. Test keys are used automatically, but you need an internet connection |
-| Brevo | Email in production | Nothing. Email is printed in your terminal, or caught by Mailpit (§2.2) |
+| Cloudflare Turnstile | The contact form's bot check | Nothing. Test keys are used automatically, but you need an internet connection (§2.5) |
+| Brevo | Email in production | Nothing. Email is printed in your terminal, or caught by Mailpit (§2.5) |
 
 **What is real today:**
 
@@ -93,7 +101,7 @@ never need `wrangler login` for local work.
 |---|---|---|
 | 1 | The Worker, from `teazo-d1-proxy` (§2.1) | `8787` |
 | 2 | The app, from `teazo-site` (§2.2) | `3000` |
-| 3 | Mailpit, optional (§2.2) | `8025` |
+| 3 | Mailpit, optional (§2.5) | `8025` |
 | 4 | Everything else: seeding, queries, git | |
 
 The app must stay on port **3000**: Google sign-in is registered for it. If
@@ -115,7 +123,7 @@ creates your database with the full schema and its starting data (the real
 address and hours, the menu sections, the admin roles). `npm run dev` then
 starts the Worker on `http://127.0.0.1:8787`. **Leave it running.** Each time
 it starts, wrangler prints a yellow warning that scheduled Workers are not
-triggered during local development. That is expected (§2.6).
+triggered during local development. That is expected (§2.5).
 
 Check it from another terminal:
 
@@ -179,59 +187,8 @@ upload) and `/admin/events` fail. The Square client is fixed to Square's
 **sandbox**, and the sandbox catalog is shared by the whole team, so only
 create or delete test items, never other people's.
 
-#### The contact form and email
-
-**The contact form needs no extra setup.** It does need the Worker running
-(it saves each message) and an internet connection (the bot check talks to
-Cloudflare even with test keys).
-
-- **Bot check.** With no keys set, development uses Cloudflare's published
-  test keys, which always pass and show a small "for testing only" label on
-  the widget. Leave `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
-  unset. To see a failed check, set `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA`
-  (always fails on the server) or
-  `NEXT_PUBLIC_TURNSTILE_SITE_KEY=2x00000000000000000000AB` (the widget fails),
-  then restart `npm run dev`.
-- **Email.** Every email the site sends is printed in the terminal running
-  `npm run dev` instead of being sent. Nothing reaches a real inbox from your
-  machine. Never put a Brevo key in `.env.local`.
-
-To see emails in a real inbox instead, run **[Mailpit](https://mailpit.axllent.org/docs/install/)**,
-a free local inbox:
-
-- **Windows:** download `mailpit-windows-amd64.zip` from the
-  [releases page](https://github.com/axllent/mailpit/releases), unzip it, and
-  from that folder run `./mailpit.exe --listen 127.0.0.1:8025`
-- **macOS:** `brew install mailpit`, then `mailpit --listen 127.0.0.1:8025`
-- **Linux:** follow the install page linked above, then
-  `mailpit --listen 127.0.0.1:8025`
-
-Then add `MAILPIT_URL=http://127.0.0.1:8025` to `.env.local`, restart
-`npm run dev`, and open `http://127.0.0.1:8025`. Mailpit must be running before
-you trigger an email, or the email fails and is only logged.
-
-Where an email goes is decided in this order: through Brevo if
-`BREVO_API_KEY` is set (production only), else to Mailpit if `MAILPIT_URL` is
-set, else printed.
-
-| Email (its subject) | How to trigger it locally | Goes to |
-|---|---|---|
-| "New website message from ..." | Submit the form on `/contact` | `owner@teazo.test`, or `CONTACT_NOTIFY_TO` if you set it |
-| "Website contact form: email alerts paused" | The 21st message within an hour (or the 101st within a day) | Same |
-| "You've been added as an admin of the TEAZO website" | Adding an admin in Settings, once Settings saves to the database (§5) | The new admin's address |
-
-Emails come from `website@teazo.test` unless you set `EMAIL_FROM`.
-
-To see saved messages, and to hide or show the form:
-
-```bash
-cd teazo-d1-proxy
-npx wrangler d1 execute teazo-db --local --command "SELECT created_at, email, subject FROM contact_message ORDER BY created_at DESC"
-npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET contact_form_enabled = 0 WHERE id = 1"
-```
-
-Set it back to `1` to show the form again. There is no admin page for
-messages or for the switch yet.
+**The contact form, email and the bot check need no setup.** §2.5 shows how to
+try each of them, and how to see emails in a local inbox.
 
 ### 2.3 Sign in locally
 
@@ -306,7 +263,218 @@ back to the bundled PDF.
 `teazo-site`, then `npm run db:migrate:local` (or `npm run db:seed:local -- you@gmail.com`,
 which also migrates). Restart the Worker if `wrangler.jsonc` changed.
 
-### 2.5 Storage limits and usage
+### 2.5 Set up and test the new features
+
+The contact form, email, the bot check, the storage limits and the file
+sweeper were added recently. None of them needs an account or a key on your
+machine, and each one can be tried locally. Start the Worker (§2.1) and the app
+(§2.2) first.
+
+| Feature | What to set up | How to try it |
+|---|---|---|
+| Email | Nothing: emails are printed in the app's terminal. Mailpit is optional | [Email](#email) |
+| Bot check (Cloudflare Turnstile) | Nothing: test keys are used automatically. Needs an internet connection | [The bot check](#the-bot-check) |
+| Contact form | Nothing | [The contact form](#the-contact-form) |
+| Limits on the owner's emails | Nothing | [The email limits](#the-email-limits) |
+| Admin invite email | Nothing. Nothing sends it until Settings saves admins | [Admin invites](#admin-invites) |
+| Admin roles | Your admin row from §2.3 | [Each admin role](#each-admin-role) |
+| Storage limits and usage | Nothing | [Storage limits and usage](#storage-limits-and-usage) |
+| File sweeper | Nothing | [The file sweeper](#the-file-sweeper) |
+
+A change to `teazo-site/.env.local` takes effect when you restart the app's
+`npm run dev`, and a change to `teazo-d1-proxy/.dev.vars` when you restart the
+Worker. Remove each test line when you are done.
+
+#### Email
+
+Where an email goes is decided when it is sent, in this order:
+
+1. `BREVO_API_KEY` is set: it is sent for real through Brevo. Production only.
+   Never put a Brevo key in `.env.local`.
+2. `MAILPIT_URL` is set: it is delivered to your local Mailpit inbox.
+3. Neither: it is printed in the terminal running the app's `npm run dev`.
+
+**By default, emails are printed.** There is nothing to set, and nothing
+reaches a real inbox. Submit the form on `/contact` and the app's terminal
+shows something like:
+
+```text
+[email] Not sent (no BREVO_API_KEY or MAILPIT_URL). This is what would go out:
+To: owner@teazo.test
+Reply-To: ana@example.com
+Subject: New website message from Ana: Catering
+
+New message from the contact form on the TEAZO website.
+...
+```
+
+Only the plain text version is printed. To see the formatted version, use
+Mailpit.
+
+**To see emails in an inbox, run [Mailpit](https://mailpit.axllent.org/)**, a
+free inbox that runs on your machine and never sends anything on:
+
+1. Install it:
+   - **Windows:** download `mailpit-windows-amd64.zip` from the
+     [latest release](https://github.com/axllent/mailpit/releases/latest) and
+     unzip it.
+   - **macOS:** `brew install mailpit`
+   - **Linux:** follow the [install page](https://mailpit.axllent.org/docs/install/).
+   - **Docker, on any system:** run
+     `docker run -d --name mailpit -p 127.0.0.1:8025:8025 axllent/mailpit`
+     and skip step 2. `docker stop mailpit` and `docker start mailpit` stop and
+     restart it.
+2. Start it in terminal 3 and leave it running:
+   `mailpit --listen 127.0.0.1:8025`. On Windows, run
+   `./mailpit.exe --listen 127.0.0.1:8025` from the unzipped folder.
+3. Add `MAILPIT_URL=http://127.0.0.1:8025` to `teazo-site/.env.local` and
+   restart the app.
+4. Open `http://127.0.0.1:8025` and submit the contact form. The email appears
+   within a few seconds, and Mailpit shows both versions of it.
+
+While `MAILPIT_URL` is set, Mailpit must be running. If it isn't, the app's
+terminal shows `A contact message was saved, but the notification email
+failed` and `could not reach Mailpit`; the message itself is still saved.
+Remove the line and restart the app to go back to printed emails.
+
+The emails the site sends:
+
+| Subject | How to trigger it locally | Goes to |
+|---|---|---|
+| "New website message from ..." | Submit the form on `/contact` | `owner@teazo.test`, or `CONTACT_NOTIFY_TO` if you set it |
+| "Website contact form: email alerts paused" | See [the email limits](#the-email-limits) | Same |
+| "You've been added as an admin of the TEAZO website" | Not yet: see [admin invites](#admin-invites) | The new admin's address |
+
+A contact email's reply address is the visitor's, so the owner can answer with
+Reply. In Mailpit, emails come from `website@teazo.test` ("TEAZO website")
+unless you set `EMAIL_FROM` or `EMAIL_FROM_NAME`.
+
+#### The bot check
+
+The contact form is protected by Cloudflare Turnstile. A small widget above
+Submit checks the visitor, and the server checks the widget's answer with
+Cloudflare before it saves anything. With no keys set, your machine uses
+Cloudflare's public test keys, which always pass, and the widget says it is for
+testing only. Leave `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
+unset for everyday work.
+
+It needs an internet connection, even with test keys. Offline, the widget
+can't load, the form says "The security check couldn't load", and nothing can
+be sent.
+
+To see what a visitor sees when the check goes wrong, add one of these lines
+to `.env.local`, restart the app, and submit the form:
+
+| Line to add | What you see |
+|---|---|
+| `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` | The widget passes, but Submit answers "The security check didn't pass. Please try it again." |
+| `TURNSTILE_SECRET_KEY=3x0000000000000000000000000000000AA` | The same answer, as if the visitor's check had already been used |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY=2x00000000000000000000AB` | The widget fails, the form says "The security check couldn't load", and Submit answers "Please wait for the security check above the Submit button to finish, then try again." |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes |
+
+The app's terminal logs each refusal with Cloudflare's error code.
+
+**The hidden field.** The form also has a `company` field that people never
+see and bots fill in. A submission with it filled in gets the usual thank-you
+but is thrown away, with no saved message and no email. To try it, open the
+browser's developer console on `/contact`, run
+`document.querySelector('input[name=company]').value = 'x'`, then submit.
+
+#### The contact form
+
+1. Open `http://localhost:3000/contact`. Fill in at least the first name, email
+   and message, wait for the widget's check mark, and choose **Submit**.
+2. The form clears and says "Thank you. Your message was sent, and we will get
+   back to you soon."
+3. The owner's email is printed in the app's terminal, or appears in Mailpit.
+4. The message is saved. In terminal 4:
+
+   ```bash
+   cd teazo-d1-proxy
+   npx wrangler d1 execute teazo-db --local --command "SELECT created_at, email, subject FROM contact_message ORDER BY created_at DESC"
+   ```
+
+**Turning the form off.** The owner will switch it from the admin panel, which
+doesn't exist yet. Until then, from `teazo-d1-proxy`:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET contact_form_enabled = 0 WHERE id = 1"
+```
+
+Reload `/contact` and the CONTACT US section is gone. A form that was already
+open answers "The contact form is not accepting messages right now." Run it
+again with `1` to bring the form back.
+
+If the Worker isn't running, `/contact` still shows the form, and Submit
+answers "Your message could not be sent right now."
+
+#### The email limits
+
+So a flood of spam can't use up Brevo's 300 free emails a day, the owner gets
+at most 20 contact emails an hour and 100 a day. The first message over a limit
+sends one "Website contact form: email alerts paused" email instead, and after
+that messages are saved with no email.
+
+To see it without sending 21 messages, fill the last hour up to 20 with test
+rows, from `teazo-d1-proxy`:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 20) INSERT INTO contact_message (first_name, email, message) SELECT 'Filler', 'filler@example.com', 'Filler ' || i FROM n WHERE i <= 20 - (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour'))"
+```
+
+Submit the form once: the "alerts paused" email arrives instead of the usual
+one. Submit again: no email, and the app's terminal says `Contact message saved
+without an email: the hourly or daily email cap was reached.` Then remove the
+test rows, and the next message is emailed as usual:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "DELETE FROM contact_message WHERE email = 'filler@example.com'"
+```
+
+#### Admin invites
+
+When an admin adds someone in Settings, the new admin gets an email that
+explains how to sign in (`sendAdminInvite` in `app/lib/admin-invite.ts`, see
+§5). Nothing sends it yet, because the Settings admins table doesn't save to
+the database. Once it does, adding an admin prints the invite in the app's
+terminal, or shows it in Mailpit, addressed to the new admin. Its sign-in link
+is built from `NEXT_PUBLIC_BASE_URL`, or `http://localhost:3000` when that
+isn't set.
+
+#### Each admin role
+
+Every admin check reads your local `admin_user` table on each request, so you
+can test each role by changing your own row. The change applies on your next
+page load, without signing in again. From `teazo-d1-proxy`:
+
+```bash
+npm run db:seed:local -- you@gmail.com --role 3    # Can View
+npm run db:seed:local -- you@gmail.com --role 2    # Can Edit
+npm run db:seed:local -- you@gmail.com --role 1    # Owner again
+```
+
+- **Can View** opens every admin page, but every admin write is refused with
+  `403`.
+- **Can Edit** and **Owner** can also upload and edit.
+- **Suspended** can't open any admin page. Suspend yourself with
+  `npx wrangler d1 execute teazo-db --local --command "UPDATE admin_user SET status = 'suspended' WHERE email_normalized = 'you@gmail.com'"`:
+  the next admin page sends you to `/login` with "This Google account does not
+  have admin access". Running the seed for your address makes you `active`
+  again.
+
+To check the write rule from a terminal, copy your `authjs.session-token`
+cookie as in §5 and send an empty upload:
+
+```bash
+curl -s -X POST http://localhost:3000/api/admin/menu/upload -H "Origin: http://localhost:3000" -H "Cookie: authjs.session-token=<your cookie>"
+```
+
+As Can View the answer is `{"error":"You do not have permission to perform
+this action."}`. As Can Edit or Owner it is `{"error":"Expected a file-upload
+form."}`, which means the role check passed and only the missing file stopped
+it.
+
+#### Storage limits and usage
 
 R2 bills for anything past its free allowance, so the Worker refuses uploads
 before that happens (the full rules are in [ENDPOINTS.md](ENDPOINTS.md)). Your
@@ -351,7 +519,7 @@ already get 429. When you are done, stop the Worker, delete those lines from
 A `503 limits_unavailable` on upload means your database is missing a
 migration: run `npm run db:migrate:local`.
 
-### 2.6 The scheduled sweeper
+#### The file sweeper
 
 Deleting a file queues its bytes in `pending_r2_deletion`, and an hourly job in
 the Worker removes them once they are 24 hours old (§4.2). `npm run dev` never
@@ -359,7 +527,9 @@ runs that job on its own; that is the yellow warning wrangler prints when it
 starts. To run it by hand, with the Worker running:
 
 1. Queue a file that is already due. No page deletes files yet, so queue one
-   yourself, for example the test upload from §2.5:
+   yourself, for example the test upload from
+   [Storage limits and usage](#storage-limits-and-usage). From
+   `teazo-d1-proxy`:
 
    ```bash
    npx wrangler d1 execute teazo-db --local --command "INSERT INTO pending_r2_deletion (r2_bucket, r2_key, queued_at) VALUES ('teazo-media', 'test/sample.pdf', strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 hours'))"
@@ -374,7 +544,7 @@ Use `teazo-media` as the bucket: the local Worker only removes files from its
 own bucket. The older address, `/__scheduled`, only works under
 `npm run dev:cron`; on plain `npm run dev` it returns `405`.
 
-### 2.7 Every environment variable
+### 2.6 Every environment variable
 
 **`teazo-site/.env.local`**
 
@@ -409,21 +579,21 @@ the variables Vercel sets itself: `VERCEL`, `VERCEL_ENV`,
 
 The values for Vercel are in §8.1.
 
-### 2.8 Scripts
+### 2.7 Scripts
 
 | Where | Script | What it does | Run it locally? |
 |---|---|---|---|
 | `teazo-d1-proxy` | `npm run dev` | Starts the Worker | Yes |
-| | `npm run dev:cron` | Same, and also answers the older `/__scheduled` address (§2.6) | Not needed |
+| | `npm run dev:cron` | Same, and also answers the older `/__scheduled` address (§2.5) | Not needed |
 | | `npm run db:migrate:local` | Applies new migrations to your database | Yes |
 | | `npm run db:seed:local -- <email>` | Migrates, then gives that address an admin role | Yes |
 | | `npm run typegen` | Generates Cloudflare types | Not needed |
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
 | | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint <file>` and add no new errors |
-| | `npm run build`, `npm start` | A production build | Only as in §2.9 |
+| | `npm run build`, `npm start` | A production build | Only as in §2.8 |
 
-### 2.9 Checking a production build locally
+### 2.8 Checking a production build locally
 
 Everyday work uses `npm run dev`. A production build behaves differently: the
 development defaults are off, so the test keys and printed email stop. To try
@@ -440,7 +610,7 @@ CONTACT_NOTIFY_TO=owner@teazo.test
 ```
 
 Stop `npm run dev` first, because `npm start` also uses port 3000. Then run
-`npm run build` and `npm start`, and start Mailpit (§2.2).
+`npm run build` and `npm start`, and start Mailpit (§2.5).
 
 - The build fails without `SQUARE_ACCESS_TOKEN`, because the Square client
   checks for it as soon as it loads.
@@ -783,7 +953,7 @@ queueing its media, in the same batch.
 
 **To undo a deletion** within the 24 hours, clear `deleted_at` on the media row
 and on what used it, and delete the `pending_r2_deletion` row, in one batch.
-§2.6 shows how to watch the sweeper work locally.
+§2.5 shows how to watch the sweeper work locally.
 
 ---
 
@@ -875,7 +1045,7 @@ after(() => sendAdminInvite({ email, username, role, canManageAdmins, invitedBy:
 `after()` sends it once the response is on its way, so the admin panel doesn't
 wait. `sendAdminInvite` never throws: a failed email is logged, and the new
 admin can still sign in. Locally the invite is printed or caught by Mailpit
-(§2.2). Both `invited` and `active` can sign in, and nothing in the app
+(§2.5). Both `invited` and `active` can sign in, and nothing in the app
 changes one into the other yet (re-running `npm run db:seed:local` for an
 address sets it to `active`, whatever its status). The database allows at most one Owner, and the handlers must
 refuse to delete or demote the Owner.
