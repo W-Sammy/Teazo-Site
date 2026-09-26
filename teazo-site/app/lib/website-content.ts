@@ -31,7 +31,6 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     "TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!",
   socialLinks: [
     { id: "facebook", label: "Facebook", icon: "/social_icons/teazo_fb_icon.png", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
-    { id: "email", label: "Email", icon: "/social_icons/teazo_email_icon.png", url: "mailto:teazosf@hotmail.com", enabled: true },
     { id: "instagram", label: "Instagram", icon: "/social_icons/teazo_insta_icon.png", url: "https://www.instagram.com/teazosf/", enabled: true },
     { id: "yelp", label: "Yelp", icon: "/social_icons/teazo_yelp_icon.png", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
   ],
@@ -188,7 +187,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 
     if (d1Links.results.length > 0) {
       const socials = d1Links.results
-        .filter((l) => l.link_group === "social")
+        .filter((l) => l.link_group === "social" && l.key !== "email")
         .map((l) => ({
           id: l.key,
           label: l.label,

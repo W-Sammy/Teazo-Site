@@ -53,9 +53,8 @@ INSERT INTO business_hours (day_of_week, display_text, opens_at, closes_at) VALU
 -- ---------------------------------------------------------------------------
 INSERT INTO site_link (key, link_group, label, url, aria_label, sort_order) VALUES
   ('facebook',  'social', 'Facebook',  'https://www.facebook.com/people/TEAZO/100063111166083', 'TEAZO on Facebook',  1),
-  ('email',     'social', 'Email',     'mailto:teazosf@hotmail.com',                            'Email TEAZO',        2),
-  ('instagram', 'social', 'Instagram', 'https://www.instagram.com/teazosf/',                    'TEAZO on Instagram', 3),
-  ('yelp',      'social', 'Yelp',      'https://www.yelp.com/biz/teazo-san-francisco',          'TEAZO on Yelp',      4),
+  ('instagram', 'social', 'Instagram', 'https://www.instagram.com/teazosf/',                    'TEAZO on Instagram', 2),
+  ('yelp',      'social', 'Yelp',      'https://www.yelp.com/biz/teazo-san-francisco',          'TEAZO on Yelp',      3),
   ('ubereats',  'delivery', 'UBER EATS', 'https://www.ubereats.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg?srsltid=AfmBOoranl_YtSY-qug2w6ZzmFcwawnUN1t6RJMvTnqq32BwwVXubRgr', NULL, 1),
   ('doordash',  'delivery', 'DOORDASH',  'https://www.doordash.com/en/store/teazo-san-francisco-849601/1213761/?srsltid=AfmBOortGz8HB9dVSbrcnGxXWHRoalBu_ObBQ_Fv-r0SRKiFrYvWQawu', NULL, 2),
   ('postmates', 'delivery', 'POSTMATES', 'https://postmates.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg', NULL, 3);
