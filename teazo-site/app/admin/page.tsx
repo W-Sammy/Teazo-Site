@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdminPage } from "@/app/lib/admin";
 
 export const metadata: Metadata = {
   title: {
@@ -6,7 +7,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminPage(){
+export default async function AdminPage(){
+  await requireAdminPage(3)
+  
   return (
     <div>
       <h1>Hello World</h1>

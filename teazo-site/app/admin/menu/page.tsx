@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getAdmin } from "@/app/lib/admin";
+import {  requireAdminPage } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
-
 export const metadata: Metadata = {
   title: {
     absolute: "Teazo Menu Admin",
@@ -48,8 +46,7 @@ function getUniqueCategories(items: ReturnType<typeof filterMenuItems>) {
 
 export default async function AdminMenuPage(){
   // Can View may open the page. The upload endpoint separately requires Can Edit.
-  //const admin = await getAdmin(3);
-  //if (!admin) redirect("/login");
+  const admin = await requireAdminPage(3);
 
   const menuItems = await getMenuItems();
   const displayedMenuItems = filterMenuItems(menuItems);
@@ -57,13 +54,12 @@ export default async function AdminMenuPage(){
   const categories = getUniqueCategories(displayedMenuItems);
 
 
-  //canUploadMenu={admin.role_id <= 2}
   return (
     <div>
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
-        canUploadMenu={false}
+        canUploadMenu={admin.role_id <= 2}
       />
     </div>
   )

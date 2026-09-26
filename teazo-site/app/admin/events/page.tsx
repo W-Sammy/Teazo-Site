@@ -3,6 +3,7 @@ import AdminEventsClient from "./components/admin-events-client";
 import { getEvents } from "./handlers/get-events";
 import type { EventCatalogItem } from "@/app/types/admin-event";
 import type { MenuItem } from "@/app/types/menu-item";
+import { requireAdminPage } from "@/app/lib/admin";
 
 export const metadata: Metadata = {
   title: {
@@ -22,6 +23,8 @@ async function getMenuItems(): Promise<MenuItem[]> {
 }
 
 export default async function AdminEventsPage() {
+  await requireAdminPage(3)
+  
   const [menuItems, initialEvents] = await Promise.all([
     getMenuItems(),
     getEvents(),

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { AdminGalleryImage } from "../../types/gallery-image";
 import AdminGalleryClient from "./components/admin-gallery-client";
+import { requireAdminPage } from "@/app/lib/admin";
 
 export const metadata: Metadata = {
   title: {
@@ -57,6 +58,8 @@ const initialImages: AdminGalleryImage[] = [
   },
 ];
 
-export default function AdminGalleryPage() {
+export default async function AdminGalleryPage() {
+  await requireAdminPage(3)
+  
   return <AdminGalleryClient initialImages={initialImages} />;
 }
