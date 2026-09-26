@@ -44,11 +44,13 @@ export default function HolidayCard({
   isDuplicateDate,
   onChange,
   onRemove,
+  onBlur,
 }: {
   holiday: Holiday;
   isDuplicateDate: boolean;
   onChange: (patch: Partial<Holiday>) => void;
   onRemove: () => void;
+  onBlur?: () => void;
 }) {
   const [nameTouched, setNameTouched] = useState(false);
   const [month, day] = holiday.date.split("-");
@@ -123,7 +125,10 @@ export default function HolidayCard({
           type="text"
           value={holiday.name}
           onChange={(e) => onChange({ name: e.target.value })}
-          onBlur={() => setNameTouched(true)}
+          onBlur={() => {
+            setNameTouched(true);
+            onBlur?.();
+          }}
           placeholder="Holiday name"
           aria-label="Holiday name"
           className={`${fieldClass(

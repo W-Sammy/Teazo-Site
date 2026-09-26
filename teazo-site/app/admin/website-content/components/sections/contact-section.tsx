@@ -43,6 +43,7 @@ export default function ContactSection({
   setRef,
   onUpdateAddress,
   onUpdateContactFormEnabled,
+  onBlur,
 }: {
   address: AddressInfo;
   contactFormEnabled?: boolean;
@@ -51,6 +52,7 @@ export default function ContactSection({
   setRef: (el: HTMLDivElement | null) => void;
   onUpdateAddress: (patch: Partial<AddressInfo>) => void;
   onUpdateContactFormEnabled?: (enabled: boolean) => void;
+  onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState<Partial<Record<ContactField, boolean>>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
@@ -67,6 +69,7 @@ export default function ContactSection({
   function handleBlur(field: ContactField, value: string) {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+    onBlur?.();
   }
 
   return (
