@@ -7,6 +7,7 @@
  * SERVER ONLY. PROXY_TOKEN carries full access to the database and must never
  * reach the browser.
  */
+import { unstable_rethrow } from "next/navigation";
 
 export type StorageUsage = {
   measuredAt: string;
@@ -84,6 +85,8 @@ export async function getStorageUsage(
       cache: "no-store",
     });
   } catch (cause) {
+    // Next.js's signal that a prerendered page must render on every request.
+    unstable_rethrow(cause);
     throw new UsageError(`could not reach the proxy at ${url}: ${String(cause)}`);
   }
 

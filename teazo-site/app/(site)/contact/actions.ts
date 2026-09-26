@@ -103,8 +103,12 @@ async function notifyOwner(values: ContactFormValues): Promise<void> {
     const overDay = recent.lastDay - EMAILS_PER_DAY;
 
     if (overHour > 0 || overDay > 0) {
-      // The first message past a cap sends one notice. The rest are only saved.
-      if (overHour === 1 || overDay === 1) {
+      // The message that takes a count past its cap sends one notice, and the
+      // rest are only saved. Nothing is sent at all once the day is past its
+      // cap. The Nth message within any 24 hours sees a daily count of at least
+      // N, so however a flood is paced, at most EMAILS_PER_DAY + 1 emails go
+      // out in any 24 hours.
+      if (overDay === 1 || (overHour === 1 && overDay <= 0)) {
         await sendEmail({ to, ...ALERTS_PAUSED_EMAIL });
       } else {
         console.warn("Contact message saved without an email: the hourly or daily email cap was reached.");

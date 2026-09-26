@@ -31,6 +31,7 @@ export type TurnstileResult =
   | { ok: true }
   | { ok: false; reason: "missing" | "rejected" | "unavailable" };
 
+/** The secret to check tokens with. When there is none, says why in the logs. */
 function secretKey(): string | undefined {
   const configured = process.env.TURNSTILE_SECRET_KEY;
   if (configured) {
@@ -43,7 +44,9 @@ function secretKey(): string | undefined {
     }
     return configured;
   }
-  return process.env.NODE_ENV === "development" ? DEV_TEST_SECRET : undefined;
+  if (process.env.NODE_ENV === "development") return DEV_TEST_SECRET;
+  console.error("TURNSTILE_SECRET_KEY is not set, so the contact form cannot check for bots.");
+  return undefined;
 }
 
 /**
@@ -61,10 +64,7 @@ export async function verifyTurnstile(token: string, remoteIp?: string): Promise
   }
 
   const secret = secretKey();
-  if (!secret) {
-    console.error("TURNSTILE_SECRET_KEY is not set, so the contact form cannot check for bots.");
-    return { ok: false, reason: "unavailable" };
-  }
+  if (!secret) return { ok: false, reason: "unavailable" };
   if (!token) return { ok: false, reason: "missing" };
   if (token.length > 2048) return { ok: false, reason: "rejected" };
 
