@@ -14,12 +14,14 @@ export default function StorySection({
   onToggle,
   setRef,
   onStoryChange,
+  onBlur,
 }: {
   story: string;
   isOpen: boolean;
   onToggle: () => void;
   setRef: (el: HTMLDivElement | null) => void;
   onStoryChange: (value: string) => void;
+  onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState(false);
 
@@ -51,7 +53,10 @@ export default function StorySection({
         <textarea
           value={story}
           onChange={(e) => onStoryChange(e.target.value)}
-          onBlur={() => setTouched(true)}
+          onBlur={() => {
+            setTouched(true);
+            onBlur?.();
+          }}
           rows={6}
           aria-label="Our Story"
           className={`block w-full min-w-0 max-w-full resize-y rounded-lg border bg-white px-3 py-2.5 text-base leading-relaxed text-gray-700 focus:outline-none sm:text-sm ${

@@ -65,6 +65,7 @@ export default async function Home() {
                     height={397}
                     className="h-[170px] w-auto sm:h-[195px]"
                     priority
+                    unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
 
             {/* TEAZO part */}

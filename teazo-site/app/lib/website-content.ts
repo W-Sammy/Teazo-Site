@@ -154,6 +154,10 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo')`
     ).all<{ key: string; value: string | null }>();
 
+    const d1Holidays = await prepare(
+      `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`
+    ).all<{ date: string; is_closed: number; display_text: string | null; note: string | null }>();
+
     if (profile) {
       currentWebsiteContent.address = {
         businessName: profile.business_name || currentWebsiteContent.address.businessName,
@@ -214,6 +218,15 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           currentWebsiteContent.logo = block.value;
         }
       }
+    }
+
+    if (d1Holidays.results.length > 0) {
+      currentWebsiteContent.holidays = d1Holidays.results.map((h, i) => ({
+        id: `holiday-${h.date || i}`,
+        name: h.note || `Holiday`,
+        date: h.date,
+        closed: h.is_closed === 1,
+      }));
     }
   } catch {
     // Keep in-memory content when D1 is unconfigured or unreachable.
@@ -301,6 +314,43 @@ export async function updateWebsiteContent(
           ).bind(displayText, opensAt, closesAt, isClosed, d1Day)
         );
       });
+    }
+
+    if (patch.socialLinks) {
+      stmts.push(prepare(`DELETE FROM site_link WHERE link_group = 'social'`));
+      for (let i = 0; i < patch.socialLinks.length; i++) {
+        const link = patch.socialLinks[i];
+        if (!link.id || !link.url) continue;
+        stmts.push(
+          prepare(
+            `INSERT INTO site_link (key, link_group, label, url, sort_order, is_active)
+             VALUES (?1, 'social', ?2, ?3, ?4, ?5)`
+          ).bind(link.id, link.label || link.id, link.url, i + 1, link.enabled ? 1 : 0)
+        );
+      }
+    }
+
+    if (patch.holidays) {
+      stmts.push(prepare(`DELETE FROM hours_exception`));
+      for (const holiday of patch.holidays) {
+        if (!holiday.date) continue;
+        const displayText = holiday.closed
+          ? "Closed"
+          : holiday.start && holiday.end
+          ? `${formatTime(holiday.start)} - ${formatTime(holiday.end)}`
+          : "Closed";
+        stmts.push(
+          prepare(
+            `INSERT INTO hours_exception (date, is_closed, display_text, note)
+             VALUES (?1, ?2, ?3, ?4)`
+          ).bind(
+            holiday.date,
+            holiday.closed ? 1 : 0,
+            displayText,
+            holiday.name || "Holiday"
+          )
+        );
+      }
     }
 
     if (stmts.length > 0) {

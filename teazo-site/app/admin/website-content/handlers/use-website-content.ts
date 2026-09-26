@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   AddressInfo,
   DayHours,
@@ -8,6 +8,8 @@ import type {
   SocialLink,
   WebsiteContent,
 } from "@/app/types/website-content";
+
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function createTemporaryId(prefix: string) {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -17,31 +19,132 @@ function createTemporaryId(prefix: string) {
 
 /**
  * Owns website content state and the update operations for every section.
- * Replace the marked temporary blocks with API calls when persistence is ready.
- * Text-field actions (story, address) should be called on blur/save once wired
- * to the real endpoint, not on every keystroke.
+ * Automatically debounces frequent input changes (typing in story/address/social/holidays,
+ * slider dragging) and immediately flushes discrete user actions (add/remove/toggle).
  */
 export function useWebsiteContent(initialContent: WebsiteContent) {
-  const [content, setContent] = useState(initialContent);
+  const [content, setContent] = useState<WebsiteContent>(initialContent);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function persistPatch(patch: Partial<WebsiteContent>) {
+  const pendingPatchRef = useRef<Partial<WebsiteContent>>({});
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const savedTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isSavingRef = useRef<boolean>(false);
+  const hasPendingDuringSaveRef = useRef<boolean>(false);
+
+  const flushPatch = async (immediatePatch?: Partial<WebsiteContent>) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    if (immediatePatch) {
+      pendingPatchRef.current = {
+        ...pendingPatchRef.current,
+        ...immediatePatch,
+        ...(immediatePatch.address
+          ? {
+              address: {
+                ...(pendingPatchRef.current.address ?? {}),
+                ...immediatePatch.address,
+              },
+            }
+          : {}),
+      };
+    }
+
+    if (Object.keys(pendingPatchRef.current).length === 0) {
+      return;
+    }
+
+    if (isSavingRef.current) {
+      hasPendingDuringSaveRef.current = true;
+      return;
+    }
+
+    const payload = { ...pendingPatchRef.current };
+    pendingPatchRef.current = {};
+
+    isSavingRef.current = true;
+    setSaveStatus("saving");
+
     try {
-      await fetch("/api/website-content", {
+      const res = await fetch("/api/website-content", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+
+      setSaveStatus("saved");
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => {
+        setSaveStatus((current) => (current === "saved" ? "idle" : current));
+      }, 3000);
     } catch {
-      // Graceful fallback for offline / test environments
+      setSaveStatus("error");
+      setErrorMessage("Failed to save changes. Please try again.");
+    } finally {
+      isSavingRef.current = false;
+      if (hasPendingDuringSaveRef.current || Object.keys(pendingPatchRef.current).length > 0) {
+        hasPendingDuringSaveRef.current = false;
+        flushPatch();
+      }
     }
-  }
+  };
+
+  const queuePatch = (patch: Partial<WebsiteContent>, delayMs = 600) => {
+    pendingPatchRef.current = {
+      ...pendingPatchRef.current,
+      ...patch,
+      ...(patch.address
+        ? {
+            address: {
+              ...(pendingPatchRef.current.address ?? {}),
+              ...patch.address,
+            },
+          }
+        : {}),
+    };
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      flushPatch();
+    }, delayMs);
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (Object.keys(pendingPatchRef.current).length > 0) {
+        fetch("/api/website-content", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pendingPatchRef.current),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   function updateLogo(dataUrl: string) {
     setErrorMessage("");
     try {
       setContent((prev) => ({ ...prev, logo: dataUrl }));
-      persistPatch({ logo: dataUrl });
+      flushPatch({ logo: dataUrl });
       return true;
     } catch {
       setErrorMessage("Failed to update the logo.");
@@ -53,7 +156,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setErrorMessage("");
     try {
       setContent((prev) => ({ ...prev, story }));
-      persistPatch({ story });
+      queuePatch({ story }, 600);
       return true;
     } catch {
       setErrorMessage("Failed to update the story.");
@@ -66,7 +169,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     try {
       const updatedAddress = { ...content.address, ...patch };
       setContent((prev) => ({ ...prev, address: updatedAddress }));
-      persistPatch({ address: updatedAddress });
+      queuePatch({ address: updatedAddress }, 600);
       return true;
     } catch {
       setErrorMessage("Failed to update contact info.");
@@ -81,7 +184,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         i === index ? { ...entry, ...patch } : entry,
       );
       setContent((prev) => ({ ...prev, hours: updatedHours }));
-      persistPatch({ hours: updatedHours });
+      queuePatch({ hours: updatedHours }, 400);
       return true;
     } catch {
       setErrorMessage("Failed to update business hours.");
@@ -98,7 +201,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         { id, label: "", icon: "", url: "", enabled: true },
       ];
       setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
-      persistPatch({ socialLinks: updatedLinks });
+      flushPatch({ socialLinks: updatedLinks });
       return true;
     } catch {
       setErrorMessage("Failed to add the social link.");
@@ -113,7 +216,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         link.id === id ? { ...link, ...patch } : link,
       );
       setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
-      persistPatch({ socialLinks: updatedLinks });
+      if (patch.enabled !== undefined) {
+        flushPatch({ socialLinks: updatedLinks });
+      } else {
+        queuePatch({ socialLinks: updatedLinks }, 600);
+      }
       return true;
     } catch {
       setErrorMessage("Failed to update the social link.");
@@ -126,7 +233,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     try {
       const updatedLinks = content.socialLinks.filter((link) => link.id !== id);
       setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
-      persistPatch({ socialLinks: updatedLinks });
+      flushPatch({ socialLinks: updatedLinks });
       return true;
     } catch {
       setErrorMessage("Failed to remove the social link.");
@@ -143,7 +250,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         { id, name: "", date: "", closed: true },
       ];
       setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
-      persistPatch({ holidays: updatedHolidays });
+      flushPatch({ holidays: updatedHolidays });
       return true;
     } catch {
       setErrorMessage("Failed to add the holiday.");
@@ -158,7 +265,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         holiday.id === id ? { ...holiday, ...patch } : holiday,
       );
       setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
-      persistPatch({ holidays: updatedHolidays });
+      if (patch.closed !== undefined) {
+        flushPatch({ holidays: updatedHolidays });
+      } else {
+        queuePatch({ holidays: updatedHolidays }, 600);
+      }
       return true;
     } catch {
       setErrorMessage("Failed to update the holiday.");
@@ -171,7 +282,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     try {
       const updatedHolidays = content.holidays.filter((holiday) => holiday.id !== id);
       setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
-      persistPatch({ holidays: updatedHolidays });
+      flushPatch({ holidays: updatedHolidays });
       return true;
     } catch {
       setErrorMessage("Failed to remove the holiday.");
@@ -183,7 +294,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setErrorMessage("");
     try {
       setContent((prev) => ({ ...prev, contactFormEnabled: enabled }));
-      persistPatch({ contactFormEnabled: enabled });
+      flushPatch({ contactFormEnabled: enabled });
       return true;
     } catch {
       setErrorMessage("Failed to update Contact Us form setting.");
@@ -193,7 +304,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   return {
     content,
+    saveStatus,
     errorMessage,
+    flushPatch,
     updateLogo,
     updateStory,
     updateAddress,
