@@ -85,13 +85,23 @@ anything older, and it says which version it wants.
 > 260-character limit is reached. Every local `wrangler d1` command, and
 > `npm run db:seed:local`, then fails with `internal error; reference = ...`,
 > which says nothing about paths, and `git clone` and `npm install` give no
-> warning first. To check, run `pwd -W | awk '{print length}'` in the repo
-> folder and keep it under 100. If it is longer, stop the Worker, move the
-> whole folder somewhere short, and run `npm run db:migrate:local` again from
-> `teazo-d1-proxy`.
+> warning first. The Worker still starts, but every query it runs fails the
+> same way, so the check in §2.1 shows that error and the app's terminal prints
+> it after `Contact form submission failed:`. Turning on Windows' long path
+> setting doesn't help. To check, run `pwd -W | awk '{print length}'` in the
+> repo folder and keep it under 100.
 >
-> To clone into `C:\dev`, run `mkdir -p /c/dev && cd /c/dev` in Git Bash before
-> the `git clone` in §2.1.
+> If it is longer, move the repo. In the repo folder, note the path that `pwd`
+> prints. Stop the Worker and the app (Ctrl+C in terminals 1 and 2), and run
+> `cd /c` in every terminal that is inside the repo, including your editor's,
+> or close it. While a program or a terminal is inside one of the repo's
+> folders, Windows won't move it and `mv` says `Permission denied`. Then run
+> `mkdir -p /c/dev && mv "<that path>" /c/dev/Teazo-Site`, run
+> `npm run db:migrate:local` again from `/c/dev/Teazo-Site/teazo-d1-proxy`, and
+> start the Worker and the app again from their new folders.
+>
+> To clone into `C:\dev` in the first place, run `mkdir -p /c/dev && cd /c/dev`
+> in Git Bash before the `git clone` in §2.1.
 
 **What you need from someone else:**
 
@@ -116,12 +126,16 @@ never need `wrangler login` for local work.
 The app must stay on port **3000**: Google sign-in is registered for it. If
 3000 is taken, `npm run dev` doesn't ask. It prints `Port 3000 is in use by
 process <pid>, using available port 3001 instead.` and starts on 3001, where
-sign-in fails. Press Ctrl+C, stop that process (`taskkill //PID <pid> //F` in
-Git Bash, `kill <pid>` on macOS or Linux), and start the app again. On Windows,
-a program that holds 3000 for only one of `localhost` and `127.0.0.1` gets no
-warning. If `http://localhost:3000` shows something other than the site, stop
-the app, run `netstat -ano | grep :3000`, and stop each process id at the end
-of a `LISTENING` line.
+sign-in fails. If that process is another `npm run dev` from this folder, it
+prints `Another next dev server is already running.` instead and exits. Either
+way, press Ctrl+C if it is still running, stop that process
+(`taskkill //PID <pid> //F` in Git Bash, `kill <pid>` on macOS or Linux), and
+start the app again. Type the slashes doubled: the `taskkill /PID <pid> /F`
+that Next.js suggests fails in Git Bash. On Windows, a program that holds 3000
+for only one of `localhost` and `127.0.0.1` gets no warning. If
+`http://localhost:3000` shows something other than the site, stop the app, run
+`netstat -ano | grep ':3000 ' | grep LISTENING`, and stop each process id at
+the end of those lines.
 
 ### 2.1 Start the database and storage
 
@@ -186,9 +200,12 @@ The sections below add more lines to `.env.local`: open it in your editor to
 add them, and restart `npm run dev` afterwards.
 
 Open **`http://localhost:3000`**. Use `localhost`, not `127.0.0.1` or the
-network address Next.js prints. On those addresses pages load but don't respond
-to clicks, so sign-in and the contact form don't work, and the app's terminal
-prints `Blocked cross-origin request to Next.js dev resource /_next/hmr` (§9).
+network address Next.js prints. On those addresses the page's scripts never
+start. Links still work, but **Continue with Google** does nothing, the contact
+form's bot check never appears, and Submit on `/contact` answers "Please wait
+for the security check above the Submit button to finish, then try again." The
+first time you open one of them after starting the app, its terminal prints
+`Blocked cross-origin request to Next.js dev resource /_next/hmr` (§9).
 
 **If you are working on Square, the menu admin or the events admin**, add
 these lines to `.env.local`:
@@ -255,10 +272,10 @@ while either of its fields is empty. It is not a sign-in error.
 |---|---|---|
 | "This Google account does not have admin access" | No live admin row for that exact address, or it is suspended | `npm run db:seed:local -- <that address>` |
 | "We could not verify your access" | The database lookup failed | Start the Worker, and check `D1_PROXY_URL` and `PROXY_TOKEN` in `.env.local` |
-| Sent back to `/login` with no message, or with "Sign-in could not be completed. Please try again." | Usually a missing `AUTH_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set |
+| Sent back to `/login` with no message, or with "Sign-in could not be completed. Please try again." | A missing `AUTH_SECRET`, or a wrong `AUTH_GOOGLE_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set. `CallbackRouteError` after you chose your Google account usually means `AUTH_GOOGLE_SECRET` is wrong: check it against what Sammy sent |
 | Google's `redirect_uri_mismatch` | The app isn't on port 3000 (see **Terminals and ports** in §2), or the redirect isn't registered | Start the app on port 3000 and open `http://localhost:3000`. The OAuth client must list `http://localhost:3000/api/auth/callback/google` |
-| **Continue with Google** does nothing | You opened `127.0.0.1` or the network address, where Next.js keeps pages from responding to clicks | Open `http://localhost:3000/login` |
-| Google shows an error page before ours, such as `org_internal`, `admin_policy_enforced` or `invalid_client` | `org_internal`: the OAuth client only admits accounts from one organization. `admin_policy_enforced`: a work or school account whose administrator blocks outside apps. `invalid_client`: `AUTH_GOOGLE_ID` is wrong | Check `AUTH_GOOGLE_ID` against what Sammy sent, and try a personal Google account. If it still fails, send Sammy the error code |
+| **Continue with Google** does nothing | You opened `127.0.0.1` or the network address, where the page's scripts never start | Open `http://localhost:3000/login` |
+| Google shows an error page before ours, such as `access_denied`, `org_internal`, `admin_policy_enforced` or `invalid_client` | `access_denied`: the OAuth app's settings don't admit this account. `org_internal`: the OAuth client only admits accounts from one organization. `admin_policy_enforced`: a work or school account whose administrator blocks outside apps. `invalid_client` ("The OAuth client was not found"): `AUTH_GOOGLE_ID` in `.env.local` is missing or wrong | For `invalid_client`, set `AUTH_GOOGLE_ID` to exactly what Sammy sent and restart `npm run dev`. For `admin_policy_enforced`, try a personal Google account. For `access_denied` or `org_internal`, send Sammy your Google address and the error code |
 
 ### 2.4 Reset
 
@@ -470,14 +487,16 @@ the form back:
 npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET contact_form_enabled = 1 WHERE id = 1"
 ```
 
-If the Worker isn't running, `/contact` still shows the form, and Submit
-answers "Your message could not be sent right now." The app's terminal then
-prints `Contact form submission failed:` with the reason on the same line.
-`could not reach the database proxy` means the Worker isn't running or
-`D1_PROXY_URL` in `.env.local` is wrong. `unauthorized` means `PROXY_TOKEN` in
-`.env.local` doesn't match the one in `teazo-d1-proxy/.dev.vars`. `no such
-column: contact_form_enabled` means your database is missing migration `0003`:
-run `npm run db:migrate:local` from `teazo-d1-proxy`.
+If the app can't use the database, `/contact` still shows the form, and
+Submit answers "Your message could not be sent right now." This can happen
+with the Worker running too. The app's terminal then prints `Contact form
+submission failed:` with the reason on the same line. `could not reach the
+database proxy` means the Worker isn't running or `D1_PROXY_URL` in
+`.env.local` is wrong. `unauthorized` means `PROXY_TOKEN` in `.env.local`
+doesn't match the one in `teazo-d1-proxy/.dev.vars`. `no such column:
+contact_form_enabled` means your database is missing migration `0003`: run
+`npm run db:migrate:local` from `teazo-d1-proxy`. `internal error; reference =
+...` usually means the repo's path is too long (§2).
 
 #### The email limits
 
@@ -505,9 +524,11 @@ running it twice never takes the hour past 20. To check the count:
 npx wrangler d1 execute teazo-db --local --command "SELECT (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour')) AS last_hour, (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')) AS last_day"
 ```
 
-`last_hour` should be 20, and `last_day` below 100. With 100 or more messages
-in the last 24 hours the daily limit is already reached, and nothing below is
-emailed.
+`last_hour` should be 20, and `last_day` 98 or less. A higher `last_day` puts
+the day near its own limit too, and the steps below go differently. Your local
+messages are only test data, so empty the table with
+`npx wrangler d1 execute teazo-db --local --command "DELETE FROM contact_message"`,
+then run the filler command again.
 
 Submit the form once: the "alerts paused" email arrives instead of the usual
 one. Submit again: no email, and the app's terminal says `Contact message saved
@@ -626,11 +647,14 @@ already get 429. When you are done, stop the Worker, delete those lines from
 A `503 limits_unavailable` on upload means the limits couldn't be checked,
 and its `message` says why. If it says the two values "must be set in
 wrangler.jsonc", either a limit you added to `.dev.vars` is not a whole number
-above zero (write `1000`, not `1,000` or `0`), or the Worker has been running
-since before you pulled the limits into `wrangler.jsonc`. Fix or delete that
-line if you added one, then restart the Worker. Until you do, `/usage` fails
-the same way, with `503 usage_unavailable`. Any other message means your
-database is missing a migration: run `npm run db:migrate:local`.
+above zero (write `1000`, not `1,000` or `0`), or `R2_STORAGE_CAP_BYTES` or
+`R2_CLASS_A_DAILY_BUDGET` is missing from the `vars` block of `wrangler.jsonc`
+(from `teazo-d1-proxy`, `git diff wrangler.jsonc` shows what changed). Fix or
+delete the line in `.dev.vars`, or put the value back in `wrangler.jsonc`, then
+restart the Worker. Until you do, `/usage` fails the same way, with
+`503 usage_unavailable`. Any other message, such as
+`no such table: r2_class_a_day`, means your database is missing a migration:
+run `npm run db:migrate:local`.
 
 #### The file sweeper
 
@@ -784,9 +808,10 @@ Rules:
 - **At most 40 statements per `batch()`, and at least one.** `batch()` throws a
   `D1Error` before sending anything otherwise. Each statement takes at most 100
   values (`?1` to `?100`) and at most 100,000 bytes of SQL, so pass long text
-  as a value and split big inserts. One request, the SQL plus its values, must
-  be at most 1,000,000 bytes, or the Worker refuses it with a `D1Error` whose
-  `status` is 413.
+  as a value and split big inserts. One request is sent as JSON, and the whole
+  body, the SQL and its values plus field names, quotes and escapes, must be at
+  most 1,000,000 bytes, or the Worker refuses it with a `D1Error` whose
+  `status` is 413. So keep the SQL plus its values well under that.
 - **Every call is a network round trip**, so fetch what a page needs in as few
   calls as you can. Pages that read the database render on every request; if
   a public page needs caching, ask Juan. Before a pull request, check that your
@@ -915,6 +940,10 @@ generic failure. `putMedia` throws a `MediaError` with the `status`:
 `docs/ENDPOINTS.md` has the details. To show how full storage is, for example
 on the dashboard, use `getStorageUsage()` from `app/lib/usage.ts`; it reports
 bytes and limits for both the database and storage, and `r2.uploadsBlocked`.
+It throws a `UsageError` on failure, with the HTTP `status` when the Worker
+answered, such as `503` (`usage_unavailable`) while migration `0004` is missing
+(§2.5). Uncaught, it replaces the whole page with an error, so catch it and
+show the page without the numbers.
 
 ### 4.1 Saving a file
 
@@ -1098,6 +1127,12 @@ the reference back to the media id (the avatar, a kept event's image,
 `content_block`, `site_link`), or inserting the `carousel_slide` or
 `menu_document` row again from values you read before deleting it.
 
+Refuse the undo once the deletion is 24 hours old. After that the sweeper may
+already have removed the file, and the undo batch still succeeds, bringing back
+rows whose file is gone. If
+`SELECT deleted_at FROM pending_r2_deletion WHERE r2_bucket = ?1 AND r2_key = ?2 ORDER BY queued_at DESC, id LIMIT 1`
+returns a timestamp, the file is already gone.
+
 §2.5 shows how to run the sweeper locally, including on rows your own code
 queued.
 
@@ -1110,7 +1145,8 @@ queued.
 shown. After Google, NextAuth admits the person only if Google has verified
 their email and it matches a live `admin_user` row with status `active` or
 `invited`; everyone else sees "This Google account does not have admin
-access". If the database can't be reached, sign-in stops with "We could not
+access". If the database lookup fails, for example because the Worker can't
+be reached or refuses the app's `PROXY_TOKEN`, sign-in stops with "We could not
 verify your access" instead (§2.3). The session is an encrypted cookie that lasts 8 hours; the database
 holds no sessions. After sign-in the admin lands on `/admin`, and signs out
 from the admin navigation.
@@ -1123,9 +1159,9 @@ next request, even though their cookie is still valid.
 
 | From | Export | Use it in | What it does |
 |---|---|---|---|
-| `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in), `/login?error=AccessDenied` (not enough access) or `/login?error=ServiceUnavailable` (the database couldn't be reached) |
+| `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in), `/login?error=AccessDenied` (not enough access) or `/login?error=ServiceUnavailable` (the database lookup failed) |
 | | `requireAdminApi(request, minRole = 3)` | Route handlers | Returns `{ ok: true, admin }`, or `{ ok: false, response }` with a ready 401, 403 or 503 |
-| | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. With a session, it throws if the database can't be reached; with no session it returns `null` without asking the database |
+| | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. With a session, it throws a `D1Error` if the database lookup fails; with no session it returns `null` without asking the database |
 | | `Admin` | | `{ id, username, role_id, can_invite_users }` |
 | `app/lib/admin-whitelist.ts` | `normalizeEmail(email)` | Anything that writes `admin_user.email_normalized` | Trims and lowercases, exactly as sign-in does |
 | | `findAuthorizedAdmin(email)`, `AdminRole` | Rarely needed directly | The sign-in lookup |
@@ -1201,8 +1237,10 @@ refuse to delete or demote the Owner.
 reset email. The "Forgot password?" link on `/login` is a placeholder. An admin
 who loses their Google account is removed and added again under their new
 address. Once Settings saves admins, adding them again sends a new invite.
-Until then, on your machine, use `npm run db:seed:local -- <new address>`,
-which sends no email.
+Until then, on your machine, use
+`npm run db:seed:local -- <new address> --role <their role>`, which sends no
+email. Only one Owner is allowed, so to give the new address `--role 1`, reset
+your database first (§2.4).
 
 ---
 
@@ -1217,7 +1255,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 |---|---|---|---|
 | `admin_user` | admin accounts | `npm run db:seed:local` today; the Settings handlers once built | sign-in, `requireAdminPage`, `requireAdminApi` |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed; the switch has a setter with no caller yet | `/contact` and its action, which read the switch only |
-| `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits. Each message is also emailed to the owner; no inbox page yet |
+| `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
 | `media_asset` | one row per stored file | the PDF menu upload | `/api/menu/pdf` |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |
 | `pending_r2_deletion` | files waiting to be removed | delete handlers (none yet, §4.2) | the Worker's hourly sweeper, which marks rows done |
@@ -1325,19 +1363,41 @@ its own `CHECK`, as `0003` does, and every existing row must pass it). SQLite
 can't add a column whose default is an expression, such as the `strftime(...)`
 timestamps in `0001`, or a `UNIQUE` column. Add those as nullable columns that
 your code fills in, with a separate `CREATE UNIQUE INDEX` for uniqueness.
+Except for `UNIQUE`, SQLite refuses these, a `NOT NULL` column without a
+default, and a `CHECK` the default fails only when the table already has rows.
+Most tables are empty on your machine, so such a migration can pass steps 2
+and 3 and then fail in production. Before step 2, put at least one row in each
+table your migration changes.
 
 Removing a column needs **two** pull requests merged separately: first the
 code that stops using the column, then the migration, because migrations are
-applied before the new code goes live. Don't rename a column: add the new one
-and copy the old values into it in one migration, switch the code to it in the
-same pull request, and remove the old column later as above.
+applied before the new code goes live. If an index or a trigger names the
+column, including the `AFTER UPDATE OF` lists of the `_touch` triggers, the
+migration must drop it first and create it again without that column, or
+SQLite refuses with `error in index ... after drop column` or
+`error in trigger ... after drop column`. A primary key or `UNIQUE` column
+can't be dropped without rebuilding the table. A `CHECK` on the column itself
+is removed with it.
 
-Adding a foreign key to an existing column means rebuilding the whole table,
-and so does making it `NOT NULL` or adding a `CHECK`, except on newer SQLite.
-Your local Worker's SQLite is new enough to do those two with `ALTER TABLE`,
-but nobody has checked that the real D1 is, so passing locally proves nothing
-there. For `NOT NULL`, first merge code that always fills the column. Raise any
-of these in the channel before you start.
+Don't rename a column. If you must, raise it in the channel first, because it
+takes three pull requests: the first adds the new column, copies the old values
+into it, and changes the code to read the new column and write both; the
+second stops the code using the old column, with a migration that copies the
+values again, for the rows the old code wrote while the first one was
+deploying; the third removes the old column as above. If the old column is
+`NOT NULL` with no `DEFAULT`, the code can't stop writing it without
+rebuilding the table.
+
+Adding a foreign key or a `CHECK` to an existing column, or making it
+`NOT NULL`, means rebuilding the whole table. Newer SQLite can add a `CHECK` or
+`NOT NULL` with `ALTER TABLE`, but your local Worker refuses both with
+`not authorized to use function: sqlite_fail`, and nobody has checked the real
+D1, so plan on the rebuild. For `NOT NULL`, first merge code that always fills
+the column. Rows written before it went live are still `NULL`, so the rebuild
+migration must fill them first
+(`UPDATE <table> SET <column> = ... WHERE <column> IS NULL`), or copying them
+into the new table fails with `NOT NULL constraint failed`. Raise any rebuild
+in the channel before you start.
 
 ---
 
@@ -1368,11 +1428,11 @@ While that is pending:
 
 ### 8.1 Settings for Vercel
 
-Save each variable marked Secret in the Notes column as a secret in Vercel
-(Vercel's Secret type, called Sensitive on older screens), which hides its
-value once saved. Vercel allows that only for Production and Preview, and a
-variable already saved as plain can't be switched: delete it and add it again.
-Never prefix a secret with `NEXT_PUBLIC_`. Vercel applies a variable only to
+Save each variable marked Secret in the Notes column as Vercel's Secret type
+(the Sensitive switch on older screens), which hides its value once saved. Set
+it for Production and Preview as the table shows. If Vercel won't let you
+change a variable you already saved as Config (plain) into a Secret, delete it
+and add it again. Never prefix a secret with `NEXT_PUBLIC_`. Vercel applies a variable only to
 deployments made after you save it, so redeploy after adding or changing any
 of these. That includes the `NEXT_PUBLIC_` ones, which are built into the
 pages.
@@ -1448,9 +1508,11 @@ to be on Cloudflare.
    one "Not junk", and tell new admins to check their spam folder for the
    invite. A domain fixes this for good.
 8. Once the site is live, send one message through the contact form and check
-   that it reaches `CONTACT_NOTIFY_TO` (look in junk too). If it doesn't, look
-   in the Vercel logs for `Brevo refused the email`. If that line says the
-   account is not yet activated, the client asks Brevo to activate
+   that it reaches `CONTACT_NOTIFY_TO` (look in junk too). If it doesn't, check
+   that `BREVO_SANDBOX` is not set, then search the Vercel logs for
+   `notification email failed`, `CONTACT_NOTIFY_TO is not set` and
+   `[email] Not sent`. If the failed line says `Brevo refused the email` and
+   that the account is not yet activated, the client asks Brevo to activate
    transactional email in a support ticket from inside Brevo.
 
 A failed email never loses a contact message: it is saved before the email is
@@ -1467,9 +1529,13 @@ of the same 300 a day.
 
 - **`business_hours.day_of_week` is 0 = Monday.** JavaScript's `getDay()` is
   0 = Sunday, and so is the hours list on `/admin/website-content`, which
-  starts with Sunday. Convert both with `(day + 6) % 7`; used directly, a
-  Saturday reads Sunday's hours. Work out today's day in the shop's time zone
-  (`business_profile.timezone`), not the server's, which is UTC on Vercel.
+  starts with Sunday. Convert either one to `day_of_week` with `(day + 6) % 7`,
+  and back with `(day_of_week + 1) % 7`, for example to fill that list from the
+  table. Used directly, a Saturday reads Sunday's hours. Work out today's day
+  in the shop's time zone (`business_profile.timezone`), not the server's,
+  which is UTC on Vercel. `getDay()` always uses the server's, so use
+  `["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone }).format(new Date()))`,
+  which gives the same number in that zone.
 - **Compare timestamps only in the same format.** Comparing a column against
   `datetime('now', …)` compares `'2026-09-08T…'` with `'2026-09-08 …'` as
   text and silently gives the wrong answer. Use
@@ -1488,11 +1554,12 @@ of the same 300 a day.
   pages. Guard only the writes.
 - **Use `http://localhost:3000`, never `127.0.0.1:3000` or the network
   address.** In development Next.js lets only `localhost` open its live-reload
-  connection, so on any other address the page loads but nothing on it
-  responds: the Google button does nothing and the contact form's bot check
-  never appears. The terminal prints `Blocked cross-origin request to Next.js
-  dev resource /_next/hmr`. Your sign-in cookie also belongs to `localhost`
-  only.
+  connection, so on any other address the page's scripts never start. Links
+  still work, but the Google button does nothing, the contact form's bot check
+  never appears, and Submit answers "Please wait for the security check...".
+  The first time you open one of those addresses after starting the app, the
+  terminal prints `Blocked cross-origin request to Next.js dev resource
+  /_next/hmr`. Your sign-in cookie also belongs to `localhost` only.
 - **Renaming a gallery image means recomputing `name_sort_key`.**
 - **Tag names are unique ignoring case** only because `name_normalized` is
   written lowercased (§3.1). Add a tag with
