@@ -19,7 +19,7 @@ export async function isContactFormEnabled(): Promise<boolean> {
   return row ? row.contact_form_enabled === 1 : true;
 }
 
-/** Call only after checking getAdmin(2). */
+/** Call only after checking requireAdminApi(request, 2) or requireAdminPage(2). */
 export async function setContactFormEnabled(enabled: boolean, adminId: string): Promise<void> {
   const result = await prepare(
     `UPDATE business_profile
