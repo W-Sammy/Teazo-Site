@@ -187,7 +187,12 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
 
     let obj: R2Object;
     try {
-      obj = await env.MEDIA.put(key, request.body, { httpMetadata: { contentType: type } });
+      // Standard, named explicitly: Infrequent Access has no free tier at all,
+      // and a changed bucket default must not move new files into it.
+      obj = await env.MEDIA.put(key, request.body, {
+        httpMetadata: { contentType: type },
+        storageClass: "Standard",
+      });
     } catch (err) {
       // The ledger already counts this upload. Make it match what R2 holds.
       await settleFailedPut(env, key).catch(() => undefined);
@@ -220,9 +225,10 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
  * free allowance, and Cloudflare offers no spending cap. So this Worker keeps
  * each billable R2 dimension under its free amount itself:
  *
- *   Storage   10 GB free. Uploads are refused once stored files would pass
- *             R2_STORAGE_CAP_BYTES, checked against the r2_object ledger
- *             (migration 0004) rather than by listing the bucket.
+ *   Storage   10 GB-month free, Standard class only. Uploads are refused once
+ *             stored files would pass R2_STORAGE_CAP_BYTES, checked against
+ *             the r2_object ledger (migration 0004) rather than by listing
+ *             the bucket. Every upload asks for Standard explicitly.
  *   Class A   1M a month free (uploads, listings). At most
  *             R2_CLASS_A_DAILY_BUDGET a day, so no 31-day window can pass the
  *             free amount, whatever day the billing period starts on.
@@ -246,7 +252,19 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
  * Every check fails closed. If the limits are not configured, or D1 cannot be
  * reached to check them, uploads are refused.
  */
-const R2_ACCOUNT_STORAGE_CAP = 9 * 1000 * 1000 * 1000; // 90% of the free 10 GB
+/**
+ * Why 9.6 GB and not the full 10:
+ *   - Cloudflare's billing docs never say how many bytes a GB is. Its other R2
+ *     docs use 10^9, the smaller reading, so 10 GB is taken as 10,000,000,000.
+ *   - A GB-month averages each day's peak over a billing period the docs call
+ *     30 days, but monthly periods can run 31. Dividing 31 days by 30 would
+ *     count a steady 10 GB as 10.33, so the true ceiling is 10 GB x 30/31,
+ *     about 9.68 GB.
+ *   - Any overage is rounded up to a whole billed GB-month, so there is no
+ *     "slightly over". The rest of the margin covers key names and metadata,
+ *     which the docs neither include in nor exclude from billed storage.
+ */
+const R2_ACCOUNT_STORAGE_CAP = 9_600_000_000;
 const R2_ACCOUNT_CLASS_A_DAILY = 30_000; // x 31 days = 930,000, under the free 1,000,000
 
 /** D1's own limit, shown on the dashboard. At it, writes fail; the free plan never bills. */

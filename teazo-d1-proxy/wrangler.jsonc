@@ -26,12 +26,13 @@
   //
   // The two R2_ limits are this deployment's share of R2's free allowance, which
   // belongs to the whole ACCOUNT. Production and preview share it, so their
-  // values must add up to no more than 9 GB (9000000000) and 30000 a day. The
-  // Worker cannot see the other deployment's values, so nothing checks the sum
-  // for you. See BILLING HARD STOPS in src/index.ts.
+  // values must add up to no more than 9.6 GB (9600000000) and 30000 a day.
+  // Production gets 9.5 GB of it. The Worker cannot see the other deployment's
+  // values, so nothing checks the sum for you. See BILLING HARD STOPS in
+  // src/index.ts for why the total is 9.6 GB and not 10.
   "vars": {
     "MEDIA_BUCKET_NAME": "teazo-media",
-    "R2_STORAGE_CAP_BYTES": "8000000000",
+    "R2_STORAGE_CAP_BYTES": "9500000000",
     "R2_CLASS_A_DAILY_BUDGET": "25000"
   },
 
@@ -53,7 +54,7 @@
       // vars are not inherited, so every one is repeated here.
       "vars": {
         "MEDIA_BUCKET_NAME": "teazo-media-preview",
-        "R2_STORAGE_CAP_BYTES": "1000000000",
+        "R2_STORAGE_CAP_BYTES": "100000000",
         "R2_CLASS_A_DAILY_BUDGET": "5000"
       },
       "d1_databases": [
