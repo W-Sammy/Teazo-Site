@@ -38,7 +38,9 @@ export default function WebsiteContentClient({
 }) {
   const {
     content,
+    saveStatus,
     errorMessage,
+    flushPatch,
     updateLogo,
     updateStory,
     updateAddress,
@@ -49,6 +51,7 @@ export default function WebsiteContentClient({
     addHoliday,
     updateHoliday,
     removeHoliday,
+    updateContactFormEnabled,
   } = useWebsiteContent(initialContent);
 
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
@@ -96,13 +99,48 @@ export default function WebsiteContentClient({
         </div>
       )}
 
-      <div className="mb-5 min-w-0 sm:mb-7">
-        <h1 className="break-words text-2xl font-semibold leading-tight text-[#2b211d] sm:text-[26px]">
-          Website Content
-        </h1>
-        <p className="mt-2 text-xs leading-relaxed text-gray-400">
-          Choose a section to open and edit its settings.
-        </p>
+      <div className="mb-5 flex min-w-0 flex-col gap-2 sm:mb-7 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="break-words text-2xl font-semibold leading-tight text-[#2b211d] sm:text-[26px]">
+              Website Content
+            </h1>
+            {saveStatus === "saving" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 animate-pulse"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Saving...
+              </span>
+            )}
+            {saveStatus === "saved" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-opacity duration-300"
+              >
+                <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                All changes saved
+              </span>
+            )}
+            {saveStatus === "error" && (
+              <span
+                role="alert"
+                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                Save failed
+              </span>
+            )}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-gray-400">
+            Choose a section to open and edit its settings.
+          </p>
+        </div>
       </div>
 
       {/* Only place the menu beside the cards when there is enough room. */}
@@ -169,6 +207,7 @@ export default function WebsiteContentClient({
             onToggle={() => selectSection("story")}
             setRef={setSectionRef("story")}
             onStoryChange={updateStory}
+            onBlur={() => flushPatch()}
           />
 
           <SocialSection
@@ -179,14 +218,18 @@ export default function WebsiteContentClient({
             onUpdateLink={updateSocialLink}
             onAddLink={addSocialLink}
             onRemoveLink={removeSocialLink}
+            onBlur={() => flushPatch()}
           />
 
           <ContactSection
             address={content.address}
+            contactFormEnabled={content.contactFormEnabled}
             isOpen={openSection === "contact"}
             onToggle={() => selectSection("contact")}
             setRef={setSectionRef("contact")}
             onUpdateAddress={updateAddress}
+            onUpdateContactFormEnabled={updateContactFormEnabled}
+            onBlur={() => flushPatch()}
           />
 
           <HoursSection
@@ -206,6 +249,7 @@ export default function WebsiteContentClient({
             onUpdateHoliday={updateHoliday}
             onRemoveHoliday={removeHoliday}
             onAddHoliday={addHoliday}
+            onBlur={() => flushPatch()}
           />
         </div>
       </div>

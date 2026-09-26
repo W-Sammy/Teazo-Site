@@ -19,7 +19,7 @@ INSERT INTO role (id, key, label, rank) VALUES
 -- Business profile — app/(site)/contact/contact-content.ts:22-32
 -- ---------------------------------------------------------------------------
 INSERT INTO business_profile (
-  id, business_name, street_address, locality, phone, email, map_query
+  id, business_name, street_address, locality, phone, email, map_query, contact_form_enabled
 ) VALUES (
   1,
   'TEAZO',
@@ -27,7 +27,8 @@ INSERT INTO business_profile (
   'San Francisco, CA 94116-2423',
   '+1 (415) 748-7398',
   'teazosf@hotmail.com',
-  '1050 Taraval St, San Francisco, CA 94116'
+  '1050 Taraval St, San Francisco, CA 94116',
+  1
 );
 
 -- ---------------------------------------------------------------------------
@@ -52,9 +53,8 @@ INSERT INTO business_hours (day_of_week, display_text, opens_at, closes_at) VALU
 -- ---------------------------------------------------------------------------
 INSERT INTO site_link (key, link_group, label, url, aria_label, sort_order) VALUES
   ('facebook',  'social', 'Facebook',  'https://www.facebook.com/people/TEAZO/100063111166083', 'TEAZO on Facebook',  1),
-  ('email',     'social', 'Email',     'mailto:teazosf@hotmail.com',                            'Email TEAZO',        2),
-  ('instagram', 'social', 'Instagram', 'https://www.instagram.com/teazosf/',                    'TEAZO on Instagram', 3),
-  ('yelp',      'social', 'Yelp',      'https://www.yelp.com/biz/teazo-san-francisco',          'TEAZO on Yelp',      4),
+  ('instagram', 'social', 'Instagram', 'https://www.instagram.com/teazosf/',                    'TEAZO on Instagram', 2),
+  ('yelp',      'social', 'Yelp',      'https://www.yelp.com/biz/teazo-san-francisco',          'TEAZO on Yelp',      3),
   ('ubereats',  'delivery', 'UBER EATS', 'https://www.ubereats.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg?srsltid=AfmBOoranl_YtSY-qug2w6ZzmFcwawnUN1t6RJMvTnqq32BwwVXubRgr', NULL, 1),
   ('doordash',  'delivery', 'DOORDASH',  'https://www.doordash.com/en/store/teazo-san-francisco-849601/1213761/?srsltid=AfmBOortGz8HB9dVSbrcnGxXWHRoalBu_ObBQ_Fv-r0SRKiFrYvWQawu', NULL, 2),
   ('postmates', 'delivery', 'POSTMATES', 'https://postmates.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg', NULL, 3);
@@ -65,6 +65,8 @@ INSERT INTO site_link (key, link_group, label, url, aria_label, sort_order) VALU
 --   static menu helper app/(site)/static-menu/static-menu-content.tsx:57-59
 -- ---------------------------------------------------------------------------
 INSERT INTO content_block (key, page_key, slot_key, block_type, value) VALUES
+  ('home.story',              'home',        'story',          'text', 'TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!'),
+  ('site.logo',               'site',        'logo',           'text', '/TEAZO_logo.png'),
   ('delivery.heading_line1',  'delivery',    'heading_line1',  'text', 'HUNGRY AT HOME?'),
   ('delivery.heading_line2',  'delivery',    'heading_line2',  'text', 'WE DELIVER.'),
   ('static_menu.helper_text', 'static_menu', 'helper_text',    'text', 'Use the button above to open our menu.'),

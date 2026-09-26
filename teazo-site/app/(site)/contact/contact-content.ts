@@ -1,3 +1,5 @@
+import { getContactContent as getLiveContactContent } from "@/app/lib/website-content";
+
 export type ContactHour = {
   day: string;
   hours: string;
@@ -15,6 +17,7 @@ export type ContactContent = {
     mapQuery: string;
   };
   hours: ContactHour[];
+  contactFormEnabled: boolean;
 };
 
 // Keep the page content in one route-local module so it can later be swapped
@@ -39,7 +42,21 @@ export const contactContent: ContactContent = {
     { day: "Saturday", hours: "11:00 AM - 10:00 PM" },
     { day: "Sunday", hours: "11:00 AM - 8:00 PM" },
   ],
+  contactFormEnabled: true,
 };
+
+/**
+ * Loads contact content including location, formatted hours, and contactFormEnabled setting.
+ * Allows the customer-facing Contact page to retrieve live configuration from D1/admin.
+ */
+export async function getContactContent(): Promise<ContactContent> {
+  try {
+    const liveContent = await getLiveContactContent();
+    return liveContent;
+  } catch {
+    return contactContent;
+  }
+}
 
 // Google Maps embed URL for the iframe on the left side of the contact card.
 export const mapEmbedSrc = `https://www.google.com/maps?q=${encodeURIComponent(

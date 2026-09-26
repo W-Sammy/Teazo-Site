@@ -27,6 +27,7 @@ export default function HolidaysSection({
   onUpdateHoliday,
   onRemoveHoliday,
   onAddHoliday,
+  onBlur,
 }: {
   holidays: Holiday[];
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function HolidaysSection({
   onUpdateHoliday: (id: string, patch: Partial<Holiday>) => void;
   onRemoveHoliday: (id: string) => void;
   onAddHoliday: () => void;
+  onBlur?: () => void;
 }) {
   const validDateCounts = countValidDates(holidays);
 
@@ -49,6 +51,7 @@ export default function HolidaysSection({
             isDuplicateDate={(validDateCounts.get(holiday.date) ?? 0) > 1}
             onChange={(patch) => onUpdateHoliday(holiday.id, patch)}
             onRemove={() => onRemoveHoliday(holiday.id)}
+            onBlur={onBlur}
           />
         ))}
       </div>

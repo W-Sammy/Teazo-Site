@@ -17,6 +17,7 @@ export default function SocialSection({
   onUpdateLink,
   onAddLink,
   onRemoveLink,
+  onBlur,
 }: {
   socialLinks: SocialLink[];
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function SocialSection({
   onUpdateLink: (id: string, patch: Partial<SocialLink>) => void;
   onAddLink: () => void;
   onRemoveLink: (id: string) => void;
+  onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState<Record<string, FieldTouch>>({});
   const [iconErrors, setIconErrors] = useState<Record<string, string>>({});
@@ -34,6 +36,7 @@ export default function SocialSection({
       ...prev,
       [id]: { ...prev[id], [field]: true },
     }));
+    onBlur?.();
   }
 
   // label/url are only required of each other, not independently, so a fully blank
