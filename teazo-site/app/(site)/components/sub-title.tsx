@@ -16,12 +16,12 @@ export default function Subtitle({ text }: Editables) {
         <div className="relative inline-block">
             {/* pink scribble */}
             <Image
-                src="/pink_scribble.png"
-                alt="Pink Silhouette of a Chalk Scribble"
+                src="/pink_scribble.svg"
+                alt="Pink Silhouette of a Drink Splash"
                 aria-hidden="true"
-                width={582}
-                height={104}
-                className="w-[355px] h-[63px] md:w-[582px] md:h-[104px]"
+                width={750}
+                height={134}
+                className="w-[355px] h-[63px] md:w-[750px] md:h-[134px]"
                 priority
             />
 
