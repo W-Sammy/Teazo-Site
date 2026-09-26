@@ -5,62 +5,40 @@ import {
   useState,
 } from "react";
 
-import type {
-  Admin,
-  AdminRole,
-  NewAdminInput,
-} from "@/app/types/admin-perms";
-import {
-  OWNER_ROLE,
-  READ_ROLE,
-  WRITE_ROLE,
-} from "@/app/types/admin-perms";
+import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
+import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
-
-/* Temporary front-end data. */
-const initialAdmins: Admin[] = [
-  {
-    id: 1,
-    username: "You",
-    email: "temp@teazo.com",
-    role: OWNER_ROLE,
-    canInviteUsers: true,
-  },
-  {
-    id: 2,
-    username: "Person1",
-    email: "Person1@teazo.com",
-    role: WRITE_ROLE,
-    canInviteUsers: false,
-  },
-  {
-    id: 3,
-    username: "Person2",
-    email: "Person2@teazo.com",
-    role: READ_ROLE,
-    canInviteUsers: false,
-  },
-];
 
 // Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
   // Mount the Add New User modal only while it is needed.
   const [showModal, setShowModal] =
     useState(false);
+  const [modalError, setModalError] =
+    useState("");
+  const [successMessage, setSuccessMessage] =
+    useState("");
+  const [adminToDelete, setAdminToDelete] =
+    useState<Admin | null>(null);
 
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
+    canEdit,
     errorMessage,
     clearError,
-    setError,
     addAdmin,
+    loadAdmins,
     deleteAdmin,
     changeRole,
     toggleInvitePermission,
-  } = useAdmins(initialAdmins);
+  } = useAdmins();
+
+  useEffect(() => {
+    void loadAdmins();
+  }, [loadAdmins]);
 
   // Automatically clear a displayed error after 3.5 seconds.
   useEffect(() => {
@@ -79,28 +57,44 @@ export default function AdminsTable() {
     };
   }, [clearError, errorMessage]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timeout = window.setTimeout(
+      () => setSuccessMessage(""),
+      3500,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [successMessage]);
+
   // Keep the form open unless the hook reports that adding the admin succeeded.
-  function handleAddAdmin(
+  async function handleAddAdmin(
     input: NewAdminInput,
   ) {
-    const added = addAdmin(input);
+    const result = await addAdmin(input);
 
-    if (added) {
+    if (result.success) {
+      setModalError("");
       setShowModal(false);
+      setSuccessMessage("Invitation added successfully.");
+    } else {
+      setModalError(result.error);
     }
   }
 
-  // Ask for confirmation before forwarding a delete request to the hook.
+  // Open the shared-style confirmation dialog before forwarding a delete request.
   function handleDeleteAdmin(
     admin: Admin,
   ) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${admin.username}?`,
-    );
+    setAdminToDelete(admin);
+  }
 
-    if (confirmed) {
-      deleteAdmin(admin);
-    }
+  async function confirmDeleteAdmin() {
+    if (!adminToDelete) return;
+
+    const deleted = await deleteAdmin(adminToDelete);
+    if (deleted) setAdminToDelete(null);
   }
 
   return (
@@ -112,6 +106,16 @@ export default function AdminsTable() {
           className="fixed left-3 right-3 top-3 z-[70] rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
         >
           {errorMessage}
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed right-3 top-3 z-[70] rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 shadow-lg sm:right-5 sm:top-5"
+        >
+          {successMessage}
         </div>
       )}
 
@@ -132,7 +136,7 @@ export default function AdminsTable() {
           </div>
 
           <div className="text-sm font-semibold text-gray-500">
-            Invite users
+            Manage Admins
           </div>
 
           {/* Reserve the final column for each row's action menu. */}
@@ -146,6 +150,7 @@ export default function AdminsTable() {
             <AdminRow
               key={admin.id}
               admin={admin}
+              canEdit={canEdit}
               onRoleChange={(
                 role: AdminRole,
               ) =>
@@ -167,12 +172,12 @@ export default function AdminsTable() {
         </div>
 
         {/* Open the creation modal without changing the current admin list. */}
-        <button
+        {canEdit && <button
           type="button"
           onClick={() =>
             setShowModal(true)
           }
-          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-pink-300 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-pink-400 sm:w-auto"
+          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
         >
           New User
           <span
@@ -181,7 +186,7 @@ export default function AdminsTable() {
           >
             +
           </span>
-        </button>
+        </button>}
       </div>
 
       {/*
@@ -191,12 +196,20 @@ export default function AdminsTable() {
       {showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
-          onCancel={() =>
-            setShowModal(false)
-          }
-          onError={setError}
+          onCancel={() => {
+            setModalError("");
+            setShowModal(false);
+          }}
+          onError={setModalError}
+          errorMessage={modalError}
         />
       )}
+
+      <DeleteAdminDialog
+        admin={adminToDelete}
+        onCancel={() => setAdminToDelete(null)}
+        onConfirm={confirmDeleteAdmin}
+      />
     </>
   );
 }

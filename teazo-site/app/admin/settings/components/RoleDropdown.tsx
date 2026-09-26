@@ -108,9 +108,9 @@ export function RoleDropdown({
         }
         className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm transition-colors md:w-auto md:justify-start md:border-0 md:bg-transparent md:p-0 ${
           open
-            ? "text-pink-400"
+            ? "text-[#b98555]"
             : "text-gray-500"
-        } group-hover/row:text-pink-300`}
+        } group-hover/row:text-[#b98555]`}
         aria-haspopup="menu"
         aria-expanded={open}
       >

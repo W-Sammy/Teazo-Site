@@ -25,12 +25,14 @@ type AddAdminModalProps = {
   onError: (
     message: string,
   ) => void;
+  errorMessage: string;
 };
 
 export function AddAdminModal({
   onAdd,
   onCancel,
   onError,
+  errorMessage,
 }: AddAdminModalProps) {
   // Keep form values local until submission; default to read access without invitations.
   const [username, setUsername] =
@@ -43,8 +45,8 @@ export function AddAdminModal({
     useState<AdminRole>(READ_ROLE);
 
   const [
-    canInviteUsers,
-    setCanInviteUsers,
+    canManageAdmins,
+    setCanManageAdmins,
   ] = useState(false);
 
   // Pass the entered values to the parent; this component does not create the user itself.
@@ -57,7 +59,7 @@ export function AddAdminModal({
       username,
       email,
       role,
-      canInviteUsers,
+      canManageAdmins,
     });
   }
 
@@ -113,6 +115,15 @@ export function AddAdminModal({
               Add an administrator to
               your website.
             </p>
+
+            {errorMessage && (
+              <p
+                role="alert"
+                className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                {errorMessage}
+              </p>
+            )}
           </div>
 
           {/* Controlled identity fields are passed to onAdd as entered. */}
@@ -136,7 +147,7 @@ export function AddAdminModal({
               }
               placeholder="Username"
               autoComplete="username"
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
@@ -160,7 +171,7 @@ export function AddAdminModal({
               }
               placeholder="email@example.com"
               autoComplete="email"
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
@@ -190,12 +201,12 @@ export function AddAdminModal({
                   nextRole !==
                   WRITE_ROLE
                 ) {
-                  setCanInviteUsers(
+                  setCanManageAdmins(
                     false,
                   );
                 }
               }}
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-base text-gray-600 outline-none focus:border-pink-300 sm:text-sm"
+              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-base text-gray-600 outline-none focus:border-[#dbb082] sm:text-sm"
             >
               <option value={READ_ROLE}>
                 {
@@ -218,7 +229,7 @@ export function AddAdminModal({
           <div className="mb-6 flex min-w-0 flex-col items-start gap-3 rounded-md border border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="break-words text-sm font-medium text-gray-600">
-                Allow user invitations
+                Manage Admins
               </p>
 
               <p className="mt-0.5 break-words text-xs text-gray-400">
@@ -228,7 +239,7 @@ export function AddAdminModal({
 
             {/* Guard the invitation toggle here as well as marking it unavailable. */}
             <InviteSwitch
-              checked={canInviteUsers}
+              checked={canManageAdmins}
               unavailable={
                 role !== WRITE_ROLE
               }
@@ -243,7 +254,7 @@ export function AddAdminModal({
                   return;
                 }
 
-                setCanInviteUsers(
+                setCanManageAdmins(
                   (current) =>
                     !current,
                 );
@@ -263,7 +274,7 @@ export function AddAdminModal({
 
             <button
               type="submit"
-              className="w-full cursor-pointer rounded-md bg-pink-300 px-5 py-2 text-sm font-semibold text-white hover:bg-pink-400 sm:w-auto"
+              className="w-full cursor-pointer rounded-md bg-[#dbb082] px-5 py-2 text-sm font-semibold text-white hover:bg-[#c99a6e] sm:w-auto"
             >
               Add User
             </button>

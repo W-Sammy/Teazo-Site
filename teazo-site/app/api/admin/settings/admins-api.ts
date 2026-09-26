@@ -1,30 +1,49 @@
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 
-// Replace these with your authenticated backend requests when gucci
-export async function fetchAdmins(): Promise<Admin[]> {
-  throw new Error("fetchAdmins is not connected to the backend yet.");
+export type AdminsResponse = {
+  admins: Admin[];
+  canEdit: boolean;
+};
+
+async function request<T>(input: RequestInfo, init?: RequestInit, unwrap = true): Promise<T> {
+  const response = await fetch(input, {
+    ...init,
+    headers: { "content-type": "application/json", ...init?.headers },
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    admin?: T;
+    admins?: T;
+  };
+  if (!response.ok) throw new Error(body.error || "The settings request failed.");
+  return (unwrap ? (body.admin ?? body.admins ?? body) : body) as T;
 }
 
-export async function createAdmin(_input: NewAdminInput): Promise<Admin> {
-  throw new Error("createAdmin is not connected to the backend yet.");
+export function fetchAdmins(): Promise<AdminsResponse> {
+  return request<AdminsResponse>("/api/admin/settings/admins", { cache: "no-store" }, false);
 }
 
-export async function updateAdminRole(
-  _id: number,
-  _role: AdminRole
-): Promise<Admin> {
-  throw new Error("updateAdminRole is not connected to the backend yet.");
+export function createAdmin(input: NewAdminInput): Promise<Admin> {
+  return request<Admin>("/api/admin/settings/admins", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
-export async function updateInvitePermission(
-  _id: number,
-  _canInviteUsers: boolean
-): Promise<Admin> {
-  throw new Error(
-    "updateInvitePermission is not connected to the backend yet."
-  );
+export function updateAdminRole(id: string, role: AdminRole): Promise<Admin> {
+  return request<Admin>(`/api/admin/settings/admins/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
 }
 
-export async function removeAdmin(_id: number): Promise<void> {
-  throw new Error("removeAdmin is not connected to the backend yet.");
+export function updateManageAdminsPermission(id: string, canManageAdmins: boolean): Promise<Admin> {
+  return request<Admin>(`/api/admin/settings/admins/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ canManageAdmins }),
+  });
+}
+
+export async function removeAdmin(id: string): Promise<void> {
+  await request<unknown>(`/api/admin/settings/admins/${id}`, { method: "DELETE" });
 }

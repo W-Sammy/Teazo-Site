@@ -14,6 +14,7 @@ import { RoleDropdown } from "./RoleDropdown";
 // Display one admin and forward requested changes to the parent component.
 type AdminRowProps = {
   admin: Admin;
+  canEdit: boolean;
   onRoleChange: (
     role: AdminRole,
   ) => void;
@@ -23,6 +24,7 @@ type AdminRowProps = {
 
 export function AdminRow({
   admin,
+  canEdit,
   onRoleChange,
   onToggleInvite,
   onDelete,
@@ -32,7 +34,7 @@ export function AdminRow({
     admin.role === OWNER_ROLE;
 
   // Use the listed admin's role to determine the invitation control's availability.
-  const canEditInvites =
+  const canManageAdmins =
     admin.role === WRITE_ROLE;
 
   // Stack fields in mobile cards and match the table's five-column grid on desktop.
@@ -47,7 +49,7 @@ export function AdminRow({
 
         {/* Allow long usernames to wrap rather than widen the card or column. */}
         <div
-          className="break-words text-sm text-gray-500 transition-colors [overflow-wrap:anywhere] group-hover/row:text-pink-300"
+          className="break-words text-sm text-gray-500 transition-colors [overflow-wrap:anywhere] group-hover/row:text-[#b98555]"
           title={admin.username}
         >
           {admin.username}
@@ -61,7 +63,7 @@ export function AdminRow({
         </span>
 
         <div
-          className="break-words text-sm text-gray-400 transition-colors [overflow-wrap:anywhere] group-hover/row:text-pink-300"
+          className="break-words text-sm text-gray-400 transition-colors [overflow-wrap:anywhere] group-hover/row:text-[#b98555]"
           title={admin.email}
         >
           {admin.email}
@@ -75,8 +77,8 @@ export function AdminRow({
         </span>
 
         {/* Show the owner's role as text; other admins receive the role dropdown. */}
-        {isOwner ? (
-          <span className="block text-sm text-gray-400 transition-colors group-hover/row:text-pink-300">
+        {isOwner || !canEdit ? (
+          <span className="block text-sm text-gray-400 transition-colors group-hover/row:text-[#b98555]">
             {
               ADMIN_ROLE_LABELS[
                 admin.role
@@ -91,10 +93,10 @@ export function AdminRow({
         )}
       </div>
 
-      {/* Invite permission */}
+      {/* Manage admins permission */}
       <div className="min-w-0">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
-          Invite users
+          Manage Admins
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -106,12 +108,11 @@ export function AdminRow({
           <InviteSwitch
             checked={
               isOwner ||
-              admin.canInviteUsers
+              admin.canManageAdmins
             }
             locked={isOwner}
             unavailable={
-              !isOwner &&
-              !canEditInvites
+              !canEdit || (!isOwner && !canManageAdmins)
             }
             onClick={onToggleInvite}
           />
@@ -119,7 +120,7 @@ export function AdminRow({
           {/* Match the text label to the switch's displayed checked state. */}
           <span className="text-xs text-gray-400">
             {isOwner ||
-            admin.canInviteUsers
+            admin.canManageAdmins
               ? "On"
               : "Off"}
           </span>
@@ -135,7 +136,7 @@ export function AdminRow({
             : "flex min-w-0 items-center justify-between gap-3 md:block"
         }
       >
-        {!isOwner && (
+        {canEdit && !isOwner && (
           <>
             <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
               Actions
