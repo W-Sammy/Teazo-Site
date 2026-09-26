@@ -89,14 +89,15 @@ export default function Home() {
                 </div>
         </section>
 
+            {/*import image carousel*/}
+                <div className="relative z-10 flex justify-center items-center px-4 py-15">
+                <ImageCarousel />
+            </div> 
+
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
             </div>
-
-            {/*import image carousel*/}
-                <div className="relative z-10 flex justify-center items-center px-4 py-75">
-                <ImageCarousel />
-            </div>       
+      
         
         {/*textbox with company message and icons*/}
         <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
