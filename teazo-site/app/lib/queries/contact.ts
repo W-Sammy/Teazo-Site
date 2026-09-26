@@ -34,6 +34,18 @@ export async function setContactFormEnabled(enabled: boolean, adminId: string): 
   }
 }
 
+/** How many messages arrived in the last hour and the last 24 hours, including any just saved. */
+export async function countRecentContactMessages(): Promise<{ lastHour: number; lastDay: number }> {
+  const row = await prepare(
+    `SELECT count(*) AS last_day,
+            coalesce(sum(created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour')), 0) AS last_hour
+       FROM contact_message
+      WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')`,
+  ).first<{ last_day: number; last_hour: number }>();
+
+  return { lastHour: row?.last_hour ?? 0, lastDay: row?.last_day ?? 0 };
+}
+
 /** Optional fields that were left blank are stored as NULL. */
 export async function insertContactMessage(input: NewContactMessage): Promise<void> {
   await prepare(

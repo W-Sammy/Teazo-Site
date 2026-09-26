@@ -108,6 +108,24 @@ npm run dev
 
 The site is at `http://localhost:3000`.
 
+**The contact form needs no extra setup.** Its bot check (Cloudflare Turnstile)
+uses Cloudflare's test keys on your machine, which always pass and show a small
+"for testing only" label. The email it sends the shop owner about each new
+message is printed in the terminal running `npm run dev` instead of being sent.
+
+To see those emails in a real inbox instead, run
+[Mailpit](https://mailpit.axllent.org/docs/install/), a free local inbox.
+Download `mailpit-windows-amd64.zip` from its
+[releases page](https://github.com/axllent/mailpit/releases), unzip it, and run:
+
+```bash
+mailpit --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025
+```
+
+Then add `MAILPIT_URL=http://localhost:8025` to `.env.local` and restart
+`npm run dev`. Emails appear at `http://localhost:8025`. Nothing ever reaches a
+real inbox from your machine unless you add a Brevo key, so don't.
+
 **If you are working on Square, the menu admin, or the events admin**, also
 add these two:
 
@@ -512,7 +530,7 @@ later migrations beside it add the rest. Open them when you need exact columns.
 | `menu_item_display` | badge, featured, hidden | `/admin/menu` | `/menu` |
 | `event` | events: name, image, start and end | `/admin/events` | public pages |
 | `event_item`, `event_category` | which Square items or categories an event covers | `/admin/events` | public pages |
-| `contact_message` | contact form messages | **the public** | an admin inbox |
+| `contact_message` | contact form messages | **the public**, after the bot check | emailed to the owner; an admin inbox later |
 
 ### Columns that look odd but matter
 
@@ -597,6 +615,56 @@ Three consequences while that is true:
 When the pipeline does land, merging becomes deploying, and the order will be
 migrations first, then the Worker, then the app. Build as though that is
 already true and nothing you write now will need reworking.
+
+### 8.1 Contact form settings for Vercel
+
+The contact form's bot check and its email to the owner need these variables
+in Vercel. Mark the secret ones as Sensitive, and never prefix them with
+`NEXT_PUBLIC_`.
+
+| Variable | Production | Preview | What it is |
+|---|---|---|---|
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | `1x00000000000000000000AA` | Turnstile's public key, used in the browser |
+| `TURNSTILE_SECRET_KEY` | the production widget's secret key | `1x0000000000000000000000000000000AA` | Checks the token on the server |
+| `BREVO_API_KEY` | the Brevo API key | leave unset | Unset means the deployment sends no email |
+| `EMAIL_FROM` | a sender address verified in Brevo | | The From address |
+| `EMAIL_FROM_NAME` | optional | | Defaults to "TEAZO website" |
+| `CONTACT_NOTIFY_TO` | the owner's inbox | | Where new messages are emailed |
+
+Previews use Cloudflare's test keys because each preview gets its own
+`*.vercel.app` address, and a widget only covers the hostnames listed on it.
+Production refuses the test keys, so a copied value can't switch the bot check
+off.
+
+**Turnstile.** On the team Cloudflare account, open Turnstile, add a widget in
+Managed mode, and list the production hostname (`teazo-site.vercel.app` for
+now, plus the shop's own domain later). It is free, and the site does not need
+to be on Cloudflare.
+
+**Brevo** (free plan: 300 emails a day, never billed while no card is added):
+
+1. The client opens the account. The free plan allows one login.
+2. Verify the sender address under Settings > Senders, using the 6-digit code
+   Brevo emails to it.
+3. Create an API key, and add it to Vercel for Production only.
+4. Turn off IP blocking for API keys: Settings > Security > Authorized IPs >
+   "Deactivate for API". Vercel has no fixed IP address, and once Brevo switches
+   blocking on after 30 days, every email would be refused. Don't authorize IPs
+   by hand, because that switches blocking on.
+5. Never add a card or buy credits. Buying credits replaces the free 300 a day.
+6. Brevo expires a key that goes unused for 90 days and emails a warning 7 days
+   before. If the form goes that long without a message, create a new key.
+7. Without the shop's own domain, Brevo rewrites the sender address, and
+   Hotmail may file the notifications as junk. Have the owner mark the first
+   one "Not junk". A domain fixes this for good.
+8. To test a key without sending anything, set `BREVO_SANDBOX=1`. Brevo checks
+   the request and delivers nothing.
+
+A failed email never loses a message: it is saved to `contact_message` before
+the email is attempted, and a failure is only logged. The owner gets at most 20
+emails an hour and 100 a day from the form, so a flood of spam can't use up
+Brevo's 300 a day. The first message over either limit sends one "alerts
+paused" email, and every message is still saved.
 
 ---
 
