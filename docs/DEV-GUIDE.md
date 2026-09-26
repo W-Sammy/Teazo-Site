@@ -17,7 +17,7 @@ Commands assume a bash shell. On Windows, use **Git Bash**, not PowerShell.
    - [2.2 Start the app](#22-start-the-app)
    - [2.3 Sign in locally](#23-sign-in-locally)
    - [2.4 Reset](#24-reset)
-   - [2.5 Set up and test the new features](#25-set-up-and-test-the-new-features): email, the bot check, the contact form, admin roles, storage limits
+   - [2.5 Set up and test the new features](#25-set-up-and-test-the-new-features): email and its limits, the bot check, the contact form, admin invites and roles, storage limits, the file sweeper
    - [2.6 Every environment variable](#26-every-environment-variable)
    - [2.7 Scripts](#27-scripts)
    - [2.8 Checking a production build locally](#28-checking-a-production-build-locally)
@@ -101,7 +101,7 @@ never need `wrangler login` for local work.
 |---|---|---|
 | 1 | The Worker, from `teazo-d1-proxy` (§2.1) | `8787` |
 | 2 | The app, from `teazo-site` (§2.2) | `3000` |
-| 3 | Mailpit, optional (§2.5) | `8025` |
+| 3 | Mailpit, optional (§2.5) | `8025` (and `1025`, which the app doesn't use) |
 | 4 | Everything else: seeding, queries, git | |
 
 The app must stay on port **3000**: Google sign-in is registered for it. If
@@ -267,8 +267,17 @@ which also migrates). Restart the Worker if `wrangler.jsonc` changed.
 
 The contact form, email, the bot check, the storage limits and the file
 sweeper were added recently. None of them needs an account or a key on your
-machine, and each one can be tried locally. Start the Worker (§2.1) and the app
-(§2.2) first.
+machine, and each one can be tried locally. Only testing admin roles needs
+sign-in from §2.3. Start the Worker (§2.1) and the app (§2.2) first.
+
+**Already set up before these features?** Your local database is missing
+migrations `0003` (the contact form switch) and `0004` (the storage record).
+From `teazo-d1-proxy`, run `npm run db:migrate:local`, then restart the Worker
+so it picks up the storage limits added to `wrangler.jsonc`. Until you do,
+Submit on `/contact` answers "Your message could not be sent right now" even
+with the Worker running, uploads get `503 limits_unavailable`, and `/usage`
+answers `usage_unavailable`. Nothing new goes in `.env.local` or `.dev.vars`.
+After later pulls, follow **After every pull** in §2.4.
 
 | Feature | What to set up | How to try it |
 |---|---|---|
@@ -277,7 +286,7 @@ machine, and each one can be tried locally. Start the Worker (§2.1) and the app
 | Contact form | Nothing | [The contact form](#the-contact-form) |
 | Limits on the owner's emails | Nothing | [The email limits](#the-email-limits) |
 | Admin invite email | Nothing. Nothing sends it until Settings saves admins | [Admin invites](#admin-invites) |
-| Admin roles | Your admin row from §2.3 | [Each admin role](#each-admin-role) |
+| Admin roles | Sign-in from §2.3: `AUTH_SECRET`, the Google id and secret from Sammy, and your admin row | [Each admin role](#each-admin-role) |
 | Storage limits and usage | Nothing | [Storage limits and usage](#storage-limits-and-usage) |
 | File sweeper | Nothing | [The file sweeper](#the-file-sweeper) |
 
@@ -325,16 +334,20 @@ free inbox that runs on your machine and never sends anything on:
      and skip step 2. `docker stop mailpit` and `docker start mailpit` stop and
      restart it.
 2. Start it in terminal 3 and leave it running:
-   `mailpit --listen 127.0.0.1:8025`. On Windows, run
-   `./mailpit.exe --listen 127.0.0.1:8025` from the unzipped folder.
+   `mailpit --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025`. On Windows, run
+   `./mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025` from the
+   unzipped folder. These addresses keep Mailpit reachable only from your own
+   machine. Without `--smtp`, it also listens for mail from your network on
+   port 1025, and Windows may ask whether to let it through the firewall.
 3. Add `MAILPIT_URL=http://127.0.0.1:8025` to `teazo-site/.env.local` and
    restart the app.
 4. Open `http://127.0.0.1:8025` and submit the contact form. The email appears
    within a few seconds, and Mailpit shows both versions of it.
 
-While `MAILPIT_URL` is set, Mailpit must be running. If it isn't, the app's
-terminal shows `A contact message was saved, but the notification email
-failed` and `could not reach Mailpit`; the message itself is still saved.
+While `MAILPIT_URL` is set, Mailpit must be running. If it isn't, the form
+still thanks the visitor as usual, so check the app's terminal: it shows `A
+contact message was saved, but the notification email failed` and `could not
+reach Mailpit`. The message itself is still saved.
 Remove the line and restart the app to go back to printed emails.
 
 The emails the site sends:
@@ -370,15 +383,25 @@ to `.env.local`, restart the app, and submit the form:
 | `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` | The widget passes, but Submit answers "The security check didn't pass. Please try it again." |
 | `TURNSTILE_SECRET_KEY=3x0000000000000000000000000000000AA` | The same answer, as if the visitor's check had already been used |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY=2x00000000000000000000AB` | The widget fails, the form says "The security check couldn't load", and Submit answers "Please wait for the security check above the Submit button to finish, then try again." |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes. After the click, Submit sends the message as usual, and the widget asks for a click again after each message |
 
-The app's terminal logs each refusal with Cloudflare's error code.
+In the first two rows Cloudflare refuses the widget's answer, and the app's
+terminal logs `Turnstile rejected a contact form submission:` with Cloudflare's
+error code (`invalid-input-response` or `timeout-or-duplicate`). The third row
+logs no refusal: the widget never gives the form an answer, so the server turns
+it away without asking Cloudflare. Instead the terminal repeats `[browser]
+[Cloudflare Turnstile] Error: 600010.` while the page is open. That is the
+widget's own error, copied from the browser, not a problem with the server.
 
 **The hidden field.** The form also has a `company` field that people never
 see and bots fill in. A submission with it filled in gets the usual thank-you
-but is thrown away, with no saved message and no email. To try it, open the
-browser's developer console on `/contact`, run
-`document.querySelector('input[name=company]').value = 'x'`, then submit.
+but is thrown away, with no saved message and no email. To try it, open
+`/contact` and fill in at least the first name, email and message. Then run
+`document.querySelector('input[name=company]').value = 'x'` in the browser's
+developer console and choose **Submit**. The form thanks you, but no email is
+printed or appears in Mailpit, and the query in step 4 of
+[the contact form](#the-contact-form) shows no new row. The form clears after
+each submission, so run the line again before the next try.
 
 #### The contact form
 
@@ -406,7 +429,12 @@ open answers "The contact form is not accepting messages right now." Run it
 again with `1` to bring the form back.
 
 If the Worker isn't running, `/contact` still shows the form, and Submit
-answers "Your message could not be sent right now."
+answers "Your message could not be sent right now." The same answer with the
+Worker running usually means your database is missing migration `0003`. The
+line after `Contact form submission failed:` in the app's terminal says which:
+`could not reach the database proxy` means start the Worker, and `no such
+column: contact_form_enabled` means run `npm run db:migrate:local` from
+`teazo-d1-proxy`.
 
 #### The email limits
 
@@ -421,6 +449,16 @@ rows, from `teazo-d1-proxy`:
 ```bash
 npx wrangler d1 execute teazo-db --local --command "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 20) INSERT INTO contact_message (first_name, email, message) SELECT 'Filler', 'filler@example.com', 'Filler ' || i FROM n WHERE i <= 20 - (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour'))"
 ```
+
+Wrangler doesn't say how many rows an INSERT added, so an empty `results` list
+here is normal. The command adds only what the last hour is missing, so
+running it twice never takes the hour past 20. To check the count:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "SELECT count(*) AS last_hour FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour')"
+```
+
+`last_hour` should be 20.
 
 Submit the form once: the "alerts paused" email arrives instead of the usual
 one. Submit again: no email, and the app's terminal says `Contact message saved
@@ -453,14 +491,25 @@ npm run db:seed:local -- you@gmail.com --role 2    # Can Edit
 npm run db:seed:local -- you@gmail.com --role 1    # Owner again
 ```
 
-- **Can View** opens every admin page, but every admin write is refused with
-  `403`.
+- **Can View** opens every admin page, and the server refuses every admin
+  write with `403`. Today the only page that writes to the server is the menu
+  PDF upload on `/admin/menu`, and its button is disabled for Can View. The
+  Square product routes also refuse Can View. The other admin pages only
+  change the page in your browser for now, so their buttons seem to work at
+  any role and the changes are gone when you reload. Use the terminal check
+  below to see the `403`.
 - **Can Edit** and **Owner** can also upload and edit.
 - **Suspended** can't open any admin page. Suspend yourself with
-  `npx wrangler d1 execute teazo-db --local --command "UPDATE admin_user SET status = 'suspended' WHERE email_normalized = 'you@gmail.com'"`:
-  the next admin page sends you to `/login` with "This Google account does not
-  have admin access". Running the seed for your address makes you `active`
-  again.
+  `npx wrangler d1 execute teazo-db --local --command "UPDATE admin_user SET status = 'suspended' WHERE email_normalized = 'you@gmail.com'"`,
+  writing your address in lowercase, exactly as the seed printed it. Wrangler
+  reports success even when no row matched, so check it with the `SELECT` from
+  §2.1. The next admin page sends you to `/login` with "This Google account
+  does not have admin access". Running the seed for your address makes you
+  `active` again.
+
+`/admin/menu` and `/admin/events` also need the Square lines from §2.2.
+Without them those two pages fail for every role, Owner included, so a failure
+there is not a role problem.
 
 To check the write rule from a terminal, copy your `authjs.session-token`
 cookie as in §5 and send an empty upload:
@@ -499,15 +548,22 @@ curl -s -X PUT http://127.0.0.1:8787/media/test/sample.pdf -H 'authorization: Be
 You should see `{"key":"test/sample.pdf","size":114913,"bucket":"teazo-media"}`,
 and the file opens at `http://127.0.0.1:8787/media/test/sample.pdf`.
 
-To make uploads fail on purpose, stop the Worker, append a limit to
-`teazo-d1-proxy/.dev.vars`, and start it again. `.dev.vars` overrides the
+To make an upload fail on purpose, add one of these lines at a time. From
+`teazo-d1-proxy`, stop the Worker, append the line to `.dev.vars`, start the
+Worker again, and run the test upload above again. `.dev.vars` overrides the
 values in `wrangler.jsonc` on your machine only, and the Worker reads it only
 when it starts.
 
 ```bash
-echo "R2_STORAGE_CAP_BYTES=1000" >> .dev.vars    # an upload that would pass 1000 bytes in total gets 507 storage_full
-echo "R2_CLASS_A_DAILY_BUDGET=1" >> .dev.vars     # one upload attempt a day; the rest get 429 r2_daily_limit
+echo "R2_STORAGE_CAP_BYTES=1000" >> .dev.vars    # the upload gets 507 storage_full
 ```
+
+```bash
+echo "R2_CLASS_A_DAILY_BUDGET=1" >> .dev.vars     # after today's first upload, every upload gets 429 r2_daily_limit
+```
+
+Don't add both at once: the Worker checks the day's budget before the storage
+cap, so with both lines you only ever see 429.
 
 The Worker's startup banner shows an overridden value as `(hidden)`, so check
 `/usage` instead (`r2.limitBytes` and `r2.classAToday.budget`). Every upload
@@ -516,7 +572,12 @@ count lasts until midnight UTC, so with a budget of 1 your first upload may
 already get 429. When you are done, stop the Worker, delete those lines from
 `.dev.vars`, and start it again.
 
-A `503 limits_unavailable` on upload means your database is missing a
+A `503 limits_unavailable` on upload means the limits couldn't be checked,
+and its `message` says why. If it says the two values "must be set in
+wrangler.jsonc", a limit you added to `.dev.vars` is not a whole number above
+zero (write `1000`, not `1,000` or `0`): fix or delete that line and restart the
+Worker. `/usage` fails the same way while that value is there, with
+`503 usage_unavailable`. Any other message means your database is missing a
 migration: run `npm run db:migrate:local`.
 
 #### The file sweeper
@@ -561,8 +622,9 @@ own bucket. The older address, `/__scheduled`, only works under
 | `CONTACT_NOTIFY_TO` | optional | Where contact emails go. Defaults to `owner@teazo.test` |
 | `EMAIL_FROM`, `EMAIL_FROM_NAME` | optional | The sender. Defaults to `website@teazo.test` and "TEAZO website" |
 
-**Leave unset on your machine:** `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and
-`TURNSTILE_SECRET_KEY` (test keys are used automatically), `BREVO_API_KEY` and
+**Leave unset for everyday work** (§2.5 and §2.8 set some of these only while
+you test): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (test
+keys are used automatically), `BREVO_API_KEY` and
 `BREVO_SANDBOX` (production only), `AUTH_URL` and `AUTH_TRUST_HOST`,
 `NODE_ENV` (Next.js sets it: `development` under `npm run dev`, `production`
 under `npm run build` and `npm start`; the test keys, printed email, the
