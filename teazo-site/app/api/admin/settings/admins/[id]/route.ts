@@ -1,4 +1,4 @@
-import { getAdmin } from "@/app/lib/admin";
+import { requireAdminApi } from "@/app/lib/admin";
 import { removeSettingsAdmin, updateSettingsAdminManagePermission, updateSettingsAdminRole } from "@/app/lib/queries/settings";
 import type { AdminRole } from "@/app/types/admin-perms";
 
@@ -7,11 +7,12 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const viewer = await getAdmin(2);
-  if (!viewer || (viewer.role_id === 2 && viewer.can_invite_users !== 1)) {
-    return errorResponse("You do not have permission to change admin access.", 403);
-  }
   try {
+    const access = await requireAdminApi(request, 2);
+    if (!access.ok) return access.response;
+    if (access.admin.role_id === 2 && access.admin.can_invite_users !== 1) {
+      return errorResponse("You do not have permission to change admin access.", 403);
+    }
     const { id } = await context.params;
     const input = await request.json() as { role?: AdminRole; canManageAdmins?: boolean };
     if (input.role === undefined && input.canManageAdmins === undefined) {
@@ -30,12 +31,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
 }
 
-export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const viewer = await getAdmin(2);
-  if (!viewer || (viewer.role_id === 2 && viewer.can_invite_users !== 1)) {
-    return errorResponse("You do not have permission to delete admins.", 403);
-  }
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const access = await requireAdminApi(request, 2);
+    if (!access.ok) return access.response;
+    if (access.admin.role_id === 2 && access.admin.can_invite_users !== 1) {
+      return errorResponse("You do not have permission to delete admins.", 403);
+    }
     const { id } = await context.params;
     await removeSettingsAdmin(id);
     return new Response(null, { status: 204 });

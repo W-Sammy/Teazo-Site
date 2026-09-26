@@ -2,6 +2,9 @@ import type { AdminEvent } from "@/app/types/admin-event";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItemMetric } from "@/app/types/dashboard";
 
+const SHOP_TIME_ZONE = "America/Los_Angeles";
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
 export function formatHour(hour: number) {
   const wholeHour = Math.floor(hour) % 24;
   const minutes = Math.round((hour % 1) * 60);
@@ -11,7 +14,12 @@ export function formatHour(hour: number) {
 }
 
 export function formatEventDate(date: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" }).format(new Date(date));
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: SHOP_TIME_ZONE,
+    month: "2-digit",
+    day: "2-digit",
+    year: "2-digit",
+  }).format(new Date(date));
 }
 
 export function isEventActive(event: AdminEvent) {
@@ -20,13 +28,27 @@ export function isEventActive(event: AdminEvent) {
 }
 
 export function getTodayHours(content: WebsiteContent) {
-  return content.hours[new Date().getDay()] ?? content.hours[0];
+  return content.hours[shopToday().dayIndex] ?? content.hours[0];
 }
 
 export function getTodayHoliday(content: WebsiteContent) {
-  const today = new Date();
-  const monthDay = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  return content.holidays.find((holiday) => holiday.date === monthDay);
+  return content.holidays.find((holiday) => holiday.date === shopToday().monthDay);
+}
+
+function shopToday() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: SHOP_TIME_ZONE,
+    weekday: "short",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((value) => value.type === type)?.value ?? "";
+  const weekday = WEEKDAYS.indexOf(part("weekday") as typeof WEEKDAYS[number]);
+  return {
+    dayIndex: weekday >= 0 ? weekday : 0,
+    monthDay: `${part("month")}-${part("day")}`,
+  };
 }
 
 export function sortMetrics(metrics: MenuItemMetric[]) {
