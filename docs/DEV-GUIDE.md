@@ -110,10 +110,12 @@ echo "PROXY_TOKEN=local-dev-token" > .dev.vars
 npm run dev
 ```
 
-`db:migrate:local` asks before applying migrations; press Enter or `y`. It
+`db:migrate:local` may ask before applying migrations; press Enter or `y`. It
 creates your database with the full schema and its starting data (the real
 address and hours, the menu sections, the admin roles). `npm run dev` then
-starts the Worker on `http://127.0.0.1:8787`. **Leave it running.**
+starts the Worker on `http://127.0.0.1:8787`. **Leave it running.** Each time
+it starts, wrangler prints a yellow warning that scheduled Workers are not
+triggered during local development. That is expected (§2.6).
 
 Check it from another terminal:
 
@@ -131,35 +133,41 @@ cd teazo-d1-proxy
 npx wrangler d1 execute teazo-db --local --command "SELECT email_normalized, role_id, status FROM admin_user"
 ```
 
+Until you add yourself in §2.3 this prints `"results": []`, an empty list.
+That is not an error.
+
 `.dev.vars` holds the Worker's local settings. The `echo ... >` above creates
 it; when you add a line later, append with `>>` or edit the file, because `>`
 replaces everything in it.
 
 ### 2.2 Start the app
 
-Create `teazo-site/.env.local`:
+In a second terminal, from the repo root, create `teazo-site/.env.local` and
+start the app:
 
 ```bash
+cat > teazo-site/.env.local <<'EOF'
 D1_PROXY_URL=http://127.0.0.1:8787
 PROXY_TOKEN=local-dev-token
 R2_PUBLIC_BASE=http://127.0.0.1:8787/media
-```
-
-`PROXY_TOKEN` must match the one in `teazo-d1-proxy/.dev.vars`. Then, from the
-repo root:
-
-```bash
+EOF
 cd teazo-site
 npm install
 npm run dev
 ```
 
+`PROXY_TOKEN` must match the one in `teazo-d1-proxy/.dev.vars`. The `cat >`
+line creates the file and replaces anything already in it, so run it once.
+The sections below add more lines to `.env.local`: open it in your editor to
+add them, and restart `npm run dev` afterwards.
+
 Open **`http://localhost:3000`**. Use `localhost`, not `127.0.0.1` or the
 network address Next.js prints: sign-in only works on `localhost`.
 
-**If you are working on Square, the menu admin or the events admin**, add:
+**If you are working on Square, the menu admin or the events admin**, add
+these lines to `.env.local`:
 
-```bash
+```ini
 SQUARE_ACCESS_TOKEN=<the team's sandbox token>
 NEXT_PUBLIC_BASE_URL=http://localhost:3000/
 ```
@@ -206,11 +214,11 @@ Where an email goes is decided in this order: through Brevo if
 `BREVO_API_KEY` is set (production only), else to Mailpit if `MAILPIT_URL` is
 set, else printed.
 
-| Email | How to trigger it locally | Goes to |
+| Email (its subject) | How to trigger it locally | Goes to |
 |---|---|---|
-| New contact message | Submit the form on `/contact` | `owner@teazo.test`, or `CONTACT_NOTIFY_TO` if you set it |
-| "Email alerts paused" | The 21st message within an hour (or the 101st within a day) | Same |
-| Admin invite | Adding an admin in Settings, once Settings saves to the database (§5) | The new admin's address |
+| "New website message from ..." | Submit the form on `/contact` | `owner@teazo.test`, or `CONTACT_NOTIFY_TO` if you set it |
+| "Website contact form: email alerts paused" | The 21st message within an hour (or the 101st within a day) | Same |
+| "You've been added as an admin of the TEAZO website" | Adding an admin in Settings, once Settings saves to the database (§5) | The new admin's address |
 
 Emails come from `website@teazo.test` unless you set `EMAIL_FROM`.
 
@@ -228,9 +236,9 @@ messages or for the switch yet.
 ### 2.3 Sign in locally
 
 **Every page under `/admin` needs sign-in**, so do this if you work on anything
-there. Add to `teazo-site/.env.local`:
+there. Add these lines to `teazo-site/.env.local`:
 
-```bash
+```ini
 AUTH_SECRET=<a long random string, from `openssl rand -base64 33`>
 AUTH_GOOGLE_ID=<the team's Google OAuth client id>
 AUTH_GOOGLE_SECRET=<the team's Google OAuth client secret>
@@ -239,6 +247,9 @@ AUTH_GOOGLE_SECRET=<the team's Google OAuth client secret>
 `AUTH_SECRET` is yours; generate your own. Get the Google id and secret from
 Sammy, and never commit them (`.env*` files are gitignored). Leave `AUTH_URL`
 and `AUTH_TRUST_HOST` unset: NextAuth trusts `localhost` in development.
+
+Until these are set, every `/admin` page sends you to `/login` and the app's
+terminal prints an `[auth][error] MissingSecret` error. That is expected.
 
 Sign-in reads the database, so **the Worker must be running**. Your Google
 account also needs an admin row in your own database. From the repo root, in
@@ -259,7 +270,9 @@ local database. Uploads and Square edits need Owner or Can Edit.
 Then open `http://localhost:3000/login` and choose **Continue with Google**.
 The email and password fields and "Forgot password?" on that page are
 placeholders: there is no password sign-in yet. Don't type a real password
-into them; the form puts what you type into the page's URL.
+into them; the form puts what you type into the page's URL. The red "Email or
+password cannot be empty" line belongs to that placeholder form and shows
+whenever its fields are empty. It is not a sign-in error.
 
 **If sign-in fails:**
 
@@ -267,7 +280,7 @@ into them; the form puts what you type into the page's URL.
 |---|---|---|
 | "This Google account does not have admin access" | No live admin row for that exact address, or it is suspended | `npm run db:seed:local -- <that address>` |
 | "We could not verify your access" | The database lookup failed | Start the Worker, and check `D1_PROXY_URL` and `PROXY_TOKEN` in `.env.local` |
-| Sent back to `/login` with no message | Usually a missing `AUTH_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal |
+| Sent back to `/login` with neither message above | Usually a missing `AUTH_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set |
 | Google's `redirect_uri_mismatch` | You opened `127.0.0.1` or another port, or the redirect isn't registered | Use `http://localhost:3000`. The OAuth client must list `http://localhost:3000/api/auth/callback/google` |
 | Google blocks you before our page | The OAuth app may only allow listed test users | Ask Sammy to add your Google account |
 
@@ -308,20 +321,32 @@ curl -s http://127.0.0.1:8787/usage -H 'authorization: Bearer local-dev-token'
 also list the bucket and compare; that spends at least one upload from the
 day's budget.
 
+To upload a test file without the admin pages, run this from `teazo-d1-proxy`.
+It stores the menu PDF that ships with the app:
+
+```bash
+curl -s -X PUT http://127.0.0.1:8787/media/test/sample.pdf -H 'authorization: Bearer local-dev-token' -H 'content-type: application/pdf' --data-binary @../teazo-site/public/teazo-menu.pdf
+```
+
+You should see `{"key":"test/sample.pdf","size":114913,"bucket":"teazo-media"}`,
+and the file opens at `http://127.0.0.1:8787/media/test/sample.pdf`.
+
 To make uploads fail on purpose, stop the Worker, append a limit to
-`teazo-d1-proxy/.dev.vars`, and restart it. `.dev.vars` overrides the values in
-`wrangler.jsonc` on your machine only.
+`teazo-d1-proxy/.dev.vars`, and start it again. `.dev.vars` overrides the
+values in `wrangler.jsonc` on your machine only, and the Worker reads it only
+when it starts.
 
 ```bash
-echo "R2_STORAGE_CAP_BYTES=1000" >> .dev.vars    # the next upload gets 507 storage_full
-echo "R2_CLASS_A_DAILY_BUDGET=1" >> .dev.vars     # after one upload today, the rest get 429 r2_daily_limit
+echo "R2_STORAGE_CAP_BYTES=1000" >> .dev.vars    # an upload that would pass 1000 bytes in total gets 507 storage_full
+echo "R2_CLASS_A_DAILY_BUDGET=1" >> .dev.vars     # one upload attempt a day; the rest get 429 r2_daily_limit
 ```
 
-Remove those lines afterwards. To upload a test file without the admin pages:
-
-```bash
-curl -X PUT http://127.0.0.1:8787/media/test/sample.pdf -H 'authorization: Bearer local-dev-token' -H 'content-type: application/pdf' --data-binary @some-file.pdf
-```
+The Worker's startup banner shows an overridden value as `(hidden)`, so check
+`/usage` instead (`r2.limitBytes` and `r2.classAToday.budget`). Every upload
+attempt counts toward the day's budget, even one refused with 507, and the
+count lasts until midnight UTC, so with a budget of 1 your first upload may
+already get 429. When you are done, stop the Worker, delete those lines from
+`.dev.vars`, and start it again.
 
 A `503 limits_unavailable` on upload means your database is missing a
 migration: run `npm run db:migrate:local`.
@@ -329,23 +354,25 @@ migration: run `npm run db:migrate:local`.
 ### 2.6 The scheduled sweeper
 
 Deleting a file queues its bytes in `pending_r2_deletion`, and an hourly job in
-the Worker removes them once they are 24 hours old (§4.2). Plain `npm run dev`
-never runs that job. To run it by hand:
+the Worker removes them once they are 24 hours old (§4.2). `npm run dev` never
+runs that job on its own; that is the yellow warning wrangler prints when it
+starts. To run it by hand, with the Worker running:
 
-1. Stop the Worker and start it with `npm run dev:cron` instead.
-2. Queue a file that is already due. No page deletes files yet, so queue one
+1. Queue a file that is already due. No page deletes files yet, so queue one
    yourself, for example the test upload from §2.5:
 
    ```bash
    npx wrangler d1 execute teazo-db --local --command "INSERT INTO pending_r2_deletion (r2_bucket, r2_key, queued_at) VALUES ('teazo-media', 'test/sample.pdf', strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 hours'))"
    ```
 
-3. Run the job: `curl "http://127.0.0.1:8787/__scheduled?cron=0+*+*+*+*"`
-4. The Worker terminal prints `sweep ok: {"reaped":1,...}`, and
+2. Run the job: `curl "http://127.0.0.1:8787/cdn-cgi/local/scheduled?cron=0+*+*+*+*"`.
+   It prints `ok`.
+3. The Worker terminal prints `sweep ok: {"reaped":1,...}`, and
    `http://127.0.0.1:8787/media/test/sample.pdf` now returns 404.
 
 Use `teazo-media` as the bucket: the local Worker only removes files from its
-own bucket.
+own bucket. The older address, `/__scheduled`, only works under
+`npm run dev:cron`; on plain `npm run dev` it returns `405`.
 
 ### 2.7 Every environment variable
 
@@ -366,8 +393,11 @@ own bucket.
 
 **Leave unset on your machine:** `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and
 `TURNSTILE_SECRET_KEY` (test keys are used automatically), `BREVO_API_KEY` and
-`BREVO_SANDBOX` (production only), `AUTH_URL` and `AUTH_TRUST_HOST`, and the
-variables Vercel sets itself: `VERCEL`, `VERCEL_ENV`,
+`BREVO_SANDBOX` (production only), `AUTH_URL` and `AUTH_TRUST_HOST`,
+`NODE_ENV` (Next.js sets it: `development` under `npm run dev`, `production`
+under `npm run build` and `npm start`; the test keys, printed email, the
+`owner@teazo.test` fallback and the local image host all depend on it), and
+the variables Vercel sets itself: `VERCEL`, `VERCEL_ENV`,
 `VERCEL_PROJECT_PRODUCTION_URL`.
 
 **`teazo-d1-proxy/.dev.vars`**
@@ -384,13 +414,13 @@ The values for Vercel are in §8.1.
 | Where | Script | What it does | Run it locally? |
 |---|---|---|---|
 | `teazo-d1-proxy` | `npm run dev` | Starts the Worker | Yes |
-| | `npm run dev:cron` | Same, plus the sweeper on demand (§2.6) | Yes, instead of `dev` |
+| | `npm run dev:cron` | Same, and also answers the older `/__scheduled` address (§2.6) | Not needed |
 | | `npm run db:migrate:local` | Applies new migrations to your database | Yes |
 | | `npm run db:seed:local -- <email>` | Migrates, then gives that address an admin role | Yes |
 | | `npm run typegen` | Generates Cloudflare types | Not needed |
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
-| | `npm run lint` | Lints the app | Yes, before a pull request |
+| | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint <file>` and add no new errors |
 | | `npm run build`, `npm start` | A production build | Only as in §2.9 |
 
 ### 2.9 Checking a production build locally
@@ -399,7 +429,7 @@ Everyday work uses `npm run dev`. A production build behaves differently: the
 development defaults are off, so the test keys and printed email stop. To try
 one anyway:
 
-```bash
+```ini
 # teazo-site/.env.local, in addition to the usual lines
 SQUARE_ACCESS_TOKEN=<any value, if you don't have the real one>
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
@@ -409,9 +439,19 @@ MAILPIT_URL=http://127.0.0.1:8025
 CONTACT_NOTIFY_TO=owner@teazo.test
 ```
 
-Then `npm run build` and `npm start`. The build fails without
-`SQUARE_ACCESS_TOKEN`, because the Square client checks for it as soon as it
-loads. Emails only reach Mailpit in this mode; they are never printed.
+Stop `npm run dev` first, because `npm start` also uses port 3000. Then run
+`npm run build` and `npm start`, and start Mailpit (§2.2).
+
+- The build fails without `SQUARE_ACCESS_TOKEN`, because the Square client
+  checks for it as soon as it loads.
+- While it generates pages, the build prints `Admin page authorization lookup
+  failed.` several times. The build still succeeds; the admin pages are checked
+  once without a request, and that check's error handler logs it.
+- Emails only reach Mailpit in this mode; they are never printed.
+
+When you are done, stop `npm start` and delete the lines you added only for
+this. With `MAILPIT_URL` left in, every email under `npm run dev` goes to
+Mailpit and fails whenever Mailpit isn't running.
 
 ---
 
@@ -584,16 +624,46 @@ record the rows.
 and the server), `app/lib/queries/menu-documents.ts` (the rows) and
 `app/api/menu/pdf/route.ts` (serving it). PDFs skip the resize.
 
-For images, a new upload route would look like this. It is a template; no
-gallery route exists yet.
+For images, a new upload would look like this. It is a template; no gallery
+route exists yet. As in §3.1, the SQL goes in the feature's query file:
+
+```ts
+// teazo-site/app/lib/queries/gallery.ts, next to listGalleryImages and sortKey
+import { batch, prepare } from "@/app/lib/d1";
+import type { StoredMedia } from "@/app/lib/media";
+
+/** Both rows or neither. Call only after requireAdminApi(request, 2) and putMedia. */
+export function recordGalleryUpload(input: {
+  mediaId: string;
+  stored: StoredMedia;
+  width: number;
+  height: number;
+  originalFilename: string;
+  name: string;
+  adminId: string;
+}) {
+  const { mediaId, stored, width, height, originalFilename, name, adminId } = input;
+  return batch([
+    prepare(
+      `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
+                                original_filename, purpose, uploaded_by)
+       VALUES (?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8)`
+    ).bind(mediaId, stored.bucket, stored.key, stored.size, width, height, originalFilename, adminId),
+    prepare(`INSERT INTO gallery_image (id, media_id, name, name_sort_key) VALUES (?1, ?2, ?3, ?4)`)
+      .bind(crypto.randomUUID(), mediaId, name, sortKey(name)),
+  ]);
+}
+```
+
+And the route:
 
 ```ts
 // teazo-site/app/api/admin/gallery/route.ts
 import sharp from "sharp";
-import { prepare, batch, D1Error } from "@/app/lib/d1";
+import { D1Error } from "@/app/lib/d1";
 import { putMedia, mintKey, deleteMediaNow, MediaError } from "@/app/lib/media";
 import { requireAdminApi } from "@/app/lib/admin";
-import { sortKey } from "@/app/lib/queries/gallery";
+import { recordGalleryUpload } from "@/app/lib/queries/gallery";
 
 export async function POST(request: Request) {
   const access = await requireAdminApi(request, 2); // Can Edit or above, see §5
@@ -632,15 +702,15 @@ export async function POST(request: Request) {
   // 3. Record it: both rows or neither.
   const mediaId = crypto.randomUUID();
   try {
-    await batch([
-      prepare(
-        `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
-                                  original_filename, purpose, uploaded_by)
-         VALUES (?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8)`
-      ).bind(mediaId, stored.bucket, stored.key, stored.size, info.width, info.height, file.name, admin.id),
-      prepare(`INSERT INTO gallery_image (id, media_id, name, name_sort_key) VALUES (?1, ?2, ?3, ?4)`)
-        .bind(crypto.randomUUID(), mediaId, name, sortKey(name)),
-    ]);
+    await recordGalleryUpload({
+      mediaId,
+      stored,
+      width: info.width,
+      height: info.height,
+      originalFilename: file.name,
+      name,
+      adminId: admin.id,
+    });
   } catch (error) {
     // The database refused the rows, so nothing points at the file: remove it.
     // With no status the outcome is unknown, so leave it rather than risk a
@@ -697,7 +767,8 @@ anything still uses it, so whatever uses it goes first:
 
 | What uses the file | First statement |
 |---|---|
-| `gallery_image`, `event`, an admin's avatar | Set its `deleted_at` |
+| `gallery_image`, or an `event` being deleted | Set its `deleted_at` |
+| An admin's avatar, or the image of an event you are keeping | Set `admin_user.avatar_media_id` or `event.image_media_id` to `NULL` |
 | `content_block.media_id`, `site_link.icon_media_id` | Set the reference to `NULL` |
 | `carousel_slide`, `menu_document` | Delete the row |
 
@@ -735,7 +806,7 @@ next request, even though their cookie is still valid.
 
 | From | Export | Use it in | What it does |
 |---|---|---|---|
-| `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in) or `/login?error=AccessDenied` (not enough access) |
+| `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in), `/login?error=AccessDenied` (not enough access) or `/login?error=ServiceUnavailable` (the database couldn't be reached) |
 | | `requireAdminApi(request, minRole = 3)` | Route handlers | Returns `{ ok: true, admin }`, or `{ ok: false, response }` with a ready 401, 403 or 503 |
 | | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. Throws if the database can't be reached |
 | | `Admin` | | `{ id, username, role_id, can_invite_users }` |
@@ -772,7 +843,7 @@ Three rules:
 | Route | Who |
 |---|---|
 | Every page under `/admin` | Any admin (Can View and up) |
-| `POST`, `PUT` and `DELETE` on `/api/square/products`, `POST /api/admin/menu/upload` | Can Edit and up |
+| `POST /api/square/products`, `PUT` and `DELETE /api/square/products/[id]`, `POST /api/admin/menu/upload` | Can Edit and up |
 | `GET /api/square/*`, `GET /api/menu/pdf`, `/api/auth/*`, the contact form | Everyone, on purpose |
 | `/account` | Anyone signed in |
 
@@ -804,8 +875,9 @@ after(() => sendAdminInvite({ email, username, role, canManageAdmins, invitedBy:
 `after()` sends it once the response is on its way, so the admin panel doesn't
 wait. `sendAdminInvite` never throws: a failed email is logged, and the new
 admin can still sign in. Locally the invite is printed or caught by Mailpit
-(§2.2). Both `invited` and `active` can sign in, and nothing changes one into
-the other yet. The database allows at most one Owner, and the handlers must
+(§2.2). Both `invited` and `active` can sign in, and nothing in the app
+changes one into the other yet (re-running `npm run db:seed:local` for an
+address sets it to `active`, whatever its status). The database allows at most one Owner, and the handlers must
 refuse to delete or demote the Owner.
 
 **There are no passwords.** Sign-in is Google only, so there is no password
@@ -895,8 +967,10 @@ writes it:
   configuration, not from the client.
 - Store `square_version`, so a stale price can be detected.
 - One `catalog_variation_cache` row per size, never just the first.
-- Never delete a cached row: set `is_deleted = 1`. Menu sections point at
-  cached items.
+- Never delete a `catalog_item_cache` or `catalog_category_cache` row: set
+  `is_deleted = 1`, because menu sections point at cached items.
+  `catalog_variation_cache` has no `is_deleted`; nothing references it, so
+  delete a size's row when Square removes that size.
 - `square_image_url` is Square's own photo URL. The photo stays at Square.
 - Events can name Square items before the sync has ever run, so when showing
   an event, skip item ids the cache doesn't have.
@@ -945,9 +1019,9 @@ sign-in or email on your machine.
 Two D1 databases exist on the team Cloudflare account, `teazo-db` and
 `teazo-db-preview`, with migrations `0001` and `0002`. The Worker and the R2
 buckets are waiting on the account's payment setup. When they go live, the
-order is: apply the missing migrations (`0003` and `0004` must be in place
-before the Worker, or every upload is refused), then deploy the Worker, then
-the app. Build as though that is already true and nothing you write now will
+order is: apply the missing migrations (without `0004` every upload is
+refused, and without `0003` the contact form refuses every message), then
+deploy the Worker, then the app. Build as though that is already true and nothing you write now will
 need reworking.
 
 While that is pending:
@@ -1068,7 +1142,7 @@ every message is still saved. Admin invites come out of the same 300 a day.
 | Its bindings, cron schedule, bucket names, and each deployment's R2 cap and daily budget | `teazo-d1-proxy/wrangler.jsonc` |
 | Every Worker endpoint, limit and error code | `docs/ENDPOINTS.md` |
 | Database, storage, usage, email and bot-check helpers | `teazo-site/app/lib/` (`d1.ts`, `media.ts`, `usage.ts`, `email.ts`, `turnstile.ts`) |
-| The emails the site sends | `teazo-site/app/lib/contact-notification.ts`, `teazo-site/app/lib/admin-invite.ts` |
+| The emails the site sends | `teazo-site/app/lib/contact-notification.ts`, `teazo-site/app/lib/admin-invite.ts`, and the "alerts paused" email and the email limits in `teazo-site/app/(site)/contact/actions.ts` |
 | Feature SQL | `teazo-site/app/lib/queries/` |
 | Sign-in and admin checks | `teazo-site/auth.ts`, `teazo-site/app/lib/admin.ts`, `teazo-site/app/lib/admin-whitelist.ts` |
 
