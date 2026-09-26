@@ -79,10 +79,19 @@ gallery and website content admin pages, and the content of every public page
 You need **Node.js 22 or newer** and **Git**. Wrangler refuses to start on
 anything older, and it says which version it wants.
 
-> **Windows: clone to a short path**, such as `C:\dev\Teazo-Site`. The local
-> database lives several folders deep inside the repo; if the full path passes
-> Windows' 260-character limit, every `wrangler d1` command fails with a bare
-> `internal error` that says nothing about paths.
+> **Windows: keep the repo at a short path**, such as `C:\dev\Teazo-Site`. The
+> local database file sits about 140 characters deep inside the repo, so if the
+> repo folder's own path is longer than about 115 characters, Windows'
+> 260-character limit is reached. Every local `wrangler d1` command, and
+> `npm run db:seed:local`, then fails with `internal error; reference = ...`,
+> which says nothing about paths, and `git clone` and `npm install` give no
+> warning first. To check, run `pwd -W | awk '{print length}'` in the repo
+> folder and keep it under 100. If it is longer, stop the Worker, move the
+> whole folder somewhere short, and run `npm run db:migrate:local` again from
+> `teazo-d1-proxy`.
+>
+> To clone into `C:\dev`, run `mkdir -p /c/dev && cd /c/dev` in Git Bash before
+> the `git clone` in §2.1.
 
 **What you need from someone else:**
 
@@ -105,7 +114,14 @@ never need `wrangler login` for local work.
 | 4 | Everything else: seeding, queries, git | |
 
 The app must stay on port **3000**: Google sign-in is registered for it. If
-Next.js offers another port, something else is using 3000; stop it.
+3000 is taken, `npm run dev` doesn't ask. It prints `Port 3000 is in use by
+process <pid>, using available port 3001 instead.` and starts on 3001, where
+sign-in fails. Press Ctrl+C, stop that process (`taskkill //PID <pid> //F` in
+Git Bash, `kill <pid>` on macOS or Linux), and start the app again. On Windows,
+a program that holds 3000 for only one of `localhost` and `127.0.0.1` gets no
+warning. If `http://localhost:3000` shows something other than the site, stop
+the app, run `netstat -ano | grep :3000`, and stop each process id at the end
+of a `LISTENING` line.
 
 ### 2.1 Start the database and storage
 
@@ -134,7 +150,7 @@ curl -s http://127.0.0.1:8787/query -H 'authorization: Bearer local-dev-token' -
 You should see `Owner`, `Can Edit` and `Can View`.
 
 **Looking inside your database.** The quickest way needs no token and no
-running Worker:
+running Worker. From the repo root:
 
 ```bash
 cd teazo-d1-proxy
@@ -170,7 +186,9 @@ The sections below add more lines to `.env.local`: open it in your editor to
 add them, and restart `npm run dev` afterwards.
 
 Open **`http://localhost:3000`**. Use `localhost`, not `127.0.0.1` or the
-network address Next.js prints: sign-in only works on `localhost`.
+network address Next.js prints. On those addresses pages load but don't respond
+to clicks, so sign-in and the contact form don't work, and the app's terminal
+prints `Blocked cross-origin request to Next.js dev resource /_next/hmr` (§9).
 
 **If you are working on Square, the menu admin or the events admin**, add
 these lines to `.env.local`:
@@ -229,7 +247,7 @@ The email and password fields and "Forgot password?" on that page are
 placeholders: there is no password sign-in yet. Don't type a real password
 into them; the form puts what you type into the page's URL. The red "Email or
 password cannot be empty" line belongs to that placeholder form and shows
-whenever its fields are empty. It is not a sign-in error.
+while either of its fields is empty. It is not a sign-in error.
 
 **If sign-in fails:**
 
@@ -237,9 +255,10 @@ whenever its fields are empty. It is not a sign-in error.
 |---|---|---|
 | "This Google account does not have admin access" | No live admin row for that exact address, or it is suspended | `npm run db:seed:local -- <that address>` |
 | "We could not verify your access" | The database lookup failed | Start the Worker, and check `D1_PROXY_URL` and `PROXY_TOKEN` in `.env.local` |
-| Sent back to `/login` with neither message above | Usually a missing `AUTH_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set |
-| Google's `redirect_uri_mismatch` | You opened `127.0.0.1` or another port, or the redirect isn't registered | Use `http://localhost:3000`. The OAuth client must list `http://localhost:3000/api/auth/callback/google` |
-| Google blocks you before our page | The OAuth app may only allow listed test users | Ask Sammy to add your Google account |
+| Sent back to `/login` with no message, or with "Sign-in could not be completed. Please try again." | Usually a missing `AUTH_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set |
+| Google's `redirect_uri_mismatch` | The app isn't on port 3000 (see **Terminals and ports** in §2), or the redirect isn't registered | Start the app on port 3000 and open `http://localhost:3000`. The OAuth client must list `http://localhost:3000/api/auth/callback/google` |
+| **Continue with Google** does nothing | You opened `127.0.0.1` or the network address, where Next.js keeps pages from responding to clicks | Open `http://localhost:3000/login` |
+| Google shows an error page before ours, such as `org_internal`, `admin_policy_enforced` or `invalid_client` | `org_internal`: the OAuth client only admits accounts from one organization. `admin_policy_enforced`: a work or school account whose administrator blocks outside apps. `invalid_client`: `AUTH_GOOGLE_ID` is wrong | Check `AUTH_GOOGLE_ID` against what Sammy sent, and try a personal Google account. If it still fails, send Sammy the error code |
 
 ### 2.4 Reset
 
@@ -259,9 +278,23 @@ The seed recreates the schema and your admin row. A reset also empties your
 local bucket, so any menu PDF you uploaded is gone and `/static-menu` goes
 back to the bundled PDF.
 
-**After every pull:** run `npm install` in both `teazo-d1-proxy` and
-`teazo-site`, then `npm run db:migrate:local` (or `npm run db:seed:local -- you@gmail.com`,
-which also migrates). Restart the Worker if `wrangler.jsonc` changed.
+**After every pull:** stop the Worker and the app (Ctrl+C in terminals 1 and
+2). On Windows, `npm install` fails with `EBUSY` if the Worker is still running
+when a pull updates wrangler. Then, in terminal 4, from the repo root:
+
+```bash
+cd teazo-d1-proxy
+npm install
+npm run db:migrate:local
+cd ../teazo-site
+npm install
+cd ..
+```
+
+`npm run db:seed:local -- you@gmail.com` from `teazo-d1-proxy` also migrates,
+so you can run it in place of `db:migrate:local`. Then start both again with
+`npm run dev`: the Worker from `teazo-d1-proxy` in terminal 1, and the app from
+`teazo-site` in terminal 2.
 
 ### 2.5 Set up and test the new features
 
@@ -272,12 +305,15 @@ sign-in from §2.3. Start the Worker (§2.1) and the app (§2.2) first.
 
 **Already set up before these features?** Your local database is missing
 migrations `0003` (the contact form switch) and `0004` (the storage record).
-From `teazo-d1-proxy`, run `npm run db:migrate:local`, then restart the Worker
-so it picks up the storage limits added to `wrangler.jsonc`. Until you do,
-Submit on `/contact` answers "Your message could not be sent right now" even
-with the Worker running, uploads get `503 limits_unavailable`, and `/usage`
-answers `usage_unavailable`. Nothing new goes in `.env.local` or `.dev.vars`.
-After later pulls, follow **After every pull** in §2.4.
+Follow **After every pull** in §2.4, which applies them. Until you do, Submit
+on `/contact` answers "Your message could not be sent right now" even with the
+Worker running, `/usage` answers `usage_unavailable`, and uploads fail: the
+Worker answers `503 limits_unavailable`, which `/admin/menu` shows as "The
+upload could not be confirmed" (the app's terminal has the code, after `Menu
+PDF upload failed:`). Nothing new goes in `.env.local` or `.dev.vars`. Files you
+uploaded before the pull are not in the new storage record, so `/usage` leaves
+them out; `/usage?verify=1` counts them as `driftBytes`, and a reset (§2.4)
+removes them.
 
 | Feature | What to set up | How to try it |
 |---|---|---|
@@ -329,10 +365,12 @@ free inbox that runs on your machine and never sends anything on:
      unzip it.
    - **macOS:** `brew install mailpit`
    - **Linux:** follow the [install page](https://mailpit.axllent.org/docs/install/).
-   - **Docker, on any system:** run
+   - **Docker, on any system:** with Docker running, run
      `docker run -d --name mailpit -p 127.0.0.1:8025:8025 axllent/mailpit`
-     and skip step 2. `docker stop mailpit` and `docker start mailpit` stop and
-     restart it.
+     once and skip step 2. After that, including after you restart your
+     computer, start it with `docker start mailpit` and stop it with
+     `docker stop mailpit`. Running `docker run` again fails because the name
+     `mailpit` is already taken.
 2. Start it in terminal 3 and leave it running:
    `mailpit --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025`. On Windows, run
    `./mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025` from the
@@ -342,7 +380,8 @@ free inbox that runs on your machine and never sends anything on:
 3. Add `MAILPIT_URL=http://127.0.0.1:8025` to `teazo-site/.env.local` and
    restart the app.
 4. Open `http://127.0.0.1:8025` and submit the contact form. The email appears
-   within a few seconds, and Mailpit shows both versions of it.
+   within a few seconds, and Mailpit shows both versions of it. Mailpit keeps
+   emails only while it runs, so stopping it empties the inbox.
 
 While `MAILPIT_URL` is set, Mailpit must be running. If it isn't, the form
 still thanks the visitor as usual, so check the app's terminal: it shows `A
@@ -410,10 +449,9 @@ each submission, so run the line again before the next try.
 2. The form clears and says "Thank you. Your message was sent, and we will get
    back to you soon."
 3. The owner's email is printed in the app's terminal, or appears in Mailpit.
-4. The message is saved. In terminal 4:
+4. The message is saved. In terminal 4, from `teazo-d1-proxy`:
 
    ```bash
-   cd teazo-d1-proxy
    npx wrangler d1 execute teazo-db --local --command "SELECT created_at, email, subject FROM contact_message ORDER BY created_at DESC"
    ```
 
@@ -425,23 +463,32 @@ npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET 
 ```
 
 Reload `/contact` and the CONTACT US section is gone. A form that was already
-open answers "The contact form is not accepting messages right now." Run it
-again with `1` to bring the form back.
+open answers "The contact form is not accepting messages right now." To bring
+the form back:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET contact_form_enabled = 1 WHERE id = 1"
+```
 
 If the Worker isn't running, `/contact` still shows the form, and Submit
-answers "Your message could not be sent right now." The same answer with the
-Worker running usually means your database is missing migration `0003`. The
-line after `Contact form submission failed:` in the app's terminal says which:
-`could not reach the database proxy` means start the Worker, and `no such
-column: contact_form_enabled` means run `npm run db:migrate:local` from
-`teazo-d1-proxy`.
+answers "Your message could not be sent right now." The app's terminal then
+prints `Contact form submission failed:` with the reason on the same line.
+`could not reach the database proxy` means the Worker isn't running or
+`D1_PROXY_URL` in `.env.local` is wrong. `unauthorized` means `PROXY_TOKEN` in
+`.env.local` doesn't match the one in `teazo-d1-proxy/.dev.vars`. `no such
+column: contact_form_enabled` means your database is missing migration `0003`:
+run `npm run db:migrate:local` from `teazo-d1-proxy`.
 
 #### The email limits
 
 So a flood of spam can't use up Brevo's 300 free emails a day, the owner gets
-at most 20 contact emails an hour and 100 a day. The first message over a limit
-sends one "Website contact form: email alerts paused" email instead, and after
-that messages are saved with no email.
+at most 20 contact emails in any 60 minutes and 100 in any 24 hours. The
+message that takes a count past its limit (the 21st in 60 minutes, or the 101st
+in 24 hours) sends one "Website contact form: email alerts paused" email
+instead, and later messages are saved with no email. Emails resume once the
+count drops back under the limit, and going over the hourly limit again sends
+another notice. Past 100 in 24 hours nothing more is sent, so however a flood
+is paced, the owner gets at most 101 emails in any 24 hours.
 
 To see it without sending 21 messages, fill the last hour up to 20 with test
 rows, from `teazo-d1-proxy`:
@@ -455,10 +502,12 @@ here is normal. The command adds only what the last hour is missing, so
 running it twice never takes the hour past 20. To check the count:
 
 ```bash
-npx wrangler d1 execute teazo-db --local --command "SELECT count(*) AS last_hour FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour')"
+npx wrangler d1 execute teazo-db --local --command "SELECT (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hour')) AS last_hour, (SELECT count(*) FROM contact_message WHERE created_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')) AS last_day"
 ```
 
-`last_hour` should be 20.
+`last_hour` should be 20, and `last_day` below 100. With 100 or more messages
+in the last 24 hours the daily limit is already reached, and nothing below is
+emailed.
 
 Submit the form once: the "alerts paused" email arrives instead of the usual
 one. Submit again: no email, and the app's terminal says `Contact message saved
@@ -548,9 +597,10 @@ curl -s -X PUT http://127.0.0.1:8787/media/test/sample.pdf -H 'authorization: Be
 You should see `{"key":"test/sample.pdf","size":114913,"bucket":"teazo-media"}`,
 and the file opens at `http://127.0.0.1:8787/media/test/sample.pdf`.
 
-To make an upload fail on purpose, add one of these lines at a time. From
+To make an upload fail on purpose, try one of these lines at a time. From
 `teazo-d1-proxy`, stop the Worker, append the line to `.dev.vars`, start the
-Worker again, and run the test upload above again. `.dev.vars` overrides the
+Worker again, and run the test upload above again. Before you try the other
+line, stop the Worker and delete the line you added from `.dev.vars`. `.dev.vars` overrides the
 values in `wrangler.jsonc` on your machine only, and the Worker reads it only
 when it starts.
 
@@ -562,8 +612,9 @@ echo "R2_STORAGE_CAP_BYTES=1000" >> .dev.vars    # the upload gets 507 storage_f
 echo "R2_CLASS_A_DAILY_BUDGET=1" >> .dev.vars     # after today's first upload, every upload gets 429 r2_daily_limit
 ```
 
-Don't add both at once: the Worker checks the day's budget before the storage
-cap, so with both lines you only ever see 429.
+Don't add both at once: the Worker counts each upload toward the day's budget
+before it checks the storage cap, so with both lines only the day's first
+upload can get 507, and every upload after it gets 429.
 
 The Worker's startup banner shows an overridden value as `(hidden)`, so check
 `/usage` instead (`r2.limitBytes` and `r2.classAToday.budget`). Every upload
@@ -574,11 +625,12 @@ already get 429. When you are done, stop the Worker, delete those lines from
 
 A `503 limits_unavailable` on upload means the limits couldn't be checked,
 and its `message` says why. If it says the two values "must be set in
-wrangler.jsonc", a limit you added to `.dev.vars` is not a whole number above
-zero (write `1000`, not `1,000` or `0`): fix or delete that line and restart the
-Worker. `/usage` fails the same way while that value is there, with
-`503 usage_unavailable`. Any other message means your database is missing a
-migration: run `npm run db:migrate:local`.
+wrangler.jsonc", either a limit you added to `.dev.vars` is not a whole number
+above zero (write `1000`, not `1,000` or `0`), or the Worker has been running
+since before you pulled the limits into `wrangler.jsonc`. Fix or delete that
+line if you added one, then restart the Worker. Until you do, `/usage` fails
+the same way, with `503 usage_unavailable`. Any other message means your
+database is missing a migration: run `npm run db:migrate:local`.
 
 #### The file sweeper
 
@@ -605,6 +657,13 @@ Use `teazo-media` as the bucket: the local Worker only removes files from its
 own bucket. The older address, `/__scheduled`, only works under
 `npm run dev:cron`; on plain `npm run dev` it returns `405`.
 
+To sweep files that your own delete code queued (§4.2), make them due instead
+of inserting a row, then run step 2:
+
+```bash
+npx wrangler d1 execute teazo-db --local --command "UPDATE pending_r2_deletion SET queued_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 hours') WHERE deleted_at IS NULL"
+```
+
 ### 2.6 Every environment variable
 
 **`teazo-site/.env.local`**
@@ -619,7 +678,7 @@ own bucket. The older address, `/__scheduled`, only works under
 | `SQUARE_ACCESS_TOKEN` | the team's sandbox token | `/api/square/*`, `/admin/menu`, `/admin/events` |
 | `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000/` | `/admin/menu`, `/admin/events`, and the sign-in link in invite emails |
 | `MAILPIT_URL` | `http://127.0.0.1:8025` (optional) | Sending email to Mailpit instead of the terminal |
-| `CONTACT_NOTIFY_TO` | optional | Where contact emails go. Defaults to `owner@teazo.test` |
+| `CONTACT_NOTIFY_TO` | optional | Where contact emails go. Under `npm run dev` it defaults to `owner@teazo.test`; a production build has no default |
 | `EMAIL_FROM`, `EMAIL_FROM_NAME` | optional | The sender. Defaults to `website@teazo.test` and "TEAZO website" |
 
 **Leave unset for everyday work** (§2.5 and §2.8 set some of these only while
@@ -638,6 +697,7 @@ the variables Vercel sets itself: `VERCEL`, `VERCEL_ENV`,
 |---|---|---|
 | `PROXY_TOKEN` | `local-dev-token` | Must match `.env.local` |
 | `R2_STORAGE_CAP_BYTES`, `R2_CLASS_A_DAILY_BUDGET` | normally not set | Come from `wrangler.jsonc`. Override only to test the limits (§2.5) |
+| `MEDIA_BUCKET_NAME` | never set | Comes from `wrangler.jsonc` (`teazo-media`). The storage limits and the sweeper both match stored files by this name, so don't override it |
 
 The values for Vercel are in §8.1.
 
@@ -652,7 +712,7 @@ The values for Vercel are in §8.1.
 | | `npm run typegen` | Generates Cloudflare types | Not needed |
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
-| | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint <file>` and add no new errors |
+| | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint "<file>"` and add no new errors. Keep the quotes: bash rejects paths such as `app/(site)/contact/actions.ts` without them |
 | | `npm run build`, `npm start` | A production build | Only as in §2.8 |
 
 ### 2.8 Checking a production build locally
@@ -696,7 +756,7 @@ Import from it; don't copy it.
 |---|---|
 | `prepare(sql)` | Builds one statement. Chain `.bind(...)`, then `.all()`, `.first()` or `.run()` |
 | `batch([...])` | Runs up to 40 statements as one transaction |
-| `D1Error` | Thrown on failure, with the database's own message and the HTTP `status` |
+| `D1Error` | Thrown on failure. `message` is the database's own message, or the Worker's error code (such as `payload_too_large`) when the Worker refuses the request, and `status` is the HTTP status. `status` is undefined when no answer came back: a `batch()` with no statements or more than 40, missing settings, or a Worker that can't be reached |
 | `D1Result` | The type `.all()` and `.run()` return, including `meta.changes` |
 | `MAX_STATEMENTS` | The batch limit, 40 |
 
@@ -722,11 +782,15 @@ Rules:
 - **`batch()` is the only transaction.** Writes that must succeed or fail
   together go in one `batch()` call. Two calls are two transactions.
 - **At most 40 statements per `batch()`, and at least one.** `batch()` throws a
-  `D1Error` before sending anything otherwise. One request, the SQL plus its
-  values, must stay under 1 MB.
+  `D1Error` before sending anything otherwise. Each statement takes at most 100
+  values (`?1` to `?100`) and at most 100,000 bytes of SQL, so pass long text
+  as a value and split big inserts. One request, the SQL plus its values, must
+  be at most 1,000,000 bytes, or the Worker refuses it with a `D1Error` whose
+  `status` is 413.
 - **Every call is a network round trip**, so fetch what a page needs in as few
   calls as you can. Pages that read the database render on every request; if
-  a public page needs caching, ask Juan.
+  a public page needs caching, ask Juan. Before a pull request, check that your
+  pages still build with `npm run build` (§2.8).
 
 ### 3.1 Writing queries for your feature
 
@@ -776,12 +840,18 @@ Rules for query files:
   that tie keep a stable order.
 - **Group writes that belong together** in one `batch([...])`.
 - **Check that a write happened** when it must: `result.meta.changes === 0`
-  means no row matched.
+  means no row matched. Never test for exactly 1: `changes` also counts rows
+  that triggers write, so a one-row update of `admin_user`, `gallery_image`,
+  `event`, `content_block` or `menu_item_display` usually reports 2 (their
+  triggers in `0001_init.sql` also set `updated_at`). `queries/contact.ts` can
+  check for 1 only because `business_profile` has no trigger.
 - **Set the computed columns when you write.** `gallery_image.name_sort_key`,
   `gallery_tag.name_normalized` and `admin_user.email_normalized` are not filled
   in for you. Write `email_normalized` with `normalizeEmail()` from
   `app/lib/admin-whitelist.ts`, the same function sign-in uses, or the admin
-  can't sign in.
+  can't sign in. Write `gallery_tag.name_normalized` as the name trimmed, with
+  each run of spaces collapsed to one, and lowercased:
+  `name.trim().replace(/\s+/g, " ").toLowerCase()`, as `0002_seed.sql` does.
 - **Deleting anything with a file attached** takes ordered steps. Follow §4.2.
 
 ---
@@ -839,7 +909,7 @@ generic failure. `putMedia` throws a `MediaError` with the `status`:
 |---|---|
 | `413` | Over 10 MB |
 | `429` | The day's upload budget is used up. It resets at midnight UTC |
-| `503` | The limits couldn't be checked. Locally: a missing migration |
+| `503` | The limits couldn't be checked. Locally: a missing migration, or a limit in `.dev.vars` that is not a whole number above zero (§2.5) |
 | `507` | This upload would take storage past the cap, which keeps the client from ever being billed |
 
 `docs/ENDPOINTS.md` has the details. To show how full storage is, for example
@@ -854,13 +924,16 @@ record the rows.
 **The working example is the PDF menu:** `app/api/admin/menu/upload/route.ts`
 (the route), `app/lib/menu-upload.ts` (the file checks shared by the browser
 and the server), `app/lib/queries/menu-documents.ts` (the rows) and
-`app/api/menu/pdf/route.ts` (serving it). PDFs skip the resize.
+`app/api/menu/pdf/route.ts` (serving it). PDFs skip the resize. Its failure
+handling is the one part not to copy: it leaves the stored file behind when
+the database refuses the rows. Follow the template below for that step.
 
 For images, a new upload would look like this. It is a template; no gallery
 route exists yet. As in §3.1, the SQL goes in the feature's query file:
 
 ```ts
-// teazo-site/app/lib/queries/gallery.ts, next to listGalleryImages and sortKey
+// teazo-site/app/lib/queries/gallery.ts, the file from §3.1. Replace its
+// import line with these two, and add the function after sortKey.
 import { batch, prepare } from "@/app/lib/d1";
 import type { StoredMedia } from "@/app/lib/media";
 
@@ -928,6 +1001,9 @@ export async function POST(request: Request) {
     if (error instanceof MediaError && error.status === 429) {
       return Response.json({ error: "Too many uploads today. Try again tomorrow." }, { status: 429 });
     }
+    if (error instanceof MediaError && error.status === 503) {
+      return Response.json({ error: "Uploads are paused right now. Try again later." }, { status: 503 });
+    }
     throw error;
   }
 
@@ -958,7 +1034,7 @@ export async function POST(request: Request) {
 ```
 
 A file left behind by a failed save keeps counting toward the storage cap,
-because nothing cleans it up later. That is why the example removes it when
+because nothing cleans it up later. That is why the template removes it when
 the database definitely refused the rows.
 
 The resize needs `sharp`. It already imports, because Next.js ships it as an
@@ -975,7 +1051,7 @@ optional dependency, but add it to `teazo-site/package.json`
 >   const canvas = new OffscreenCanvas(Math.round(img.width * scale), Math.round(img.height * scale));
 >   canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
 >   const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.9 });
->   return new File([blob], "photo.jpg", { type: "image/jpeg" });
+>   return new File([blob], file.name.replace(/\.[^.]*$/, "") + ".jpg", { type: "image/jpeg" });
 > }
 > ```
 
@@ -1013,9 +1089,17 @@ the admin.
 version. Removing one means deleting its `menu_document` row, then retiring and
 queueing its media, in the same batch.
 
-**To undo a deletion** within the 24 hours, clear `deleted_at` on the media row
-and on what used it, and delete the `pending_r2_deletion` row, in one batch.
-§2.5 shows how to watch the sweeper work locally.
+**To undo a deletion** within the 24 hours, reverse the delete batch in one
+batch: clear `deleted_at` on the media row, put back what used it, and remove
+the queued row with
+`DELETE FROM pending_r2_deletion WHERE r2_bucket = ?1 AND r2_key = ?2 AND deleted_at IS NULL`.
+Putting it back means clearing `deleted_at` (`gallery_image`, `event`), setting
+the reference back to the media id (the avatar, a kept event's image,
+`content_block`, `site_link`), or inserting the `carousel_slide` or
+`menu_document` row again from values you read before deleting it.
+
+§2.5 shows how to run the sweeper locally, including on rows your own code
+queued.
 
 ---
 
@@ -1026,7 +1110,8 @@ and on what used it, and delete the `pending_r2_deletion` row, in one batch.
 shown. After Google, NextAuth admits the person only if Google has verified
 their email and it matches a live `admin_user` row with status `active` or
 `invited`; everyone else sees "This Google account does not have admin
-access". The session is an encrypted cookie that lasts 8 hours; the database
+access". If the database can't be reached, sign-in stops with "We could not
+verify your access" instead (§2.3). The session is an encrypted cookie that lasts 8 hours; the database
 holds no sessions. After sign-in the admin lands on `/admin`, and signs out
 from the admin navigation.
 
@@ -1040,7 +1125,7 @@ next request, even though their cookie is still valid.
 |---|---|---|---|
 | `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in), `/login?error=AccessDenied` (not enough access) or `/login?error=ServiceUnavailable` (the database couldn't be reached) |
 | | `requireAdminApi(request, minRole = 3)` | Route handlers | Returns `{ ok: true, admin }`, or `{ ok: false, response }` with a ready 401, 403 or 503 |
-| | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. Throws if the database can't be reached |
+| | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. With a session, it throws if the database can't be reached; with no session it returns `null` without asking the database |
 | | `Admin` | | `{ id, username, role_id, can_invite_users }` |
 | `app/lib/admin-whitelist.ts` | `normalizeEmail(email)` | Anything that writes `admin_user.email_normalized` | Trims and lowercases, exactly as sign-in does |
 | | `findAuthorizedAdmin(email)`, `AdminRole` | Rarely needed directly | The sign-in lookup |
@@ -1115,7 +1200,9 @@ refuse to delete or demote the Owner.
 **There are no passwords.** Sign-in is Google only, so there is no password
 reset email. The "Forgot password?" link on `/login` is a placeholder. An admin
 who loses their Google account is removed and added again under their new
-address, which sends a new invite.
+address. Once Settings saves admins, adding them again sends a new invite.
+Until then, on your machine, use `npm run db:seed:local -- <new address>`,
+which sends no email.
 
 ---
 
@@ -1130,7 +1217,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 |---|---|---|---|
 | `admin_user` | admin accounts | `npm run db:seed:local` today; the Settings handlers once built | sign-in, `requireAdminPage`, `requireAdminApi` |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed; the switch has a setter with no caller yet | `/contact` and its action, which read the switch only |
-| `contact_message` | contact form messages | the public contact form, after the bot check | emailed to the owner; no inbox page yet |
+| `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits. Each message is also emailed to the owner; no inbox page yet |
 | `media_asset` | one row per stored file | the PDF menu upload | `/api/menu/pdf` |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |
 | `pending_r2_deletion` | files waiting to be removed | delete handlers (none yet, §4.2) | the Worker's hourly sweeper, which marks rows done |
@@ -1141,7 +1228,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 
 | Table | Holds | Will be written by | Will be read by |
 |---|---|---|---|
-| `business_hours` | the 7 weekday rows | `/admin/website-content` | `/contact` |
+| `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | `/contact` |
 | `hours_exception` | holiday closures, by date | `/admin/website-content` | `/contact` |
 | `site_link` | social and delivery links | `/admin/website-content` | `/`, `/contact`, `/delivery` |
 | `content_block` | editable text on the site | `/admin/website-content` | public pages |
@@ -1220,10 +1307,12 @@ other code.
    colliding.
 2. Apply it on top of your existing data. From the repo root:
    `cd teazo-d1-proxy && npm run db:migrate:local`
-3. Prove it also works from empty: stop the Worker, then
-   `rm -rf .wrangler/state && npm run db:seed:local -- you@gmail.com`
-   (the seed migrates and restores your admin row). **Nothing checks
-   migrations automatically**, so say in the pull request that you did both.
+3. Prove it also works from empty: stop the Worker, then from `teazo-d1-proxy`
+   run `rm -rf .wrangler/state && npm run db:seed:local -- you@gmail.com`
+   (the seed migrates and restores your admin row), and start the Worker again
+   with `npm run dev`. Like any reset (§2.4), this empties your local bucket.
+   **Nothing checks migrations automatically**, so say in the pull request that
+   you did both.
 4. Once it merges, everyone else runs `npm run db:migrate:local` (or the seed).
 
 **Never edit a migration after it has merged.** It is recorded as applied, so
@@ -1231,19 +1320,32 @@ your edit silently never runs on any database that already has it. Write a new
 migration instead.
 
 One pull request is enough for a new table, an index, a nullable column, or a
-new column with a `DEFAULT` (it may carry its own `CHECK`, as `0003` does).
-Removing or renaming a column, or making an existing column `NOT NULL`, needs
-**two** pull requests merged separately: first the code that stops using the
-column, then the migration, because migrations are applied before the new code
-goes live. Adding a `CHECK` or foreign key to an existing column rebuilds the
-whole table; raise it in the channel before you start.
+new column with a constant `DEFAULT` such as `0` or `'active'` (it may carry
+its own `CHECK`, as `0003` does, and every existing row must pass it). SQLite
+can't add a column whose default is an expression, such as the `strftime(...)`
+timestamps in `0001`, or a `UNIQUE` column. Add those as nullable columns that
+your code fills in, with a separate `CREATE UNIQUE INDEX` for uniqueness.
+
+Removing a column needs **two** pull requests merged separately: first the
+code that stops using the column, then the migration, because migrations are
+applied before the new code goes live. Don't rename a column: add the new one
+and copy the old values into it in one migration, switch the code to it in the
+same pull request, and remove the old column later as above.
+
+Adding a foreign key to an existing column means rebuilding the whole table,
+and so does making it `NOT NULL` or adding a `CHECK`, except on newer SQLite.
+Your local Worker's SQLite is new enough to do those two with `ALTER TABLE`,
+but nobody has checked that the real D1 is, so passing locally proves nothing
+there. For `NOT NULL`, first merge code that always fills the column. Raise any
+of these in the channel before you start.
 
 ---
 
 ## 8. How your code reaches production
 
 **The site deploys to Vercel, but the Worker doesn't exist yet**, so nothing
-there can reach a database. On Vercel today, sign-in fails with "We could not
+there can reach a database. Vercel builds production from `dev`, and every
+other pushed branch gets its own preview. On Vercel today, sign-in fails with "We could not
 verify your access", the contact form refuses every message, and the PDF menu
 link returns an error. Test anything that involves the database, storage,
 sign-in or email on your machine.
@@ -1266,7 +1368,14 @@ While that is pending:
 
 ### 8.1 Settings for Vercel
 
-Mark every secret as Sensitive, and never prefix one with `NEXT_PUBLIC_`.
+Save each variable marked Secret in the Notes column as a secret in Vercel
+(Vercel's Secret type, called Sensitive on older screens), which hides its
+value once saved. Vercel allows that only for Production and Preview, and a
+variable already saved as plain can't be switched: delete it and add it again.
+Never prefix a secret with `NEXT_PUBLIC_`. Vercel applies a variable only to
+deployments made after you save it, so redeploy after adding or changing any
+of these. That includes the `NEXT_PUBLIC_` ones, which are built into the
+pages.
 
 | Variable | Production | Preview | Notes |
 |---|---|---|---|
@@ -1274,19 +1383,22 @@ Mark every secret as Sensitive, and never prefix one with `NEXT_PUBLIC_`.
 | `PROXY_TOKEN` | the production Worker's secret | the preview Worker's secret | Secret. Must match `wrangler secret put PROXY_TOKEN` for that Worker |
 | `R2_PUBLIC_BASE` | the production Worker URL + `/media` | the preview Worker URL + `/media` | |
 | `AUTH_SECRET` | a long random string | its own string | Secret |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | the same | Secret. The client must list each deployment's `/api/auth/callback/google` |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | the same | Secret. The OAuth client must list `https://teazo-site.vercel.app/api/auth/callback/google`. Google allows no wildcards, and each commit's preview gets a new address, so a preview can sign in only at its branch URL (shown on the deployment's page in Vercel, like `https://teazo-site-git-<branch>-<team>.vercel.app`), and only after Sammy adds that URL's `/api/auth/callback/google` |
 | `SQUARE_ACCESS_TOKEN` | the sandbox token, for now | the same | Secret. The Square client is fixed to the sandbox |
-| `NEXT_PUBLIC_BASE_URL` | `https://teazo-site.vercel.app/` | that preview's URL | Trailing `/`. Also the sign-in link in invite emails |
+| `NEXT_PUBLIC_BASE_URL` | `https://teazo-site.vercel.app/` | the same | Trailing `/`. Also the sign-in link in invite emails. Each preview commit gets a new address, so previews use production's, and their `/admin/menu` and `/admin/events` read the product list through production |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | `1x00000000000000000000AA` | Public |
 | `TURNSTILE_SECRET_KEY` | the production widget's secret | `1x0000000000000000000000000000000AA` | Secret |
 | `BREVO_API_KEY` | the Brevo API key | leave unset | Secret. Unset means the deployment sends no email |
 | `EMAIL_FROM` | a sender address verified in Brevo | | Required whenever `BREVO_API_KEY` is set, or every email fails |
 | `EMAIL_FROM_NAME` | optional | | Defaults to "TEAZO website" |
-| `CONTACT_NOTIFY_TO` | the owner's inbox | | Where new contact messages are emailed |
+| `CONTACT_NOTIFY_TO` | the owner's inbox | | Required. Without it, contact messages are saved but nobody is emailed, and the logs say `CONTACT_NOTIFY_TO is not set` |
 
 Vercel sets `NODE_ENV`, `VERCEL`, `VERCEL_ENV` and
-`VERCEL_PROJECT_PRODUCTION_URL` itself; don't add them. `BREVO_SANDBOX=1` makes
-Brevo check a request and deliver nothing, for testing a key.
+`VERCEL_PROJECT_PRODUCTION_URL` itself; don't add them. `BREVO_SANDBOX=1`,
+added to Production next to the key, makes Brevo accept each email and deliver
+nothing, with nothing in its logs. It only shows the request is well formed,
+not that email arrives. Delete it and redeploy when you are done, or no email
+is ever delivered.
 
 **The Worker's own settings** live in `teazo-d1-proxy/wrangler.jsonc`: the
 bucket name and each deployment's R2 storage cap and daily upload budget. Its
@@ -1297,7 +1409,13 @@ Previews use Cloudflare's Turnstile test keys because each preview gets its own
 `*.vercel.app` address, and a widget only covers the hostnames listed on it. On
 the production deployment the code ignores a test secret, so every submission
 is refused until the real one is set; a test site key there is logged as an
-error. Either way the check fails closed, never open.
+error. Either way the check fails closed, never open: the visitor sees "The
+security check isn't working right now", and the logs show `TURNSTILE_SECRET_KEY
+is one of Cloudflare's test secrets`, plus `NEXT_PUBLIC_TURNSTILE_SITE_KEY is
+missing or is a Cloudflare test key on production` for a test site key. To see
+this on your machine, follow §2.8 and start the app with
+`VERCEL_ENV=production npm start`. With `VERCEL_ENV=preview`, the same test
+keys pass.
 
 **Turnstile.** On the team Cloudflare account, open Turnstile, add a widget in
 Managed mode, and list the production hostname (`teazo-site.vercel.app` for
@@ -1307,13 +1425,20 @@ to be on Cloudflare.
 **Brevo** (free plan: 300 emails a day, never billed while no card is added):
 
 1. The client opens the account. The free plan allows one login.
-2. Verify the sender address under Settings > Senders, using the 6-digit code
-   Brevo emails to it.
-3. Create an API key, and add it to Vercel for Production only.
-4. Turn off IP blocking for API keys: Settings > Security > Authorized IPs >
-   "Deactivate for API". Vercel has no fixed IP address, and once Brevo switches
-   blocking on after 30 days, every email would be refused. Don't authorize IPs
-   by hand, because that switches blocking on.
+2. Add the sender address under Settings > Senders, Domains, IPs > Senders >
+   Add a sender, save it, and enter the 6-digit code Brevo emails to that
+   address.
+3. Create an API key under Settings > SMTP & API > API Keys & MCP > Generate a
+   new API key. Choose no expiration, copy the key right away (Brevo shows it
+   only once), and add it to Vercel for Production only.
+4. Keep Brevo's IP blocking for API keys off. Vercel sends from changing
+   addresses, and while blocking is on, Brevo refuses email from any address it
+   hasn't seen before. A new account starts with blocking off. Brevo switches it
+   on by itself once no new address has used the key for 30 days, and emails
+   the account owner when it blocks one. When that email comes, and about a
+   month after the site starts sending, open Settings > Security > Authorized
+   IPs. If the API keys row says Activated, choose "Deactivate for API". Don't
+   authorize IPs by hand, because that switches blocking on.
 5. Never add a card or buy credits. Buying credits replaces the free 300 a day.
 6. Brevo expires a key that goes unused for 90 days and emails a warning 7 days
    before. If the site goes that long without sending an email, create a new
@@ -1322,36 +1447,58 @@ to be on Cloudflare.
    Hotmail and Gmail may file the emails as junk. Have the owner mark the first
    one "Not junk", and tell new admins to check their spam folder for the
    invite. A domain fixes this for good.
+8. Once the site is live, send one message through the contact form and check
+   that it reaches `CONTACT_NOTIFY_TO` (look in junk too). If it doesn't, look
+   in the Vercel logs for `Brevo refused the email`. If that line says the
+   account is not yet activated, the client asks Brevo to activate
+   transactional email in a support ticket from inside Brevo.
 
 A failed email never loses a contact message: it is saved before the email is
 attempted, and a failure is only logged. The owner gets at most 20 contact
-emails an hour and 100 a day, so a flood of spam can't use up Brevo's 300 a
-day. The first message over either limit sends one "alerts paused" email, and
-every message is still saved. Admin invites come out of the same 300 a day.
+emails in any 60 minutes and 100 in any 24 hours, and the message that takes a
+count past its limit sends an "alerts paused" email instead (§2.5). However a
+flood is paced, that is at most 101 emails in any 24 hours, so spam can't use
+up Brevo's 300 a day, and every message is still saved. Admin invites come out
+of the same 300 a day.
 
 ---
 
 ## 9. Gotchas
 
 - **`business_hours.day_of_week` is 0 = Monday.** JavaScript's `getDay()` is
-  0 = Sunday.
+  0 = Sunday, and so is the hours list on `/admin/website-content`, which
+  starts with Sunday. Convert both with `(day + 6) % 7`; used directly, a
+  Saturday reads Sunday's hours. Work out today's day in the shop's time zone
+  (`business_profile.timezone`), not the server's, which is UTC on Vercel.
 - **Compare timestamps only in the same format.** Comparing a column against
   `datetime('now', …)` compares `'2026-09-08T…'` with `'2026-09-08 …'` as
   text and silently gives the wrong answer. Use
   `strftime('%Y-%m-%dT%H:%M:%fZ', 'now', …)` on both sides.
-- **End every `ORDER BY` with the primary key** (`…, id`), or rows that tie
-  can come back in a different order on each request.
-- **Never gate anything on `auth()` alone.** The session cookie stays valid for
-  up to 8 hours after an admin is removed. Use `requireAdminPage` or
+- **End every `ORDER BY` with the primary key** (`…, id`). Rows that tie come
+  back in whatever order SQLite's query plan reaches them, so the order changes
+  when the query, an index or the rows change, and a paged list can repeat or
+  skip rows.
+- **Never gate anything on `auth()` alone.** Removing or suspending an admin
+  does not end their session. The cookie lasts 8 hours from when it was last
+  renewed, and every request to `/api/auth/session` renews it, so a removed
+  admin can keep it alive indefinitely. Use `requireAdminPage` or
   `requireAdminApi` (§5), which check `admin_user` on every request.
 - **Leave `GET /api/square/*` public.** `/admin/menu` and `/admin/events` fetch
   it from the server without your cookie, so guarding it would break both
   pages. Guard only the writes.
-- **Use `http://localhost:3000`, never `127.0.0.1:3000`.** They are different
-  addresses to Google, and only `localhost` is registered for sign-in (§2.3).
+- **Use `http://localhost:3000`, never `127.0.0.1:3000` or the network
+  address.** In development Next.js lets only `localhost` open its live-reload
+  connection, so on any other address the page loads but nothing on it
+  responds: the Google button does nothing and the contact form's bot check
+  never appears. The terminal prints `Blocked cross-origin request to Next.js
+  dev resource /_next/hmr`. Your sign-in cookie also belongs to `localhost`
+  only.
 - **Renaming a gallery image means recomputing `name_sort_key`.**
-- **Tag names are unique ignoring case**, so add them with
-  `INSERT … ON CONFLICT(name_normalized) DO NOTHING`.
+- **Tag names are unique ignoring case** only because `name_normalized` is
+  written lowercased (§3.1). Add a tag with
+  `INSERT … ON CONFLICT(name_normalized) DO NOTHING`, then read its id with
+  `SELECT id FROM gallery_tag WHERE name_normalized = ?1`, because
+  `DO NOTHING` returns no row when the tag already exists.
 - **Building the Square sync?** The Square routes will corrupt the cache if the
   sync copies them. `PUT /api/square/products/[id]` sends Square only the first
   size, so every other size is dropped, and it leaves out the item's photo ids,
