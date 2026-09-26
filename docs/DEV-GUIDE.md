@@ -67,8 +67,9 @@ machine:
 - The PDF menu: uploaded from `/admin/menu`, stored in R2, and served on
   `/static-menu`.
 - The Worker's billing limits on R2 and the storage usage report (§2.5).
+- Settings: adding, changing and removing admins, saved to `admin_user` (§5).
 
-**Still sample data or hardcoded:** the Settings admins table, the events,
+**Still sample data or hardcoded:** the dashboard's numbers, the events,
 gallery and website content admin pages, and the content of every public page
 (address, hours, menu, gallery). Those are waiting for their features.
 
@@ -338,7 +339,7 @@ removes them.
 | Bot check (Cloudflare Turnstile) | Nothing: test keys are used automatically. Needs an internet connection | [The bot check](#the-bot-check) |
 | Contact form | Nothing | [The contact form](#the-contact-form) |
 | Limits on the owner's emails | Nothing | [The email limits](#the-email-limits) |
-| Admin invite email | Nothing. Nothing sends it until Settings saves admins | [Admin invites](#admin-invites) |
+| Admin invite email | Nothing. Nothing sends it yet: Settings saves new admins but doesn't call it | [Admin invites](#admin-invites) |
 | Admin roles | Sign-in from §2.3: `AUTH_SECRET`, the Google id and secret from Sammy, and your admin row | [Each admin role](#each-admin-role) |
 | Storage limits and usage | Nothing | [Storage limits and usage](#storage-limits-and-usage) |
 | File sweeper | Nothing | [The file sweeper](#the-file-sweeper) |
@@ -541,13 +542,13 @@ npx wrangler d1 execute teazo-db --local --command "DELETE FROM contact_message 
 
 #### Admin invites
 
-When an admin adds someone in Settings, the new admin gets an email that
+When an admin adds someone in Settings, the new admin should get an email that
 explains how to sign in (`sendAdminInvite` in `app/lib/admin-invite.ts`, see
-§5). Nothing sends it yet, because the Settings admins table doesn't save to
-the database. Once it does, adding an admin prints the invite in the app's
-terminal, or shows it in Mailpit, addressed to the new admin. Its sign-in link
-is built from `NEXT_PUBLIC_BASE_URL`, or `http://localhost:3000` when that
-isn't set.
+§5). Settings already saves the new admin, but its add route doesn't call
+`sendAdminInvite` yet, so nothing is sent. Once it does, adding an admin in
+Settings prints the invite in the app's terminal, or shows it in Mailpit,
+addressed to the new admin. Its sign-in link is built from
+`NEXT_PUBLIC_BASE_URL`, or `http://localhost:3000` when that isn't set.
 
 #### Each admin role
 
@@ -562,13 +563,15 @@ npm run db:seed:local -- you@gmail.com --role 1    # Owner again
 ```
 
 - **Can View** opens every admin page, and the server refuses every admin
-  write with `403`. Today the only page that writes to the server is the menu
-  PDF upload on `/admin/menu`, and its button is disabled for Can View. The
-  Square product routes also refuse Can View. The other admin pages only
-  change the page in your browser for now, so their buttons seem to work at
-  any role and the changes are gone when you reload. Use the terminal check
-  below to see the `403`.
-- **Can Edit** and **Owner** can also upload and edit.
+  write with `403`. Today two pages write to the server: the menu PDF upload on
+  `/admin/menu`, whose button is disabled for Can View, and the admins list in
+  Settings, which shows Can View no edit controls. The Square product routes
+  also refuse Can View. The other admin pages only change the page in your
+  browser for now, so their buttons seem to work at any role and the changes
+  are gone when you reload. Use the terminal check below to see the `403`.
+- **Can Edit** and **Owner** can also upload and edit. Adding, changing and
+  removing admins in Settings needs the Owner, or a Can Edit admin with Manage
+  Admins turned on.
 - **Suspended** can't open any admin page. Suspend yourself with
   `npx wrangler d1 execute teazo-db --local --command "UPDATE admin_user SET status = 'suspended' WHERE email_normalized = 'you@gmail.com'"`,
   writing your address in lowercase, exactly as the seed printed it. Wrangler
@@ -1196,7 +1199,9 @@ Three rules:
 | Route | Who |
 |---|---|
 | Every page under `/admin` | Any admin (Can View and up) |
+| `GET /api/admin/settings/admins` | Any admin (Can View and up) |
 | `POST /api/square/products`, `PUT` and `DELETE /api/square/products/[id]`, `POST /api/admin/menu/upload` | Can Edit and up |
+| `POST /api/admin/settings/admins`, `PATCH` and `DELETE /api/admin/settings/admins/[id]` | The Owner, or Can Edit with Manage Admins |
 | `GET /api/square/*`, `GET /api/menu/pdf`, `/api/auth/*`, the contact form | Everyone, on purpose |
 | `/account` | Anyone signed in |
 
@@ -1212,17 +1217,21 @@ curl -X POST http://localhost:3000/api/... -H "Origin: http://localhost:3000" -H
 Otherwise you get 403 "Request origin is not allowed." Never call an admin
 route from server code; call the query function directly.
 
-**Adding admins.** Settings doesn't save to the database yet, so on your
-machine the only way to add an admin is `npm run db:seed:local` (§2.3). When
-the add-admin route is built, it inserts the row with status `invited` and then
-emails the new admin how to sign in:
+**Adding admins.** Settings saves admins: `POST /api/admin/settings/admins`
+inserts the row with status `invited` (`app/lib/queries/settings.ts`), and the
+new admin can sign in right away. On your machine `npm run db:seed:local`
+(§2.3) still works too. The route doesn't email the new admin yet. To send the
+invite, replace the `return` at the end of its `POST` with:
 
 ```ts
 import { after } from "next/server";
 import { sendAdminInvite } from "@/app/lib/admin-invite";
 
-// once the admin_user row is saved
-after(() => sendAdminInvite({ email, username, role, canManageAdmins, invitedBy: admin.username }));
+// in POST, in place of the current return
+const created = await createSettingsAdmin(input);
+const invitedBy = access.admin.username;
+after(() => sendAdminInvite({ email: created.email, username: created.username, role: created.role, canManageAdmins: created.canManageAdmins, invitedBy }));
+return Response.json({ admin: created }, { status: 201 });
 ```
 
 `after()` sends it once the response is on its way, so the admin panel doesn't
@@ -1230,14 +1239,14 @@ wait. `sendAdminInvite` never throws: a failed email is logged, and the new
 admin can still sign in. Locally the invite is printed or caught by Mailpit
 (§2.5). Both `invited` and `active` can sign in, and nothing in the app
 changes one into the other yet (re-running `npm run db:seed:local` for an
-address sets it to `active`, whatever its status). The database allows at most one Owner, and the handlers must
-refuse to delete or demote the Owner.
+address sets it to `active`, whatever its status). The database allows at most
+one Owner, and the Settings queries never change or delete the Owner's row.
 
 **There are no passwords.** Sign-in is Google only, so there is no password
 reset email. The "Forgot password?" link on `/login` is a placeholder. An admin
 who loses their Google account is removed and added again under their new
-address. Once Settings saves admins, adding them again sends a new invite.
-Until then, on your machine, use
+address in Settings. That will send a new invite once the add route calls
+`sendAdminInvite`. On your machine you can also use
 `npm run db:seed:local -- <new address> --role <their role>`, which sends no
 email. Only one Owner is allowed, so to give the new address `--role 1`, reset
 your database first (§2.4).
@@ -1253,7 +1262,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 
 | Table | Holds | Written by | Read by |
 |---|---|---|---|
-| `admin_user` | admin accounts | `npm run db:seed:local` today; the Settings handlers once built | sign-in, `requireAdminPage`, `requireAdminApi` |
+| `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed; the switch has a setter with no caller yet | `/contact` and its action, which read the switch only |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
 | `media_asset` | one row per stored file | the PDF menu upload | `/api/menu/pdf` |
