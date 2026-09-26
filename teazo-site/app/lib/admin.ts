@@ -1,75 +1,112 @@
+import "server-only";
+
+import { cache } from "react";
+import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
-import { prepare } from "./d1";
 
-export type Admin = {
-  id: string;
-  username: string;
-  role_id: number;
-  can_invite_users: number;
-};
+import {
+  findAuthorizedAdmin,
+  type Admin,
+  type AdminRole,
+} from "./admin-whitelist";
 
-type AdminApiAccess =
+export type { Admin } from "./admin-whitelist";
+
+type AdminAccess =
   | { ok: true; admin: Admin }
-  | { ok: false; response: Response };
+  | { ok: false; status: 401 | 403 };
 
-function accessResponse(message: string, status: number) {
-  return Response.json(
-    { error: message },
-    { status, headers: { "Cache-Control": "no-store" } },
-  );
+type ApiAccess = { ok: true; admin: Admin } | { ok: false; response: Response };
+
+// React cache deduplicates checks during one server render.
+// It does not persist authorization results across requests.
+const getAdminAccess = cache(
+  async (minRole: AdminRole): Promise<AdminAccess> => {
+    const session = await auth();
+    const email = session?.user?.email;
+
+    if (!email) {
+      return { ok: false, status: 401 };
+    }
+
+    const admin = await findAuthorizedAdmin(email);
+
+    if (!admin || admin.role_id > minRole) {
+      return { ok: false, status: 403 };
+    }
+
+    return { ok: true, admin };
+  },
+);
+
+export async function getAdmin(minRole: AdminRole): Promise<Admin | null> {
+  const access = await getAdminAccess(minRole);
+
+  return access.ok ? access.admin : null;
 }
 
-/** Authenticate admin API requests and reject cross-origin writes. */
+export async function requireAdminPage(minRole: AdminRole = 3): Promise<Admin> {
+  let access: AdminAccess;
+
+  try {
+    access = await getAdminAccess(minRole);
+  } catch {
+    console.error("Admin page authorization lookup failed.");
+    redirect("/login?error=ServiceUnavailable");
+  }
+
+  if (!access.ok) {
+    redirect(access.status === 401 ? "/login" : "/login?error=AccessDenied");
+  }
+
+  return access.admin;
+}
+
+function denyApi(status: number, message: string): ApiAccess {
+  return {
+    ok: false,
+    response: Response.json(
+      { error: message },
+      {
+        status,
+        headers: { "Cache-Control": "no-store" },
+      },
+    ),
+  };
+}
+
 export async function requireAdminApi(
   request: Request,
-  minRole: 1 | 2 | 3,
-): Promise<AdminApiAccess> {
+  minRole: AdminRole = 3,
+): Promise<ApiAccess> {
+  let access: AdminAccess;
+
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return { ok: false, response: accessResponse("Unauthorized.", 401) };
-    }
+    access = await getAdminAccess(minRole);
+  } catch {
+    console.error("Admin API authorization lookup failed.");
 
-    if (request.method !== "GET" && request.method !== "HEAD") {
-      const origin = request.headers.get("origin");
-      if (!origin || new URL(origin).host !== new URL(request.url).host) {
-        return {
-          ok: false,
-          response: accessResponse("Request origin is not allowed.", 403),
-        };
-      }
-    }
-
-    const admin = await getAdmin(3);
-    if (!admin) return { ok: false, response: accessResponse("Access denied.", 403) };
-    if (admin.role_id > minRole) return { ok: false, response: accessResponse("Forbidden.", 403) };
-    return { ok: true, admin };
-  } catch (error) {
-    console.error("Could not verify admin access:", error);
-    return {
-      ok: false,
-      response: accessResponse("The admin service is unavailable.", 503),
-    };
+    return denyApi(503, "Authorization is temporarily unavailable.");
   }
-}
 
-/** Roles: 1 Owner, 2 Can Edit, 3 Can View. A lower number is more access. */
-export async function getAdmin(
-  minRole: 1 | 2 | 3
-): Promise<Admin | null> {
-  const email = (await auth())?.user?.email;
+  if (!access.ok) {
+    return denyApi(
+      access.status,
+      access.status === 401
+        ? "Authentication required."
+        : "You do not have permission to perform this action.",
+    );
+  }
 
-  if (!email) return null;
+  // Cookie-authenticated writes must originate from this site.
+  if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+    const origin = request.headers.get("origin");
 
-  const admin = await prepare(
-    `SELECT id, username, role_id, can_invite_users
-       FROM admin_user
-      WHERE email_normalized = ?1
-        AND deleted_at IS NULL
-        AND status IN ('active', 'invited')`
-  )
-    .bind(email.trim().toLowerCase())
-    .first<Admin>();
+    if (!origin || origin !== new URL(request.url).origin) {
+      return denyApi(403, "Request origin is not allowed.");
+    }
+  }
 
-  return admin && admin.role_id <= minRole ? admin : null;
+  return { ok: true, admin: access.admin };
 }

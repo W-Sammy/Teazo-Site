@@ -3,6 +3,7 @@ import { D1Error } from "@/app/lib/d1";
 import { MediaError, mintKey, putMedia } from "@/app/lib/media";
 import { getMenuFileError, MAX_MENU_PDF_BYTES } from "@/app/lib/menu-upload";
 import { publishMenuDocument } from "@/app/lib/queries/menu-documents";
+import { requireAdminApi } from "@/app/lib/admin";
 
 export const runtime = "nodejs";
 
@@ -10,16 +11,22 @@ export const runtime = "nodejs";
 const MAX_REQUEST_BYTES = MAX_MENU_PDF_BYTES + 100_000;
 
 class UploadError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
     super(message);
   }
 }
 
 function errorResponse(message: string, status: number): Response {
-  return Response.json({ error: message }, {
-    status,
-    headers: { "Cache-Control": "no-store" },
-  });
+  return Response.json(
+    { error: message },
+    {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }
 
 /** Read a bounded multipart body, including when Content-Length is absent. */
@@ -30,7 +37,10 @@ async function readUploadForm(request: Request): Promise<FormData> {
   }
 
   if (Number(request.headers.get("content-length")) > MAX_REQUEST_BYTES) {
-    throw new UploadError("The upload is too large. Choose a PDF of 4 MB or less.", 413);
+    throw new UploadError(
+      "The upload is too large. Choose a PDF of 4 MB or less.",
+      413,
+    );
   }
 
   const reader = request.body?.getReader();
@@ -46,7 +56,10 @@ async function readUploadForm(request: Request): Promise<FormData> {
       length += value.byteLength;
       if (length > MAX_REQUEST_BYTES) {
         await reader.cancel().catch(() => undefined);
-        throw new UploadError("The upload is too large. Choose a PDF of 4 MB or less.", 413);
+        throw new UploadError(
+          "The upload is too large. Choose a PDF of 4 MB or less.",
+          413,
+        );
       }
       chunks.push(value);
     }
@@ -66,18 +79,22 @@ async function readUploadForm(request: Request): Promise<FormData> {
       headers: { "Content-Type": contentType },
     }).formData();
   } catch {
-    throw new UploadError("The upload form could not be read. Choose the PDF again.", 400);
+    throw new UploadError(
+      "The upload form could not be read. Choose the PDF again.",
+      400,
+    );
   }
 }
 
 export async function POST(request: Request): Promise<Response> {
-  try {
-    // Check the database role on every upload, not just when opening the page.
-    const admin = await getAdmin(2);
-    if (!admin) {
-      return errorResponse("Sign in with an Owner or Can Edit account to upload a menu.", 401);
-    }
+  const access = await requireAdminApi(request, 2);
+  if (!access.ok) {
+    return access.response;
+  }
 
+  const admin = access.admin;
+
+  try {
     // Only this site's browser form may submit a cookie-authenticated upload.
     const origin = request.headers.get("origin");
     const host = request.headers.get("host") ?? new URL(request.url).host;
@@ -87,7 +104,8 @@ export async function POST(request: Request): Promise<Response> {
     } catch {
       sameOrigin = false;
     }
-    if (!sameOrigin) return errorResponse("Please upload from the Teazo admin page.", 403);
+    if (!sameOrigin)
+      return errorResponse("Please upload from the Teazo admin page.", 403);
 
     const form = await readUploadForm(request);
     const file = form.get("file");
@@ -97,44 +115,69 @@ export async function POST(request: Request): Promise<Response> {
 
     const fileError = getMenuFileError(file);
     if (fileError) {
-      return errorResponse(fileError, file.size > MAX_MENU_PDF_BYTES ? 413 : 400);
+      return errorResponse(
+        fileError,
+        file.size > MAX_MENU_PDF_BYTES ? 413 : 400,
+      );
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
     const decoder = new TextDecoder("ascii");
     const header = decoder.decode(bytes.subarray(0, 5));
-    const trailer = decoder.decode(bytes.subarray(Math.max(0, bytes.length - 2048)));
+    const trailer = decoder.decode(
+      bytes.subarray(Math.max(0, bytes.length - 2048)),
+    );
 
     // Basic format checks, not a full PDF parser or a malware scan.
     if (header !== "%PDF-" || !trailer.includes("%%EOF")) {
-      return errorResponse("This file does not appear to be a complete PDF. Export it again and retry.", 400);
+      return errorResponse(
+        "This file does not appear to be a complete PDF. Export it again and retry.",
+        400,
+      );
     }
 
     // Use generated keys, never a user-supplied filename, for storage paths.
     const key = mintKey("documents/menu", "pdf");
     const documentId = crypto.randomUUID();
     const mediaId = crypto.randomUUID();
-    const originalFilename = Array.from(file.name.split(/[\\/]/).pop() || "menu.pdf")
-      .filter((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127)
-      .join("").slice(0, 200);
+    const originalFilename = Array.from(
+      file.name.split(/[\\/]/).pop() || "menu.pdf",
+    )
+      .filter(
+        (character) =>
+          character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127,
+      )
+      .join("")
+      .slice(0, 200);
 
     // Store first, then publish the new version in one database transaction.
     const stored = await putMedia(key, bytes, "application/pdf");
-    await publishMenuDocument({ documentId, mediaId, stored, originalFilename, adminId: admin.id });
-
-    return Response.json({ success: true, documentId }, {
-      status: 201,
-      headers: { "Cache-Control": "no-store" },
+    await publishMenuDocument({
+      documentId,
+      mediaId,
+      stored,
+      originalFilename,
+      adminId: admin.id,
     });
+
+    return Response.json(
+      { success: true, documentId },
+      {
+        status: 201,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error) {
-    if (error instanceof UploadError) return errorResponse(error.message, error.status);
+    if (error instanceof UploadError)
+      return errorResponse(error.message, error.status);
 
     console.error("Menu PDF upload failed:", error);
 
     // Do not delete the stored file here. A lost /batch response can occur AFTER
     // a commit; deleting then could remove the newly published menu's bytes.
     // A failed transaction can leave an unreferenced file for later cleanup.
-    const status = error instanceof D1Error || error instanceof MediaError ? 503 : 500;
+    const status =
+      error instanceof D1Error || error instanceof MediaError ? 503 : 500;
     return errorResponse(
       "The upload could not be confirmed. Check the public menu before retrying. If it did not change, check the app and Worker terminals.",
       status,
