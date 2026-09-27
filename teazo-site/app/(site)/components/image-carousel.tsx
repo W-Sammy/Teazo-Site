@@ -13,6 +13,8 @@ export default function ImageCarousel(): JSX.Element {
     ];
 
     const [index, setIndex] = useState<number>(0);
+    const [isCenterHovered, setIsCenterHovered] = useState<boolean>(false);
+    
 
 {/* Transition Timer */}    
 useEffect(() => {
@@ -42,12 +44,19 @@ useEffect(() => {
     const rightImage = images[(index + 1) % images.length] || "/fallback.png"; 
 
     return (
-        <div className="relative w-full flex justify-center">
-            {/* Image */}
-            <div className="flex items-center gap-20 justify-center"> {/* need images to fit next to each other */}
-
+        
+        <div
+            className="relative w-full flex flex-col items-center">
+                    
+            <div className="relative w-full h-175 flex items-center justify-center">
+           
                 {/* Left */}
-                <div className = "absolute w-75 h-125 -translate-x-62.5 -rotate-6 z-10">
+                <div className = {`
+                            absolute w-75 h-125 z-10 
+                            transition-all duration-500 ease-in-out
+                            ${isCenterHovered ? "-translate-x-95" : "-translate-x-65"}
+                            `}
+                >
 
                 <Image
                     src={leftImage}
@@ -59,7 +68,10 @@ useEffect(() => {
                 </div>
 
                 {/* Center */}  
-                <div className = " absolute w-100 h-150 z-30">
+                <div className = {`absolute w-100 h-150 z-30`}
+                                   onMouseEnter={() => setIsCenterHovered(true)} 
+                                   onMouseLeave={() => setIsCenterHovered(false)}             
+                >
 
                 <Image
                     src={currentImage}
@@ -67,11 +79,17 @@ useEffect(() => {
                     fill
                     sizes = "12w"
                     className="object-cover rounded-xl" 
-                />  {/* switch to object-cover */}
+                />  
                 </div>
 
                 {/* Right */}
-                <div className = "absolute w-75 h-125 translate-x-62.5 rotate-6 z-10">
+                <div className = {`
+                            absolute w-75 h-125 z-10
+                            transition-all duration-500 ease-in-out
+                            ${isCenterHovered ? "translate-x-95" : "translate-x-65"}
+                            `}
+                >
+                    
                 <Image
                     src={rightImage}
                     alt="image-carousel"
@@ -80,6 +98,23 @@ useEffect(() => {
                     className="object-cover rounded-xl"
                 />
                 </div>
+            </div>
+
+            {/* Dots */}
+            <div className="flex items-center justify-center gap-3 mt-6">
+                {images.map((_, dotIndex) => (
+                    <button
+                        key={dotIndex}
+                        type="button" 
+                        onClick={() => setIndex(dotIndex)} 
+                        aria-label={`Go to image ${dotIndex + 1}`} 
+                        className={`
+                            rounded-full
+                            transition-all duration-300
+                            ${ index === dotIndex ? "w-3 h-3 bg-black" : "w-2.5 h-2.5 bg-gray-400 hover:bg-gray-600"}
+                            `}
+                        />
+                    ))}
             </div>
         </div>
         
