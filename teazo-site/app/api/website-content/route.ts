@@ -3,7 +3,7 @@ import {
   getWebsiteContent,
   updateWebsiteContent,
 } from "@/app/lib/website-content";
-
+import { validateWebsiteContentPatch } from "@/app/lib/website-content-validators";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,18 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
+
+    const validation = validateWebsiteContentPatch(body);
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          error: "Validation failed: " + validation.errors.join("; "),
+          errors: validation.errors,
+        },
+        { status: 400 },
+      );
+    }
+
     const updated = await updateWebsiteContent(body);
 
     // Invalidate cached pages so customer-facing changes appear immediately

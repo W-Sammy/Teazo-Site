@@ -4,36 +4,16 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconContact } from "../icons";
 import { fieldClass, FieldLabel, ErrorText } from "../field-controls";
-import { isNonEmpty, isValidEmail, isValidPhone, withinMaxLength } from "../validators";
+import {
+  validateAddressField,
+  validateAddress,
+  isValidPhone,
+  formatPhoneNumber,
+} from "../validators";
 import type { AddressInfo } from "@/app/types/website-content";
 
 type ContactField = "businessName" | "phone" | "streetAddress" | "locality" | "email" | "mapQuery";
 type ContactErrors = Partial<Record<ContactField, string>>;
-
-function validateField(field: ContactField, value: string): string | undefined {
-  switch (field) {
-    case "businessName":
-      if (!isNonEmpty(value)) return "Business name is required";
-      if (!withinMaxLength(value, 100)) return "Keep under 100 characters";
-      return undefined;
-    case "phone":
-      if (!isNonEmpty(value)) return "Phone number is required";
-      if (!isValidPhone(value)) return "Enter a valid phone number";
-      return undefined;
-    case "streetAddress":
-      if (!isNonEmpty(value)) return "Street address is required";
-      return undefined;
-    case "locality":
-      if (!isNonEmpty(value)) return "City, state, and ZIP are required";
-      return undefined;
-    case "email":
-      if (!isNonEmpty(value)) return "Email is required";
-      if (!isValidEmail(value)) return "Enter a valid email address";
-      return undefined;
-    case "mapQuery":
-      return undefined;
-  }
-}
 
 export default function ContactSection({
   address,
@@ -52,24 +32,40 @@ export default function ContactSection({
   setRef: (el: HTMLDivElement | null) => void;
   onUpdateAddress: (patch: Partial<AddressInfo>) => void;
   onUpdateContactFormEnabled?: (enabled: boolean) => void;
-  onBlur?: () => void;
+  onBlur?: (error?: string) => void;
 }) {
   const [touched, setTouched] = useState<Partial<Record<ContactField, boolean>>>({});
   const [errors, setErrors] = useState<ContactErrors>({});
 
-  // only revalidates fields already touched (post-blur), so typing into an untouched
+  // Revalidates fields already touched (post-blur), so typing into an untouched
   // field doesn't flash an error before the user's had a chance to finish it
   function handleChange(field: ContactField, value: string) {
     onUpdateAddress({ [field]: value } as Partial<AddressInfo>);
     if (touched[field]) {
-      setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+      setErrors((prev) => ({ ...prev, [field]: validateAddressField(field, value) }));
     }
   }
 
   function handleBlur(field: ContactField, value: string) {
+    let finalValue = value.trim();
+    if (field === "phone" && isValidPhone(finalValue)) {
+      finalValue = formatPhoneNumber(finalValue);
+      if (finalValue !== value) {
+        onUpdateAddress({ phone: finalValue });
+      }
+    }
+    const fieldError = validateAddressField(field, finalValue);
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
-    onBlur?.();
+    setErrors((prev) => ({ ...prev, [field]: fieldError }));
+
+    const updatedAddress = { ...address, [field]: finalValue };
+    const { valid, errors: addrErrors } = validateAddress(updatedAddress);
+    if (!valid) {
+      const firstError = fieldError || Object.values(addrErrors)[0];
+      onBlur?.(firstError);
+    } else {
+      onBlur?.();
+    }
   }
 
   return (
@@ -94,6 +90,7 @@ export default function ContactSection({
               value={address.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
               onBlur={(e) => handleBlur("phone", e.target.value)}
+              placeholder="+1 (415) 748-7398"
               className={fieldClass(Boolean(errors.phone))}
             />
             {errors.phone && <ErrorText>{errors.phone}</ErrorText>}
@@ -145,10 +142,11 @@ export default function ContactSection({
         <div className="sm:w-1/2">
           <FieldLabel>Email</FieldLabel>
           <input
-            type="text"
+            type="email"
             value={address.email}
             onChange={(e) => handleChange("email", e.target.value)}
             onBlur={(e) => handleBlur("email", e.target.value)}
+            placeholder="teazosf@hotmail.com"
             className={fieldClass(Boolean(errors.email))}
           />
           {errors.email && <ErrorText>{errors.email}</ErrorText>}

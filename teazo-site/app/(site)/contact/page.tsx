@@ -149,14 +149,15 @@ export default async function ContactPage() {
     dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
   const isYelpEnabled =
     dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
-  const phoneHref = `tel:${location.phone.replace(/[^\d+]/g, "")}`;
+  const phoneDigits = location.phone.replace(/[^\d+]/g, "");
+  const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
   const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
   const hoursDayShiftPx = isMobileRequest ? 0 : HOURS_DAY_SHIFT_PX;
   const hoursTimeShiftPx = isMobileRequest ? 0 : HOURS_TIME_SHIFT_PX;
   const hoursTimeMinWidth = isMobileRequest
     ? "auto"
     : HOURS_TIME_COLUMN_MIN_WIDTH;
-  const emailHref = `mailto:${location.email}`;
+  const emailHref = `mailto:${location.email || "teazosf@hotmail.com"}`;
   const opensWebmail = false;
   const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
     location.mapQuery,

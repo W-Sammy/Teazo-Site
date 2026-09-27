@@ -4,6 +4,13 @@ import type {
   WebsiteContent,
 } from "@/app/types/website-content";
 import { prepare, batch } from "@/app/lib/d1";
+import {
+  isValidPhone,
+  isValidEmail,
+  isNonEmpty,
+  formatPhoneNumber,
+  validateWebsiteContentPatch,
+} from "@/app/lib/website-content-validators";
 
 export type ContactHour = {
   day: string;
@@ -207,11 +214,21 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 
     if (profile) {
       content.address = {
-        businessName: profile.business_name || content.address.businessName,
-        streetAddress: profile.street_address || content.address.streetAddress,
-        locality: profile.locality || content.address.locality,
-        phone: profile.phone || content.address.phone,
-        email: profile.email || content.address.email,
+        businessName: (profile.business_name && isNonEmpty(profile.business_name))
+          ? profile.business_name
+          : content.address.businessName,
+        streetAddress: (profile.street_address && isNonEmpty(profile.street_address))
+          ? profile.street_address
+          : content.address.streetAddress,
+        locality: (profile.locality && isNonEmpty(profile.locality))
+          ? profile.locality
+          : content.address.locality,
+        phone: (profile.phone && isValidPhone(profile.phone))
+          ? formatPhoneNumber(profile.phone)
+          : content.address.phone,
+        email: (profile.email && isValidEmail(profile.email))
+          ? profile.email
+          : content.address.email,
         mapQuery: profile.map_query || content.address.mapQuery,
       };
       if (profile.contact_form_enabled !== undefined && profile.contact_form_enabled !== null) {
@@ -292,14 +309,26 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 export async function updateWebsiteContent(
   patch: Partial<WebsiteContent>,
 ): Promise<WebsiteContent> {
+  const validation = validateWebsiteContentPatch(patch);
+  if (!validation.valid) {
+    throw new Error(`Invalid website content: ${validation.errors.join("; ")}`);
+  }
+
   const current = await getWebsiteContent();
+
+  const formattedAddress = patch.address
+    ? {
+        ...patch.address,
+        phone: patch.address.phone ? formatPhoneNumber(patch.address.phone) : patch.address.phone,
+      }
+    : undefined;
 
   const nextContent: WebsiteContent = {
     ...current,
     ...patch,
     address: {
       ...current.address,
-      ...(patch.address ?? {}),
+      ...(formattedAddress ?? {}),
     },
   };
 

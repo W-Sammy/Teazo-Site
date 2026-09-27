@@ -40,6 +40,7 @@ export default function WebsiteContentClient({
     content,
     saveStatus,
     errorMessage,
+    setErrorMessage,
     flushPatch,
     updateLogo,
     updateStory,
@@ -93,9 +94,17 @@ export default function WebsiteContentClient({
       {errorMessage && (
         <div
           role="alert"
-          className="fixed left-20 right-3 top-3 z-[60] break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
+          className="fixed left-20 right-3 top-3 z-[60] flex max-w-md items-start justify-between gap-3 break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5"
         >
-          {errorMessage}
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage("")}
+            className="text-red-400 hover:text-red-600 text-xs font-bold px-1"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -133,7 +142,7 @@ export default function WebsiteContentClient({
                 className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                Save failed
+                {errorMessage ? "Formatting error" : "Save failed"}
               </span>
             )}
           </div>
@@ -229,7 +238,7 @@ export default function WebsiteContentClient({
             setRef={setSectionRef("contact")}
             onUpdateAddress={updateAddress}
             onUpdateContactFormEnabled={updateContactFormEnabled}
-            onBlur={() => flushPatch()}
+            onBlur={(error?: string) => flushPatch(undefined, error)}
           />
 
           <HoursSection
