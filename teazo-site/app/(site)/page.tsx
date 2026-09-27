@@ -100,7 +100,7 @@ export default function Home() {
       
         
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] rounded-[28px] border bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -113,9 +113,26 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                 
                 <p> From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!</p>
 
+            </div>
 
-                {/*social media icons*/}
-                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
+        </div>
+        </section>
+
+        {/* Call To Action */}
+        <section
+          className={`mx-auto mt-10 w-full max-w-[1000px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+        >
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center items-center justify-center text-center
+">
+            <div className="max-w-3xl">
+              <h2
+                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+              >
+                Come Explore Our World of Tea!
+              </h2>
+
+            {/*social media icons*/}
+            <div className="mt-8 flex flex-wrap justify-center  items-center gap-6 sm:gap-10">
                     
                     <a href= {socialLinks.facebook} target="_blank">
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
@@ -129,12 +146,12 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                     <a href={socialLinks.yelp} target="_blank">
                     <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                </div>
-
             </div>
 
+            </div>
         </div>
         </section>
+
 
     </main>
   )
