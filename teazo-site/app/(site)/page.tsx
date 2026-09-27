@@ -55,14 +55,16 @@ export default function Home() {
     
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
+            <section className="relative z-20 mx-auto flex w-full 
+            
+ flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
                     src="/TEAZO_logo.svg"
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
                     height={397}
-                    className="h-[170px] w-auto sm:h-[195px]"
+                    className="h-42.5 w-auto sm:h-48.75"
                     priority
                 />
 
@@ -100,7 +102,7 @@ export default function Home() {
       
         
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] rounded-[28px] border bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-250 rounded-[28px] border bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-225"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -120,9 +122,9 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
 
         {/* Call To Action */}
         <section
-          className={`mx-auto mt-10 w-full max-w-[1000px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+          className={`mx-auto mt-10 w-full max-w-250 rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
         >
-        <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center items-center justify-center text-center
+        <div className="mx-auto flex w-full max-w-295 flex-col justify-between gap-6 items-center text-center
 ">
             <div className="max-w-3xl">
               <h2
