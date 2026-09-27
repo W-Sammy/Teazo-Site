@@ -19,7 +19,7 @@ export default function Sidebar({
 }: SidebarProps) {
   // Active pages use colored icons; inactive pages use the black variants.
   const iconRoot =
-    "/admin_icons/admin_svg/"; // will eventually change this to "/admin_icons/admin_svg/"
+    "/admin_icons/admin_svg/";
 
   // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
