@@ -1,14 +1,14 @@
 import type { WebsiteContent } from "@/app/types/website-content";
 
 const MOCK_CONTENT: WebsiteContent = {
-  logo: "/TEAZO_logo.png",
+  logo: "/TEAZO_logo.svg",
   story:
     "TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!",
   socialLinks: [
-    { id: "facebook", label: "Facebook", icon: "/social_icons/teazo_fb_icon.png", url: "", enabled: true },
-    { id: "email", label: "Email", icon: "/social_icons/teazo_email_icon.png", url: "", enabled: true },
-    { id: "instagram", label: "Instagram", icon: "/social_icons/teazo_insta_icon.png", url: "", enabled: true },
-    { id: "yelp", label: "Yelp", icon: "/social_icons/teazo_yelp_icon.png", url: "", enabled: true },
+    { id: "facebook", label: "Facebook", icon: "/social_icons/social_svg/teazo_fb_icon.svg", url: "", enabled: true },
+    { id: "email", label: "Email", icon: "/social_icons/social_svg/teazo_email_icon.svg", url: "", enabled: true },
+    { id: "instagram", label: "Instagram", icon: "/social_icons/social_svg/teazo_insta_icon.svg", url: "", enabled: true },
+    { id: "yelp", label: "Yelp", icon: "/social_icons/social_svg/teazo_yelp_icon.svg", url: "", enabled: true },
   ],
   address: {
     businessName: "TEAZO",

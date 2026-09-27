@@ -131,7 +131,11 @@ export default function SocialSection({
                     />
                   ) : (
                     <span className="text-[#a99584]">
-                      <IconSocial />
+                      <img
+                        src="/admin_icons/admin_svg/teazo_share_icon.svg"
+                        alt="Default Icon"
+                        className="h-6 w-6 object-contain"
+                      /> 
                     </span>
                   )}
 
