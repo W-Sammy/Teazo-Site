@@ -1,7 +1,5 @@
 import type {
-  AddressInfo,
   DayHours,
-  Holiday,
   SocialLink,
   WebsiteContent,
 } from "@/app/types/website-content";
@@ -13,6 +11,7 @@ export type ContactHour = {
 };
 
 export type ContactContent = {
+  logo?: string;
   location: {
     businessName: string;
     streetAddress: string;
@@ -22,6 +21,7 @@ export type ContactContent = {
     mapQuery: string;
   };
   hours: ContactHour[];
+  socialLinks?: SocialLink[];
   contactFormEnabled: boolean;
 };
 
@@ -63,7 +63,24 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
   contactFormEnabled: true,
 };
 
-let currentWebsiteContent: WebsiteContent = { ...DEFAULT_WEBSITE_CONTENT };
+function cloneDefaultWebsiteContent(): WebsiteContent {
+  return {
+    logo: DEFAULT_WEBSITE_CONTENT.logo,
+    story: DEFAULT_WEBSITE_CONTENT.story,
+    socialLinks: DEFAULT_WEBSITE_CONTENT.socialLinks.map((s) => ({ ...s })),
+    deliveryLinks: DEFAULT_WEBSITE_CONTENT.deliveryLinks?.map((d) => ({ ...d })),
+    address: { ...DEFAULT_WEBSITE_CONTENT.address },
+    hours: DEFAULT_WEBSITE_CONTENT.hours.map((h) => ({ ...h })),
+    holidays: DEFAULT_WEBSITE_CONTENT.holidays.map((h) => ({ ...h })),
+    contactFormEnabled: DEFAULT_WEBSITE_CONTENT.contactFormEnabled,
+  };
+}
+
+let inMemoryContent: WebsiteContent = cloneDefaultWebsiteContent();
+
+function isD1Configured(): boolean {
+  return Boolean(process.env.D1_PROXY_URL && process.env.PROXY_TOKEN);
+}
 
 const WEEKDAY_NAMES_FROM_MONDAY = [
   "Monday",
@@ -111,19 +128,50 @@ function hourToTimeString(hour: number): string {
  * Loads current website content from D1 if configured, otherwise falls back to memory.
  */
 export async function getWebsiteContent(): Promise<WebsiteContent> {
+  const content = cloneDefaultWebsiteContent();
+
+  if (!isD1Configured()) {
+    return inMemoryContent;
+  }
+
   try {
-    const profile = await prepare(
-      `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
-         FROM business_profile WHERE id = 1`
-    ).first<{
+    let profile: {
       business_name: string;
       street_address: string;
       locality: string;
       phone: string | null;
       email: string | null;
       map_query: string;
-      contact_form_enabled: number;
-    }>();
+      contact_form_enabled?: number;
+    } | null = null;
+
+    try {
+      profile = await prepare(
+        `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
+           FROM business_profile WHERE id = 1`
+      ).first<{
+        business_name: string;
+        street_address: string;
+        locality: string;
+        phone: string | null;
+        email: string | null;
+        map_query: string;
+        contact_form_enabled: number;
+      }>();
+    } catch {
+      // Fallback query if contact_form_enabled column does not exist yet in database
+      profile = await prepare(
+        `SELECT business_name, street_address, locality, phone, email, map_query
+           FROM business_profile WHERE id = 1`
+      ).first<{
+        business_name: string;
+        street_address: string;
+        locality: string;
+        phone: string | null;
+        email: string | null;
+        map_query: string;
+      }>();
+    }
 
     const d1Hours = await prepare(
       `SELECT day_of_week, display_text, opens_at, closes_at, is_closed
@@ -158,15 +206,17 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     ).all<{ date: string; is_closed: number; display_text: string | null; note: string | null }>();
 
     if (profile) {
-      currentWebsiteContent.address = {
-        businessName: profile.business_name || currentWebsiteContent.address.businessName,
-        streetAddress: profile.street_address || currentWebsiteContent.address.streetAddress,
-        locality: profile.locality || currentWebsiteContent.address.locality,
-        phone: profile.phone || currentWebsiteContent.address.phone,
-        email: profile.email || currentWebsiteContent.address.email,
-        mapQuery: profile.map_query || currentWebsiteContent.address.mapQuery,
+      content.address = {
+        businessName: profile.business_name || content.address.businessName,
+        streetAddress: profile.street_address || content.address.streetAddress,
+        locality: profile.locality || content.address.locality,
+        phone: profile.phone || content.address.phone,
+        email: profile.email || content.address.email,
+        mapQuery: profile.map_query || content.address.mapQuery,
       };
-      currentWebsiteContent.contactFormEnabled = profile.contact_form_enabled === 1;
+      if (profile.contact_form_enabled !== undefined && profile.contact_form_enabled !== null) {
+        content.contactFormEnabled = profile.contact_form_enabled === 1;
+      }
     }
 
     if (d1Hours.results.length === 7) {
@@ -174,7 +224,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       const mappedHours: DayHours[] = WEEKDAY_ABBRS_FROM_SUNDAY.map((abbr, jsDay) => {
         const d1Day = (jsDay + 6) % 7;
         const row = d1Hours.results.find((r) => r.day_of_week === d1Day);
-        if (!row) return currentWebsiteContent.hours[jsDay];
+        if (!row) return content.hours[jsDay];
         return {
           day: abbr,
           start: parseTimeToHour(row.opens_at),
@@ -182,7 +232,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           closed: row.is_closed === 1,
         };
       });
-      currentWebsiteContent.hours = mappedHours;
+      content.hours = mappedHours;
     }
 
     if (d1Links.results.length > 0) {
@@ -195,7 +245,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           url: l.url,
           enabled: l.is_active === 1,
         }));
-      if (socials.length > 0) currentWebsiteContent.socialLinks = socials;
+      if (socials.length > 0) content.socialLinks = socials;
 
       const delivery = d1Links.results
         .filter((l) => l.link_group === "delivery")
@@ -206,32 +256,34 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           url: l.url,
           enabled: l.is_active === 1,
         }));
-      if (delivery.length > 0) currentWebsiteContent.deliveryLinks = delivery;
+      if (delivery.length > 0) content.deliveryLinks = delivery;
     }
 
     if (d1Copy.results.length > 0) {
       for (const block of d1Copy.results) {
         if (block.key === "home.story" && block.value) {
-          currentWebsiteContent.story = block.value;
+          content.story = block.value;
         } else if (block.key === "site.logo" && block.value) {
-          currentWebsiteContent.logo = block.value;
+          content.logo = block.value;
         }
       }
     }
 
     if (d1Holidays.results.length > 0) {
-      currentWebsiteContent.holidays = d1Holidays.results.map((h, i) => ({
+      content.holidays = d1Holidays.results.map((h, i) => ({
         id: `holiday-${h.date || i}`,
         name: h.note || `Holiday`,
         date: h.date,
         closed: h.is_closed === 1,
       }));
     }
-  } catch {
-    // Keep in-memory content when D1 is unconfigured or unreachable.
-  }
 
-  return currentWebsiteContent;
+    inMemoryContent = { ...content };
+    return content;
+  } catch (error) {
+    console.error("Failed to fetch website content from D1:", error);
+    return inMemoryContent;
+  }
 }
 
 /**
@@ -240,21 +292,31 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 export async function updateWebsiteContent(
   patch: Partial<WebsiteContent>,
 ): Promise<WebsiteContent> {
-  currentWebsiteContent = {
-    ...currentWebsiteContent,
+  const current = await getWebsiteContent();
+
+  const nextContent: WebsiteContent = {
+    ...current,
     ...patch,
     address: {
-      ...currentWebsiteContent.address,
+      ...current.address,
       ...(patch.address ?? {}),
     },
   };
 
+  inMemoryContent = { ...nextContent };
+
+  if (!isD1Configured()) {
+    return nextContent;
+  }
+
   try {
     const stmts: Array<{ toStmt(): { sql: string; params: unknown[] } }> = [];
+    const hasAddressUpdate = patch.address !== undefined;
+    const hasFormToggleUpdate = patch.contactFormEnabled !== undefined;
 
-    if (patch.address || patch.contactFormEnabled !== undefined) {
-      const addr = currentWebsiteContent.address;
-      const formEnabled = currentWebsiteContent.contactFormEnabled ? 1 : 0;
+    if (hasAddressUpdate || hasFormToggleUpdate) {
+      const addr = nextContent.address;
+      const formEnabled = nextContent.contactFormEnabled ? 1 : 0;
       stmts.push(
         prepare(
           `UPDATE business_profile
@@ -353,13 +415,45 @@ export async function updateWebsiteContent(
     }
 
     if (stmts.length > 0) {
-      await batch(stmts);
+      try {
+        await batch(stmts);
+      } catch (err: unknown) {
+        const errMsg = String(err);
+        // If contact_form_enabled column does not exist yet, retry updating business_profile without it
+        if (errMsg.includes("contact_form_enabled") && (hasAddressUpdate || hasFormToggleUpdate)) {
+          const addr = nextContent.address;
+          const fallbackStmts = stmts.map((s) => {
+            const stmtObj = s.toStmt();
+            if (stmtObj.sql.includes("contact_form_enabled")) {
+              return prepare(
+                `UPDATE business_profile
+                   SET business_name = ?1, street_address = ?2, locality = ?3,
+                       phone = ?4, email = ?5, map_query = ?6,
+                       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                 WHERE id = 1`
+              ).bind(
+                addr.businessName,
+                addr.streetAddress,
+                addr.locality,
+                addr.phone,
+                addr.email,
+                addr.mapQuery || `${addr.streetAddress}, ${addr.locality}`,
+              );
+            }
+            return s;
+          });
+          await batch(fallbackStmts);
+        } else {
+          throw err;
+        }
+      }
     }
-  } catch {
-    // If D1 is unconfigured or unreachable, memory state still updates.
+  } catch (err) {
+    console.error("Failed to update website content in D1:", err);
+    throw err;
   }
 
-  return currentWebsiteContent;
+  return nextContent;
 }
 
 /**
@@ -385,6 +479,7 @@ export async function getContactContent(): Promise<ContactContent> {
   });
 
   return {
+    logo: content.logo,
     location: {
       businessName: content.address.businessName,
       streetAddress: content.address.streetAddress,
@@ -396,6 +491,7 @@ export async function getContactContent(): Promise<ContactContent> {
         `${content.address.streetAddress}, ${content.address.locality}`,
     },
     hours,
+    socialLinks: content.socialLinks,
     contactFormEnabled: content.contactFormEnabled,
   };
 }

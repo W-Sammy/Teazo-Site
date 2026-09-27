@@ -32,11 +32,6 @@ const montserrat = Montserrat({
 const HOURS_TIME_COLUMN_MIN_WIDTH = "10.5rem";
 const HOURS_DAY_SHIFT_PX = 10;
 const HOURS_TIME_SHIFT_PX = -28;
-const socialLinks = {
-  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
-  instagram: "https://www.instagram.com/teazosf/",
-  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
-};
 
 function PinIcon() {
   return (
@@ -130,7 +125,30 @@ function ClockIcon() {
 export default async function ContactPage() {
   const requestHeaders = await headers();
   const userAgent = requestHeaders.get("user-agent") ?? "";
-  const { location, hours, contactFormEnabled } = await getContactContent();
+  const contactData = await getContactContent();
+  const {
+    location,
+    hours,
+    contactFormEnabled,
+    logo,
+    socialLinks: dynamicSocialLinks,
+  } = contactData;
+  const logoSrc = logo || "/TEAZO_logo.svg";
+  const fbLink =
+    dynamicSocialLinks?.find((l) => l.id === "facebook" && l.enabled)?.url ||
+    "https://www.facebook.com/people/TEAZO/100063111166083";
+  const igLink =
+    dynamicSocialLinks?.find((l) => l.id === "instagram" && l.enabled)?.url ||
+    "https://www.instagram.com/teazosf/";
+  const yelpLink =
+    dynamicSocialLinks?.find((l) => l.id === "yelp" && l.enabled)?.url ||
+    "https://www.yelp.com/biz/teazo-san-francisco";
+  const isFbEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
+  const isIgEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
+  const isYelpEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
   const phoneHref = `tel:${location.phone.replace(/[^\d+]/g, "")}`;
   const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
   const hoursDayShiftPx = isMobileRequest ? 0 : HOURS_DAY_SHIFT_PX;
@@ -158,13 +176,16 @@ export default async function ContactPage() {
           {/* Use the approved uploaded logo asset rather than reconstructing it
               in code so brand updates can be handled from /public later. */}
           <Image
-            src="/TEAZO_logo.svg"
-            alt=""
+            src={logoSrc}
+            alt="TEAZO logo"
             aria-hidden="true"
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
             priority
+            unoptimized={
+              logoSrc.startsWith("data:") || logoSrc.startsWith("http")
+            }
           />
           <h1
             className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
@@ -314,22 +335,24 @@ export default async function ContactPage() {
               </p>
 
               <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                <a
-                  href={socialLinks.facebook}
-                  aria-label={`${location.businessName} on Facebook`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_fb_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
+                {isFbEnabled && (
+                  <a
+                    href={fbLink}
+                    aria-label={`${location.businessName} on Facebook`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_fb_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
                 <a
                   href={emailHref}
                   aria-label={`Email ${location.businessName}`}
@@ -346,38 +369,42 @@ export default async function ContactPage() {
                     className="h-12 w-12 object-contain"
                   />
                 </a>
-                <a
-                  href={socialLinks.instagram}
-                  aria-label={`${location.businessName} on Instagram`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_insta_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
-                <a
-                  href={socialLinks.yelp}
-                  aria-label={`${location.businessName} on Yelp`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
+                {isIgEnabled && (
+                  <a
+                    href={igLink}
+                    aria-label={`${location.businessName} on Instagram`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_insta_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
+                {isYelpEnabled && (
+                  <a
+                    href={yelpLink}
+                    aria-label={`${location.businessName} on Yelp`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_yelp_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
               </div>
             </div>
 

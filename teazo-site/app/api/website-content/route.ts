@@ -29,13 +29,19 @@ export async function PATCH(request: Request) {
     revalidatePath("/");
     revalidatePath("/contact");
     revalidatePath("/delivery");
+    revalidatePath("/menu");
+    revalidatePath("/gallery");
     revalidatePath("/admin/website-content");
 
     return NextResponse.json(updated);
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/website-content failed:", error);
     return NextResponse.json(
-      { error: "Failed to update website content" },
-      { status: 400 },
+      {
+        error: "Failed to update website content",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
     );
   }
 }

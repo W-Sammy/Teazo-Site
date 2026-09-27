@@ -45,6 +45,10 @@ export async function POST(request: Request) {
     await updateWebsiteContent({ logo: publicUrl });
 
     revalidatePath("/");
+    revalidatePath("/contact");
+    revalidatePath("/delivery");
+    revalidatePath("/menu");
+    revalidatePath("/gallery");
     revalidatePath("/admin/website-content");
 
     return NextResponse.json({ success: true, url: publicUrl });

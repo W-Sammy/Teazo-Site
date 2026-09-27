@@ -102,30 +102,33 @@ export default function ContactSection({
 
         <div className="rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">
           <FieldLabel>Address</FieldLabel>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-3">
             <div>
+              <span className="mb-1 block text-xs font-semibold text-[#8c6d48]">Street Address</span>
               <input
                 type="text"
                 value={address.streetAddress}
                 onChange={(e) => handleChange("streetAddress", e.target.value)}
                 onBlur={(e) => handleBlur("streetAddress", e.target.value)}
-                placeholder="Street address"
+                placeholder="Street address (e.g. 1050 Taraval St.)"
                 className={`${fieldClass(Boolean(errors.streetAddress))} bg-white`}
               />
               {errors.streetAddress && <ErrorText>{errors.streetAddress}</ErrorText>}
             </div>
             <div>
+              <span className="mb-1 block text-xs font-semibold text-[#8c6d48]">City, State ZIP</span>
               <input
                 type="text"
                 value={address.locality}
                 onChange={(e) => handleChange("locality", e.target.value)}
                 onBlur={(e) => handleBlur("locality", e.target.value)}
-                placeholder="City, State ZIP"
+                placeholder="City, State ZIP (e.g. San Francisco, CA 94116)"
                 className={`${fieldClass(Boolean(errors.locality))} bg-white`}
               />
               {errors.locality && <ErrorText>{errors.locality}</ErrorText>}
             </div>
             <div>
+              <span className="mb-1 block text-xs font-semibold text-[#8c6d48]">Google Maps Search Query (optional)</span>
               <input
                 type="text"
                 value={address.mapQuery ?? ""}

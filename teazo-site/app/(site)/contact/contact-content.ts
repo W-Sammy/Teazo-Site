@@ -5,9 +5,12 @@ export type ContactHour = {
   hours: string;
 };
 
+import type { SocialLink } from "@/app/types/website-content";
+
 // Route-local content shape for the contact page. If this route later moves to
 // an admin dashboard or CMS, this type is the contract to preserve.
 export type ContactContent = {
+  logo?: string;
   location: {
     businessName: string;
     streetAddress: string;
@@ -17,12 +20,14 @@ export type ContactContent = {
     mapQuery: string;
   };
   hours: ContactHour[];
+  socialLinks?: SocialLink[];
   contactFormEnabled: boolean;
 };
 
 // Keep the page content in one route-local module so it can later be swapped
 // for admin-dashboard or CMS data without rewriting the contact layout.
 export const contactContent: ContactContent = {
+  logo: "/TEAZO_logo.svg",
   location: {
     // Keep address data split into display-friendly pieces because the layout
     // renders them on separate lines while still deriving links from mapQuery.
@@ -41,6 +46,11 @@ export const contactContent: ContactContent = {
     { day: "Friday", hours: "11:00 AM - 10:00 PM" },
     { day: "Saturday", hours: "11:00 AM - 10:00 PM" },
     { day: "Sunday", hours: "11:00 AM - 8:00 PM" },
+  ],
+  socialLinks: [
+    { id: "facebook", label: "Facebook", icon: "/social_icons/teazo_fb_icon.png", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
+    { id: "instagram", label: "Instagram", icon: "/social_icons/teazo_insta_icon.png", url: "https://www.instagram.com/teazosf/", enabled: true },
+    { id: "yelp", label: "Yelp", icon: "/social_icons/teazo_yelp_icon.png", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
   ],
   contactFormEnabled: true,
 };
