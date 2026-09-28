@@ -317,6 +317,12 @@ so you can run it in place of `db:migrate:local`. Then start both again with
 `npm run dev`: the Worker from `teazo-d1-proxy` in terminal 1, and the app from
 `teazo-site` in terminal 2.
 
+If `db:migrate:local` fails with `duplicate column name: contact_form_enabled`,
+your database ran an early copy of the contact form branch, whose own `0003`
+added that column. Reset it as above. To keep your local data instead, run
+`npx wrangler d1 execute teazo-db --local --command "ALTER TABLE business_profile DROP COLUMN contact_form_enabled"`
+from `teazo-d1-proxy`, then `npm run db:migrate:local` again.
+
 ### 2.5 Set up and test the new features
 
 The contact form, email, the bot check, the storage limits and the file
@@ -327,10 +333,10 @@ sign-in from §2.3. Start the Worker (§2.1) and the app (§2.2) first.
 **Already set up before these features?** Your local database may be missing
 migrations `0003` (website content, including the contact form switch) and
 `0004` (the storage record).
-Follow **After every pull** in §2.4, which applies them. Until you do, Submit
-on `/contact` answers "Your message could not be sent right now" even with the
-Worker running, `/usage` answers `usage_unavailable`, and uploads fail: the
-Worker answers `503 limits_unavailable`, which `/admin/menu` shows as "The
+Follow **After every pull** in §2.4, which applies them. Without `0003`,
+Submit on `/contact` answers "Your message could not be sent right now" even
+with the Worker running. Without `0004`, `/usage` answers `usage_unavailable`
+and uploads fail: the Worker answers `503 limits_unavailable`, which `/admin/menu` shows as "The
 upload could not be confirmed" (the app's terminal has the code, after `Menu
 PDF upload failed:`). Nothing new goes in `.env.local` or `.dev.vars`. Files you
 uploaded before the pull are not in the new storage record, so `/usage` leaves
