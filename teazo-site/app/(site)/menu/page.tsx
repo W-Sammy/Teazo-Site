@@ -5,6 +5,7 @@ import { type MenuItem } from "../components/menu-item-card";
 import MenuItemsSection from "../components/menu-items-section";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
+import Subtitle from "../components/sub-title";
 import { getWebsiteContent } from "@/app/lib/website-content";
 
 export const metadata: Metadata = {
@@ -21,21 +22,6 @@ const montserrat = Montserrat({
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
-
-// Decorative pink scribble behind the section heading.
-function PaintStroke() {
-	return (
-		<div className="absolute left-1/2 top-1/2 h-[120px] w-[680px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2">
-			<Image
-				src="/pink_scribble.png"
-				alt=""
-				aria-hidden="true"
-				fill
-				className="object-contain"
-			/>
-		</div>
-	);
-}
 
 /* Structure used to group menu items into named categories.
    Each section can optionally include a subtitle plus a list of items
@@ -747,17 +733,12 @@ export default async function MenuPage() {
 						</div>
 					</div>
 
-					<div className="relative mt-10 inline-flex items-center justify-center sm:mt-12">
-						<PaintStroke />
-						<h2
-							className={`${cabinSketch.className} relative z-10 px-5 text-center text-[3.1rem] uppercase leading-[0.92] tracking-[0.035em] text-[#161616] sm:text-[4.5rem] lg:text-[5rem]`}
-						>
-							Drinks, Desserts &amp; Specials
-						</h2>
+					<div className="relative mt-16 inline-flex items-center justify-center sm:mt-12">
+						<Subtitle text={"Boba • Snacks • Desserts"} />
 					</div>
 
 					<p
-						className={`${montserrat.className} mt-6 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
+						className={`${montserrat.className} mt-17 sm:mt-6 max-w-3xl text-base leading-7 text-stone-700 sm:text-lg`}
 					>
 						Explore TEAZO menu categories and featured specials.
 					</p>
@@ -767,7 +748,7 @@ export default async function MenuPage() {
 				<MenuItemsSection
 					title="TEAZO Special"
 					items={specials}
-					className="mx-auto mt-16 max-w-[1320px] lg:mt-20"
+					className="mx-auto mt-12 max-w-[1320px] lg:mt-20"
 					headingClassName={cabinSketch.className}
 					bodyClassName={montserrat.className}
 				/>

@@ -8,7 +8,7 @@ ALTER TABLE business_profile ADD COLUMN contact_form_enabled INTEGER NOT NULL DE
 
 INSERT INTO content_block (key, page_key, slot_key, block_type, value) VALUES
   ('home.story', 'home', 'story', 'text', 'TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!'),
-  ('site.logo', 'site', 'logo', 'text', '/TEAZO_logo.png')
+  ('site.logo', 'site', 'logo', 'text', '/TEAZO_logo.svg')
 ON CONFLICT (key) DO NOTHING;
 
 DELETE FROM site_link WHERE key = 'email' AND link_group = 'social';

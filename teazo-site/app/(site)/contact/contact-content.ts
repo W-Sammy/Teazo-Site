@@ -48,9 +48,9 @@ export const contactContent: ContactContent = {
     { day: "Sunday", hours: "11:00 AM - 8:00 PM" },
   ],
   socialLinks: [
-    { id: "facebook", label: "Facebook", icon: "/social_icons/teazo_fb_icon.png", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
-    { id: "instagram", label: "Instagram", icon: "/social_icons/teazo_insta_icon.png", url: "https://www.instagram.com/teazosf/", enabled: true },
-    { id: "yelp", label: "Yelp", icon: "/social_icons/teazo_yelp_icon.png", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
+    { id: "facebook", label: "Facebook", icon: "/social_icons/social_svg/teazo_fb_icon.svg", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
+    { id: "instagram", label: "Instagram", icon: "/social_icons/social_svg/teazo_insta_icon.svg", url: "https://www.instagram.com/teazosf/", enabled: true },
+    { id: "yelp", label: "Yelp", icon: "/social_icons/social_svg/teazo_yelp_icon.svg", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
   ],
   contactFormEnabled: true,
 };

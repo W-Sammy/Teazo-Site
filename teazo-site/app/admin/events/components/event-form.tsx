@@ -36,7 +36,7 @@ const acceptedImageTypes = [
 const maxFileSize = 10 * 1024 * 1024;
 
 const fallbackImageUrl =
-  "/admin_icons/teazo_dash_icon.png";
+  "/admin_icons/admin_svg/teazo_dash_icon.svg";
 
 // Format a stored date for datetime-local using the browser's local clock.
 function toDateTimeLocal(value?: string) {

@@ -33,13 +33,13 @@ export type ContactContent = {
 };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
-  logo: "/TEAZO_logo.png",
+  logo: "/TEAZO_logo.svg",
   story:
     "TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!",
   socialLinks: [
-    { id: "facebook", label: "Facebook", icon: "/social_icons/teazo_fb_icon.png", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
-    { id: "instagram", label: "Instagram", icon: "/social_icons/teazo_insta_icon.png", url: "https://www.instagram.com/teazosf/", enabled: true },
-    { id: "yelp", label: "Yelp", icon: "/social_icons/teazo_yelp_icon.png", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
+    { id: "facebook", label: "Facebook", icon: "/social_icons/social_svg/teazo_fb_icon.svg", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
+    { id: "instagram", label: "Instagram", icon: "/social_icons/social_svg/teazo_insta_icon.svg", url: "https://www.instagram.com/teazosf/", enabled: true },
+    { id: "yelp", label: "Yelp", icon: "/social_icons/social_svg/teazo_yelp_icon.svg", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
   ],
   deliveryLinks: [
     { id: "ubereats", label: "UBER EATS", icon: "", url: "https://www.ubereats.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg?srsltid=AfmBOoranl_YtSY-qug2w6ZzmFcwawnUN1t6RJMvTnqq32BwwVXubRgr", enabled: true },
@@ -258,7 +258,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         .map((l) => ({
           id: l.key,
           label: l.label,
-          icon: `/social_icons/teazo_${l.key}_icon.png`,
+          icon: `/social_icons/social_svg/teazo_${l.key}_icon.svg`,
           url: l.url,
           enabled: l.is_active === 1,
         }));
