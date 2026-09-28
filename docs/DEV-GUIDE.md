@@ -975,11 +975,14 @@ routes to call. They are server only, and the routes check the admin first
 
 `saveGalleryImage()` throws a `GalleryInputError` for input the admin should
 fix, with a message to show as it is and the HTTP `status` to answer with:
-`400`, `413` over 10 MB, or `415` not a readable image. It throws a
-`MediaError` when storage refuses the file, with the Worker's `status`: `507`
-storage is full, `429` the day's uploads are used up, or `503` uploads are
-paused (no `status` when the Worker can't be reached). A `D1Error` means the
-database failed. The other two throw only `D1Error`.
+`400`, `413` over 10 MB, or `415` not a JPEG, PNG or WebP image, or not
+readable. It throws a `MediaError` when storing fails: `507`, `429` and `503`
+are the refusals listed under **An upload can be refused** above, worth
+explaining to the admin, and any other `status`, or none (the Worker can't be
+reached or isn't configured), means storage failed. A `D1Error` means the
+database failed. `getAdminGalleryImages()` throws `D1Error`, or `MediaError`
+when `R2_PUBLIC_BASE` isn't set, and `removeGalleryImage()` throws only
+`D1Error`.
 
 The public `/gallery` page shows published images through
 `getPublicGalleryImages()`, and its placeholder images whenever no image is
@@ -1336,9 +1339,10 @@ Two D1 databases exist on the team Cloudflare account, `teazo-db` and
 buckets are waiting on the account's payment setup. When they go live, the
 order is: apply the missing migrations (without `0004` every upload is
 refused, and without `0003` the contact form refuses every message), then
-deploy the Worker and add its `workers.dev` hostname to `app/lib/imageHosts.ts`
-so `/gallery` can show stored images, then the app. Build as though that is already true and nothing you write now will
-need reworking.
+deploy the Worker (production and preview) and add both `workers.dev`
+hostnames to `app/lib/imageHosts.ts` so `/gallery` can show stored images,
+then the app. Build as though that is already true and nothing you write now
+will need reworking.
 
 While that is pending:
 

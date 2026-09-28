@@ -108,7 +108,8 @@ export async function getAdminGalleryImages(): Promise<AdminGalleryImage[]> {
 /**
  * Resize, store and record a new gallery image. Call only after
  * requireAdminApi(request, 2). Throws GalleryInputError for input to fix,
- * MediaError when storage refuses (507, 429, 503), and D1Error otherwise.
+ * MediaError when storing fails (507, 429 and 503 are refusals to explain to
+ * the admin), and D1Error when the database fails.
  */
 export async function saveGalleryImage(input: {
   file: unknown;
@@ -131,8 +132,13 @@ export async function saveGalleryImage(input: {
 
   const resized = await toWebp(file);
 
+  // Build the URL before storing anything, so missing configuration fails
+  // before any bytes or rows are written.
+  const key = mintKey("gallery", "webp");
+  const url = toPublicUrl(key);
+
   // Store the bytes first, so a failure never leaves rows pointing at nothing.
-  const stored = await putMedia(mintKey("gallery", "webp"), resized.data, "image/webp");
+  const stored = await putMedia(key, resized.data, "image/webp");
 
   const imageId = crypto.randomUUID();
   try {
@@ -169,7 +175,7 @@ export async function saveGalleryImage(input: {
   } catch (error) {
     console.warn("Saved a gallery image but could not read it back:", imageId, error);
   }
-  return { id: imageId, name, url: toPublicUrl(stored.key), tags, createdAt: new Date().toISOString() };
+  return { id: imageId, name, url, tags, createdAt: new Date().toISOString() };
 }
 
 /**
