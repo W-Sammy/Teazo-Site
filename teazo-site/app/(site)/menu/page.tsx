@@ -5,6 +5,7 @@ import { type MenuItem } from "../components/menu-item-card";
 import MenuItemsSection from "../components/menu-items-section";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
+import { getWebsiteContent } from "@/app/lib/website-content";
 
 export const metadata: Metadata = {
 	title: "Menu",
@@ -699,7 +700,10 @@ const menuSections: MenuSection[] = [
 	},
 ];
 
-export default function MenuPage() {
+export default async function MenuPage() {
+	const content = await getWebsiteContent();
+	const logoSrc = content.logo || "/TEAZO_logo.svg";
+
 	return (
 		<main className="relative isolate min-h-screen bg-[#FFF8F9] text-stone-900">
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -709,13 +713,14 @@ export default function MenuPage() {
 			<div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
 				<section className="flex flex-col items-center text-center">
 					<Image
-						src="/TEAZO_logo.svg"
-						alt=""
+						src={logoSrc}
+						alt="TEAZO logo"
 						aria-hidden="true"
 						width={389}
 						height={397}
 						className="h-[170px] w-auto sm:h-[195px]"
 						priority
+						unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
 					/>
 
 					<h1
