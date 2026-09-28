@@ -9,7 +9,7 @@ const montserrat = Montserrat({
   weight: ["400", "700"],
 });
 
-const FALLBACK_IMAGE_SRC = "/TEAZO_logo.png";
+const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
 /* Core menu item shape for the UI.
    This is closer to the Square API shape so mock data can be replaced later

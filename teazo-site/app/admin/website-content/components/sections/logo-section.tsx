@@ -20,30 +20,51 @@ export default function LogoSection({
   onLogoChange: (dataUrl: string) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  function handleFile(file: File | undefined) {
+  async function handleFile(file: File | undefined) {
     if (!file) return;
 
     const check = isValidImageFile(file);
-
     if (!check.valid) {
       setError(check.error ?? "Invalid image file");
       return;
     }
 
-    // stored as a data URL for now since there's no upload endpoint/R2 wired yet;
-    // onLogoChange just carries this string until backend persistence lands
-    const reader = new FileReader();
+    setError(null);
+    setIsUploading(true);
 
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setError(null);
-        onLogoChange(reader.result);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/website-content/logo", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || "Failed to upload logo.");
       }
-    };
 
-    reader.onerror = () => setError("Couldn't read that image file");
-    reader.readAsDataURL(file);
+      const data = await res.json();
+      if (data.url) {
+        onLogoChange(data.url);
+        setIsUploading(false);
+        return;
+      }
+    } catch {
+      // Fall back to data URL for offline / local testing
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          onLogoChange(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   return (
