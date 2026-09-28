@@ -61,17 +61,20 @@ machine:
 **What is real today:**
 
 - Google sign-in, checked against the `admin_user` table, and a guard on every
-  admin page and admin write route (§5).
+  admin page and on the admin write routes, except website content's two (§5).
 - The contact form: bot-checked, saved to the database, and emailed to the
   owner.
 - The PDF menu: uploaded from `/admin/menu`, stored in R2, and served on
   `/static-menu`.
 - The Worker's billing limits on R2 and the storage usage report (§2.5).
 - Settings: adding, changing and removing admins, saved to `admin_user` (§5).
+- Website content: the address, phone, email, hours, holidays, social links,
+  story, logo and contact form switch, edited on `/admin/website-content` and
+  shown on the public pages.
 
-**Still sample data or hardcoded:** the dashboard's numbers, the events,
-gallery and website content admin pages, and the content of every public page
-(address, hours, menu, gallery). Those are waiting for their features.
+**Still sample data or hardcoded:** the dashboard's numbers, the events and
+gallery admin pages, and the menu and gallery on the public pages. Those are
+waiting for their features.
 
 ---
 
@@ -321,8 +324,9 @@ sweeper were added recently. None of them needs an account or a key on your
 machine, and each one can be tried locally. Only testing admin roles needs
 sign-in from §2.3. Start the Worker (§2.1) and the app (§2.2) first.
 
-**Already set up before these features?** Your local database is missing
-migrations `0003` (the contact form switch) and `0004` (the storage record).
+**Already set up before these features?** Your local database may be missing
+migrations `0003` (website content, including the contact form switch) and
+`0004` (the storage record).
 Follow **After every pull** in §2.4, which applies them. Until you do, Submit
 on `/contact` answers "Your message could not be sent right now" even with the
 Worker running, `/usage` answers `usage_unavailable`, and uploads fail: the
@@ -473,8 +477,8 @@ each submission, so run the line again before the next try.
    npx wrangler d1 execute teazo-db --local --command "SELECT created_at, email, subject FROM contact_message ORDER BY created_at DESC"
    ```
 
-**Turning the form off.** The owner will switch it from the admin panel, which
-doesn't exist yet. Until then, from `teazo-d1-proxy`:
+**Turning the form off.** The owner switches it on `/admin/website-content`.
+To do it without signing in, from `teazo-d1-proxy`:
 
 ```bash
 npx wrangler d1 execute teazo-db --local --command "UPDATE business_profile SET contact_form_enabled = 0 WHERE id = 1"
@@ -827,9 +831,8 @@ one file per feature, with one function for each thing a page needs, named for
 what it does. Pages call those functions and never contain SQL themselves.
 Whoever builds a feature writes its query file, in the same pull request.
 
-Two real ones to copy from: `queries/contact.ts` (a read, an insert, and an
-update that checks it really changed a row) and `queries/menu-documents.ts`
-(several writes in one `batch()`).
+Two real ones to copy from: `queries/contact.ts` (reads, an insert and a
+count) and `queries/menu-documents.ts` (several writes in one `batch()`).
 
 For example, whoever builds the gallery would write something like:
 
@@ -871,8 +874,8 @@ Rules for query files:
   means no row matched. Never test for exactly 1: `changes` also counts rows
   that triggers write, so a one-row update of `admin_user`, `gallery_image`,
   `event`, `content_block` or `menu_item_display` usually reports 2 (their
-  triggers in `0001_init.sql` also set `updated_at`). `queries/contact.ts` can
-  check for 1 only because `business_profile` has no trigger.
+  triggers in `0001_init.sql` also set `updated_at`). `business_profile` has
+  no such trigger, so a one-row update there reports 1.
 - **Set the computed columns when you write.** `gallery_image.name_sort_key`,
   `gallery_tag.name_normalized` and `admin_user.email_normalized` are not filled
   in for you. Write `email_normalized` with `normalizeEmail()` from
@@ -1202,7 +1205,8 @@ Three rules:
 | `GET /api/admin/settings/admins` | Any admin (Can View and up) |
 | `POST /api/square/products`, `PUT` and `DELETE /api/square/products/[id]`, `POST /api/admin/menu/upload` | Can Edit and up |
 | `POST /api/admin/settings/admins`, `PATCH` and `DELETE /api/admin/settings/admins/[id]` | The Owner, or Can Edit with Manage Admins |
-| `GET /api/square/*`, `GET /api/menu/pdf`, `/api/auth/*`, the contact form | Everyone, on purpose |
+| `PATCH /api/website-content`, `POST /api/admin/website-content/logo` | Everyone for now: these two don't check sign-in yet |
+| `GET /api/square/*`, `GET /api/menu/pdf`, `GET /api/website-content`, `/api/auth/*`, the contact form | Everyone, on purpose |
 | `/account` | Anyone signed in |
 
 **Testing an admin write from a terminal.** `requireAdminApi` refuses a write
@@ -1263,7 +1267,11 @@ in `0001_init.sql`). Open them when you need exact columns.
 | Table | Holds | Written by | Read by |
 |---|---|---|---|
 | `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
-| `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed; the switch has a setter with no caller yet | `/contact` and its action, which read the switch only |
+| `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form's action, which reads the switch |
+| `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `hours_exception` | holidays. `/admin/website-content` stores each date as `MM-DD`, repeating every year, not the `YYYY-MM-DD` the schema comment describes | `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `content_block` | editable text on the site, including the story and the logo | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
 | `media_asset` | one row per stored file | the PDF menu upload | `/api/menu/pdf` |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |
@@ -1275,10 +1283,6 @@ in `0001_init.sql`). Open them when you need exact columns.
 
 | Table | Holds | Will be written by | Will be read by |
 |---|---|---|---|
-| `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | `/contact` |
-| `hours_exception` | holiday closures, by date | `/admin/website-content` | `/contact` |
-| `site_link` | social and delivery links | `/admin/website-content` | `/`, `/contact`, `/delivery` |
-| `content_block` | editable text on the site | `/admin/website-content` | public pages |
 | `carousel_slide` | home page carousel | no admin page yet | `/` |
 | `gallery_image` | gallery entries | `/admin/gallery` | `/gallery` |
 | `gallery_tag` | tag names | the seed, then uploads | gallery filter |
@@ -1292,10 +1296,6 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `menu_section` | menu sections and subtitles | `/admin/menu` | `/menu` |
 | `menu_section_item` | which items, in what order | `/admin/menu` | `/menu` |
 | `menu_item_display` | badge, featured, hidden | `/admin/menu` | `/menu` |
-
-Whoever wires holidays: the admin page treats a holiday as a month and day
-that repeats every year, while `hours_exception` stores one row per date.
-Decide how to map them before building it.
 
 There are no passwords, reset tokens or invitation tokens in the schema:
 sign-in is Google only (§5). Password sign-in would need a new migration (§7)
@@ -1590,7 +1590,7 @@ of the same 300 a day.
 
 | What | Where |
 |---|---|
-| The schema: every table, column, constraint and trigger | `teazo-site/migrations/`, read in order (`0001` creates most tables, `0003` adds the contact form switch, `0004` adds the R2 ledger) |
+| The schema: every table, column, constraint and trigger | `teazo-site/migrations/`, read in order (`0001` creates most tables, `0003` adds website content and the contact form switch, `0004` adds the R2 ledger) |
 | The starting data: roles, address, hours, links, content blocks, menu sections, gallery tags (no admins) | `teazo-site/migrations/0002_seed.sql` |
 | Giving yourself an admin role locally | `teazo-d1-proxy/scripts/seed-local.mjs` (`npm run db:seed:local`) |
 | The proxy Worker: the only file with Cloudflare bindings | `teazo-d1-proxy/src/index.ts` |

@@ -17,6 +17,7 @@ export default function SocialSection({
   onUpdateLink,
   onAddLink,
   onRemoveLink,
+  onBlur,
 }: {
   socialLinks: SocialLink[];
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function SocialSection({
   onUpdateLink: (id: string, patch: Partial<SocialLink>) => void;
   onAddLink: () => void;
   onRemoveLink: (id: string) => void;
+  onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState<Record<string, FieldTouch>>({});
   const [iconErrors, setIconErrors] = useState<Record<string, string>>({});
@@ -34,6 +36,7 @@ export default function SocialSection({
       ...prev,
       [id]: { ...prev[id], [field]: true },
     }));
+    onBlur?.();
   }
 
   // label/url are only required of each other, not independently, so a fully blank
@@ -131,7 +134,11 @@ export default function SocialSection({
                     />
                   ) : (
                     <span className="text-[#a99584]">
-                      <IconSocial />
+                      <img
+                        src="/admin_icons/admin_svg/teazo_share_icon.svg"
+                        alt="Default Icon"
+                        className="h-6 w-6 object-contain"
+                      /> 
                     </span>
                   )}
 

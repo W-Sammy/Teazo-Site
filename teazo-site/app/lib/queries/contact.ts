@@ -1,5 +1,5 @@
 // Server code only. Never import this file into a client component.
-import { D1Error, prepare } from "@/app/lib/d1";
+import { prepare } from "@/app/lib/d1";
 
 export type NewContactMessage = {
   firstName: string;
@@ -17,21 +17,6 @@ export async function isContactFormEnabled(): Promise<boolean> {
 
   // No profile row means nobody has turned the form off.
   return row ? row.contact_form_enabled === 1 : true;
-}
-
-/** Call only after checking requireAdminApi(request, 2) or requireAdminPage(2). */
-export async function setContactFormEnabled(enabled: boolean, adminId: string): Promise<void> {
-  const result = await prepare(
-    `UPDATE business_profile
-        SET contact_form_enabled = ?1,
-            updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-            updated_by = ?2
-      WHERE id = 1`,
-  ).bind(enabled ? 1 : 0, adminId).run();
-
-  if (result.meta.changes !== 1) {
-    throw new D1Error("business_profile row 1 is missing, so the setting was not saved");
-  }
 }
 
 /** How many messages arrived in the last hour and the last 24 hours, including any just saved. */
