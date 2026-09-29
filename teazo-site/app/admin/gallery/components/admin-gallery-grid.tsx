@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import GalleryImage from "./gallery-image";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 
 type AdminGalleryGridProps = {
@@ -22,12 +22,10 @@ export default function AdminGalleryGrid({
           className="rounded-2xl border border-[#dbb082]/60 bg-white shadow-sm"
         >
           <div className="relative aspect-[4/3] overflow-hidden rounded-t-2xl bg-[#f3ece6]">
-            <Image
+            <GalleryImage
               src={image.url}
               alt={image.name}
-              fill
               loading={index < 3 ? "eager" : "lazy"}
-              unoptimized={image.url.startsWith("blob:")}
               className="object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
             />
