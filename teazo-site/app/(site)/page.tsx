@@ -111,23 +111,7 @@ export default async function Home() {
                     <p key={idx}>{paragraph}</p>
                 ))}
 
-                {/*social media icons*/}
-                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
-                    <a href={fbLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Facebook" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={emailHref}>
-                        <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Email" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={igLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Instagram" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={yelpLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                </div>
             </div>
-
         </div>
         </section>
 
