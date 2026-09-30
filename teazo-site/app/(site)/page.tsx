@@ -111,7 +111,24 @@ export default async function Home() {
                     <p key={idx}>{paragraph}</p>
                 ))}
 
-                {/*social media icons*/}
+            </div>
+        </div>
+        </section>
+
+{/* Call To Action */}
+        <section
+          className={`mx-auto mt-10 w-full max-w-250 rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+        >
+        <div className="mx-auto flex w-full max-w-295 flex-col justify-between gap-6 items-center text-center
+">
+            <div className="max-w-3xl">
+              <h2
+                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+              >
+                Come Explore Our World of Tea!
+              </h2>
+
+            {/*social media icons*/}
                 <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
                     <a href={fbLink} target="_blank" rel="noopener noreferrer">
                         <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Facebook" className="w-14 h-14 sm:w-16 sm:h-16" />
@@ -126,8 +143,8 @@ export default async function Home() {
                         <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                 </div>
-            </div>
 
+            </div>
         </div>
         </section>
 
