@@ -9,6 +9,7 @@
  * actions. PROXY_TOKEN carries full access to the database and must never be
  * named NEXT_PUBLIC_ or reach the browser.
  */
+import { unstable_rethrow } from "next/navigation";
 
 /** Thrown for transport failures and for anything the database rejects. */
 export class D1Error extends Error {
@@ -63,6 +64,10 @@ async function post<T>(path: string, body: unknown): Promise<T> {
       cache: "no-store",
     });
   } catch (cause) {
+    // While a page is prerendered, Next.js throws from fetch to mark the page
+    // as rendered on every request. Pass that on instead of reporting it as a
+    // failure, or any page that reads the database breaks npm run build.
+    unstable_rethrow(cause);
     throw new D1Error(`could not reach the database proxy at ${url}: ${String(cause)}`);
   }
 

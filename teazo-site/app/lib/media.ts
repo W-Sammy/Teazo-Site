@@ -84,8 +84,10 @@ export function mintKey(prefix: string, ext: string): string {
  * Store bytes and return what to record in media_asset.
  *
  * Store the bytes BEFORE writing the database rows. If the rows then fail, one
- * unreferenced file is left behind, which is harmless and gets cleaned up. The
- * other order leaves rows pointing at a file that does not exist.
+ * unreferenced file is left behind. Nothing cleans it up later, and it counts
+ * toward the storage cap, so remove it with deleteMediaNow() when the database
+ * definitely refused the rows (docs/DEV-GUIDE.md section 4.1). The other order
+ * leaves rows pointing at a file that does not exist.
  */
 export async function putMedia(
   key: string,
