@@ -5,11 +5,11 @@ import { useState, JSX, useEffect } from "react";
 
 export default function ImageCarousel(): JSX.Element {
     const images: string[] = [
-        "/carousel_images/menu.jpg",
+        "/carousel_images/Tea_Gather.jpg",
         "/carousel_images/fresh_leaf.jpg",
         "/carousel_images/leaf_basket.jpeg",
         "/carousel_images/dried_leaves.jpg",
-        "/carousel_images/drink.jpg"
+        "/carousel_images/Tea_Leaf_Basket.jpeg"
     ];
 
     const [index, setIndex] = useState<number>(0);
