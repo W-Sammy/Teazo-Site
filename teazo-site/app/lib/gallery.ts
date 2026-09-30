@@ -33,7 +33,8 @@ import type { AdminGalleryImage } from "@/app/types/gallery-image";
 /** Upload types the admin can send. Every image is stored as WebP. */
 const UPLOAD_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_NAME_LENGTH = 120;
-const MAX_TAG_LENGTH = 40;
+/** Matches the admin gallery form. */
+const MAX_TAG_LENGTH = 30;
 /** Longest side after resizing. A phone photo comes out at a few hundred KB. */
 const MAX_SIDE = 2000;
 

@@ -951,8 +951,8 @@ the database refuses the rows. Follow the gallery's instead, step 4 below.
 checks, resizes and stores the upload, and `app/lib/queries/gallery.ts`
 records the rows. Its steps:
 
-1. Check the input: a name, at most 12 tags, and a JPEG, PNG or WebP file of
-   10 MB or less.
+1. Check the input: a name of up to 120 characters, at most 12 tags of up to
+   30 characters each, and a JPEG, PNG or WebP file of 10 MB or less.
 2. Resize with `sharp` to WebP, at most 2000px on the longest side. A 1.6 MB
    phone photo comes out at a few hundred KB, and photo size is what fills the
    free storage. `sharp` is pinned in `teazo-site/package.json`.
