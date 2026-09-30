@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
+import { getWebsiteContent } from "@/app/lib/website-content";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -27,7 +28,10 @@ const mockImages: GalleryImage[] = [
   { id: "mock-9", url: "/TEAZO_logo.svg", alt: "TEAZO drink" },
 ];
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const content = await getWebsiteContent();
+  const logoSrc = content.logo || "/TEAZO_logo.svg";
+
   return (
     <main className="relative z-0 min-h-screen bg-[#FFF8F9] text-stone-900">
       {/* bubble background */}
@@ -40,13 +44,14 @@ export default function GalleryPage() {
         {/* Page header */}
         <section className="flex flex-col items-center text-center">
           <Image
-              src="/TEAZO_logo.svg"
-              alt=""
+              src={logoSrc}
+              alt="TEAZO logo"
               aria-hidden="true"
               width={389}
               height={397}
               className="h-[170px] w-auto sm:h-[195px]"
               priority
+              unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
           />
 
           <h1

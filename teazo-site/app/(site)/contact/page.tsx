@@ -3,11 +3,7 @@ import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import { headers } from "next/headers";
 import { BubbleField } from "@/app/components/bubble-field";
-import {
-  contactContent,
-  directionsHref,
-  mapEmbedSrc,
-} from "./contact-content";
+import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 
 // Keep route metadata local to the contact page so the rest of the site can
@@ -36,11 +32,6 @@ const montserrat = Montserrat({
 const HOURS_TIME_COLUMN_MIN_WIDTH = "10.5rem";
 const HOURS_DAY_SHIFT_PX = 10;
 const HOURS_TIME_SHIFT_PX = -28;
-const socialLinks = {
-  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
-  instagram: "https://www.instagram.com/teazosf/",
-  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
-};
 
 function PinIcon() {
   return (
@@ -134,16 +125,46 @@ function ClockIcon() {
 export default async function ContactPage() {
   const requestHeaders = await headers();
   const userAgent = requestHeaders.get("user-agent") ?? "";
-  const { location, hours } = contactContent;
-  const phoneHref = `tel:${location.phone.replace(/[^\d+]/g, "")}`;
+  const contactData = await getContactContent();
+  const {
+    location,
+    hours,
+    contactFormEnabled,
+    logo,
+    socialLinks: dynamicSocialLinks,
+  } = contactData;
+  const logoSrc = logo || "/TEAZO_logo.svg";
+  const fbLink =
+    dynamicSocialLinks?.find((l) => l.id === "facebook" && l.enabled)?.url ||
+    "https://www.facebook.com/people/TEAZO/100063111166083";
+  const igLink =
+    dynamicSocialLinks?.find((l) => l.id === "instagram" && l.enabled)?.url ||
+    "https://www.instagram.com/teazosf/";
+  const yelpLink =
+    dynamicSocialLinks?.find((l) => l.id === "yelp" && l.enabled)?.url ||
+    "https://www.yelp.com/biz/teazo-san-francisco";
+  const isFbEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
+  const isIgEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
+  const isYelpEnabled =
+    dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
+  const phoneDigits = location.phone.replace(/[^\d+]/g, "");
+  const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
   const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
   const hoursDayShiftPx = isMobileRequest ? 0 : HOURS_DAY_SHIFT_PX;
   const hoursTimeShiftPx = isMobileRequest ? 0 : HOURS_TIME_SHIFT_PX;
   const hoursTimeMinWidth = isMobileRequest
     ? "auto"
     : HOURS_TIME_COLUMN_MIN_WIDTH;
-  const emailHref = `mailto:${location.email}`;
+  const emailHref = `mailto:${location.email || "teazosf@hotmail.com"}`;
   const opensWebmail = false;
+  const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
+    location.mapQuery,
+  )}&z=15&output=embed`;
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    location.mapQuery,
+  )}`;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
@@ -156,13 +177,16 @@ export default async function ContactPage() {
           {/* Use the approved uploaded logo asset rather than reconstructing it
               in code so brand updates can be handled from /public later. */}
           <Image
-            src="/TEAZO_logo.svg"
-            alt=""
+            src={logoSrc}
+            alt="TEAZO logo"
             aria-hidden="true"
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
             priority
+            unoptimized={
+              logoSrc.startsWith("data:") || logoSrc.startsWith("http")
+            }
           />
           <h1
             className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
@@ -185,7 +209,7 @@ export default async function ContactPage() {
               <div className="overflow-hidden rounded-[16px] border border-[#e6ddd8] bg-[#efe7e0]">
                 <iframe
                   title={`${location.businessName} map`}
-                  src={mapEmbedSrc}
+                  src={embedSrc}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   className="h-[320px] w-full border-0 sm:h-[380px] lg:h-[430px]"
@@ -236,7 +260,7 @@ export default async function ContactPage() {
 
                   <div className="flex items-start justify-start sm:justify-end sm:pr-16">
                     <a
-                      href={directionsHref}
+                      href={directionsUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-block whitespace-nowrap text-sm font-semibold uppercase tracking-[0.08em] text-[#cd8f84] transition hover:opacity-70"
@@ -312,22 +336,24 @@ export default async function ContactPage() {
               </p>
 
               <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                <a
-                  href={socialLinks.facebook}
-                  aria-label={`${location.businessName} on Facebook`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_fb_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
+                {isFbEnabled && (
+                  <a
+                    href={fbLink}
+                    aria-label={`${location.businessName} on Facebook`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_fb_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
                 <a
                   href={emailHref}
                   aria-label={`Email ${location.businessName}`}
@@ -344,38 +370,42 @@ export default async function ContactPage() {
                     className="h-12 w-12 object-contain"
                   />
                 </a>
-                <a
-                  href={socialLinks.instagram}
-                  aria-label={`${location.businessName} on Instagram`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_insta_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
-                <a
-                  href={socialLinks.yelp}
-                  aria-label={`${location.businessName} on Yelp`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
+                {isIgEnabled && (
+                  <a
+                    href={igLink}
+                    aria-label={`${location.businessName} on Instagram`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_insta_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
+                {isYelpEnabled && (
+                  <a
+                    href={yelpLink}
+                    aria-label={`${location.businessName} on Yelp`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block transition hover:opacity-70"
+                  >
+                    <Image
+                      src="/social_icons/social_svg/teazo_yelp_icon.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                      className="h-12 w-12 object-contain"
+                    />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -389,66 +419,70 @@ export default async function ContactPage() {
           </div>
         </section>
 
-        <div className="relative mt-14 flex items-center justify-center sm:mt-16">
-          <Subtitle text="CONTACT US" />
-        </div>
-
-        <section
-          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-white px-5 py-7 shadow-sm sm:px-6 sm:py-8 lg:px-8 lg:py-9`}
-        >
-          <form
-            action={`mailto:${location.email}`}
-            method="post"
-            encType="text/plain"
-            className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-5"
-          >
-            <div className="grid w-full gap-5 md:grid-cols-2">
-              <input
-                type="text"
-                name="firstName"
-                placeholder="FIRST NAME"
-                aria-label="First name"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="text"
-                name="lastName"
-                placeholder="LAST NAME"
-                aria-label="Last name"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="EMAIL"
-                aria-label="Email"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
-              <input
-                type="text"
-                name="subject"
-                placeholder="SUBJECT"
-                aria-label="Subject"
-                className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-              />
+        {contactFormEnabled && (
+          <>
+            <div className="relative mt-14 flex items-center justify-center sm:mt-16">
+              <Subtitle text="CONTACT US" />
             </div>
 
-            <textarea
-              name="message"
-              placeholder="MESSAGE"
-              aria-label="Message"
-              rows={8}
-              className="min-h-[250px] w-full resize-y border-2 border-[#b9aaa4] bg-white px-4 py-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
-            />
-
-            <button
-              type="submit"
-              className="mt-1 flex h-[66px] w-[210px] cursor-pointer items-center justify-center bg-black text-[1rem] font-bold tracking-[0.12em] text-white transition hover:bg-[#FFBDC7]"
+            <section
+              className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-white px-5 py-7 shadow-sm sm:px-6 sm:py-8 lg:px-8 lg:py-9`}
             >
-              SUBMIT
-            </button>
-          </form>
-        </section>
+              <form
+                action={`mailto:${location.email}`}
+                method="post"
+                encType="text/plain"
+                className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-5"
+              >
+                <div className="grid w-full gap-5 md:grid-cols-2">
+                  <input
+                    type="text"
+                    name="firstName"
+                    placeholder="FIRST NAME"
+                    aria-label="First name"
+                    className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+                  />
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder="LAST NAME"
+                    aria-label="Last name"
+                    className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="EMAIL"
+                    aria-label="Email"
+                    className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+                  />
+                  <input
+                    type="text"
+                    name="subject"
+                    placeholder="SUBJECT"
+                    aria-label="Subject"
+                    className="h-14 w-full border-2 border-[#b9aaa4] bg-white px-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+                  />
+                </div>
+
+                <textarea
+                  name="message"
+                  placeholder="MESSAGE"
+                  aria-label="Message"
+                  rows={8}
+                  className="min-h-[250px] w-full resize-y border-2 border-[#b9aaa4] bg-white px-4 py-4 text-[0.95rem] font-semibold tracking-[0.08em] text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#cd8f84]"
+                />
+
+                <button
+                  type="submit"
+                  className="mt-1 flex h-[66px] w-[210px] cursor-pointer items-center justify-center bg-black text-[1rem] font-bold tracking-[0.12em] text-white transition hover:bg-[#FFBDC7]"
+                >
+                  SUBMIT
+                </button>
+              </form>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

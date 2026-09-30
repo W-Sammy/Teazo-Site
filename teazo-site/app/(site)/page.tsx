@@ -10,6 +10,7 @@ import ImageCarousel from "@/app/(site)/components/image-carousel";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
+import { getWebsiteContent } from "@/app/lib/website-content";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -37,15 +38,15 @@ const mediumMontserrat = Montserrat({
     weight: ['500']
 });
 
-const socialLinks = {
-  facebook: "https://www.facebook.com/people/TEAZO/100063111166083",
-  instagram: "https://www.instagram.com/teazosf/",
-  yelp: "https://www.yelp.com/biz/teazo-san-francisco",
-};
+export default async function Home() {
+  const content = await getWebsiteContent();
+  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const fbLink = content.socialLinks.find((l) => l.id === "facebook" && l.enabled)?.url || "https://www.facebook.com/people/TEAZO/100063111166083";
+  const igLink = content.socialLinks.find((l) => l.id === "instagram" && l.enabled)?.url || "https://www.instagram.com/teazosf/";
+  const yelpLink = content.socialLinks.find((l) => l.id === "yelp" && l.enabled)?.url || "https://www.yelp.com/biz/teazo-san-francisco";
+  const emailHref = `mailto:${content.address.email || "teazosf@hotmail.com"}`;
+  const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
-const emailHref = 'mailto:$(location.email)'
-
-export default function Home() {
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
@@ -59,13 +60,14 @@ export default function Home() {
             
  flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
-                    src="/TEAZO_logo.svg"
+                    src={logoSrc}
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
                     height={397}
                     className="h-42.5 w-auto sm:h-48.75"
                     priority
+                    unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
 
             {/* TEAZO part */}
@@ -140,13 +142,13 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                     <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href={emailHref}>
-                    <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                        <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Email" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href={socialLinks.instagram} target="_blank">
-                    <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <a href={igLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Instagram" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-                    <a href={socialLinks.yelp} target="_blank">
-                    <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    <a href={yelpLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
             </div>
 

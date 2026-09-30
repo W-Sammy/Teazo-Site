@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AdminEvent, EventFormValues } from "@/app/types/admin-event";
 
-const fallbackEventImage = "/admin_icons/teazo_dash_icon.png";
+const fallbackEventImage = "/admin_icons/admin_svg/teazo_dash_icon.svg";
 
 function createTemporaryEventId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto

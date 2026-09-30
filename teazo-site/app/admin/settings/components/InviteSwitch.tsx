@@ -12,13 +12,14 @@ export function InviteSwitch({
   return (
     <button
       type="button"
+      disabled={locked || unavailable}
       role="switch"
       aria-checked={checked}
-      aria-label="Allow user invitations"
+      aria-label="Allow Manage Admins access"
       aria-disabled={locked || unavailable}
       onClick={onClick}
       className={`relative h-5 w-9 flex-none overflow-hidden rounded-full p-0 transition-colors ${
-        checked ? "bg-pink-300" : "bg-gray-200"
+        checked ? "bg-[#dbb082]" : "bg-gray-200"
       } ${
         locked
           ? "cursor-not-allowed opacity-70"
