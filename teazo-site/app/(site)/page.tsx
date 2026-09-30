@@ -56,16 +56,14 @@ export default async function Home() {
     
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 mx-auto flex w-full 
-            
- flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
+            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
                 <Image
                     src={logoSrc}
                     alt="TEAZO logo"
                     aria-hidden="true"
                     width={389}
                     height={397}
-                    className="h-42.5 w-auto sm:h-48.75"
+                    className="h-[170px] w-auto sm:h-[195px]"
                     priority
                     unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
@@ -104,25 +102,36 @@ export default async function Home() {
       
         
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-250 rounded-[28px] border bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-225"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
             <div className={`${mediumMontserrat.className} space-y-6 text-[20px] leading-relaxed text-[#000000] sm:text-[24px]`}>
-            
-                <p> TEAZO is specializing in bringing you high qualities drink, snack and dessert.</p>
+                {storyParagraphs.map((paragraph, idx) => (
+                    <p key={idx}>{paragraph}</p>
+                ))}
 
-                <p> We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used.From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!
-TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used.</p>
-                
-                <p> From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!</p>
-
+                {/*social media icons*/}
+                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
+                    <a href={fbLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Facebook" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    </a>
+                    <a href={emailHref}>
+                        <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Email" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    </a>
+                    <a href={igLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Instagram" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    </a>
+                    <a href={yelpLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
+                    </a>
+                </div>
             </div>
 
         </div>
         </section>
 
-        {/* Call To Action */}
+{/* Call To Action */}
         <section
           className={`mx-auto mt-10 w-full max-w-250 rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
         >
@@ -136,10 +145,9 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
               </h2>
 
             {/*social media icons*/}
-            <div className="mt-8 flex flex-wrap justify-center  items-center gap-6 sm:gap-10">
-                    
-                    <a href= {socialLinks.facebook} target="_blank">
-                    <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Order" className="w-14 h-14 sm:w-16 sm:h-16" />
+                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
+                    <a href={fbLink} target="_blank" rel="noopener noreferrer">
+                        <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Facebook" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
                     <a href={emailHref}>
                         <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Email" className="w-14 h-14 sm:w-16 sm:h-16" />
@@ -150,12 +158,11 @@ TEAZO is specializing in bringing you high qualities drink, snack and dessert. W
                     <a href={yelpLink} target="_blank" rel="noopener noreferrer">
                         <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
                     </a>
-            </div>
+                </div>
 
             </div>
         </div>
         </section>
-
 
     </main>
   )
