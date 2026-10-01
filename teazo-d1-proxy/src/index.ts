@@ -20,6 +20,7 @@
  *   GET    /media/<key>  public read of an R2 object
  *   PUT    /media/<key>  write an R2 object (token)
  *   DELETE /media/<key>  delete an R2 object (token)
+ *   GET    /usage        storage used, and the billing hard stops (token)
  *   scheduled()          the sweeper: deletes the R2 bytes of files that
  *                        were queued for deletion more than 24 hours ago
  *
@@ -35,6 +36,8 @@ export interface Env {
   DB: D1Database;
   MEDIA: R2Bucket;
   MEDIA_BUCKET_NAME: string; // wrangler.jsonc `vars`
+  R2_STORAGE_CAP_BYTES: string;    // wrangler.jsonc `vars`, see BILLING HARD STOPS
+  R2_CLASS_A_DAILY_BUDGET: string; // wrangler.jsonc `vars`, see BILLING HARD STOPS
   PROXY_TOKEN: string;       // wrangler secret put PROXY_TOKEN
 }
 
@@ -164,7 +167,39 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
     if (!Number.isFinite(size) || size <= 0) return json({ error: "length_required" }, 411);
     if (size > MAX_MEDIA_BYTES) return json({ error: "payload_too_large", max: MAX_MEDIA_BYTES }, 413);
     if (!request.body) return json({ error: "empty_body" }, 400);
-    const obj = await env.MEDIA.put(key, request.body, { httpMetadata: { contentType: type } });
+
+    // Billing hard stops, checked before any R2 operation happens. If they
+    // cannot be checked, refuse: an unchecked upload is how a bill starts.
+    try {
+      const limits = r2Limits(env);
+      if (!(await spendClassA(env, 1, limits.classADaily))) {
+        return json({ error: "r2_daily_limit", budget: limits.classADaily }, 429);
+      }
+      if (!(await reserveStorage(env, key, size, limits.storageCap))) {
+        return json(
+          { error: "storage_full", capBytes: limits.storageCap, usedBytes: await storedBytes(env) },
+          507,
+        );
+      }
+    } catch (err) {
+      return json({ error: "limits_unavailable", message: (err as Error).message }, 503);
+    }
+
+    let obj: R2Object;
+    try {
+      // Standard, named explicitly: Infrequent Access has no free tier at all,
+      // and a changed bucket default must not move new files into it.
+      obj = await env.MEDIA.put(key, request.body, {
+        httpMetadata: { contentType: type },
+        storageClass: "Standard",
+      });
+    } catch (err) {
+      // The ledger already counts this upload. Make it match what R2 holds.
+      await settleFailedPut(env, key).catch(() => undefined);
+      return json({ error: "storage_error", message: (err as Error).message }, 502);
+    }
+    if (obj.size !== size) await recordSize(env, key, obj.size);
+
     // The bucket name comes back so the app records media_asset.r2_bucket from
     // one source of truth, rather than a second env var that could be scoped
     // wrong and leave the sweeper refusing to reap the object.
@@ -173,10 +208,219 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
 
   if (request.method === "DELETE") {
     await env.MEDIA.delete(key); // idempotent: deleting a missing key is not an error
+    // Bytes first, ledger second. If this step fails the ledger over-counts,
+    // which only makes the storage cap stricter.
+    await forgetObject(env, key).catch((err) => console.error("ledger delete failed:", key, err));
     return new Response(null, { status: 204 });
   }
 
   return json({ error: "method_not_allowed" }, 405);
+}
+
+/**
+ * BILLING HARD STOPS
+ *
+ * R2 is the only part of this stack that can produce a bill. On the free plans
+ * D1 and Workers refuse requests past their limits; R2 bills anything past its
+ * free allowance, and Cloudflare offers no spending cap. So this Worker keeps
+ * each billable R2 dimension under its free amount itself:
+ *
+ *   Storage   10 GB-month free, Standard class only. Uploads are refused once
+ *             stored files would pass R2_STORAGE_CAP_BYTES, checked against
+ *             the r2_object ledger (migration 0004) rather than by listing
+ *             the bucket. Every upload asks for Standard explicitly.
+ *   Class A   1M a month free (uploads, listings). At most
+ *             R2_CLASS_A_DAILY_BUDGET a day, so no 31-day window can pass the
+ *             free amount, whatever day the billing period starts on.
+ *   Class B   10M a month free (reads). Not counted here: each Worker request
+ *             makes at most one read, and the free Workers plan refuses
+ *             requests past 100,000 a day across the account (Error 1027),
+ *             which caps reads at 3.1M a month.
+ *   Deletes   always free.
+ *
+ * The free amounts belong to the ACCOUNT and are shared by every bucket on it,
+ * so production and preview each get a share through their vars in
+ * wrangler.jsonc. Neither Worker can see the other's share. Each clamps its own
+ * to the account totals below; keeping the two shares' sum within them is up
+ * to whoever edits those vars.
+ *
+ * The guarantee holds while the account stays on the free Workers plan and
+ * nothing reaches the buckets except these Workers. Serving a bucket from a
+ * public custom domain, or uploading with wrangler or the dashboard, would
+ * bypass these checks.
+ *
+ * Every check fails closed. If the limits are not configured, or D1 cannot be
+ * reached to check them, uploads are refused.
+ */
+/**
+ * Why 9.6 GB and not the full 10:
+ *   - Cloudflare's billing docs never say how many bytes a GB is. Its other R2
+ *     docs use 10^9, the smaller reading, so 10 GB is taken as 10,000,000,000.
+ *   - A GB-month averages each day's peak over a billing period the docs call
+ *     30 days, but monthly periods can run 31. Dividing 31 days by 30 would
+ *     count a steady 10 GB as 10.33, so the true ceiling is 10 GB x 30/31,
+ *     about 9.68 GB.
+ *   - Any overage is rounded up to a whole billed GB-month, so there is no
+ *     "slightly over". The rest of the margin covers key names and metadata,
+ *     which the docs neither include in nor exclude from billed storage.
+ */
+const R2_ACCOUNT_STORAGE_CAP = 9_600_000_000;
+const R2_ACCOUNT_CLASS_A_DAILY = 30_000; // x 31 days = 930,000, under the free 1,000,000
+
+/** D1's own limit, shown on the dashboard. At it, writes fail; the free plan never bills. */
+const D1_LIMIT_BYTES = 500 * 1000 * 1000;
+
+/** Pages of 1,000 objects that ?verify=1 may list in one request (2 subrequests each). */
+const R2_LIST_MAX_PAGES = 20;
+
+const utcDay = () => new Date().toISOString().slice(0, 10);
+
+const percent = (part: number, whole: number) =>
+  Math.round((part / whole) * 10_000) / 100;
+
+function r2Limits(env: Env) {
+  const storageCap = Number(env.R2_STORAGE_CAP_BYTES);
+  const classADaily = Math.floor(Number(env.R2_CLASS_A_DAILY_BUDGET));
+  if (!(storageCap > 0) || !(classADaily > 0)) {
+    throw new Error("R2_STORAGE_CAP_BYTES and R2_CLASS_A_DAILY_BUDGET must be set in wrangler.jsonc");
+  }
+  return {
+    storageCap: Math.min(storageCap, R2_ACCOUNT_STORAGE_CAP),
+    classADaily: Math.min(classADaily, R2_ACCOUNT_CLASS_A_DAILY),
+  };
+}
+
+/** Spend n Class A operations from today's budget. False, and nothing spent, if that would exceed it. */
+async function spendClassA(env: Env, n: number, budget: number): Promise<boolean> {
+  if (n > budget) return false;
+  const result = await env.DB.prepare(
+    `INSERT INTO r2_class_a_day (r2_bucket, day, ops) VALUES (?1, ?2, ?3)
+     ON CONFLICT (r2_bucket, day) DO UPDATE SET ops = ops + excluded.ops
+      WHERE ops + excluded.ops <= ?4`,
+  ).bind(env.MEDIA_BUCKET_NAME, utcDay(), n, budget).run();
+  return result.meta.changes === 1;
+}
+
+/**
+ * Count `key` in the ledger if the bucket stays within the cap. It is a single
+ * statement, so two uploads racing for the last bytes cannot both get in. An
+ * existing key (an overwrite) is counted at its new size, not twice.
+ */
+async function reserveStorage(env: Env, key: string, size: number, cap: number): Promise<boolean> {
+  const result = await env.DB.prepare(
+    `INSERT INTO r2_object (r2_bucket, r2_key, byte_size)
+     SELECT ?1, ?2, ?3
+      WHERE (SELECT coalesce(sum(byte_size), 0) FROM r2_object
+              WHERE r2_bucket = ?1 AND r2_key <> ?2) + ?3 <= ?4
+     ON CONFLICT (r2_bucket, r2_key) DO UPDATE
+        SET byte_size = excluded.byte_size, stored_at = ${NOW}`,
+  ).bind(env.MEDIA_BUCKET_NAME, key, size, cap).run();
+  return result.meta.changes === 1;
+}
+
+function recordSize(env: Env, key: string, size: number) {
+  return env.DB.prepare(
+    "UPDATE r2_object SET byte_size = ?3 WHERE r2_bucket = ?1 AND r2_key = ?2",
+  ).bind(env.MEDIA_BUCKET_NAME, key, size).run();
+}
+
+function forgetObject(env: Env, key: string) {
+  return env.DB.prepare(
+    "DELETE FROM r2_object WHERE r2_bucket = ?1 AND r2_key = ?2",
+  ).bind(env.MEDIA_BUCKET_NAME, key).run();
+}
+
+async function storedBytes(env: Env): Promise<number> {
+  const row = await env.DB.prepare(
+    "SELECT coalesce(sum(byte_size), 0) AS bytes FROM r2_object WHERE r2_bucket = ?1",
+  ).bind(env.MEDIA_BUCKET_NAME).first<{ bytes: number }>();
+  return row?.bytes ?? 0;
+}
+
+/** After a failed put, make the ledger match what R2 actually holds for `key`. */
+async function settleFailedPut(env: Env, key: string) {
+  // A HEAD is a read, and this request has made no other.
+  const existing = await env.MEDIA.head(key);
+  if (existing) await recordSize(env, key, existing.size);
+  else await forgetObject(env, key);
+}
+
+async function measureUsage(env: Env, verify: boolean) {
+  const limits = r2Limits(env);
+
+  // One D1 query reads the ledger and today's budget, and its result also
+  // reports the database size. No R2 operation is involved.
+  const result = await env.DB.prepare(
+    `SELECT (SELECT coalesce(sum(byte_size), 0) FROM r2_object WHERE r2_bucket = ?1) AS bytes,
+            (SELECT count(*) FROM r2_object WHERE r2_bucket = ?1) AS objects,
+            (SELECT coalesce(max(ops), 0) FROM r2_class_a_day
+              WHERE r2_bucket = ?1 AND day = ?2) AS class_a`,
+  ).bind(env.MEDIA_BUCKET_NAME, utcDay()).all<{ bytes: number; objects: number; class_a: number }>();
+
+  const { bytes, objects, class_a } = result.results[0];
+  const d1Bytes = result.meta.size_after;
+  const remainingBytes = Math.max(0, limits.storageCap - bytes);
+
+  const usage = {
+    measuredAt: new Date().toISOString(),
+    d1: {
+      bytes: d1Bytes,
+      limitBytes: D1_LIMIT_BYTES,
+      percentUsed: percent(d1Bytes, D1_LIMIT_BYTES),
+    },
+    r2: {
+      bucket: env.MEDIA_BUCKET_NAME,
+      bytes,
+      objects,
+      limitBytes: limits.storageCap,
+      remainingBytes,
+      percentUsed: percent(bytes, limits.storageCap),
+      classAToday: { used: class_a, budget: limits.classADaily },
+      uploadsBlocked: remainingBytes === 0 || class_a >= limits.classADaily,
+    },
+  };
+
+  if (!verify) return usage;
+  return { ...usage, verify: await listBucket(env, limits.classADaily, bytes, objects) };
+}
+
+/**
+ * ?verify=1: list the bucket itself and compare with the ledger. Each page is a
+ * Class A operation spent from the daily budget; if the budget runs out, or the
+ * page limit is reached, the listing stops and is reported incomplete.
+ */
+async function listBucket(env: Env, budget: number, trackedBytes: number, trackedObjects: number) {
+  let bytes = 0;
+  let objects = 0;
+  let pages = 0;
+  let cursor: string | undefined;
+  let budgetSpent = false;
+
+  do {
+    if (!(await spendClassA(env, 1, budget))) {
+      budgetSpent = true;
+      break;
+    }
+    const page = await env.MEDIA.list({ cursor, limit: 1000 });
+    for (const object of page.objects) {
+      bytes += object.size;
+      objects++;
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+    pages++;
+  } while (cursor && pages < R2_LIST_MAX_PAGES);
+
+  const complete = !budgetSpent && cursor === undefined;
+  return {
+    bytes,
+    objects,
+    pages,
+    complete,
+    // Positive means R2 holds files the ledger does not know about, for
+    // example files stored before migration 0004.
+    driftBytes: complete ? bytes - trackedBytes : null,
+    driftObjects: complete ? objects - trackedObjects : null,
+  };
 }
 
 export default {
@@ -184,6 +428,19 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/media/")) {
       return handleMedia(request, env, url.pathname.slice("/media/".length));
+    }
+
+    if (url.pathname === "/usage") {
+      if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+      if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
+      if (!(await authorized(request, env.PROXY_TOKEN))) {
+        return json({ error: "unauthorized" }, 401);
+      }
+      try {
+        return json(await measureUsage(env, url.searchParams.get("verify") === "1"));
+      } catch (err) {
+        return json({ error: "usage_unavailable", message: (err as Error).message }, 503);
+      }
     }
 
     if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
