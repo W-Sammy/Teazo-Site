@@ -63,7 +63,7 @@ type AdminMenuClientProps = {
 const fallbackImage = "/TEAZO_logo.svg";
 
 // Validate only the response fields this page uses before displaying a saved item.
-type CreatedMenuItem = Pick<
+type SavedMenuItem = Pick<
   MenuItem,
   | "catalogObjectId"
   | "name"
@@ -78,7 +78,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isCreatedMenuItem(value: unknown): value is CreatedMenuItem {
+function isSavedMenuItem(value: unknown): value is SavedMenuItem {
   return (
     isRecord(value) &&
     typeof value.catalogObjectId === "string" &&
@@ -123,6 +123,46 @@ function getCreateErrorMessage(status: number, result: unknown): string {
   return unconfirmedCreateMessage;
 }
 
+// A failed update response does not prove that the saved item is unchanged.
+const unconfirmedUpdateMessage =
+  "The item update could not be confirmed. Reload the menu and check the item before trying again.";
+
+function getUpdateErrorMessage(status: number, result: unknown): string {
+  const message =
+    isRecord(result) &&
+    typeof result.error === "string" &&
+    result.error.trim()
+      ? result.error
+      : null;
+
+  if (status === 401) {
+    return "Your session has expired. Sign in again before saving changes.";
+  }
+
+  if (status === 403) {
+    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Can Edit access from the Teazo admin page.";
+  }
+
+  if (status === 404) {
+    return "This item is no longer available in Square. Reload the menu before continuing.";
+  }
+
+  if (status === 409) {
+    return message ?? "This item changed while it was being saved. Reload the menu and try again.";
+  }
+
+  if (status === 400) {
+    return message ?? "The item contains invalid data. Check the fields and try again.";
+  }
+
+  // Our PUT route returns safe messages, including saved-but-reload-failed cases.
+  if (status === 500 || status === 502 || status === 503) {
+    return message ?? unconfirmedUpdateMessage;
+  }
+
+  return unconfirmedUpdateMessage;
+}
+
 const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
   {
     value: "grid",
@@ -163,7 +203,8 @@ export default function AdminMenuClient({
   const [createdItems, setCreatedItems] =
     useState<DisplayedMenuItem[]>([]);
 
-  // Existing items get a local override instead of mutating the incoming props.
+  // Cache confirmed Square edits without mutating the incoming props.
+  // Any selected replacement image remains a local preview only.
   const [editedItems, setEditedItems] =
     useState<Map<string, DisplayedMenuItem>>(
       () => new Map(),
@@ -184,7 +225,7 @@ export default function AdminMenuClient({
   const [isSavingItem, setIsSavingItem] = useState(false);
   const itemSavePendingRef = useRef(false);
   const [drawer, setDrawer] = useState<MenuDrawer>(null);
-  // PDF uploads persist; keep their feedback separate from local item edits.
+  // PDF uploads persist; keep their feedback separate from item saves.
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -337,7 +378,7 @@ export default function AdminMenuClient({
         return;
       }
 
-      // Do not dismiss a form while its PDF upload or item creation is pending.
+      // Do not dismiss a form while its PDF upload or item save is pending.
       if (uploadPendingRef.current || itemSavePendingRef.current) {
         event.preventDefault();
         return;
@@ -544,7 +585,7 @@ export default function AdminMenuClient({
       return next;
     });
 
-    // Remove the page's cached addition and local edit, not the saved Square item.
+    // Remove the page's cached addition/edit, not the saved Square item.
     setCreatedItems((current) =>
       current.filter((entry) => entry.id !== item.id),
     );
@@ -581,51 +622,115 @@ export default function AdminMenuClient({
 
     setItemSaveError("");
 
-    // Preserve local-only editing. Connecting edits to Square is TZ-170.
+    // TZ-170: save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
-      const original = allItems.find((item) => item.id === drawer.item.id);
-
-      if (!original) {
-        setItemSaveError("The menu item is no longer available.");
+      if (!canUploadMenu) {
+        setItemSaveError("Owner or Can Edit access is required to edit a menu item.");
         return;
       }
 
-      try {
-        // No selected file means keep the existing image, unless explicitly removed.
-        let imageUrl = values.removeImage
-          ? fallbackImage
-          : original.img || fallbackImage;
+      const original = allItems.find((item) => item.id === drawer.item.id);
 
-        if (values.imageFile) {
-          imageUrl = URL.createObjectURL(values.imageFile);
-          managedImageUrls.current.add(imageUrl);
+      if (!original) {
+        setItemSaveError("The menu item is no longer available. Reload the menu.");
+        return;
+      }
+
+      // Capture the ID and lock this form immediately, before the next render.
+      const itemId = original.id;
+      itemSavePendingRef.current = true;
+      setIsSavingItem(true);
+      setItemSaveSuccess("");
+      setLocalNotice("");
+
+      try {
+        const response = await fetch(
+          `/api/square/products/${encodeURIComponent(itemId)}`,
+          {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: values.name,
+              description: values.description,
+              priceCents: values.priceCents,
+              categoryIds: values.categoryIds,
+              // Omit currency, modifier lists, and images to preserve their saved settings.
+            }),
+          },
+        );
+
+        const result: unknown = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          setItemSaveError(getUpdateErrorMessage(response.status, result));
+          return;
         }
 
-        // Preserve the ID: editing replaces the item rather than adding a duplicate.
+        if (!isSavedMenuItem(result) || result.catalogObjectId !== itemId) {
+          setItemSaveError(unconfirmedUpdateMessage);
+          return;
+        }
+
+        /*
+         * The route preserves Square's image IDs. Replacement/removal controls
+         * affect the local preview only until TZ-171 is connected.
+         */
+        let imageUrl = result.imageUrl?.trim() || fallbackImage;
+        let imageNotice = "";
+
+        if (values.imageFile) {
+          try {
+            imageUrl = URL.createObjectURL(values.imageFile);
+            managedImageUrls.current.add(imageUrl);
+            imageNotice = " The selected image is a local preview only; the saved Square image was not changed.";
+          } catch {
+            // An image-preview failure must not turn a confirmed edit into a failed save.
+            imageNotice = " The item was saved, but the replacement image preview could not be displayed. The saved Square image was not changed.";
+          }
+        } else if (values.removeImage) {
+          imageUrl = fallbackImage;
+          imageNotice = " The image was removed from this local preview only; the saved Square image was not changed.";
+        } else if (managedImageUrls.current.has(original.img)) {
+          // Retain an existing session-only preview without claiming it was uploaded.
+          imageUrl = original.img;
+          imageNotice = " The image shown is still a local preview and will not persist after a reload.";
+        }
+
         const updatedItem: DisplayedMenuItem = {
-          ...original,
+          id: result.catalogObjectId,
           img: imageUrl,
-          name: values.name,
-          price: values.priceCents / 100,
-          description: values.description,
-          categories: formCategories.filter((category) =>
-            values.categoryIds.includes(category.id),
-          ),
+          name: result.name?.trim() || "Unnamed item",
+          price: result.priceCents / 100,
+          description: result.description ?? "",
+          // Use returned membership, even if Square returns an empty category list.
+          categories: result.categories.map((category) => ({
+            id: category.id,
+            name:
+              category.name ??
+              formCategories.find((option) => option.id === category.id)?.name ??
+              "Unnamed category",
+          })),
         };
 
+        // Replace the same ID; editing must never append a second row.
         setEditedItems((current) => {
           const next = new Map(current);
-          next.set(original.id, updatedItem);
+          next.set(itemId, updatedItem);
           return next;
         });
+        setCreatedItems((current) =>
+          current.map((item) => item.id === itemId ? updatedItem : item),
+        );
 
-        setItemSaveSuccess("");
-        setLocalNotice(`Updated “${values.name}” locally.`);
-
-        // No API call, database update, or browser storage write occurs for edits yet.
+        setItemSaveSuccess(`Updated “${updatedItem.name}” in Square.${imageNotice}`);
         setDrawer(null);
       } catch {
-        setItemSaveError("The local changes could not be saved. Please try again.");
+        // Keep the form and original row intact when the update cannot be confirmed.
+        setItemSaveError(unconfirmedUpdateMessage);
+      } finally {
+        itemSavePendingRef.current = false;
+        setIsSavingItem(false);
       }
 
       return;
@@ -664,7 +769,7 @@ export default function AdminMenuClient({
         return;
       }
 
-      if (!isCreatedMenuItem(result)) {
+      if (!isSavedMenuItem(result)) {
         setItemSaveError(unconfirmedCreateMessage);
         return;
       }
@@ -1003,9 +1108,10 @@ export default function AdminMenuClient({
                 role="status"
                 className="[overflow-wrap:anywhere]"
               >
-                {localNotice} Editing and deletion still only affect this
-                page; they do not update Square. Reloading discards these local
-                changes. Items already added to Square remain saved.
+                {localNotice} Deletion still only affects this page; it does
+                not remove the item from Square. Reloading restores locally
+                hidden items. Item additions and text/price/category edits are
+                saved to Square; image-preview changes are not.
               </p>
 
               {(search ||
@@ -1052,12 +1158,11 @@ export default function AdminMenuClient({
           >
             {drawer.kind !== "upload-menu" ? (
               <>
-                {drawer.kind === "add-item" && (
-                  <p className="mb-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700">
-                    New items are saved to Square. Image upload is not connected
-                    yet, so a selected image is only a preview for this page.
-                  </p>
-                )}
+                <p className="mb-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700">
+                  {drawer.kind === "edit-item"
+                    ? "Name, price, description, and category changes are saved to Square. Replacing or removing an image only changes this page's preview; the saved Square image stays unchanged."
+                    : "New items are saved to Square. Image upload is not connected yet, so a selected image is only a preview for this page."}
+                </p>
 
                 {itemSaveError && (
                   <div
@@ -1070,7 +1175,9 @@ export default function AdminMenuClient({
 
                 {isSavingItem && (
                   <p role="status" className="mb-3 text-sm text-gray-600">
-                    Adding the item to Square. Please keep this page open.
+                    {drawer.kind === "edit-item"
+                      ? "Saving changes to Square. Please keep this page open."
+                      : "Adding the item to Square. Please keep this page open."}
                   </p>
                 )}
 

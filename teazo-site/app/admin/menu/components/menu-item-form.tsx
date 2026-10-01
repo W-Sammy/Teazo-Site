@@ -279,7 +279,7 @@ export default function MenuItemForm({
     } catch {
       setErrors({
         form: isEditing
-          ? "The local changes could not be saved. Please try again."
+          ? "The item update could not be confirmed. Reload the menu and check the item before trying again."
           : "The item could not be confirmed. Check the menu before trying again.",
       });
     } finally {
@@ -659,7 +659,9 @@ export default function MenuItemForm({
           disabled={checkingImage || isSaving}
           className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-wait disabled:opacity-50"
         >
-          {isSaving ? "Adding..." : isEditing ? "Save Changes" : "Add Item"}
+          {isSaving
+            ? isEditing ? "Saving..." : "Adding..."
+            : isEditing ? "Save Changes" : "Add Item"}
         </button>
       </div>
     </form>
