@@ -75,7 +75,11 @@ type SavedMenuItem = Pick<
 >;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
 function isSavedMenuItem(value: unknown): value is SavedMenuItem {
@@ -84,7 +88,8 @@ function isSavedMenuItem(value: unknown): value is SavedMenuItem {
     typeof value.catalogObjectId === "string" &&
     value.catalogObjectId.trim().length > 0 &&
     (value.name == null || typeof value.name === "string") &&
-    (value.description === undefined || typeof value.description === "string") &&
+    (value.description === undefined ||
+      typeof value.description === "string") &&
     typeof value.priceCents === "number" &&
     Number.isSafeInteger(value.priceCents) &&
     value.priceCents >= 0 &&
@@ -148,11 +153,17 @@ function getUpdateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 409) {
-    return message ?? "This item changed while it was being saved. Reload the menu and try again.";
+    return (
+      message ??
+      "This item changed while it was being saved. Reload the menu and try again."
+    );
   }
 
   if (status === 400) {
-    return message ?? "The item contains invalid data. Check the fields and try again.";
+    return (
+      message ??
+      "The item contains invalid data. Check the fields and try again."
+    );
   }
 
   // Our PUT route returns safe messages, including saved-but-reload-failed cases.
@@ -161,6 +172,47 @@ function getUpdateErrorMessage(status: number, result: unknown): string {
   }
 
   return unconfirmedUpdateMessage;
+}
+
+// A successful HTTP status alone is not enough: the deleted IDs must include this item.
+function isConfirmedDeletion(value: unknown, itemId: string): boolean {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.deletedObjectIds) &&
+    value.deletedObjectIds.every((id) => typeof id === "string") &&
+    value.deletedObjectIds.includes(itemId)
+  );
+}
+
+const unconfirmedDeleteMessage =
+  "The deletion could not be confirmed. Reload the menu and check the item before trying again.";
+
+function getDeleteErrorMessage(status: number, result: unknown): string {
+  if (status === 401) {
+    return "Your session has expired. Sign in again before deleting an item.";
+  }
+
+  if (status === 403) {
+    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Can Edit access from the Teazo admin page.";
+  }
+
+  if (
+    status === 404 &&
+    isRecord(result) &&
+    result.error === "Product not found"
+  ) {
+    return "This item is no longer available in Square. Reload the menu to update the list.";
+  }
+
+  if (status === 429) {
+    return "Square is busy processing another request. Wait a moment, check the menu, and try again.";
+  }
+
+  if (status === 503) {
+    return "The service is temporarily unavailable. Reload the menu and check the item before trying again.";
+  }
+
+  return unconfirmedDeleteMessage;
 }
 
 const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
@@ -210,7 +262,7 @@ export default function AdminMenuClient({
       () => new Map(),
     );
 
-  // Hide existing items locally without sending deletion requests to Square.
+  // Hide only items whose IDs were confirmed deleted by the Square endpoint.
   const [deletedItemIds, setDeletedItemIds] =
     useState<Set<string>>(
       () => new Set(),
@@ -219,12 +271,17 @@ export default function AdminMenuClient({
   const [itemPendingDelete, setItemPendingDelete] =
     useState<DisplayedMenuItem | null>(null);
 
-  const [localNotice, setLocalNotice] = useState("");
+  const [itemDeleteSuccess, setItemDeleteSuccess] = useState("");
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+  const itemDeletePendingRef = useRef(false);
+
   const [itemSaveError, setItemSaveError] = useState("");
   const [itemSaveSuccess, setItemSaveSuccess] = useState("");
   const [isSavingItem, setIsSavingItem] = useState(false);
   const itemSavePendingRef = useRef(false);
+
   const [drawer, setDrawer] = useState<MenuDrawer>(null);
+
   // PDF uploads persist; keep their feedback separate from item saves.
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
@@ -378,8 +435,12 @@ export default function AdminMenuClient({
         return;
       }
 
-      // Do not dismiss a form while its PDF upload or item save is pending.
-      if (uploadPendingRef.current || itemSavePendingRef.current) {
+      // Do not dismiss a form while a PDF upload, item save, or deletion is pending.
+      if (
+        uploadPendingRef.current ||
+        itemSavePendingRef.current ||
+        itemDeletePendingRef.current
+      ) {
         event.preventDefault();
         return;
       }
@@ -451,8 +512,12 @@ export default function AdminMenuClient({
     if (
       !canUploadMenu ||
       uploadPendingRef.current ||
-      itemSavePendingRef.current
-    ) return;
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
+
     setMobileFiltersOpen(false);
     setUploadFile(null);
     setUploadError("");
@@ -461,24 +526,43 @@ export default function AdminMenuClient({
   }
 
   function closeDrawer() {
-    if (uploadPendingRef.current || itemSavePendingRef.current) return;
+    if (
+      uploadPendingRef.current ||
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
+
     setDrawer(null);
     setItemSaveError("");
   }
 
   async function handleMenuUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (uploadPendingRef.current || itemSavePendingRef.current) return;
 
-    if (!canUploadMenu) {
-      setUploadError("Owner or Can Edit access is required to upload a menu.");
+    if (
+      uploadPendingRef.current ||
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
       return;
     }
+
+    if (!canUploadMenu) {
+      setUploadError(
+        "Owner or Can Edit access is required to upload a menu.",
+      );
+      return;
+    }
+
     if (!uploadFile) {
       setUploadError("Please choose a PDF first.");
       return;
     }
+
     const fileError = getMenuFileError(uploadFile);
+
     if (fileError) {
       setUploadError(fileError);
       return;
@@ -499,28 +583,40 @@ export default function AdminMenuClient({
         credentials: "same-origin",
         body: form,
       });
+
       const result: unknown = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const message = result && typeof result === "object" &&
-          "error" in result && typeof result.error === "string"
-          ? result.error
-          : response.status === 413
-            ? `The PDF must be ${MENU_PDF_SIZE_LABEL} or smaller.`
-            : "The upload could not be confirmed. Check the public menu before retrying.";
+        const message =
+          result &&
+          typeof result === "object" &&
+          "error" in result &&
+          typeof result.error === "string"
+            ? result.error
+            : response.status === 413
+              ? `The PDF must be ${MENU_PDF_SIZE_LABEL} or smaller.`
+              : "The upload could not be confirmed. Check the public menu before retrying.";
+
         throw new Error(message);
       }
+
       if (!isMenuUploadResponse(result)) {
-        throw new Error("The server returned an unexpected response. Check the public menu before retrying.");
+        throw new Error(
+          "The server returned an unexpected response. Check the public menu before retrying.",
+        );
       }
 
-      setUploadSuccess(`“${uploadFile.name}” was uploaded and published as the PDF menu.`);
+      setUploadSuccess(
+        `“${uploadFile.name}” was uploaded and published as the PDF menu.`,
+      );
       setUploadFile(null);
       setDrawer(null);
     } catch (error) {
-      setUploadError(error instanceof Error && !(error instanceof TypeError)
-        ? error.message
-        : "The upload could not be confirmed. Check the public menu before retrying.");
+      setUploadError(
+        error instanceof Error && !(error instanceof TypeError)
+          ? error.message
+          : "The upload could not be confirmed. Check the public menu before retrying.",
+      );
     } finally {
       uploadPendingRef.current = false;
       setIsUploading(false);
@@ -528,12 +624,16 @@ export default function AdminMenuClient({
   }
 
   function openAddItemForm() {
-    // Item creation and PDF uploads currently use the same Owner/Can Edit roles.
+    // Menu writes and PDF uploads currently use the same Owner/Can Edit roles.
     if (
       !canUploadMenu ||
       uploadPendingRef.current ||
-      itemSavePendingRef.current
-    ) return;
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
+
     setMobileFiltersOpen(false);
     setItemSaveError("");
     setItemSaveSuccess("");
@@ -541,107 +641,176 @@ export default function AdminMenuClient({
   }
 
   function openEditItemForm(item: DisplayedMenuItem) {
-    if (uploadPendingRef.current || itemSavePendingRef.current) return;
+    if (
+      uploadPendingRef.current ||
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
+
     setMobileFiltersOpen(false);
     setItemSaveError("");
     setDrawer({ kind: "edit-item", item });
   }
 
   function requestDeleteItem(item: DisplayedMenuItem) {
-    if (uploadPendingRef.current || itemSavePendingRef.current) return;
+    if (
+      uploadPendingRef.current ||
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
+
     const currentItem = allItems.find(
       (entry) => entry.id === item.id,
     );
 
     if (currentItem) {
+      setItemDeleteSuccess("");
       setItemPendingDelete(currentItem);
     }
   }
 
-  function confirmDeleteItem() {
-    if (uploadPendingRef.current || itemSavePendingRef.current) return;
-    if (!itemPendingDelete) {
+  function cancelDeleteItem() {
+    if (itemDeletePendingRef.current) {
       return;
     }
-
-    const item = allItems.find(
-      (entry) => entry.id === itemPendingDelete.id,
-    );
-
-    if (!item) {
-      setItemPendingDelete(null);
-
-      setLocalNotice(
-        "This item is no longer in the local preview.",
-      );
-
-      return;
-    }
-
-    // Preserve incoming props and hide existing items by their stable IDs.
-    setDeletedItemIds((current) => {
-      const next = new Set(current);
-      next.add(item.id);
-      return next;
-    });
-
-    // Remove the page's cached addition/edit, not the saved Square item.
-    setCreatedItems((current) =>
-      current.filter((entry) => entry.id !== item.id),
-    );
-
-    setEditedItems((current) => {
-      const next = new Map(current);
-      next.delete(item.id);
-      return next;
-    });
-
-    // Deleting a different item must not discard the form currently being edited.
-    setDrawer((current) =>
-      current?.kind === "edit-item" &&
-      current.item.id === item.id
-        ? null
-        : current,
-    );
 
     setItemPendingDelete(null);
-    setItemSaveSuccess("");
-
-    setLocalNotice(
-      `Deleted “${item.name}” from this local preview.`,
-    );
   }
 
-  async function handleSaveItem(values: MenuItemFormValues): Promise<void> {
+  // Return an error message to the dialog, or null after confirmed deletion.
+  async function confirmDeleteItem(): Promise<string | null> {
+    if (
+      uploadPendingRef.current ||
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return "Another menu operation is still running. Please wait for it to finish.";
+    }
+
+    if (!itemPendingDelete) {
+      return "No item is selected. Close this dialog and select an item again.";
+    }
+
+    // The server independently enforces the same Owner/Can Edit permission.
+    if (!canUploadMenu) {
+      return "Owner or Can Edit access is required to delete a menu item.";
+    }
+
+    // Capture the selected record so an async response cannot target another item.
+    const item = itemPendingDelete;
+
+    itemDeletePendingRef.current = true;
+    setIsDeletingItem(true);
+    setItemDeleteSuccess("");
+    setItemSaveSuccess("");
+
+    try {
+      const response = await fetch(
+        `/api/square/products/${encodeURIComponent(item.id)}`,
+        {
+          method: "DELETE",
+          credentials: "same-origin",
+        },
+      );
+
+      const result: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        return getDeleteErrorMessage(response.status, result);
+      }
+
+      if (!isConfirmedDeletion(result, item.id)) {
+        return unconfirmedDeleteMessage;
+      }
+
+      // Do not change the displayed list until Square confirms this exact item ID.
+      setDeletedItemIds((current) => {
+        const next = new Set(current);
+        next.add(item.id);
+        return next;
+      });
+
+      // Remove cached additions and edits for the deleted item.
+      // The existing cleanup effect releases unused local image-preview URLs.
+      setCreatedItems((current) =>
+        current.filter((entry) => entry.id !== item.id),
+      );
+
+      setEditedItems((current) => {
+        const next = new Map(current);
+        next.delete(item.id);
+        return next;
+      });
+
+      // Keep an unrelated edit drawer intact.
+      setDrawer((current) =>
+        current?.kind === "edit-item" && current.item.id === item.id
+          ? null
+          : current,
+      );
+
+      setItemPendingDelete(null);
+      setItemDeleteSuccess(
+        `Deleted “${item.name}” from Square.`,
+      );
+
+      return null;
+    } catch {
+      // A network failure might occur after Square performed the deletion.
+      // Keep the row/dialog until the result can be checked; never retry silently.
+      return unconfirmedDeleteMessage;
+    } finally {
+      itemDeletePendingRef.current = false;
+      setIsDeletingItem(false);
+    }
+  }
+
+  async function handleSaveItem(
+    values: MenuItemFormValues,
+  ): Promise<void> {
     if (
       !drawer ||
       drawer.kind === "upload-menu" ||
       uploadPendingRef.current ||
-      itemSavePendingRef.current
-    ) return;
+      itemSavePendingRef.current ||
+      itemDeletePendingRef.current
+    ) {
+      return;
+    }
 
     setItemSaveError("");
 
     // TZ-170: save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
       if (!canUploadMenu) {
-        setItemSaveError("Owner or Can Edit access is required to edit a menu item.");
+        setItemSaveError(
+          "Owner or Can Edit access is required to edit a menu item.",
+        );
         return;
       }
 
-      const original = allItems.find((item) => item.id === drawer.item.id);
+      const original = allItems.find(
+        (item) => item.id === drawer.item.id,
+      );
 
       if (!original) {
-        setItemSaveError("The menu item is no longer available. Reload the menu.");
+        setItemSaveError(
+          "The menu item is no longer available. Reload the menu.",
+        );
         return;
       }
 
       // Capture the ID and lock this form immediately, before the next render.
       const itemId = original.id;
+
       itemSavePendingRef.current = true;
       setIsSavingItem(true);
       setItemSaveSuccess("");
-      setLocalNotice("");
+      setItemDeleteSuccess("");
 
       try {
         const response = await fetch(
@@ -649,7 +818,9 @@ export default function AdminMenuClient({
           {
             method: "PUT",
             credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({
               name: values.name,
               description: values.description,
@@ -663,11 +834,16 @@ export default function AdminMenuClient({
         const result: unknown = await response.json().catch(() => null);
 
         if (!response.ok) {
-          setItemSaveError(getUpdateErrorMessage(response.status, result));
+          setItemSaveError(
+            getUpdateErrorMessage(response.status, result),
+          );
           return;
         }
 
-        if (!isSavedMenuItem(result) || result.catalogObjectId !== itemId) {
+        if (
+          !isSavedMenuItem(result) ||
+          result.catalogObjectId !== itemId
+        ) {
           setItemSaveError(unconfirmedUpdateMessage);
           return;
         }
@@ -683,18 +859,25 @@ export default function AdminMenuClient({
           try {
             imageUrl = URL.createObjectURL(values.imageFile);
             managedImageUrls.current.add(imageUrl);
-            imageNotice = " The selected image is a local preview only; the saved Square image was not changed.";
+
+            imageNotice =
+              " The selected image is a local preview only; the saved Square image was not changed.";
           } catch {
             // An image-preview failure must not turn a confirmed edit into a failed save.
-            imageNotice = " The item was saved, but the replacement image preview could not be displayed. The saved Square image was not changed.";
+            imageNotice =
+              " The item was saved, but the replacement image preview could not be displayed. The saved Square image was not changed.";
           }
         } else if (values.removeImage) {
           imageUrl = fallbackImage;
-          imageNotice = " The image was removed from this local preview only; the saved Square image was not changed.";
+
+          imageNotice =
+            " The image was removed from this local preview only; the saved Square image was not changed.";
         } else if (managedImageUrls.current.has(original.img)) {
           // Retain an existing session-only preview without claiming it was uploaded.
           imageUrl = original.img;
-          imageNotice = " The image shown is still a local preview and will not persist after a reload.";
+
+          imageNotice =
+            " The image shown is still a local preview and will not persist after a reload.";
         }
 
         const updatedItem: DisplayedMenuItem = {
@@ -703,12 +886,15 @@ export default function AdminMenuClient({
           name: result.name?.trim() || "Unnamed item",
           price: result.priceCents / 100,
           description: result.description ?? "",
+
           // Use returned membership, even if Square returns an empty category list.
           categories: result.categories.map((category) => ({
             id: category.id,
             name:
               category.name ??
-              formCategories.find((option) => option.id === category.id)?.name ??
+              formCategories.find(
+                (option) => option.id === category.id,
+              )?.name ??
               "Unnamed category",
           })),
         };
@@ -719,11 +905,16 @@ export default function AdminMenuClient({
           next.set(itemId, updatedItem);
           return next;
         });
+
         setCreatedItems((current) =>
-          current.map((item) => item.id === itemId ? updatedItem : item),
+          current.map((item) =>
+            item.id === itemId ? updatedItem : item,
+          ),
         );
 
-        setItemSaveSuccess(`Updated “${updatedItem.name}” in Square.${imageNotice}`);
+        setItemSaveSuccess(
+          `Updated “${updatedItem.name}” in Square.${imageNotice}`,
+        );
         setDrawer(null);
       } catch {
         // Keep the form and original row intact when the update cannot be confirmed.
@@ -737,7 +928,9 @@ export default function AdminMenuClient({
     }
 
     if (!canUploadMenu) {
-      setItemSaveError("Owner or Can Edit access is required to add a menu item.");
+      setItemSaveError(
+        "Owner or Can Edit access is required to add a menu item.",
+      );
       return;
     }
 
@@ -745,13 +938,15 @@ export default function AdminMenuClient({
     itemSavePendingRef.current = true;
     setIsSavingItem(true);
     setItemSaveSuccess("");
-    setLocalNotice("");
+    setItemDeleteSuccess("");
 
     try {
       const response = await fetch("/api/square/products", {
         method: "POST",
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: values.name,
           description: values.description,
@@ -765,7 +960,9 @@ export default function AdminMenuClient({
       const result: unknown = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setItemSaveError(getCreateErrorMessage(response.status, result));
+        setItemSaveError(
+          getCreateErrorMessage(response.status, result),
+        );
         return;
       }
 
@@ -785,10 +982,13 @@ export default function AdminMenuClient({
         try {
           imageUrl = URL.createObjectURL(values.imageFile);
           managedImageUrls.current.add(imageUrl);
-          imageNotice = " The selected image is a local preview only and will not persist after a reload.";
+
+          imageNotice =
+            " The selected image is a local preview only and will not persist after a reload.";
         } catch {
           // Preview failure must not report a successfully created Square item as failed.
-          imageNotice = " The item was saved, but its local image preview could not be displayed.";
+          imageNotice =
+            " The item was saved, but its local image preview could not be displayed.";
         }
       }
 
@@ -798,12 +998,15 @@ export default function AdminMenuClient({
         name: result.name?.trim() || "Unnamed item",
         price: result.priceCents / 100,
         description: result.description ?? "",
+
         // Keep returned category membership; only fill in missing display labels.
         categories: result.categories.map((category) => ({
           id: category.id,
           name:
             category.name ??
-            formCategories.find((option) => option.id === category.id)?.name ??
+            formCategories.find(
+              (option) => option.id === category.id,
+            )?.name ??
             "Unnamed category",
         })),
       };
@@ -812,7 +1015,10 @@ export default function AdminMenuClient({
         ...current.filter((item) => item.id !== newItem.id),
         newItem,
       ]);
-      setItemSaveSuccess(`Added “${newItem.name}” to Square.${imageNotice}`);
+
+      setItemSaveSuccess(
+        `Added “${newItem.name}” to Square.${imageNotice}`,
+      );
       setDrawer(null);
     } catch {
       // A network failure does not prove that Square rejected the creation.
@@ -1039,8 +1245,17 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openAddItemForm}
-                  disabled={!canUploadMenu || isUploading || isSavingItem}
-                  title={canUploadMenu ? "Add a menu item" : "Owner or Can Edit access is required"}
+                  disabled={
+                    !canUploadMenu ||
+                    isUploading ||
+                    isSavingItem ||
+                    isDeletingItem
+                  }
+                  title={
+                    canUploadMenu
+                      ? "Add a menu item"
+                      : "Owner or Can Edit access is required"
+                  }
                   className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Add Item
@@ -1049,8 +1264,17 @@ export default function AdminMenuClient({
                 <button
                   type="button"
                   onClick={openUploadForm}
-                  disabled={!canUploadMenu || isUploading || isSavingItem}
-                  title={canUploadMenu ? "Upload a PDF menu" : "Owner or Can Edit access is required"}
+                  disabled={
+                    !canUploadMenu ||
+                    isUploading ||
+                    isSavingItem ||
+                    isDeletingItem
+                  }
+                  title={
+                    canUploadMenu
+                      ? "Upload a PDF menu"
+                      : "Owner or Can Edit access is required"
+                  }
                   className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
                 >
                   Upload Menu
@@ -1064,7 +1288,11 @@ export default function AdminMenuClient({
           {/* Count matching items in either view, including new items and local changes. */}
           {/* ListView supplies the gap below; offset its extra desktop padding by one spacing unit. */}
           <div className="flex items-center justify-between gap-3 px-3 pt-3 text-sm text-gray-500 sm:-mb-1 sm:px-4 sm:pt-4">
-            <span role="status" aria-live="polite" aria-atomic="true">
+            <span
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {filteredItems.length}{" "}
               {filteredItems.length === 1 ? "item" : "items"}
             </span>
@@ -1072,7 +1300,13 @@ export default function AdminMenuClient({
 
           {uploadSuccess && (
             <div className="m-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900 sm:m-4">
-              <p role="status" className="[overflow-wrap:anywhere]">{uploadSuccess}</p>
+              <p
+                role="status"
+                className="[overflow-wrap:anywhere]"
+              >
+                {uploadSuccess}
+              </p>
+
               <a
                 href={CURRENT_MENU_PDF_URL}
                 target="_blank"
@@ -1086,7 +1320,13 @@ export default function AdminMenuClient({
 
           {itemSaveSuccess && (
             <div className="m-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900 sm:m-4">
-              <p role="status" className="[overflow-wrap:anywhere]">{itemSaveSuccess}</p>
+              <p
+                role="status"
+                className="[overflow-wrap:anywhere]"
+              >
+                {itemSaveSuccess}
+              </p>
+
               {(search || selectedCategories.length > 0) && (
                 <button
                   type="button"
@@ -1102,20 +1342,16 @@ export default function AdminMenuClient({
             </div>
           )}
 
-          {localNotice && (
+          {itemDeleteSuccess && (
             <div className="m-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700 sm:m-4">
               <p
                 role="status"
                 className="[overflow-wrap:anywhere]"
               >
-                {localNotice} Deletion still only affects this page; it does
-                not remove the item from Square. Reloading restores locally
-                hidden items. Item additions and text/price/category edits are
-                saved to Square; image-preview changes are not.
+                {itemDeleteSuccess} Reloading the menu should not restore this item.
               </p>
 
-              {(search ||
-                selectedCategories.length > 0) && (
+              {(search || selectedCategories.length > 0) && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1153,7 +1389,11 @@ export default function AdminMenuClient({
             }
             isOpen
             onClose={closeDrawer}
-            closeDisabled={isUploading || isSavingItem}
+            closeDisabled={
+              isUploading ||
+              isSavingItem ||
+              isDeletingItem
+            }
             mobileFullscreen
           >
             {drawer.kind !== "upload-menu" ? (
@@ -1174,7 +1414,10 @@ export default function AdminMenuClient({
                 )}
 
                 {isSavingItem && (
-                  <p role="status" className="mb-3 text-sm text-gray-600">
+                  <p
+                    role="status"
+                    className="mb-3 text-sm text-gray-600"
+                  >
                     {drawer.kind === "edit-item"
                       ? "Saving changes to Square. Please keep this page open."
                       : "Adding the item to Square. Please keep this page open."}
@@ -1217,12 +1460,19 @@ export default function AdminMenuClient({
                   Upload Menu
                 </h2>
 
-                <p id="menu-upload-help" className="text-sm text-gray-600">
+                <p
+                  id="menu-upload-help"
+                  className="text-sm text-gray-600"
+                >
                   Choose a PDF of {MENU_PDF_SIZE_LABEL} or less. A successful upload
                   replaces the public PDF menu, not the individual Square items.
                 </p>
+
                 {uploadError && (
-                  <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 [overflow-wrap:anywhere]">
+                  <p
+                    role="alert"
+                    className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 [overflow-wrap:anywhere]"
+                  >
                     {uploadError}
                   </p>
                 )}
@@ -1246,7 +1496,9 @@ export default function AdminMenuClient({
                     onChange={(event) => {
                       const file = event.target.files?.[0] ?? null;
                       setUploadFile(file);
-                      setUploadError(file ? getMenuFileError(file) ?? "" : "");
+                      setUploadError(
+                        file ? getMenuFileError(file) ?? "" : "",
+                      );
                     }}
                     className="hidden"
                   />
@@ -1273,7 +1525,10 @@ export default function AdminMenuClient({
                 </div>
 
                 {isUploading && (
-                  <p role="status" className="text-sm text-gray-600">
+                  <p
+                    role="status"
+                    className="text-sm text-gray-600"
+                  >
                     Uploading and publishing the menu. Please keep this page open.
                   </p>
                 )}
@@ -1290,7 +1545,12 @@ export default function AdminMenuClient({
 
                   <button
                     type="submit"
-                    disabled={isUploading || !canUploadMenu || !uploadFile || !!getMenuFileError(uploadFile)}
+                    disabled={
+                      isUploading ||
+                      !canUploadMenu ||
+                      !uploadFile ||
+                      !!getMenuFileError(uploadFile)
+                    }
                     className="min-w-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isUploading ? "Uploading…" : "Upload"}
@@ -1306,7 +1566,7 @@ export default function AdminMenuClient({
         <DeleteMenuItemDialog
           key={itemPendingDelete.id}
           itemName={itemPendingDelete.name}
-          onCancel={() => setItemPendingDelete(null)}
+          onCancel={cancelDeleteItem}
           onConfirm={confirmDeleteItem}
           fallbackFocusRef={searchInputRef}
         />
