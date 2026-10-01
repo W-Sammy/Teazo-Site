@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 
+import { MouseEvent } from "react"; // for mobile menu
+
 // setup fonts
 const montserrat = Montserrat({
     subsets: ['latin'], // reduce amount of importing to just letters, nums
@@ -25,25 +27,39 @@ export default function NavBar() {
     const active = (item: string) => {
         const href = item === "HOME" ? "/" : `/${item.toLowerCase()}`;
         return pathName === href;
-    }
+    };
+
+    
 
     return (
-        // 50% opacity white "rectangle"
-        <header className="fixed top-0 w-full z-50 bg-white/50 backdrop-blur-md">
-            <nav className="mx-auto flex flex-col md:flex-row items-center justify-center md:justify-between px-6 py-4 md:px-10 md:py-6 gap-4 md:gap-0">
-                    
+        <header className="fixed inset-x-0 top-0 z-[9999] w-full">
+            {/* 50% opacity white "rectangle" */}
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-white/50 backdrop-blur-md"
+            />
+            
+            {/* navigational */}
+            <nav
+                className="relative z-10 mx-auto px-6 py-4 md:flex md:items-center md:justify-between md:px-10 md:py-6"
+                aria-label="Main Navigation"
+            >  
+
+            <div className="relative flex min-h-12 items-center justify-center md:contents">
                 {/* teazo logo - gold, cabin sketch & underlined (no change during hover)
                     left on desktop, centered on mobile */}
                 <Link 
                     href="/" 
-                    className={`${cabinSketch.className} text-[48px] md:text-[64px] font-normal border-b-2 border-[#DBAF82] leading-[0.8] text-[#DBAF82] tracking-[0.05em]`}
+                    className={`${cabinSketch.className} border-b-2 border-[#DBAF82] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#DBAF82] md:text-[64px]`}
                 >
                     TEAZO
                 </Link>
 
+                {/* hamburger icon for mobile view.*/}
+
                 {/* navItems - black, monserrat, underlined when hovered & active on page
                     right on desktop, centered & below logo on mobile */}
-                <div className="grid grid-cols-5 w-full md:w-auto md:flex gap-2 md:gap-12">
+                <div className="hidden items-center gap-12 md:flex">
                     {navItems.map((item) => (
                         <Link
                             key={item}
@@ -54,6 +70,7 @@ export default function NavBar() {
                         </Link>
                     ))}
                 </div>
+            </div>
 
             </nav>
         </header>
