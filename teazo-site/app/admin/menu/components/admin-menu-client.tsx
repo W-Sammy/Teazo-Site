@@ -1348,7 +1348,7 @@ export default function AdminMenuClient({
                 role="status"
                 className="[overflow-wrap:anywhere]"
               >
-                {itemDeleteSuccess} Reloading the menu should not restore this item.
+                {itemDeleteSuccess} 
               </p>
 
               {(search || selectedCategories.length > 0) && (
