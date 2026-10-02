@@ -33,7 +33,8 @@ type MenuItemFormProps = {
   initialItem?: MenuItemFormInitialValues | null;
   categories: { id: string; name: string }[];
   onCancel: () => void;
-  onSave: (values: MenuItemFormValues) => void;
+  onSave: (values: MenuItemFormValues) => void | Promise<void>;
+  isSaving?: boolean;
 };
 
 type FieldErrors = {
@@ -79,6 +80,7 @@ export default function MenuItemForm({
   categories,
   onCancel,
   onSave,
+  isSaving = false,
 }: MenuItemFormProps) {
   const isEditing = initialItem !== null;
 
@@ -141,6 +143,7 @@ export default function MenuItemForm({
   }, []);
 
   function selectFiles(files: FileList | null) {
+    if (submitted.current || isSaving) return;
     if (!files?.length) {
       return;
     }
@@ -217,10 +220,10 @@ export default function MenuItemForm({
     selectFiles(event.dataTransfer.files);
   }
 
-  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submitted.current || checkingImage) {
+    if (submitted.current || checkingImage || isSaving) {
       return;
     }
 
@@ -261,7 +264,8 @@ export default function MenuItemForm({
     try {
       submitted.current = true;
 
-      onSave({
+      // Wait for async saves so a failure cannot leave the submit guard locked.
+      await onSave({
         name: cleanName,
         description: description.trim(),
         priceCents,
@@ -273,13 +277,14 @@ export default function MenuItemForm({
         removeImage: imageRemoved,
       });
     } catch {
-      submitted.current = false;
-
       setErrors({
         form: isEditing
-          ? "The local changes could not be saved. Please try again."
-          : "The temporary item could not be added. Please try again.",
+          ? "The item update could not be confirmed. Reload the menu and check the item before trying again."
+          : "The item could not be confirmed. Check the menu before trying again.",
       });
+    } finally {
+      // Keep the entered fields and allow another attempt after a failed save.
+      submitted.current = false;
     }
   }
 
@@ -288,6 +293,7 @@ export default function MenuItemForm({
       onSubmit={handleSubmit}
       noValidate
       aria-labelledby="menu-item-form-title"
+      aria-busy={isSaving}
       className="flex min-h-full w-full min-w-0 flex-col pt-2 sm:pt-4"
     >
       <h2
@@ -312,6 +318,7 @@ export default function MenuItemForm({
           ref={nameRef}
           id="menu-item-name"
           name="menuItemName"
+          disabled={isSaving}
           type="text"
           required
           value={name}
@@ -355,6 +362,7 @@ export default function MenuItemForm({
           ref={priceRef}
           id="menu-item-price"
           name="menuItemPrice"
+          disabled={isSaving}
           type="text"
           inputMode="decimal"
           required
@@ -398,6 +406,7 @@ export default function MenuItemForm({
         <textarea
           id="menu-item-description"
           name="menuItemDescription"
+          disabled={isSaving}
           rows={4}
           value={description}
           onChange={(event) =>
@@ -427,6 +436,7 @@ export default function MenuItemForm({
                 <input
                   type="checkbox"
                   name="menuItemCategory"
+                  disabled={isSaving}
                   value={category.id}
                   checked={categoryIds.includes(category.id)}
                   onChange={() =>
@@ -520,6 +530,7 @@ export default function MenuItemForm({
         <div
           onDragEnter={(event) => {
             event.preventDefault();
+            if (submitted.current || isSaving) return;
             dragDepth.current += 1;
             setIsDragging(true);
           }}
@@ -550,6 +561,7 @@ export default function MenuItemForm({
             ref={fileInputRef}
             id="menu-item-image"
             name="menuItemImage"
+            disabled={isSaving}
             type="file"
             accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
             aria-labelledby="menu-item-image-label"
@@ -565,6 +577,7 @@ export default function MenuItemForm({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isSaving}
             className="w-full cursor-pointer whitespace-normal rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
           >
             {previewUrl
@@ -580,6 +593,7 @@ export default function MenuItemForm({
             <button
               type="button"
               onClick={removeImage}
+              disabled={isSaving}
               className="mt-2 cursor-pointer text-sm text-red-600 hover:underline"
             >
               {previewUrl
@@ -593,6 +607,7 @@ export default function MenuItemForm({
               <button
                 type="button"
                 onClick={restoreOriginalImage}
+                disabled={isSaving}
                 className="mt-2 block w-full cursor-pointer text-sm text-blue-500 hover:underline"
               >
                 Restore current image
@@ -633,6 +648,7 @@ export default function MenuItemForm({
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSaving}
           className="min-w-0 cursor-pointer rounded-lg bg-gray-400 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
         >
           Cancel
@@ -640,10 +656,12 @@ export default function MenuItemForm({
 
         <button
           type="submit"
-          disabled={checkingImage}
+          disabled={checkingImage || isSaving}
           className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-wait disabled:opacity-50"
         >
-          {isEditing ? "Save Changes" : "Add Item"}
+          {isSaving
+            ? isEditing ? "Saving..." : "Adding..."
+            : isEditing ? "Save Changes" : "Add Item"}
         </button>
       </div>
     </form>

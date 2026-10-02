@@ -4,13 +4,13 @@ import type {
   MenuItem,
   ModifierList,
   ItemCategory,
-  CreateMenuItemBody,
 } from "@/app/types/menu-item";
 import {
   buildModifierList,
   buildMenuItemFromGetResponse,
 } from "@/app/lib/square-helpers";
 import { requireAdminApi } from "@/app/lib/admin";
+import { validateCreateMenuItemBody } from "@/app/lib/menu-item-validators";
 
 /**
  * GET /api/products
@@ -38,7 +38,11 @@ export async function GET() {
         console.warn("Skipping unexpected image object:", img);
         continue;
       }
-      imageMap.set(img.id, (img as CatalogObject.Image).imageData?.url ?? "");
+
+      imageMap.set(
+        img.id,
+        (img as CatalogObject.Image).imageData?.url ?? "",
+      );
     }
 
     // Create a map of the category data
@@ -48,6 +52,7 @@ export async function GET() {
         console.warn("Skipping unexpected category object:", category);
         continue;
       }
+
       categoryMap.set(
         category.id,
         (category as CatalogObject.Category).categoryData?.name ?? "",
@@ -57,11 +62,15 @@ export async function GET() {
     // Create a map of the modified data
     const modifierListMap = new Map<string, ModifierList>();
     for await (const obj of modifierListResult) {
-      const modifierList = buildModifierList(obj as CatalogObject.ModifierList);
+      const modifierList = buildModifierList(
+        obj as CatalogObject.ModifierList,
+      );
+
       if (!obj.id) {
         console.warn("Skipping unexpected modifier object:", obj);
         continue;
       }
+
       modifierListMap.set(obj.id, modifierList);
     }
 
@@ -75,11 +84,15 @@ export async function GET() {
         | undefined;
       const priceMoney = variation?.itemVariationData?.priceMoney;
       const imageId = catalogItem.itemData?.imageIds?.[0];
+
       const categories: ItemCategory[] = (
         catalogItem.itemData?.categories ?? []
       )
         .filter((c): c is { id: string } => !!c.id)
-        .map((c) => ({ id: c.id, name: categoryMap.get(c.id) ?? null }));
+        .map((c) => ({
+          id: c.id,
+          name: categoryMap.get(c.id) ?? null,
+        }));
 
       if (!item.id) {
         return Response.json(
@@ -91,17 +104,26 @@ export async function GET() {
       const modifiers: ModifierList[] = (
         catalogItem.itemData?.modifierListInfo ?? []
       )
-        .map((info) => modifierListMap.get(info.modifierListId ?? ""))
-        .filter((ml): ml is ModifierList => ml !== undefined);
+        .map((info) =>
+          modifierListMap.get(info.modifierListId ?? ""),
+        )
+        .filter(
+          (ml): ml is ModifierList => ml !== undefined,
+        );
 
       products.push({
         catalogObjectId: item.id,
         name: catalogItem.itemData?.name,
-        description: catalogItem.itemData?.description ?? undefined,
+        description:
+          catalogItem.itemData?.description ?? undefined,
         variationId: variation?.id,
-        priceCents: priceMoney ? Number(priceMoney.amount) : 0,
+        priceCents: priceMoney
+          ? Number(priceMoney.amount)
+          : 0,
         currency: priceMoney?.currency ?? "USD",
-        imageUrl: imageId ? (imageMap.get(imageId) ?? null) : null,
+        imageUrl: imageId
+          ? (imageMap.get(imageId) ?? null)
+          : null,
         categories,
         modifiers,
       });
@@ -110,6 +132,7 @@ export async function GET() {
     return Response.json(products);
   } catch (error) {
     console.error("Square catalog fetch failed:", error);
+
     return Response.json(
       { error: "Failed to fetch products" },
       { status: 500 },
@@ -123,82 +146,120 @@ export async function GET() {
  * Creates a new catalog item in Square.
  *
  * @returns 201 - The created MenuItem
- * @returns 400 - Missing required fields
+ * @returns 400 - Invalid request data
  * @returns 500 - Square API failure
  */
 export async function POST(request: Request) {
   const access = await requireAdminApi(request, 2);
+
   if (!access.ok) {
     return access.response;
   }
-  try {
-    const body: CreateMenuItemBody = await request.json();
 
-    if (!body.name || body.priceCents === undefined) {
+  try {
+    let requestBody: unknown;
+
+    try {
+      requestBody = await request.json();
+    } catch {
       return Response.json(
-        { error: "name and priceCents are required" },
+        {
+          error: "Request body must contain valid JSON.",
+        },
         { status: 400 },
       );
     }
 
-    // defines structure of Square catalogItem then sends it to square
-    const upsertResult = await squareClient.catalog.object.upsert({
-      idempotencyKey: crypto.randomUUID(),
-      object: {
-        type: "ITEM",
-        id: "#new-item",
-        itemData: {
-          name: body.name,
-          description: body.description,
-          categories: body.categoryIds?.map((id) => ({ id })),
-          modifierListInfo: body.modifierListIds?.map((id) => ({
-            modifierListId: id,
-            enabled: true,
-          })),
-          variations: [
-            {
-              type: "ITEM_VARIATION",
-              id: "#new-variation",
-              itemVariationData: {
-                name: "Regular",
-                pricingType: "FIXED_PRICING",
-                priceMoney: {
-                  amount: BigInt(body.priceCents),
-                  currency: (body.currency ?? "USD") as Currency,
+    const validation =
+      validateCreateMenuItemBody(requestBody);
+
+    if (!validation.ok) {
+      return Response.json(
+        { error: validation.error },
+        { status: 400 },
+      );
+    }
+
+    const body = validation.data;
+
+    // Defines structure of Square catalogItem then sends it to Square
+    const upsertResult =
+      await squareClient.catalog.object.upsert({
+        idempotencyKey: crypto.randomUUID(),
+        object: {
+          type: "ITEM",
+          id: "#new-item",
+          itemData: {
+            name: body.name,
+            description: body.description,
+            categories: body.categoryIds?.map((id) => ({
+              id,
+            })),
+            modifierListInfo:
+              body.modifierListIds?.map((id) => ({
+                modifierListId: id,
+                enabled: true,
+              })),
+            variations: [
+              {
+                type: "ITEM_VARIATION",
+                id: "#new-variation",
+                itemVariationData: {
+                  name: "Regular",
+                  pricingType: "FIXED_PRICING",
+                  priceMoney: {
+                    amount: BigInt(body.priceCents),
+                    currency: (body.currency ??
+                      "USD") as Currency,
+                  },
                 },
               },
-            },
-          ],
+            ],
+          },
         },
-      },
-    });
+      });
 
     const newId = upsertResult.idMappings?.find(
-      (m) => m.clientObjectId === "#new-item",
+      (mapping) =>
+        mapping.clientObjectId === "#new-item",
     )?.objectId;
+
     if (!newId) {
       return Response.json(
-        { error: "Failed to retrieve created item id" },
+        {
+          error: "Failed to retrieve created item id",
+        },
         { status: 500 },
       );
     }
 
-    const getResult = await squareClient.catalog.object.get({
-      objectId: newId,
-      includeRelatedObjects: true,
-    });
+    const getResult =
+      await squareClient.catalog.object.get({
+        objectId: newId,
+        includeRelatedObjects: true,
+      });
 
-    const menuItem = buildMenuItemFromGetResponse(getResult);
+    const menuItem =
+      buildMenuItemFromGetResponse(getResult);
+
     if (!menuItem) {
       return Response.json(
-        { error: "Failed to build created item" },
+        {
+          error: "Failed to build created item",
+        },
         { status: 500 },
       );
     }
 
-    return Response.json(menuItem, { status: 201 });
+    return Response.json(menuItem, {
+      status: 201,
+    });
   } catch (error) {
-    console.error("Square catalog create failed:", error);
+    console.error(
+      "Square catalog create failed:",
+      error,
+    );
+
     return Response.json(
       { error: "Failed to create product" },
       { status: 500 },
