@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import GalleryImage from "./gallery-image";
 import type { MouseEvent } from "react";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 
@@ -78,11 +78,9 @@ export default function AdminGalleryList({
 
               <td className="px-3 py-2">
                 <div className="relative h-11 w-11 overflow-hidden rounded bg-[#f3ece6]">
-                  <Image
+                  <GalleryImage
                     src={image.url}
-                    alt=""
-                    fill
-                    unoptimized={image.url.startsWith("blob:")}
+                    alt={image.name}
                     className="object-cover"
                     sizes="44px"
                   />
