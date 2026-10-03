@@ -5,6 +5,7 @@ import Subtitle from "@/app/(site)/components/sub-title"
 
 //import carousel
 import ImageCarousel from "@/app/(site)/components/image-carousel";
+import ActiveEvents from "@/app/(site)/components/active-events";
 
 // import font & bubbles
 import { Montserrat, Cabin_Sketch } from "next/font/google";
@@ -95,6 +96,8 @@ export default async function Home() {
                 <div className="relative z-10 flex justify-center items-center px-4 py-15">
                 <ImageCarousel />
             </div> 
+
+            <ActiveEvents />
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
