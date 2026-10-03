@@ -14,6 +14,6 @@ export const periodOptions: DashboardPeriodOption[] = [
 ];
 export const visitTypeOptions: DashboardVisitTypeOption[] = [
   { value: "menu-items", label: "Menu items" },
-  { value: "pages", label: "Front-facing pages" },
+  { value: "pages", label: "User pages" },
 ];
 export type DashboardSummary = { totalVisits: number; topItem: MenuItemMetric | undefined };
