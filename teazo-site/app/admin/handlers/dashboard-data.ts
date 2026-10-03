@@ -4,7 +4,7 @@ import type { AdminEvent } from "@/app/types/admin-event";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { DashboardMetrics } from "@/app/types/dashboard";
 import type { StorageUsage } from "@/app/types/storage-usage";
-import { getEvents } from "@/app/admin/events/handlers/get-events";
+import { listActiveEvents } from "@/app/lib/queries/events";
 import { getWebsiteContent } from "@/app/admin/website-content/handlers/get-website-content";
 import { getStorageUsage } from "@/app/admin/handlers/get-storage-usage";
 
@@ -19,27 +19,19 @@ export type DashboardData = {
   storageUsage: StorageUsage[];
 };
 
-/**
- * Loads dashboard data from local fixtures for now.
- * Replace this function's data sources with API calls when the endpoints are ready.
- */
 export async function getDashboardData(): Promise<DashboardData> {
-  const fixturePath = path.join(
-    process.cwd(),
-    "app",
-    "admin",
-    "dashboard-sample.txt",
-  );
+  const fixturePath = path.join(process.cwd(), "app", "admin", "dashboard-sample.txt");
   const [fixtureContents, events, websiteContent, storageUsage] = await Promise.all([
     readFile(fixturePath, "utf8"),
-    getEvents(),
+    listActiveEvents(),
     getWebsiteContent(),
     getStorageUsage(),
   ]);
-
   const fixture = JSON.parse(fixtureContents) as DashboardFixture;
 
   return {
+    // Visit metrics are still supplied by the existing dashboard fixture until
+    // the page-visit tracking table is connected.
     metrics: fixture.metrics,
     events,
     websiteContent,
