@@ -9,7 +9,7 @@ import type { DashboardClientProps } from "./dashboard/dashboard-types";
 export default function DashboardClient({ metrics, events, websiteContent, storageUsage }: DashboardClientProps) {
   const [period, setPeriod] = useState<DashboardPeriod>("24-hours");
   const [visitType, setVisitType] = useState<DashboardVisitType>("menu-items");
-  const topItems = useMemo(() => visitType === "menu-items" ? sortMetrics(metrics.menuItems[period]) : sortPageMetrics(metrics.pages[period]), [metrics, period, visitType]);
+  const topItems = useMemo(() => visitType === "menu-items" ? sortMetrics(metrics.menuItems?.[period] ?? []) : sortPageMetrics(metrics.pages?.[period] ?? []), [metrics, period, visitType]);
   const topItem = topItems[0];
   const totalVisits = topItems.reduce((total, item) => total + item.event_count, 0);
   const chartItems = topItems.map((item) => "square_item_id" in item ? { id: item.square_item_id, name: item.item_name_snapshot, event_count: item.event_count } : { id: item.page_path, name: item.page_name_snapshot, event_count: item.event_count });
