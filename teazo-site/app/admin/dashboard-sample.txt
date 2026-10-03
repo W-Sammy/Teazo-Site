@@ -16,11 +16,11 @@
       { "metric_date": "2026-09-25", "square_item_id": "taro", "item_name_snapshot": "Taro", "event_count": 1975 }
       ],
       "30-days": [
-      { "metric_date": "2026-09-25", "square_item_id": "milk-tea", "item_name_snapshot": "Milk Tea", "event_count": 612 },
-      { "metric_date": "2026-09-25", "square_item_id": "matcha", "item_name_snapshot": "Matcha", "event_count": 540 },
-      { "metric_date": "2026-09-25", "square_item_id": "strawberry", "item_name_snapshot": "Strawberry", "event_count": 488 },
-      { "metric_date": "2026-09-25", "square_item_id": "mango", "item_name_snapshot": "Mango", "event_count": 421 },
-      { "metric_date": "2026-09-25", "square_item_id": "taro", "item_name_snapshot": "Taro", "event_count": 390 }
+      { "metric_date": "2026-09-25", "square_item_id": "milk-tea", "item_name_snapshot": "Milk Tea", "event_count": 12960 },
+      { "metric_date": "2026-09-25", "square_item_id": "matcha", "item_name_snapshot": "Matcha", "event_count": 11280 },
+      { "metric_date": "2026-09-25", "square_item_id": "strawberry", "item_name_snapshot": "Strawberry", "event_count": 9860 },
+      { "metric_date": "2026-09-25", "square_item_id": "mango", "item_name_snapshot": "Mango", "event_count": 8640 },
+      { "metric_date": "2026-09-25", "square_item_id": "taro", "item_name_snapshot": "Taro", "event_count": 7920 }
       ]
     },
     "pages": {
