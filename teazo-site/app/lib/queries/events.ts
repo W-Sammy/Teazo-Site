@@ -18,6 +18,10 @@ type TargetRow = {
   target_type: "item" | "category";
 };
 
+type EventMediaRow = {
+  image_media_id: string | null;
+};
+
 export type EventInput = {
   name: string;
   description: string;
@@ -76,6 +80,19 @@ export async function listEvents(): Promise<AdminEvent[]> {
   ]);
 
   return eventResult.results.map((row) => mapEvent(row, targetResult.results));
+}
+
+export async function listActiveEvents(): Promise<AdminEvent[]> {
+  const events = await listEvents();
+  const now = Date.now();
+  return events.filter((event) => Date.parse(event.startAt) <= now && Date.parse(event.endAt) >= now);
+}
+
+export async function eventExists(id: string): Promise<boolean> {
+  const row = await prepare(
+    "SELECT id FROM event WHERE id = ?1 AND deleted_at IS NULL",
+  ).bind(id).first<{ id: string }>();
+  return row !== null;
 }
 
 function targetInsertStatements(
@@ -159,6 +176,11 @@ export async function updateEvent(
   media?: { id: string; stored: StoredMedia; mimeType: string; originalFilename: string; adminId: string },
   squareEnv: "sandbox" | "production" = "sandbox",
 ) {
+  const previous = await prepare(
+    "SELECT image_media_id FROM event WHERE id = ?1 AND deleted_at IS NULL",
+  ).bind(id).first<EventMediaRow>();
+  if (!previous) return false;
+
   const statements = [
     ...(media
       ? [
@@ -195,15 +217,46 @@ export async function updateEvent(
     prepare("DELETE FROM event_item WHERE event_id = ?1").bind(id),
     ...(!input.appliesToAll ? targetInsertStatements(id, input, squareEnv) : []),
   ];
-  const result = await batch(statements);
-  return result;
+  if (media?.id && previous.image_media_id && previous.image_media_id !== media.id) {
+    statements.push(
+      prepare(
+        `UPDATE media_asset
+            SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+          WHERE id = ?1 AND deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM event WHERE image_media_id = ?1 AND deleted_at IS NULL)
+            AND NOT EXISTS (SELECT 1 FROM gallery_image WHERE media_id = ?1 AND deleted_at IS NULL)
+            AND NOT EXISTS (SELECT 1 FROM carousel_slide WHERE media_id = ?1)
+            AND NOT EXISTS (SELECT 1 FROM menu_document WHERE media_id = ?1)
+            AND NOT EXISTS (SELECT 1 FROM content_block WHERE media_id = ?1)
+            AND NOT EXISTS (SELECT 1 FROM site_link WHERE icon_media_id = ?1)
+            AND NOT EXISTS (SELECT 1 FROM admin_user WHERE avatar_media_id = ?1 AND deleted_at IS NULL)`,
+      ).bind(previous.image_media_id),
+    );
+    statements.push(
+      prepare(
+        `INSERT INTO pending_r2_deletion (r2_bucket, r2_key)
+         SELECT media.r2_bucket, media.r2_key
+           FROM media_asset AS media
+          WHERE media.id = ?1 AND media.deleted_at IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM pending_r2_deletion AS pending
+               WHERE pending.r2_bucket = media.r2_bucket
+                 AND pending.r2_key = media.r2_key
+                 AND pending.deleted_at IS NULL
+            )`,
+      ).bind(previous.image_media_id),
+    );
+  }
+  await batch(statements);
+  return true;
 }
 
-export async function softDeleteEvent(id: string): Promise<void> {
-  await prepare(
+export async function softDeleteEvent(id: string): Promise<boolean> {
+  const result = await prepare(
     `UPDATE event SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?1 AND deleted_at IS NULL`,
   ).bind(id).run();
+  return Number(result.meta.changes ?? 0) > 0;
 }
 
 export async function softDeleteEndedEvents(): Promise<void> {

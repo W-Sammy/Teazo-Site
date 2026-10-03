@@ -18,7 +18,8 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (!access.ok) return access.response;
   try {
     const { id } = await context.params;
-    await softDeleteEvent(id);
+    const deleted = await softDeleteEvent(id);
+    if (!deleted) return errorResponse("Event not found.", 404);
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error("Could not delete event:", error);

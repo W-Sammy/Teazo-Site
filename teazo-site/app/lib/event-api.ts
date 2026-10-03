@@ -1,6 +1,6 @@
 import { requireAdminApi } from "@/app/lib/admin";
 import { D1Error } from "@/app/lib/d1";
-import { createEvent, updateEvent, type EventInput } from "@/app/lib/queries/events";
+import { createEvent, eventExists, updateEvent, type EventInput } from "@/app/lib/queries/events";
 import { MAX_MEDIA_BYTES, mintKey, putMedia, type MediaType } from "@/app/lib/media";
 
 const acceptedTypes = new Set<MediaType>(["image/jpeg", "image/png", "image/webp"]);
@@ -44,6 +44,9 @@ export async function saveEvent(request: Request, id: string | null) {
   try {
     const form = await request.formData();
     const input = parseInput(form);
+    if (id && !(await eventExists(id))) {
+      return Response.json({ error: "Event not found." }, { status: 404 });
+    }
     const uploaded = await readMedia(form);
     const media = uploaded ? { ...uploaded, adminId: access.admin.id } : undefined;
     if (id) {
