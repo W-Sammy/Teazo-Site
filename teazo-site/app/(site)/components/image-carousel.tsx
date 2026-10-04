@@ -13,7 +13,7 @@ export default function ImageCarousel(): JSX.Element {
     ];
 
     const [index, setIndex] = useState<number>(0);
-    const [isCenterHovered, setIsCenterHovered] = useState<boolean>(false);
+    const [isHovered, setIsHovered] = useState<boolean>(false);
     
 
 {/* Transition Timer */}    
@@ -54,8 +54,10 @@ useEffect(() => {
                 <div className = {`
                             absolute w-75 h-125 z-10 
                             transition-all duration-500 ease-in-out
-                            ${isCenterHovered ? "-translate-x-95" : "-translate-x-65"}
+                            ${isHovered ? "-translate-x-95" : "-translate-x-65"}
                             `}
+                            onMouseEnter={() => setIsHovered(true)} 
+                            onMouseLeave={() => setIsHovered(false)} 
                 >
 
                 <Image
@@ -69,8 +71,8 @@ useEffect(() => {
 
                 {/* Center */}  
                 <div className = {`absolute w-100 h-150 z-30`}
-                                   onMouseEnter={() => setIsCenterHovered(true)} 
-                                   onMouseLeave={() => setIsCenterHovered(false)}             
+                                   onMouseEnter={() => setIsHovered(true)} 
+                                   onMouseLeave={() => setIsHovered(false)}             
                 >
 
                 <Image
@@ -86,8 +88,10 @@ useEffect(() => {
                 <div className = {`
                             absolute w-75 h-125 z-10
                             transition-all duration-500 ease-in-out
-                            ${isCenterHovered ? "translate-x-95" : "translate-x-65"}
+                            ${isHovered ? "translate-x-95" : "translate-x-65"}
                             `}
+                            onMouseEnter={() => setIsHovered(true)} 
+                            onMouseLeave={() => setIsHovered(false)} 
                 >
                     
                 <Image
