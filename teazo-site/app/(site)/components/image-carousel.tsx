@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, JSX, useEffect } from "react"; 
+import { useEffect, useRef, useState, JSX } from "react"; 
 
 export default function ImageCarousel(): JSX.Element {
     const images: string[] = [
@@ -11,18 +11,116 @@ export default function ImageCarousel(): JSX.Element {
         "/carousel_images/dried_leaves.jpg",
         "/carousel_images/Tea_Leaf_Basket.jpeg"
     ];
-
+    
     const [index, setIndex] = useState<number>(0);
     const [isHovered, setIsHovered] = useState<boolean>(false);
-    
+    const [dragOffset, setDragOffset] = useState<number>(0);
+    const dragStartX = useRef<number>(0);
+    const isDragging = useRef<boolean>(false);
+    const isAnimating = useRef<boolean>(false);
+
+    const handlePointerDown = (
+        event: React.PointerEvent<HTMLDivElement>
+    ): void => {
+        if (event.pointerType === "mouse" && event.button !== 0) {
+            return;
+        }
+        
+        if (!event.isPrimary) {
+        return;
+        }
+
+        dragStartX.current = event.clientX;
+        isDragging.current = true;
+
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const handlePointerMove = ( 
+        event: React.PointerEvent<HTMLDivElement> 
+    ): void => { 
+        if (!isDragging.current) { 
+            return; } const distance = event.clientX - dragStartX.current; 
+            setDragOffset(distance); 
+    };
+
+    const handlePointerUp = (
+        event: React.PointerEvent<HTMLDivElement>
+    ): void => {
+        if (!isDragging.current) {
+            return;
+        }
+
+        const dragDistance =
+            event.clientX - dragStartX.current;
+
+        const swipeThreshold = 75;
+
+        isDragging.current = false;
+
+        if ( 
+            event.currentTarget.hasPointerCapture( 
+                event.pointerId 
+            ) 
+        ) { 
+            event.currentTarget.releasePointerCapture( 
+                event.pointerId 
+            ); 
+        }
+
+        const numberOfSlides = Math.floor(
+        Math.abs(dragDistance) / swipeThreshold
+    );
+
+    const direction = dragDistance < 0 ? 1 : -1;
+    const slideDistance = 400 * numberOfSlides;
+    isAnimating.current = true;
+
+    {/* Handling Left and Right*/}
+    if (numberOfSlides > 0) {
+
+        if (dragDistance < 0) {
+            setIndex((prev) => {
+                return (
+                    (prev + numberOfSlides) % images.length
+                );
+            });
+        } 
+        else {
+            setIndex((prev) => {
+                return (
+                    (prev - numberOfSlides + images.length * 10)
+                    % images.length
+                );
+            });
+            }
+        }
+
+        isDragging.current = false;
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+    };
+
+    const handlePointerCancel = (
+        event: React.PointerEvent<HTMLDivElement>
+    ): void => {
+        isDragging.current = false;
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+    };
 
 {/* Transition Timer */}    
 useEffect(() => {
     const timer = setInterval(() => {
-        setIndex((prev) =>
-            prev === images.length - 1 ? 0 : prev + 1
-        );
-    }, 5000);
+        if (!isDragging.current && !isAnimating.current) {
+            setIndex((prev) => 
+                prev === images.length - 1 ? 0 : prev + 1 
+            );
+        } }, 5000);
     
     return () => clearInterval(timer);
 }, [images.length]);
@@ -38,7 +136,7 @@ useEffect(() => {
             prev === images.length - 1 ? 0 : prev + 1
         );
     };
-
+         
     const leftImage = images[(index - 1 + images.length) % images.length] || "/fallback.png";
     const currentImage = images[index] || "/fallback.png";
     const rightImage = images[(index + 1) % images.length] || "/fallback.png"; 
@@ -53,54 +151,77 @@ useEffect(() => {
                 {/* Left */}
                 <div className = {`
                             absolute w-75 h-125 z-10 
-                            transition-all duration-500 ease-in-out
+                            transition-transform duration-500 ease-in-out
                             ${isHovered ? "-translate-x-95" : "-translate-x-65"}
                             `}
                             onMouseEnter={() => setIsHovered(true)} 
-                            onMouseLeave={() => setIsHovered(false)} 
+                            onMouseLeave={() => setIsHovered(false)}
+                            onPointerDown={handlePointerDown}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerCancel}
+                            style={{
+                                touchAction: "pan-y",
+                                userSelect: "none",
+                            }}
                 >
-
-                <Image
-                    src={leftImage}
-                    alt="previous image-carousel"
-                    fill
-                    sizes = "10w"
-                    className="object-cover rounded-xl" 
-                /> 
+                    <Image
+                        src={leftImage}
+                        alt="image-carousel"
+                        fill
+                        sizes = "12w"
+                        draggable={false}
+                        className="object-cover rounded-xl" 
+                    /> 
                 </div>
 
                 {/* Center */}  
-                <div className = {`absolute w-100 h-150 z-30`}
-                                   onMouseEnter={() => setIsHovered(true)} 
-                                   onMouseLeave={() => setIsHovered(false)}             
+                <div className = {`absolute w-100 h-150 z-30
+                                   transition-transform duration-500 ease-in-out
+                                 `}
+                            onMouseEnter={() => setIsHovered(true)} 
+                            onMouseLeave={() => setIsHovered(false)}   
+                            onPointerDown={handlePointerDown}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerCancel}
+                            style={{
+                                touchAction: "pan-y",
+                                userSelect: "none",
+                            }}
                 >
-
-                <Image
-                    src={currentImage}
-                    alt="image-carousel"
-                    fill
-                    sizes = "12w"
-                    className="object-cover rounded-xl" 
-                />  
+                    <Image
+                        src={currentImage}
+                        alt="image-carousel"
+                        fill
+                        sizes = "12w"
+                        draggable={false}
+                        className="object-cover rounded-xl" 
+                    />  
                 </div>
 
                 {/* Right */}
                 <div className = {`
                             absolute w-75 h-125 z-10
-                            transition-all duration-500 ease-in-out
+                            transition-transform duration-500 ease-in-out
                             ${isHovered ? "translate-x-95" : "translate-x-65"}
                             `}
                             onMouseEnter={() => setIsHovered(true)} 
                             onMouseLeave={() => setIsHovered(false)} 
-                >
-                    
-                <Image
-                    src={rightImage}
-                    alt="image-carousel"
-                    fill
-                    sizes = "10w"
-                    className="object-cover rounded-xl"
-                />
+                            onPointerDown={handlePointerDown}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerCancel}
+                            style={{
+                                touchAction: "pan-y",
+                                userSelect: "none",
+                            }}
+                >                   
+                    <Image
+                        src={rightImage}
+                        alt="image-carousel"
+                        fill
+                        sizes = "12w"
+                        draggable={false}
+                        className="object-cover rounded-xl" 
+                    />
                 </div>
             </div>
 
