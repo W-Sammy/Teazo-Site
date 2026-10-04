@@ -132,7 +132,7 @@ export default function ImageCarousel(): JSX.Element {
                     <div 
                         key={image} 
                         className={` absolute ${width} ${height} rounded-xl overflow-hidden transition-all duration-500 ease-in-out `} 
-                        style={{ transform: `translateX(${translateX}px)`, opacity: isVisible ? 1 : 0, zIndex, pointerEvents: "none", }} 
+                        style={{ transform: `translateX(${translateX}px)`, opacity: isVisible ? 1 : 0, zIndex, pointerEvents: isVisible ? "auto" : "none", }} 
                         onMouseEnter={() => setIsHovered(true) } 
                         onMouseLeave={() => setIsHovered(false) } 
                     > 
