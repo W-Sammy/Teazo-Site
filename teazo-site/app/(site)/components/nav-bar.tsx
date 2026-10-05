@@ -29,7 +29,37 @@ export default function NavBar() {
         return pathName === href;
     };
 
-    
+    // mobile menu
+    const mobileToggle = (event: MouseEvent<HTMLElement>) => {
+        const mobileMenu = event.currentTarget.parentElement;
+
+        // check if menu's open
+        if (!(mobileMenu instanceof HTMLDetailsElement) || !mobileMenu.open) {
+            return;
+        }
+
+        // wait for menu to finish that...sultry transition...before closing it
+        event.preventDefault();
+
+        // check if "closing" already exists
+        if (mobileMenu.classList.contains("closing")) {
+            return;
+        }
+
+        // otherwise create it
+        mobileMenu.classList.add("closing");
+
+        // create a reduce motion var for that sultry transition...
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)",).matches;
+
+        // close menu.
+        window.setTimeout(
+            () => {
+                mobileMenu.open = false;
+                mobileMenu?.classList.remove("closing");
+            }, reduceMotion ? 0 : 240,
+        );
+    };
 
     return (
         <header className="fixed inset-x-0 top-0 z-[9999] w-full">
@@ -58,7 +88,7 @@ export default function NavBar() {
                 {/* hamburger icon for mobile view.*/}
 
                 {/* navItems - black, monserrat, underlined when hovered & active on page
-                    right on desktop, centered & below logo on mobile */}
+                    right on desktop, hidden in mobile */}
                 <div className="hidden items-center gap-12 md:flex">
                     {navItems.map((item) => (
                         <Link
