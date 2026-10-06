@@ -113,8 +113,8 @@ export default function NavBar() {
 
                                         className={`${montserrat.className} px-4 py-4 text-center text-sm font-bold tracking-[0.05em] transition-colors ${
                                             active(item)
-                                                ? "text-black underline decoration-2 underline-offset-4"
-                                                : "text-black hover:underline hover:decoration-2 hover:underline-offset-4"
+                                                ? "text-black underline decoration-2 underline-offset-8"
+                                                : "text-black hover:underline hover:decoration-2 hover:underline-offset-8"
                                         }`}
                                     >
                                         {item}
