@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 
-import { MouseEvent } from "react"; // for mobile menu
+import type { MouseEvent } from "react"; // for mobile menu
 
 // setup fonts
 const montserrat = Montserrat({
@@ -38,7 +38,7 @@ export default function NavBar() {
             return;
         }
 
-        // wait for menu to finish that...sultry transition...before closing it
+        // wait for menu to finish transition before closing it
         event.preventDefault();
 
         // check if "closing" already exists
@@ -49,7 +49,7 @@ export default function NavBar() {
         // otherwise create it
         mobileMenu.classList.add("closing");
 
-        // create a reduce motion var for that sultry transition...
+        // reduce motion var for transition if reduce motion enabled
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)",).matches;
 
         // close menu.
@@ -75,18 +75,171 @@ export default function NavBar() {
                 aria-label="Main Navigation"
             >  
 
-            <div className="relative flex min-h-12 items-center justify-center md:contents">
-                {/* teazo logo - gold, cabin sketch & underlined (no change during hover)
-                    left on desktop, centered on mobile */}
-                <Link 
-                    href="/" 
-                    className={`${cabinSketch.className} border-b-2 border-[#DBAF82] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#DBAF82] md:text-[64px]`}
-                >
-                    TEAZO
-                </Link>
+                <div className="relative flex min-h-12 items-center justify-center md:contents">
+                    {/* teazo logo - gold, cabin sketch & underlined (no change during hover)
+                        left on desktop, centered on mobile */}
+                    <Link 
+                        href="/" 
+                        className={`${cabinSketch.className} border-b-2 border-[#DBAF82] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#DBAF82] md:text-[64px]`}
+                    >
+                        TEAZO
+                    </Link>
 
-                {/* hamburger icon for mobile view.*/}
+                    {/* nav menu icons for mobile view.*/}
+                    <details className="mobile-menu static md:hidden">
+                        {/* hamburger icon */}
+                        <summary
+                            onClick={mobileToggle}
+                            className="absolute right-0 top-1/2 z-[10000] flex h-12 w-12 -translate-y-1/2 touch-manipulation cursor-pointer list-none items-center justify-center rounded-md pointer-events-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black [&::-webkit-details-marker]:hidden"
+                            aria-label="Open or Close Navigational Menu"
+                        >
+                            <span className="relative block h-6 w-7">
+                                <span className="hamburger-line hamburger-top" />
+                                <span className="hamburger-line hamburger-middle" />
+                                <span className="hamburger-line hamburger-bottom" />
+                            </span>
+                        </summary>
 
+                        {/* dropdown menu - mobile view items */}
+                        <div className="mobile-dropdown fixed inset-x-0 top-20 z-[9999] max-h-[calc(100dvh-5rem)] w-screen overflow-y-auto bg-white/50 backdrop-blur-md">
+
+                            {/* navItems - black, monserrat, 
+                                underlined when currently active on page*/}
+                            <div className="flex flex-col px-6 py-3">
+                                {navItems.map((item) => (
+                                    <Link
+                                        key={item}
+                                        href={item === "HOME" ? "/" : `/${item.toLowerCase()}`}
+
+                                        className={`${montserrat.className} px-4 py-4 text-center text-sm font-bold tracking-[0.05em] transition-colors ${
+                                            active(item)
+                                                ? "text-black underline decoration-2 underline-offset-4"
+                                                : "text-black hover:underline hover:decoration-2 hover:underline-offset-4"
+                                        }`}
+                                    >
+                                        {item}
+                                    </Link>
+                                ))}
+                            </div>
+
+                        </div>
+                    </details>
+
+                    {/* dubious amounts of css transitions for the menu icon & mobile menu*/}
+                    <style>
+                        {`
+                            /* basic hamburger line for icons */
+                            .hamburger-line {
+                                position: absolute;
+                                left: 0;
+                                display: block;
+                                width: 28px;
+                                height: 2px;
+                                background: black;
+                                transform-origin: center;
+                            }
+
+                            /* icon transitions */
+                            /* initial positions as menu icon*/
+                            .hamburger-top {
+                                top: 3px;
+                                transition: transform 200ms ease;
+                            }
+
+                            .hamburger-middle {
+                                top: 11px;
+                                transition: opacity 200ms ease;
+                            }
+
+                            .hamburger-bottom {
+                                top: 19px;
+                                transition: transform 200ms ease;
+                            }
+
+
+                            /* transitions into exit icon via opening mobile menu */
+                            .mobile-menu[open] .hamburger-top {
+                                transform: translateY(8px) rotate(45deg);
+                            }
+
+                            .mobile-menu[open] .hamburger-middle {
+                                opacity: 0;
+                            }
+
+                            .mobile-menu[open] .hamburger-bottom {
+                                transform: translateY(-8px) rotate(-45deg);
+                            }
+
+
+                            /* transitions back into menu icon via closing mobile menu */
+                            .mobile-menu.closing .hamburger-top,
+                            .mobile-menu.closing .hamburger-bottom {
+                                transform: none;
+                            }
+
+                            .mobile-menu.closing .hamburger-middle {
+                                opacity: 1;
+                            }
+
+
+                            /* mobile menu transitions */
+                            /* mobile menu sliding down to open */
+                            .mobile-menu[open] .mobile-dropdown {
+                                animation: menu-slide-down 240ms
+                                    cubic-bezier(0.22, 1, 0.36, 1) both;
+                            }
+
+                            /* mobile menu sliding up to close */
+                            .mobile-menu.closing .mobile-dropdown {
+                                animation: menu-slide-up 240ms
+                                    cubic-bezier(0.22, 1, 0.36, 1) both;
+                                pointer-events: none;
+                            }
+
+                            
+                            /* menu animations */
+                            /* menu open */
+                            @keyframes menu-slide-down {
+                                from {
+                                    opacity: 0;
+                                    transform: translateY(-16px);
+                                }
+
+                                to {
+                                    opacity: 1;
+                                    transform: translateY(0);
+                                }
+                            }
+
+                            /* menu close */
+                            @keyframes menu-slide-up {
+                                from {
+                                    opacity: 1;
+                                    transform: translateY(0);
+                                }
+
+                                to {
+                                    opacity: 0;
+                                    transform: translateY(-16px);
+                                }
+                            }
+
+                            /* remove reduced motion when reduced motion enabled */
+                            @media (prefers-reduced-motion: reduce) {
+                                .mobile-menu .hamburger-line {
+                                    transition-duration: 0ms;
+                                }
+
+                                .mobile-menu[open] .mobile-dropdown,
+                                .mobile-menu.closing .mobile-dropdown {
+                                    animation-duration: 0ms;
+                                }
+                            }
+                        `}
+                    </style>
+                </div>
+
+                {/* desktop view items */}
                 {/* navItems - black, monserrat, underlined when hovered & active on page
                     right on desktop, hidden in mobile */}
                 <div className="hidden items-center gap-12 md:flex">
@@ -94,13 +247,16 @@ export default function NavBar() {
                         <Link
                             key={item}
                             href={item === "HOME" ? "/" : `/${item.toLowerCase()}`}
-                            className={`${montserrat.className} text-[10px] md:text-[18px] font-bold tracking-[0.05em] text-black text-center transition pb-1 border-b-2 hover:border-black ${active(item) ? "border-black" : "border-transparent"}`}
+                            className={`${montserrat.className} text-[10px] md:text-[18px] font-bold tracking-[0.05em] text-black text-center transition pb-1 border-b-2 hover:border-black 
+                                ${active(item) 
+                                    ? "border-black" 
+                                    : "border-transparent"
+                            }`}
                         >
                             {item}
                         </Link>
                     ))}
                 </div>
-            </div>
 
             </nav>
         </header>
