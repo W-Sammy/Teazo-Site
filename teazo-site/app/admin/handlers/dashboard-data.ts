@@ -7,6 +7,7 @@ import type { StorageUsage } from "@/app/types/storage-usage";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import { getWebsiteContent } from "@/app/admin/website-content/handlers/get-website-content";
 import { getStorageUsage } from "@/app/admin/handlers/get-storage-usage";
+import { listAnalyticsMetrics } from "@/app/lib/queries/analytics";
 
 type DashboardFixture = {
   metrics: DashboardMetrics | LegacyDashboardMetrics;
@@ -32,6 +33,30 @@ function normalizeMetrics(metrics: DashboardFixture["metrics"]): DashboardMetric
   };
 }
 
+async function loadMetrics(fixture: DashboardFixture): Promise<DashboardMetrics> {
+  if (!process.env.D1_PROXY_URL || !process.env.PROXY_TOKEN) return normalizeMetrics(fixture.metrics);
+
+  try {
+    const live = await listAnalyticsMetrics();
+    return {
+      menuItems: {
+        "24-hours": live["24-hours"].menuItems,
+        "7-days": live["7-days"].menuItems,
+        "30-days": live["30-days"].menuItems,
+      },
+      pages: {
+        "24-hours": live["24-hours"].pages,
+        "7-days": live["7-days"].pages,
+        "30-days": live["30-days"].pages,
+      },
+    };
+  } catch (error) {
+    // Keep the dashboard available during the migration/deployment window.
+    console.error("Could not load live analytics; using dashboard fixture:", error);
+    return normalizeMetrics(fixture.metrics);
+  }
+}
+
 export type DashboardData = {
   metrics: DashboardMetrics;
   events: AdminEvent[];
@@ -52,7 +77,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     // Visit metrics are still supplied by the existing dashboard fixture until
     // the page-visit tracking table is connected.
-    metrics: normalizeMetrics(fixture.metrics),
+    metrics: await loadMetrics(fixture),
     events,
     websiteContent,
     storageUsage,
