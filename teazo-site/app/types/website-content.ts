@@ -31,6 +31,28 @@ export type AddressInfo = {
   mapQuery?: string;
 };
 
+export type ContactHour = {
+  day: string;
+  hours: string;
+  isHoliday?: boolean;
+  holidayName?: string;
+};
+
+export type ContactContent = {
+  logo?: string;
+  location: {
+    businessName: string;
+    streetAddress: string;
+    locality: string;
+    phone: string;
+    email: string;
+    mapQuery: string;
+  };
+  hours: ContactHour[];
+  socialLinks?: SocialLink[];
+  contactFormEnabled: boolean;
+};
+
 export type WebsiteContent = {
   logo: string;
   story: string;
