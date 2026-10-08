@@ -22,7 +22,9 @@ export type GalleryUploadValues = {
 type GalleryUploadFormProps = {
   initialImage?: AdminGalleryImage | null;
   onCancel: () => void;
-  onSave: (values: GalleryUploadValues) => void;
+  onSave: (
+    values: GalleryUploadValues,
+  ) => void | Promise<void>;
 };
 
 // Client-side constraints for file selection and tag entry.
@@ -94,6 +96,14 @@ export default function GalleryUploadForm({
   const [imageError, setImageError] =
     useState<string | null>(null);
 
+  // Report failures that happen after validation, such as a server or network error.
+  const [uploadError, setUploadError] =
+    useState<string | null>(null);
+
+  // Prevent duplicate submissions while a save/upload is still running.
+  const [isSaving, setIsSaving] =
+    useState(false);
+
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
 
@@ -115,6 +125,7 @@ export default function GalleryUploadForm({
   // Both the file picker and drag-and-drop use the same file checks and preview setup.
   function selectFile(file: File) {
     setImageError(null);
+    setUploadError(null);
 
     if (!acceptedImageTypes.includes(file.type)) {
       setImageError(
@@ -265,7 +276,7 @@ export default function GalleryUploadForm({
   }
 
   // Validate the image/name and include an unfinished tag before invoking onSave.
-  function handleSubmit(
+  async function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
@@ -276,6 +287,7 @@ export default function GalleryUploadForm({
     setNameError(null);
     setTagError(null);
     setImageError(null);
+    setUploadError(null);
 
     if (!cleanName) {
       setNameError(
@@ -324,11 +336,29 @@ export default function GalleryUploadForm({
     }
 
     // Pass the file itself, not this form's short-lived preview URL.
-    onSave({
-      name: cleanName,
-      tags: submittedTags,
-      file: selectedFile,
-    });
+    // A future server upload can reject this promise, which is reported below.
+    try {
+      setIsSaving(true);
+
+      await onSave({
+        name: cleanName,
+        tags: submittedTags,
+        file: selectedFile,
+      });
+    } catch (error) {
+      console.error(
+        "Gallery image save failed:",
+        error,
+      );
+
+      setUploadError(
+        error instanceof Error && error.message
+          ? error.message
+          : "The image could not be saved. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   // This checks basic readiness only; submission still validates a pending tag.
@@ -368,6 +398,7 @@ export default function GalleryUploadForm({
             ) => {
               setName(event.target.value);
               setNameError(null);
+              setUploadError(null);
             }}
             className={`w-full min-w-0 rounded border bg-white px-3 py-2 text-base outline-none transition focus:ring-2 focus:ring-[#FFBDC7]/50 md:text-sm ${
               nameError
@@ -436,6 +467,7 @@ export default function GalleryUploadForm({
               ) => {
                 setTagInput(event.target.value);
                 setTagError(null);
+                setUploadError(null);
               }}
               onKeyDown={handleTagKeyDown}
               placeholder="Type a tag and press Enter"
@@ -555,28 +587,42 @@ export default function GalleryUploadForm({
           )}
         </div>
 
+        {/* Show server/network save failures without closing the form. */}
+        {uploadError && (
+          <div
+            role="alert"
+            className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {uploadError}
+          </div>
+        )}
+
         {/* Keep actions reachable while the mobile form content scrolls. */}
         {/* Form actions */}
         <div className="sticky bottom-0 z-10 -mx-1 mt-auto grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-1 pt-5 md:static md:mx-0 md:flex md:items-center md:justify-between md:border-0 md:px-0 md:pb-0 md:pt-8">
           <button
             type="button"
             onClick={onCancel}
-            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 md:w-auto"
+            disabled={isSaving}
+            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            disabled={!canSave}
+            disabled={!canSave || isSaving}
             className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
           >
-            {initialImage
-              ? "Save Changes"
-              : "Save"}
+            {isSaving
+              ? "Saving..."
+              : initialImage
+                ? "Save Changes"
+                : "Save"}
           </button>
         </div>
       </div>
     </form>
   );
 }
+

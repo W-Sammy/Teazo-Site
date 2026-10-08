@@ -329,9 +329,9 @@ export default function AdminGalleryClient({
   }
 
   // Remove the confirmed record, free its local URL, and close a matching editor.
-  function confirmDelete() {
+  async function confirmDelete(): Promise<string | null> {
     if (!imagePendingDelete) {
-      return;
+      return null;
     }
 
     const nextImages = images.filter(
@@ -354,6 +354,8 @@ export default function AdminGalleryClient({
     }
 
     setImagePendingDelete(null);
+
+    return null;
   }
 
   // Clear only tag matching; preserve search text, sorting, and view mode.
