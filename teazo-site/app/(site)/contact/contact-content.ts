@@ -1,28 +1,11 @@
 import { getContactContent as getLiveContactContent } from "@/app/lib/website-content";
 
-export type ContactHour = {
-  day: string;
-  hours: string;
-};
+import type {
+  ContactHour,
+  ContactContent,
+} from "@/app/types/website-content";
 
-import type { SocialLink } from "@/app/types/website-content";
-
-// Route-local content shape for the contact page. If this route later moves to
-// an admin dashboard or CMS, this type is the contract to preserve.
-export type ContactContent = {
-  logo?: string;
-  location: {
-    businessName: string;
-    streetAddress: string;
-    locality: string;
-    phone: string;
-    email: string;
-    mapQuery: string;
-  };
-  hours: ContactHour[];
-  socialLinks?: SocialLink[];
-  contactFormEnabled: boolean;
-};
+export type { ContactHour, ContactContent };
 
 // Keep the page content in one route-local module so it can later be swapped
 // for admin-dashboard or CMS data without rewriting the contact layout.

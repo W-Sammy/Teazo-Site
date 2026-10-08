@@ -2,7 +2,10 @@ import type {
   DayHours,
   SocialLink,
   WebsiteContent,
+  ContactHour,
+  ContactContent,
 } from "@/app/types/website-content";
+import { getWeeklyCustomerHours } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
 import {
   isValidPhone,
@@ -12,25 +15,7 @@ import {
   validateWebsiteContentPatch,
 } from "@/app/lib/website-content-validators";
 
-export type ContactHour = {
-  day: string;
-  hours: string;
-};
-
-export type ContactContent = {
-  logo?: string;
-  location: {
-    businessName: string;
-    streetAddress: string;
-    locality: string;
-    phone: string;
-    email: string;
-    mapQuery: string;
-  };
-  hours: ContactHour[];
-  socialLinks?: SocialLink[];
-  contactFormEnabled: boolean;
-};
+export type { ContactHour, ContactContent, SocialLink };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
   logo: "/TEAZO_logo.svg",
@@ -89,15 +74,6 @@ function isD1Configured(): boolean {
   return Boolean(process.env.D1_PROXY_URL && process.env.PROXY_TOKEN);
 }
 
-const WEEKDAY_NAMES_FROM_MONDAY = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
 const WEEKDAY_ABBRS_FROM_SUNDAY = [
   "Sun",
@@ -511,22 +487,7 @@ export async function updateWebsiteContent(
  */
 export async function getContactContent(): Promise<ContactContent> {
   const content = await getWebsiteContent();
-
-  // Convert DayHours (Sun-first) to ContactHour (Mon-first)
-  const hours: ContactHour[] = WEEKDAY_NAMES_FROM_MONDAY.map((dayName, monIdx) => {
-    // monIdx 0 = Mon -> jsDay 1; monIdx 6 = Sun -> jsDay 0
-    const jsDay = (monIdx + 1) % 7;
-    const entry = content.hours[jsDay];
-    const hoursText = entry?.closed
-      ? "Closed"
-      : entry
-      ? `${formatTime(entry.start)} - ${formatTime(entry.end)}`
-      : "11:00 AM - 8:00 PM";
-    return {
-      day: dayName,
-      hours: hoursText,
-    };
-  });
+  const hours = getWeeklyCustomerHours(content);
 
   return {
     logo: content.logo,
