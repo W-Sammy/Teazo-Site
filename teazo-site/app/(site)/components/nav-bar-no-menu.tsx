@@ -48,10 +48,10 @@ export default function NavBar() {
             return;
         }
 
-        // otherwise create it
+        // otherwise create "closing"
         mobileMenu.classList.add("closing");
 
-        // reduce motion var for transition if reduce motion enabled
+        // if reduce motion enabled
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)",).matches;
 
         // close menu.
@@ -89,7 +89,7 @@ export default function NavBar() {
 
                     {/* nav menu icons for mobile view.*/}
                     <details className="mobile-menu static md:hidden">
-                        {/* hamburger icon */}
+                        {/* menu icon */}
                         <summary
                             onClick={mobileToggle}
                             className="absolute right-0 top-1/2 z-[10000] flex h-12 w-12 -translate-y-1/2 touch-manipulation cursor-pointer list-none items-center justify-center rounded-md pointer-events-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black [&::-webkit-details-marker]:hidden"
@@ -105,7 +105,7 @@ export default function NavBar() {
                         {/* dropdown menu - mobile view items */}
                         <div className="mobile-dropdown fixed inset-x-0 top-20 z-[9999] max-h-[calc(100dvh-5rem)] w-screen overflow-y-auto bg-white/50 backdrop-blur-md">
 
-                            {/* navItems - black, monserrat, 
+                            {/* navItems - black, montserrat, 
                                 underlined when currently active on page*/}
                             <div className="flex flex-col px-6 py-3">
                                 {navItems.map((item) => (
@@ -127,7 +127,7 @@ export default function NavBar() {
                         </div>
                     </details>
 
-                    {/* dubious amounts of css transitions for the menu icon & mobile menu*/}
+                    {/* css transitions for the menu icon & mobile menu*/}
                     <style>
                         {`
                             /* basic hamburger line for icons */
@@ -242,8 +242,8 @@ export default function NavBar() {
                 </div>
 
                 {/* desktop view items */}
-                {/* navItems - black, monserrat, underlined when hovered & active on page
-                    right on desktop, hidden in mobile */}
+                {/* navItems - black, montserrat, underlined when hovered & active on page
+                    right on desktop, hidden for mobile */}
                 <div className="hidden items-center gap-12 md:flex">
                     {navItems.map((item) => (
                         <Link
