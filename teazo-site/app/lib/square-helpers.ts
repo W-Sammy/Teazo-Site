@@ -56,9 +56,24 @@ export function buildModifierList(obj: CatalogObject.ModifierList): ModifierList
         };
     });
 
+    const parseConstraint = (val: bigint | number | null | undefined): number | undefined => {
+        if (val === null || val === undefined) return undefined;
+        const num = Number(val);
+        return num >= 0 ? num : undefined;
+    };
+
+    const rawSelectionType = obj.modifierListData?.selectionType;
+    const selectionType =
+        rawSelectionType === "SINGLE" || rawSelectionType === "MULTIPLE"
+            ? rawSelectionType
+            : undefined;
+
     return {
         id: obj.id,
         name: obj.modifierListData?.name ?? undefined,
+        selectionType,
+        minSelectedModifiers: parseConstraint(obj.modifierListData?.minSelectedModifiers),
+        maxSelectedModifiers: parseConstraint(obj.modifierListData?.maxSelectedModifiers),
         options,
     };
 }

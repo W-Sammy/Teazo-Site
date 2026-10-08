@@ -7,6 +7,9 @@ export interface ModifierOption {
 export interface ModifierList {
     id: string;
     name: string | undefined;
+    selectionType?: "SINGLE" | "MULTIPLE";
+    minSelectedModifiers?: number;
+    maxSelectedModifiers?: number;
     options: ModifierOption[];
 }
 
@@ -49,3 +52,5 @@ export interface UpdateMenuItemBody {
     categoryIds?: string[];
     modifierListIds?: string[];
 }
+
+export * from "./checkout";
