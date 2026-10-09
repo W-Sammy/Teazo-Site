@@ -62,10 +62,6 @@ function EventCard({ event }: { event: AdminEvent }) {
         <p className="mt-1 text-xs text-slate-400">
           {formatEventDate(event.startAt)} – {formatEventDate(event.endAt)}
         </p>
-
-        <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-          {event.description}
-        </p>
       </div>
     </article>
   );
