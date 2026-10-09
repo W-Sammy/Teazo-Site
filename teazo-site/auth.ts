@@ -1,9 +1,66 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
+
+import { findAdminCredentials } from "./app/lib/admin-credentials";
+import { verifyPassword } from "./app/lib/password";
 
 import { findAuthorizedAdmin, normalizeEmail } from "@/app/lib/admin-whitelist";
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google,
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+
+      async authorize(credentials) {
+        const { email, password } = credentials;
+
+        // Values submitted by the browser must be checked server-side.
+        if (typeof email !== "string" || typeof password !== "string") {
+          return null;
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        if (
+          !normalizedEmail ||
+          normalizedEmail.length > 254 ||
+          password.length === 0 ||
+          password.length > 1024
+        ) {
+          return null;
+        }
+
+        try {
+          const admin = await findAdminCredentials(normalizedEmail);
+
+          if (!admin) return null;
+
+          const passwordMatches = await verifyPassword(
+            password,
+            admin.password_hash,
+          );
+
+          if (!passwordMatches) return null;
+
+          // Only identity information enters Auth.js, never the hash.
+          return {
+            id: admin.id,
+            name: admin.username,
+            email: admin.email_normalized,
+          };
+        } catch {
+          console.error("Credentials sign-in verification failed.");
+
+          // A service failure is different from incorrect credentials.
+          throw new Error("Credentials verification unavailable.");
+        }
+      },
+    }),
+  ],
 
   pages: {
     signIn: "/login",
