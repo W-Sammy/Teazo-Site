@@ -13,7 +13,7 @@ export async function findAdminCredentials(
 ): Promise<AdminCredentials | null> {
   const normalizedEmail = normalizeEmail(email);
 
-  if (!normalizeEmail) return null;
+  if (!normalizedEmail) return null;
 
   return prepare(
     `SELECT id, username, email_normalized, password_hash
@@ -25,6 +25,6 @@ export async function findAdminCredentials(
         AND password_hash IS NOT NULL
       LIMIT 1`,
   )
-    .bind(normalizeEmail)
+    .bind(normalizedEmail)
     .first<AdminCredentials>();
 }
