@@ -12,6 +12,7 @@ export type Holiday = {
   closed: boolean; // true = fully closed, false = adjusted hours (see start/end)
   start?: number; // adjusted-hours open time, 24hr scale; only meaningful when closed is false
   end?: number; // adjusted-hours close time, 24hr scale; only meaningful when closed is false
+  displayText?: string;
 };
 
 export type SocialLink = {

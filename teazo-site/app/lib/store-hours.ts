@@ -52,6 +52,59 @@ export function formatMinuteOfDay(minuteOfDay: number): string {
 }
 
 /**
+ * Parses a 12-hour or 24-hour time string into a decimal hour (e.g. "1:00 PM" -> 13, "9:30 AM" -> 9.5).
+ */
+export function parse12HourToDecimal(timeStr: string | null | undefined): number | undefined {
+  if (!timeStr) return undefined;
+  const trimmed = timeStr.trim();
+  if (!trimmed || trimmed.toLowerCase() === "closed") return undefined;
+
+  // 12-hour format: "1:00 AM", "05:30 PM", "1pm"
+  const match12 = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const minute = match12[2] ? parseInt(match12[2], 10) : 0;
+    const period = match12[3].toUpperCase();
+    if (period === "PM" && hour < 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+    return hour + minute / 60;
+  }
+
+  // 24-hour format: "13:00", "09:30"
+  const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    const hour = parseInt(match24[1], 10);
+    const minute = parseInt(match24[2], 10);
+    return hour + minute / 60;
+  }
+
+  return undefined;
+}
+
+/**
+ * Parses a display time range string like "1:00 AM - 5:00 PM" into decimal start/end hours.
+ */
+export function parseDisplayTextRange(displayText: string | null | undefined): {
+  start?: number;
+  end?: number;
+} {
+  if (!displayText) return {};
+  const cleaned = displayText.trim();
+  if (!cleaned || cleaned.toLowerCase() === "closed") return {};
+
+  const parts = cleaned.split(/\s*[-–—]\s*/);
+  if (parts.length !== 2) return {};
+
+  const start = parse12HourToDecimal(parts[0]);
+  const end = parse12HourToDecimal(parts[1]);
+
+  if (start !== undefined && end !== undefined) {
+    return { start, end };
+  }
+  return {};
+}
+
+/**
  * Extracts date and time components formatted in Pacific Time (America/Los_Angeles).
  */
 export function getPacificParts(date: Date = new Date()): PacificDateParts {
@@ -160,8 +213,19 @@ export function getStoreScheduleForDate(
       };
     }
 
-    const startHour = holiday.start ?? 11;
-    const endHour = holiday.end ?? 20;
+    let startHour = holiday.start;
+    let endHour = holiday.end;
+
+    // If start or end are missing, parse from displayText if available
+    if ((startHour === undefined || endHour === undefined) && holiday.displayText) {
+      const parsed = parseDisplayTextRange(holiday.displayText);
+      if (parsed.start !== undefined) startHour = parsed.start;
+      if (parsed.end !== undefined) endHour = parsed.end;
+    }
+
+    startHour = startHour ?? 9;
+    endHour = endHour ?? 17;
+
     const openMinuteOfDay = Math.round(startHour * 60);
     const closeMinuteOfDay = Math.round(endHour * 60);
     const cutoffMinuteOfDay = Math.max(

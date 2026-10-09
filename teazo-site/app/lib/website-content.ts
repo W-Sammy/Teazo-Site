@@ -5,7 +5,7 @@ import type {
   ContactHour,
   ContactContent,
 } from "@/app/types/website-content";
-import { getWeeklyCustomerHours } from "@/app/lib/store-hours";
+import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
 import {
   isValidPhone,
@@ -113,19 +113,6 @@ function normalizeHolidayDate(date: string): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
 }
 
-function parseDisplayHour(value: string): number | undefined {
-  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!match) return undefined;
-  let hour = Number(match[1]) % 12;
-  if (match[3].toUpperCase() === "PM") hour += 12;
-  return hour + Number(match[2]) / 60;
-}
-
-function parseHolidayHours(displayText: string | null) {
-  if (!displayText || !displayText.includes("-")) return {};
-  const [open, close] = displayText.split("-").map((part) => parseDisplayHour(part));
-  return open !== undefined && close !== undefined ? { start: open, end: close } : {};
-}
 
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
@@ -283,13 +270,18 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     }
 
     if (d1Holidays.results.length > 0) {
-      content.holidays = d1Holidays.results.map((h, i) => ({
-        id: `holiday-${h.date || i}`,
-        name: h.note || `Holiday`,
-        date: normalizeHolidayDate(h.date),
-        closed: h.is_closed === 1,
-        ...parseHolidayHours(h.display_text),
-      }));
+      content.holidays = d1Holidays.results.map((h, i) => {
+        const timeRange = parseDisplayTextRange(h.display_text);
+        return {
+          id: `holiday-${h.date || i}`,
+          name: h.note || `Holiday`,
+          date: normalizeHolidayDate(h.date),
+          closed: h.is_closed === 1,
+          start: timeRange.start,
+          end: timeRange.end,
+          displayText: h.display_text || undefined,
+        };
+      });
     }
 
     inMemoryContent = { ...content };
@@ -423,9 +415,9 @@ export async function updateWebsiteContent(
         if (!holiday.date) continue;
         const displayText = holiday.closed
           ? "Closed"
-          : holiday.start && holiday.end
+          : holiday.start !== undefined && holiday.end !== undefined
           ? `${formatTime(holiday.start)} - ${formatTime(holiday.end)}`
-          : "Closed";
+          : holiday.displayText || "Closed";
         stmts.push(
           prepare(
             `INSERT INTO hours_exception (date, is_closed, display_text, note)
