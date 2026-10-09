@@ -76,20 +76,23 @@ export async function recordMenuItemView(date: string, itemId: string, itemName:
 
 export async function consumeAnalyticsRateLimit(rateKey: string, now = new Date()) {
   const windowStart = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+  const currentTime = now.toISOString();
+
   const result = await prepare(
     `INSERT INTO analytics_rate_limit (identifier, window_started_at, event_count)
-     VALUES (?1, ?2, 1)
+     VALUES (?1, ?3, 1)
      ON CONFLICT (identifier) DO UPDATE SET
        event_count = CASE
          WHEN analytics_rate_limit.window_started_at < ?2 THEN 1
          ELSE analytics_rate_limit.event_count + 1
        END,
        window_started_at = CASE
-         WHEN analytics_rate_limit.window_started_at < ?2 THEN ?2
+         WHEN analytics_rate_limit.window_started_at < ?2 THEN ?3
          ELSE analytics_rate_limit.window_started_at
        END
      RETURNING event_count`,
-  ).bind(rateKey, windowStart).first<{ event_count: number }>();
+  ).bind(rateKey, windowStart, currentTime).first<{ event_count: number }>();
+
   return (result?.event_count ?? Number.MAX_SAFE_INTEGER) <= 30;
 }
 

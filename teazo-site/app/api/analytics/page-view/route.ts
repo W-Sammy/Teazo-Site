@@ -35,7 +35,12 @@ export async function POST(request: Request) {
     if (!body || !isAnalyticsPageKey(body.pageKey)) return errorResponse("Invalid page key.", 400);
 
     const { key, responseHeaders } = await getRateKey(request);
-    if (!(await consumeAnalyticsRateLimit(key))) return errorResponse("Analytics rate limit exceeded.", 429);
+    if (!(await consumeAnalyticsRateLimit(key))) {
+      return Response.json(
+        { error: "Analytics rate limit exceeded." },
+        { status: 429, headers: responseHeaders },
+      );
+    }
 
     await recordPageView(getShopMetricDate(), body.pageKey);
     return Response.json({ ok: true }, { headers: responseHeaders });
