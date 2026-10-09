@@ -9,6 +9,7 @@ import ImageCarousel from "@/app/(site)/components/image-carousel";
 // import font & bubbles
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
+import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
 
@@ -26,6 +27,11 @@ const cabinSketch = Cabin_Sketch({
     weight: ['400'] // normal
 });
 
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 // extra bold montserrat
 const boldMontserrat = Montserrat({
     subsets: ['latin'],
@@ -38,13 +44,44 @@ const mediumMontserrat = Montserrat({
     weight: ['500']
 });
 
+function PhoneIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-6 w-6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4.8 3.7h3.4l1.5 4.4-2 1.7a16 16 0 0 0 6.2 6.2l1.7-2 4.4 1.5v3.4A1.8 1.8 0 0 1 18.2 21C10.9 21 3 13.1 3 5.8A1.8 1.8 0 0 1 4.8 3.7Z" />
+    </svg>
+  );
+}
+
 export default async function Home() {
   const content = await getWebsiteContent();
   const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const contactData = await getContactContent();
+  const {
+    location,
+    hours,
+    contactFormEnabled,
+    logo,
+    socialLinks: dynamicSocialLinks,
+  } = contactData;
   const fbLink = content.socialLinks.find((l) => l.id === "facebook" && l.enabled)?.url || "https://www.facebook.com/people/TEAZO/100063111166083";
   const igLink = content.socialLinks.find((l) => l.id === "instagram" && l.enabled)?.url || "https://www.instagram.com/teazosf/";
   const yelpLink = content.socialLinks.find((l) => l.id === "yelp" && l.enabled)?.url || "https://www.yelp.com/biz/teazo-san-francisco";
   const emailHref = `mailto:${content.address.email || "teazosf@hotmail.com"}`;
+  const opensWebmail = false;
+  const phoneDigits = location.phone.replace(/[^\d+]/g, "");
+  const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
+  const isYelpEnabled = dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
+  const isFbEnabled = dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
+  const isIgEnabled = dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
@@ -111,25 +148,112 @@ export default async function Home() {
                     <p key={idx}>{paragraph}</p>
                 ))}
 
-                {/*social media icons*/}
-                <div className="mt-8 flex flex-wrap justify-center items-center gap-6 sm:gap-10">
-                    <a href={fbLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_fb_icon.svg" alt="Facebook" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={emailHref}>
-                        <img src="/social_icons/social_svg/teazo_email_icon.svg" alt="Email" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={igLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_insta_icon.svg" alt="Instagram" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                    <a href={yelpLink} target="_blank" rel="noopener noreferrer">
-                        <img src="/social_icons/social_svg/teazo_yelp_icon.svg" alt="Yelp" className="w-14 h-14 sm:w-16 sm:h-16" />
-                    </a>
-                </div>
             </div>
-
         </div>
         </section>
+
+{/* Call To Action */}
+        <section
+                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+                >
+                  <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
+                    <div className="max-w-3xl">
+                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+                        Group Orders
+                      </p>
+                      <h2
+                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                      >
+                        Planning for a Crowd?
+                      </h2>
+                      <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
+                        Call us for group ordering and discounted pricing on larger
+                        drink, snack, and dessert orders.
+                      </p>
+        
+                      <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
+                        {isFbEnabled && (
+                          <a
+                            href={fbLink}
+                            aria-label={`${location.businessName} on Facebook`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block transition hover:opacity-70"
+                          >
+                            <Image
+                              src="/social_icons/social_svg/teazo_fb_icon.svg"
+                              alt=""
+                              aria-hidden="true"
+                              width={64}
+                              height={64}
+                              className="h-12 w-12 object-contain"
+                            />
+                          </a>
+                        )}
+                        <a
+                          href={emailHref}
+                          aria-label={`Email ${location.businessName}`}
+                          target={opensWebmail ? "_blank" : undefined}
+                          rel={opensWebmail ? "noreferrer" : undefined}
+                          className="block transition hover:opacity-70"
+                        >
+                          <Image
+                            src="/social_icons/social_svg/teazo_email_icon.svg"
+                            alt=""
+                            aria-hidden="true"
+                            width={64}
+                            height={64}
+                            className="h-12 w-12 object-contain"
+                          />
+                        </a>
+                        {isIgEnabled && (
+                          <a
+                            href={igLink}
+                            aria-label={`${location.businessName} on Instagram`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block transition hover:opacity-70"
+                          >
+                            <Image
+                              src="/social_icons/social_svg/teazo_insta_icon.svg"
+                              alt=""
+                              aria-hidden="true"
+                              width={64}
+                              height={64}
+                              className="h-12 w-12 object-contain"
+                            />
+                          </a>
+                        )}
+                        {isYelpEnabled && (
+                          <a
+                            href={yelpLink}
+                            aria-label={`${location.businessName} on Yelp`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block transition hover:opacity-70"
+                          >
+                            <Image
+                              src="/social_icons/social_svg/teazo_yelp_icon.svg"
+                              alt=""
+                              aria-hidden="true"
+                              width={64}
+                              height={64}
+                              className="h-12 w-12 object-contain"
+                            />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+        
+                    <a
+                      href={phoneHref}
+                      className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
+                    >
+                      <PhoneIcon />
+                      CALL TO ORDER
+                    </a>
+                  </div>
+                </section>
 
     </main>
   )

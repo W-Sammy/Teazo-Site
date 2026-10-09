@@ -4,6 +4,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
@@ -11,7 +12,10 @@ import { createPortal } from "react-dom";
 type DeleteMenuItemDialogProps = {
   itemName: string;
   onCancel: () => void;
-  onConfirm: () => void;
+
+  // The parent removes the row/closes the dialog only after confirmed deletion.
+  onConfirm: () => Promise<string | null>;
+
   fallbackFocusRef?: RefObject<HTMLElement | null>;
 };
 
@@ -23,7 +27,10 @@ export default function DeleteMenuItemDialog({
 }: DeleteMenuItemDialogProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
-  const confirmed = useRef(false);
+  const pendingRef = useRef(false);
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const titleId = useId();
   const descriptionId = useId();
@@ -42,7 +49,10 @@ export default function DeleteMenuItemDialog({
         : null;
 
     // A native modal sits above the navigation and makes the background inert.
-    dialog.showModal();
+    if (!dialog.open) {
+      dialog.showModal();
+    }
+
     cancelButtonRef.current?.focus({ preventScroll: true });
 
     return () => {
@@ -59,6 +69,39 @@ export default function DeleteMenuItemDialog({
     };
   }, [fallbackFocusRef]);
 
+  function handleCancel() {
+    // Use the ref as well as disabled buttons to block immediate repeated input.
+    if (!pendingRef.current) {
+      onCancel();
+    }
+  }
+
+  async function handleConfirm() {
+    if (pendingRef.current) {
+      return;
+    }
+
+    pendingRef.current = true;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const errorMessage = await onConfirm();
+
+      if (errorMessage) {
+        setDeleteError(errorMessage);
+      }
+    } catch {
+      setDeleteError(
+        "The deletion could not be confirmed. Reload the menu and check the item before trying again.",
+      );
+    } finally {
+      // Failed requests must not leave the Delete button permanently locked.
+      pendingRef.current = false;
+      setIsDeleting(false);
+    }
+  }
+
   return createPortal(
     <dialog
       ref={dialogRef}
@@ -67,7 +110,7 @@ export default function DeleteMenuItemDialog({
       className="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-md overflow-y-auto overscroll-contain rounded-2xl border border-[#dbb082]/60 bg-white p-5 text-gray-900 shadow-xl backdrop:bg-black/40 sm:p-6"
       onCancel={(event) => {
         event.preventDefault();
-        onCancel();
+        handleCancel();
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -89,7 +132,7 @@ export default function DeleteMenuItemDialog({
           event.clientY > bounds.bottom;
 
         if (outside) {
-          onCancel();
+          handleCancel();
         }
       }}
     >
@@ -102,9 +145,10 @@ export default function DeleteMenuItemDialog({
 
       <button
         type="button"
-        onClick={onCancel}
+        onClick={handleCancel}
+        disabled={isDeleting}
         aria-label="Close delete confirmation"
-        className="absolute right-2 top-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+        className="absolute right-2 top-2 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg
           aria-hidden="true"
@@ -126,29 +170,49 @@ export default function DeleteMenuItemDialog({
         <p className="[overflow-wrap:anywhere]">
           Are you sure you want to delete <strong>{itemName}</strong>?
         </p>
+
+        <p className="mt-2">
+          This deletes the item and its variations from Square and removes it
+          from the menu. This action cannot be undone from this page.
+        </p>
       </div>
+
+      {deleteError && (
+        <p
+          role="alert"
+          className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 [overflow-wrap:anywhere]"
+        >
+          {deleteError}
+        </p>
+      )}
+
+      {isDeleting && (
+        <p
+          role="status"
+          className="mt-4 text-sm text-gray-600"
+        >
+          Deleting the item from Square. Please keep this page open.
+        </p>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:flex sm:justify-end">
         <button
           ref={cancelButtonRef}
           type="button"
-          onClick={onCancel}
-          className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"
+          onClick={handleCancel}
+          disabled={isDeleting}
+          className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancel
         </button>
 
         <button
           type="button"
-          onClick={() => {
-            if (!confirmed.current) {
-              confirmed.current = true;
-              onConfirm();
-            }
-          }}
-          className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+          onClick={handleConfirm}
+          disabled={isDeleting}
+          className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </button>
       </div>
     </dialog>,
