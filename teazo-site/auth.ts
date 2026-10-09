@@ -73,6 +73,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async signIn({ account, profile, user }) {
+      if (account?.provider === "credentials") {
+        return typeof user.email === "string" && user.email.length > 0;
+      }
+
       if (
         account?.provider !== "google" ||
         profile?.email_verified !== true ||

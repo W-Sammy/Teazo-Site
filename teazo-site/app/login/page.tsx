@@ -9,12 +9,63 @@ import Link from "next/link";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Suspense, useState } from "react";
+import type { SubmitEvent } from "react";
 import AuthMessage from "./auth-message";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmitting) return;
+
+    setLoginError(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || password.length === 0) {
+      setLoginError("Enter your email and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email: normalizedEmail,
+        password,
+        redirect: false,
+        redirectTo: "/admin",
+      });
+
+      if (result.error) {
+        setLoginError(
+          result.error === "CredentialsSignin"
+            ? "Invalid email or password."
+            : "Sign-in is temporarily unavailable. Please try again.",
+        );
+        return;
+      }
+
+      if (!result.ok) {
+        setLoginError("Sign-in could not be completed. Please try again.");
+        return;
+      }
+
+      // Make a fresh request so /admin reads the new session cookie.
+      window.location.assign("/admin");
+    } catch {
+      setLoginError("Unable to connect. Please try again.");
+    } finally {
+      setPassword("");
+      setIsSubmitting(false);
+    }
+  }
   return (
     <div className="relative min-h-screen flex flex-col bg-[#f4efeb] overflow-hidden">
       {/* Background effects layer */}
@@ -49,13 +100,23 @@ export default function AdminLoginPage() {
             <AuthMessage />
           </Suspense>
           {/* Login Form */}
-          <form className="relative mt-8 flex flex-col items-center gap-5">
+          <form
+            onSubmit={handleSubmit}
+            aria-busy={isSubmitting}
+            className="relative mt-8 flex flex-col items-center gap-5"
+          >
             <input
               type="email"
               name="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="EMAIL"
               className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
+              value={email}
+              required
+              maxLength={254}
+              autoComplete="username"
+              aria-label="Email"
+              disabled={isSubmitting}
             />
 
             <input
@@ -64,23 +125,29 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="PASSWORD"
               className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
+              value={password}
+              required
+              maxLength={1024}
+              autoComplete=""
+              aria-label="Password"
+              disabled={isSubmitting}
             />
 
-            {(!email || !password) && (
-              <p className="absolute top-17 mt-10 text-sm text-red-500">
-                Email or password cannot be empty
+            {loginError && (
+              <p
+                role="alert"
+                className="w-full text-center text-sm text-red-600"
+              >
+                {loginError}
               </p>
             )}
 
             <button
               type="submit"
-              disabled={!email || !password}
-              style={{
-                cursor: !email || !password ? "not-allowed" : "pointer",
-              }}
-              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7] "
+              disabled={isSubmitting || !email.trim() || !password}
+              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              SIGN IN
+              {isSubmitting ? "SIGNING IN…" : "SIGN IN"}
             </button>
 
             {/* [!] Needs to be update once account administrative workflow has been developed */}
