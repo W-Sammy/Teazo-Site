@@ -181,6 +181,7 @@ export default function ImageCarousel(): JSX.Element {
                     <button
                         key={dotIndex}
                         type="button" 
+                        onClick={() => changeSlide(dotIndex)}
                         aria-label={`Go to image ${dotIndex + 1}`} 
                         className={`
                             rounded-full
