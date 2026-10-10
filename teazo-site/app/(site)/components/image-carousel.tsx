@@ -111,7 +111,7 @@ export default function ImageCarousel(): JSX.Element {
             className="relative w-full flex flex-col items-center">
 
             <div 
-                className="relative w-full h-175 flex items-center justify-center overflow-hidden"
+                className="relative w-full h-100 sm:h-140 flex items-center justify-center overflow-hidden"
                 onPointerDown={handlePointerDown} 
                 onPointerUp={handlePointerUp} 
                 onPointerMove={handlePointerMove}
@@ -122,8 +122,8 @@ export default function ImageCarousel(): JSX.Element {
                 {images.map((image, imageIndex) => { const offset = getOffset(imageIndex);
                 const isVisible = Math.abs(offset) <= 1;
                 const isCenter = offset === 0;
-                const width = isCenter ? "w-100" : "w-75";
-                const height = isCenter ? "h-150" : "h-125";
+                const width = isCenter ? "w-65 sm:w-120" : "w-60 sm:w-100";
+                const height = isCenter ? "h-65 sm:h-120" : "h-60 sm:h-100";
                 const sideDistance = isHovered ? 380 : 260;
                 let translateX = 0; if (offset < 0) { translateX = offset * sideDistance; } else if (offset > 0) { translateX = offset * sideDistance; }
                 const zIndex = 30 - Math.abs(offset) * 5;
@@ -150,7 +150,7 @@ export default function ImageCarousel(): JSX.Element {
            
 
             {/* Dots */}
-            <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="flex items-center justify-center gap-3 mb-6">
                 {images.map((_, dotIndex) => (
                     <button
                         key={dotIndex}

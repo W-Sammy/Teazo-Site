@@ -129,7 +129,7 @@ export default async function Home() {
         </section>
 
             {/*import image carousel*/}
-                <div className="relative z-10 flex justify-center items-center px-4 py-15">
+                <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
                 <ImageCarousel />
             </div> 
 
