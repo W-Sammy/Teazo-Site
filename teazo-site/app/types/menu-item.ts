@@ -18,6 +18,12 @@ export interface ItemCategory {
     name: string | null;
 }
 
+export interface ItemVariation {
+    id: string;
+    name: string | null | undefined;
+    priceCents: number;
+}
+
 export interface MenuItem {
     catalogObjectId: string;
     name: string | null | undefined;
@@ -28,6 +34,7 @@ export interface MenuItem {
     imageUrl: string | null;
     categories: ItemCategory[];
     modifiers: ModifierList[];
+    variations?: ItemVariation[];
 }
 
 export interface Category {

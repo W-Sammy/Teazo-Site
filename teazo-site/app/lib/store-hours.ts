@@ -7,6 +7,7 @@ import type {
 
 export const STORE_TIMEZONE = "America/Los_Angeles";
 export const PREP_LEAD_TIME_MINUTES = 25;
+export const PREP_LEAD_TIME_GRACE_MINUTES = 3;
 export const ORDER_CUTOFF_MINUTES_BEFORE_CLOSE = 30;
 
 export interface PacificDateParts {
@@ -376,12 +377,15 @@ export async function validatePickupTiming(
       };
     }
 
-    // Enforce minimum 25-minute prep lead time
-    const minPickupTimeMs = referenceNow.getTime() + PREP_LEAD_TIME_MINUTES * 60 * 1000;
+    // Enforce prep lead time with a grace buffer for form submission delay.
+    // Allows slots selected within the session (~22-25m) without false 400 rejection,
+    // while strictly ensuring the pickup time is in the future.
+    const effectiveLeadTimeMinutes = Math.max(1, PREP_LEAD_TIME_MINUTES - PREP_LEAD_TIME_GRACE_MINUTES);
+    const minPickupTimeMs = referenceNow.getTime() + effectiveLeadTimeMinutes * 60 * 1000;
     if (pickupDate.getTime() < minPickupTimeMs) {
       return {
         valid: false,
-        error: `Scheduled pickup must be at least ${PREP_LEAD_TIME_MINUTES} minutes from now.`,
+        error: `Scheduled pickup must be at least ${PREP_LEAD_TIME_MINUTES} minutes from now. Please select an updated pickup time.`,
       };
     }
 

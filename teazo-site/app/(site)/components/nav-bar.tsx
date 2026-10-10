@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
+import { useCart } from "@/app/context/cart-context";
 
 import type { MouseEvent } from "react"; // for mobile menu
 
@@ -22,6 +23,7 @@ export default function NavBar() {
     // separate from teazo logo because it'll be styled differently 
     const navItems = ["HOME", "MENU", "GALLERY", "CONTACT", "DELIVERY"];
     const pathName = usePathname();
+    const { totalCount, openCart } = useCart();
 
     // check which link/page/route is currently active
     const active = (item: string) => {
@@ -50,7 +52,7 @@ export default function NavBar() {
         mobileMenu.classList.add("closing");
 
         // if reduce motion enabled
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)",).matches;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         // close menu.
         window.setTimeout(
@@ -84,6 +86,35 @@ export default function NavBar() {
                     >
                         TEAZO
                     </Link>
+
+                    {/* Cart Trigger Button - Mobile View */}
+                    <button
+                        type="button"
+                        onClick={openCart}
+                        aria-label={`Open Cart (${totalCount} items)`}
+                        className="absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
+                    >
+                        <svg
+                            className="w-6 h-6 transition-transform group-hover:scale-105"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                        </svg>
+
+                        {/* Active item counter badge */}
+                        {totalCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-[#DBAF82] text-white text-[10px] font-bold rounded-full h-4.5 min-w-[18px] px-1 flex items-center justify-center shadow-sm">
+                                {totalCount}
+                            </span>
+                        )}
+                    </button>
 
                     {/* nav menu icons for mobile view.*/}
                     <details className="mobile-menu static md:hidden">
@@ -242,20 +273,51 @@ export default function NavBar() {
                 {/* desktop view items */}
                 {/* navItems - black, montserrat, underlined when hovered & active on page
                     right on desktop, hidden for mobile */}
-                <div className="hidden items-center gap-12 md:flex">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item}
-                            href={item === "HOME" ? "/" : `/${item.toLowerCase()}`}
-                            className={`${montserrat.className} text-[10px] md:text-[18px] font-bold tracking-[0.05em] text-black text-center transition pb-1 border-b-2 hover:border-black 
-                                ${active(item) 
-                                    ? "border-black" 
-                                    : "border-transparent"
-                            }`}
+                <div className="hidden items-center gap-10 md:flex">
+                    <div className="flex items-center gap-8 lg:gap-12">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item}
+                                href={item === "HOME" ? "/" : `/${item.toLowerCase()}`}
+                                className={`${montserrat.className} text-[10px] md:text-[18px] font-bold tracking-[0.05em] text-black text-center transition pb-1 border-b-2 hover:border-black 
+                                    ${active(item) 
+                                        ? "border-black" 
+                                        : "border-transparent"
+                                }`}
+                            >
+                                {item}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Cart Trigger Button - Desktop */}
+                    <button
+                        type="button"
+                        onClick={openCart}
+                        aria-label={`Open Cart (${totalCount} items)`}
+                        className="relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
+                    >
+                        <svg
+                            className="w-6 h-6 transition-transform group-hover:scale-105"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                         >
-                            {item}
-                        </Link>
-                    ))}
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                        </svg>
+
+                        {/* Active item counter badge */}
+                        {totalCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-[#DBAF82] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center shadow-sm">
+                                {totalCount}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
             </nav>

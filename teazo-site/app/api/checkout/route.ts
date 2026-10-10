@@ -74,7 +74,8 @@ export async function POST(request: Request) {
 
   // 5. Construct Order and create Square Payment Link
   const baseUrl = getSiteBaseUrl();
-  const redirectUrl = `${baseUrl}/order/confirmation?orderId={ORDER_ID}`;
+  // Square automatically appends ?orderId=...&transactionId=... to the redirectUrl upon successful payment
+  const redirectUrl = `${baseUrl}/order/confirmation`;
 
   try {
     const response = await squareClient.checkout.paymentLinks.create({

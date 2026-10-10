@@ -27,6 +27,7 @@ export interface CartItem {
   cartItemId: string; // Unique UUID per customization configuration
   catalogObjectId: string; // Square Item ID
   variationId: string; // Square Variation ID (Size)
+  variationName?: string; // Display name for variation (e.g. "Regular", "Large")
   name: string;
   basePriceCents: number;
   imageUrl: string | null;
