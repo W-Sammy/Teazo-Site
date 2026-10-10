@@ -81,3 +81,8 @@ export async function getLiveEvents(): Promise<AdminEvent[]> {
     (event) => Date.parse(event.startAt) <= now && now <= Date.parse(event.endAt),
   );
 }
+
+export async function getEventById(id: string): Promise<AdminEvent | null> {
+  const events = await getEvents();
+  return events.find((event) => event.id === id) ?? null;
+}

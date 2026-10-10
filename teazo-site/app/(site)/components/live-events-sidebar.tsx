@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import type { AdminEvent } from "@/app/types/admin-event";
@@ -68,12 +69,19 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
 
           <div className="max-h-[min(65vh,34rem)] space-y-4 overflow-y-auto p-4">
             {events.map((event) => (
-              <button
+              <Link
                 key={event.id}
-                type="button"
-                disabled={!hasBeenOpenedByUser}
+                href={`/events#${encodeURIComponent(event.id)}`}
                 aria-label={`${event.name}. ${formatEventDuration(event)}`}
-                className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
+                aria-disabled={!hasBeenOpenedByUser}
+                onClick={(clickEvent) => {
+                  if (!hasBeenOpenedByUser) clickEvent.preventDefault();
+                }}
+                className={`group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition ${
+                  hasBeenOpenedByUser
+                    ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md"
+                    : "cursor-default"
+                }`}
               >
                 <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#f4e9e4]">
                   <Image
@@ -89,8 +97,17 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                   <h3 className="font-bold text-[#3c2924]">{event.name}</h3>
                   <p className="mt-1 text-xs font-medium text-[#9b7065]">{formatEventDuration(event)}</p>
                 </div>
-              </button>
+              </Link>
             ))}
+          </div>
+          <div className="border-t border-[#eee1dc] px-4 py-3">
+            <Link
+              href="/events"
+              onClick={() => setHasBeenOpenedByUser(true)}
+              className="block text-center text-sm font-bold uppercase tracking-[0.12em] text-[#3c2924] transition hover:text-[#9b7065]"
+            >
+              View all live events →
+            </Link>
           </div>
         </div>
       </aside>

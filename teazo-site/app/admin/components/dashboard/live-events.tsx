@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { AdminEvent } from "@/app/types/admin-event";
 import { formatEventDate } from "./dashboard-utils";
 
@@ -7,5 +8,5 @@ export default function LiveEvents({ events }: { events: AdminEvent[] }) {
 }
 
 function EventCard({ event }: { event: AdminEvent }) {
-  return <article className="flex min-w-0 gap-3 rounded-xl bg-slate-50 p-3"><div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-[#fcf5ed]"><Image src={event.imageUrl} alt="" fill sizes="80px" className="object-cover" /></div><div className="min-w-0"><h3 className="truncate text-sm font-semibold text-slate-600">{event.name}</h3><p className="mt-1 text-xs text-slate-400">{formatEventDate(event.startAt)} – {formatEventDate(event.endAt)}</p></div></article>;
+  return <Link href={`/events#${encodeURIComponent(event.id)}`} className="flex min-w-0 gap-3 rounded-xl bg-slate-50 p-3 transition hover:bg-[#fcf5ed] hover:shadow-sm"><div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-[#fcf5ed]"><Image src={event.imageUrl} alt="" fill sizes="80px" className="object-cover" /></div><div className="min-w-0"><h3 className="truncate text-sm font-semibold text-slate-600">{event.name}</h3><p className="mt-1 text-xs text-slate-400">{formatEventDate(event.startAt)} – {formatEventDate(event.endAt)}</p></div></Link>;
 }
