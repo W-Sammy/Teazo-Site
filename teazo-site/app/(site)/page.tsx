@@ -12,6 +12,8 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
+import { getLiveEvents } from "@/app/admin/events/handlers/get-events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -20,6 +22,9 @@ export const metadata: Metadata = {
     },
     description: "Teazo Home",
 };
+
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
@@ -62,7 +67,7 @@ function PhoneIcon() {
 }
 
 export default async function Home() {
-  const content = await getWebsiteContent();
+  const [content, liveEvents] = await Promise.all([getWebsiteContent(), getLiveEvents()]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const contactData = await getContactContent();
   const {
@@ -86,6 +91,7 @@ export default async function Home() {
 
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
+            <LiveEventsSidebar events={liveEvents} />
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
