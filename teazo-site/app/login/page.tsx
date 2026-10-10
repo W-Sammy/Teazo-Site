@@ -1,7 +1,7 @@
 "use client";
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
-import Footer from "@/app/(site)/components/footer";
+import StaticFooter from "@/app/(site)/components/static-footer";
 
 import { BubbleField } from "@/app/components/bubble-field";
 
@@ -114,7 +114,7 @@ export default function AdminLoginPage() {
 
       {/* End of page footer */}
       <div className="relative z-10">
-        <Footer />
+        <StaticFooter />
       </div>
     </div>
   );
