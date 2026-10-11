@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Montserrat } from "next/font/google";
 
 const montserrat = Montserrat({
@@ -11,9 +11,9 @@ const montserrat = Montserrat({
 
 const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
-/* Core menu item shape for the UI.
-   This is closer to the Square API shape so mock data can be replaced later
-   with less refactoring. */
+import type { ModifierList, ItemVariation } from "@/app/types/menu-item";
+
+/* Core menu item shape for the UI. */
 export type MenuItem = {
   catalogObjectId: string;
   name: string;
@@ -24,10 +24,13 @@ export type MenuItem = {
   categoryId: string | null;
   categoryName: string | null;
   description?: string;
+  modifiers?: ModifierList[];
+  variations?: ItemVariation[];
 };
 
 type MenuItemCardProps = {
   item: MenuItem;
+  onCustomize?: (item: MenuItem) => void;
 };
 
 /* Price values come from the data layer in cents. This helper converts
@@ -40,26 +43,42 @@ function formatPrice(priceCents: number, currency: string | null) {
 }
 
 /* Reusable card used to display a single menu item.
-   This component is responsible only for rendering one item’s image,
-   name, price, and optional description in a consistent card layout. */
-export default function MenuItemCard({ item }: MenuItemCardProps) {
-  const [imageSrc, setImageSrc] = useState(item.imageUrl || FALLBACK_IMAGE_SRC);
+   Clicking the card or the Order action opens the customization modal. */
+export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
+  const [hasImageError, setHasImageError] = useState(false);
   const formattedPrice = formatPrice(item.priceCents, item.currency);
 
-  useEffect(() => {
-    setImageSrc(item.imageUrl || FALLBACK_IMAGE_SRC);
-  }, [item.imageUrl]);
-
+  const imageSrc = !hasImageError && item.imageUrl ? item.imageUrl : FALLBACK_IMAGE_SRC;
   const isUsingFallbackImage = imageSrc === FALLBACK_IMAGE_SRC;
 
+  const handleClick = () => {
+    onCustomize?.(item);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onCustomize?.(item);
+    }
+  };
+
   return (
-    <article className="flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role={onCustomize ? "button" : undefined}
+      tabIndex={onCustomize ? 0 : undefined}
+      aria-label={onCustomize ? `Customize ${item.name}` : undefined}
+      className={`group flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        onCustomize ? "cursor-pointer active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#DBAF82]" : ""
+      }`}
+    >
       {/* This text column is allowed to shrink so long item names wrap instead of pushing into the image. */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Stacking the name and price on mobile prevents the price from being covered by the image. */}
         <div className="flex flex-col gap-1">
           <h4
-            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 sm:text-[1.05rem]`}
+            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 group-hover:text-[#c68f5d] transition-colors sm:text-[1.05rem]`}
           >
             {item.name}
           </h4>
@@ -78,22 +97,20 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
             {item.description}
           </p>
         )}
+
       </div>
 
       {/* The image keeps a fixed size so it does not overlap the text or price. */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
         <Image
+          key={item.imageUrl || "fallback"}
           src={imageSrc}
           alt={item.name}
           fill
           className={isUsingFallbackImage ? "object-contain p-2" : "object-cover"}
           sizes="(max-width: 640px) 96px, 112px"
           loading="lazy"
-          onError={() => {
-            if (imageSrc !== FALLBACK_IMAGE_SRC) {
-              setImageSrc(FALLBACK_IMAGE_SRC);
-            }
-          }}
+          onError={() => setHasImageError(true)}
         />
       </div>
     </article>

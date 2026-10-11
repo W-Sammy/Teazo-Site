@@ -4,6 +4,7 @@ import type {
   MenuItem,
   ModifierList,
   ItemCategory,
+  ItemVariation,
 } from "@/app/types/menu-item";
 import {
   buildModifierList,
@@ -111,6 +112,17 @@ export async function GET() {
           (ml): ml is ModifierList => ml !== undefined,
         );
 
+      const variations: ItemVariation[] = (
+        (catalogItem.itemData?.variations ?? []) as CatalogObject.ItemVariation[]
+      ).map((v) => {
+        const p = v.itemVariationData?.priceMoney;
+        return {
+          id: v.id ?? "",
+          name: v.itemVariationData?.name ?? null,
+          priceCents: p ? Number(p.amount) : 0,
+        };
+      });
+
       products.push({
         catalogObjectId: item.id,
         name: catalogItem.itemData?.name,
@@ -126,6 +138,7 @@ export async function GET() {
           : null,
         categories,
         modifiers,
+        variations,
       });
     }
 

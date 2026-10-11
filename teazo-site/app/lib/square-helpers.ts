@@ -1,5 +1,5 @@
 import type { GetCatalogObjectResponse } from 'square';
-import type { MenuItem, ModifierList, ModifierOption, ItemCategory } from "@/app/types/menu-item";
+import type { MenuItem, ModifierList, ModifierOption, ItemCategory, ItemVariation } from "@/app/types/menu-item";
 import type { CatalogObject } from 'square';
 
 // Builds a full MenuItem from a Square GetCatalogObjectResponse
@@ -23,6 +23,17 @@ export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse): 
     const variation = catalogItem.itemData?.variations?.[0] as CatalogObject.ItemVariation | undefined;
     const priceMoney = variation?.itemVariationData?.priceMoney;
 
+    const variations: ItemVariation[] = (
+        (catalogItem.itemData?.variations ?? []) as CatalogObject.ItemVariation[]
+    ).map((v) => {
+        const p = v.itemVariationData?.priceMoney;
+        return {
+            id: v.id ?? "",
+            name: v.itemVariationData?.name ?? null,
+            priceCents: p ? Number(p.amount) : 0,
+        };
+    });
+
     const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
         .flatMap((info) => {
             const listObj = relatedObjects.find(
@@ -41,6 +52,7 @@ export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse): 
         imageUrl: imageObj?.imageData?.url ?? null,
         categories,
         modifiers,
+        variations,
     };
 }
 
@@ -56,9 +68,24 @@ export function buildModifierList(obj: CatalogObject.ModifierList): ModifierList
         };
     });
 
+    const parseConstraint = (val: bigint | number | null | undefined): number | undefined => {
+        if (val === null || val === undefined) return undefined;
+        const num = Number(val);
+        return num >= 0 ? num : undefined;
+    };
+
+    const rawSelectionType = obj.modifierListData?.selectionType;
+    const selectionType =
+        rawSelectionType === "SINGLE" || rawSelectionType === "MULTIPLE"
+            ? rawSelectionType
+            : undefined;
+
     return {
         id: obj.id,
         name: obj.modifierListData?.name ?? undefined,
+        selectionType,
+        minSelectedModifiers: parseConstraint(obj.modifierListData?.minSelectedModifiers),
+        maxSelectedModifiers: parseConstraint(obj.modifierListData?.maxSelectedModifiers),
         options,
     };
 }

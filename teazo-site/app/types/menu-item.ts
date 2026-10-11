@@ -7,12 +7,21 @@ export interface ModifierOption {
 export interface ModifierList {
     id: string;
     name: string | undefined;
+    selectionType?: "SINGLE" | "MULTIPLE";
+    minSelectedModifiers?: number;
+    maxSelectedModifiers?: number;
     options: ModifierOption[];
 }
 
 export interface ItemCategory {
     id: string;
     name: string | null;
+}
+
+export interface ItemVariation {
+    id: string;
+    name: string | null | undefined;
+    priceCents: number;
 }
 
 export interface MenuItem {
@@ -25,6 +34,7 @@ export interface MenuItem {
     imageUrl: string | null;
     categories: ItemCategory[];
     modifiers: ModifierList[];
+    variations?: ItemVariation[];
 }
 
 export interface Category {
@@ -49,3 +59,5 @@ export interface UpdateMenuItemBody {
     categoryIds?: string[];
     modifierListIds?: string[];
 }
+
+export * from "./checkout";

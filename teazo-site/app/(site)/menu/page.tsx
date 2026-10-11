@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
-import MenuItemsSection from "../components/menu-items-section";
+import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 import Subtitle from "../components/sub-title";
@@ -37,7 +37,7 @@ type MenuSection = {
   items: CardMenuItem[];
 };
 
-// Only validate the endpoint fields used by this page. Modifiers are not displayed.
+// Validate the endpoint fields used by this page and the customizer modal.
 type CatalogMenuItem = Pick<
   ApiMenuItem,
   | "catalogObjectId"
@@ -48,6 +48,8 @@ type CatalogMenuItem = Pick<
   | "currency"
   | "imageUrl"
   | "categories"
+  | "modifiers"
+  | "variations"
 >;
 
 type MenuLoadResult =
@@ -73,6 +75,7 @@ const preferredCategoryNames = [
   "Caffeine Free Drink",
   "Dessert & Cake",
   "Snack",
+  "Other Menu Items",
 ].map(normalizeCategoryName);
 
 // Existing presentation copy, applied only when the actual category name matches.
@@ -112,7 +115,9 @@ function isCatalogMenuItem(value: unknown): value is CatalogMenuItem {
         typeof category.id === "string" &&
         category.id.trim().length > 0 &&
         (category.name === null || typeof category.name === "string"),
-    )
+    ) &&
+    (value.modifiers === undefined || Array.isArray(value.modifiers)) &&
+    (value.variations === undefined || Array.isArray(value.variations))
   );
 }
 
@@ -158,6 +163,8 @@ function toCardItem(
     categoryId,
     categoryName,
     description: item.description?.trim() || undefined,
+    modifiers: item.modifiers || [],
+    variations: item.variations,
   };
 }
 
@@ -335,11 +342,19 @@ async function loadMenu(): Promise<MenuLoadResult> {
   }
 }
 
-export default async function MenuPage() {
-  const [content, menuResult] = await Promise.all([
+export default async function MenuPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ item?: string }>;
+}) {
+  const [resolvedParams, content, menuResult] = await Promise.all([
+    searchParams ? searchParams : Promise.resolve(undefined),
     getWebsiteContent(),
     loadMenu(),
   ]);
+
+  const initialItemId =
+    typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
 
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const sections = menuResult.ok ? menuResult.sections : [];
@@ -357,7 +372,7 @@ export default async function MenuPage() {
   );
 
   return (
-    <main className="relative isolate min-h-screen bg-[#FFF8F9] text-stone-900">
+    <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <BubbleField />
       </div>
@@ -463,36 +478,13 @@ export default async function MenuPage() {
             </p>
           </section>
         ) : (
-          <>
-            {/* Real featured-category items retain the existing special-section layout. */}
-            {specialSections.map((section) => (
-              <MenuItemsSection
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                items={section.items}
-                className="mx-auto mt-12 max-w-[1320px] lg:mt-20"
-                headingClassName={cabinSketch.className}
-                bodyClassName={montserrat.className}
-              />
-            ))}
-
-            {/* Full menu categories use the shared section renderer in a vertical grid. */}
-            {menuSections.length > 0 && (
-              <div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
-                {menuSections.map((section) => (
-                  <MenuItemsSection
-                    key={section.id}
-                    title={section.title}
-                    subtitle={section.subtitle}
-                    items={section.items}
-                    headingClassName={cabinSketch.className}
-                    bodyClassName={montserrat.className}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+          <MenuCatalog
+            specialSections={specialSections}
+            menuSections={menuSections}
+            initialItemId={initialItemId}
+            headingClassName={cabinSketch.className}
+            bodyClassName={montserrat.className}
+          />
         )}
       </div>
     </main>

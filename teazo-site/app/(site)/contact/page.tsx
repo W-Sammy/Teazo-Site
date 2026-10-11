@@ -300,7 +300,12 @@ export default async function ContactPage() {
                       className="text-[0.98rem] font-semibold uppercase tracking-[0.04em] text-stone-700 sm:text-[1rem]"
                       style={{ transform: `translateX(${hoursDayShiftPx}px)` }}
                     >
-                      {entry.day}
+                      <span>{entry.day}</span>
+                      {entry.holidayName && (
+                        <span className="ml-2 inline-block rounded-full bg-[#faebe7] px-2 py-0.5 text-xs font-semibold text-[#c0553f] normal-case tracking-normal">
+                          {entry.holidayName}
+                        </span>
+                      )}
                     </dt>
                     <dd
                       className="col-start-2 row-start-2 justify-self-start whitespace-nowrap text-left text-[0.95rem] font-semibold text-stone-700 sm:col-start-3 sm:row-start-1 sm:justify-self-end sm:text-right sm:text-[1rem]"
@@ -314,6 +319,11 @@ export default async function ContactPage() {
                   </div>
                 ))}
               </dl>
+              {hours.some((entry) => entry.isHoliday) && (
+                <p className="mt-4 text-xs font-medium text-[#c0553f]">
+                  * Special holiday hours or closures are in effect this week.
+                </p>
+              )}
             </div>
           </div>
         </section>
