@@ -299,7 +299,7 @@ function ItemCustomizerModalContent({
 
   return (
     <div
-      className="fixed inset-0 z-[100] overflow-y-auto"
+      className="fixed inset-0 z-[10060] overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}

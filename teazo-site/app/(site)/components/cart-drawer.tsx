@@ -527,7 +527,7 @@ export default function CartDrawer() {
   return createPortal(
     <>
       <div
-        className={`fixed inset-0 z-[110] overflow-hidden transition-all duration-300 ${
+        className={`fixed inset-0 z-[10050] overflow-hidden transition-all duration-300 ${
         isCartOpen ? "pointer-events-auto visible" : "pointer-events-none invisible"
       }`}
       role="dialog"
