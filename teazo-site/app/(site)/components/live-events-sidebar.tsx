@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import type { AdminEvent } from "@/app/types/admin-event";
+import EventModal from "@/app/(site)/components/event-modal";
 
 type LiveEventsSidebarProps = {
   events: AdminEvent[];
@@ -32,6 +33,7 @@ function CloseIcon() {
 export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsOpen(false), 5000);
@@ -72,7 +74,8 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                 key={event.id}
                 type="button"
                 disabled={!hasBeenOpenedByUser}
-                aria-label={`${event.name}. ${formatEventDuration(event)}`}
+                onClick={() => setSelectedEvent(event)}
+                aria-label={`${event.name}. ${formatEventDuration(event)}. View event details`}
                 className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
               >
                 <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#f4e9e4]">
@@ -94,6 +97,8 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
           </div>
         </div>
       </aside>
+
+      {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
 
       <button
         type="button"
