@@ -131,6 +131,26 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+function normalizeHolidayDate(date: string): string {
+  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
+  // values from the database as well.
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
+}
+
+function parseDisplayHour(value: string): number | undefined {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return undefined;
+  let hour = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === "PM") hour += 12;
+  return hour + Number(match[2]) / 60;
+}
+
+function parseHolidayHours(displayText: string | null) {
+  if (!displayText || !displayText.includes("-")) return {};
+  const [open, close] = displayText.split("-").map((part) => parseDisplayHour(part));
+  return open !== undefined && close !== undefined ? { start: open, end: close } : {};
+}
+
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
  */
@@ -290,8 +310,9 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       content.holidays = d1Holidays.results.map((h, i) => ({
         id: `holiday-${h.date || i}`,
         name: h.note || `Holiday`,
-        date: h.date,
+        date: normalizeHolidayDate(h.date),
         closed: h.is_closed === 1,
+        ...parseHolidayHours(h.display_text),
       }));
     }
 

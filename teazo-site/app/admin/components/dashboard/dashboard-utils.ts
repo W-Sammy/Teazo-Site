@@ -1,6 +1,6 @@
 import type { AdminEvent } from "@/app/types/admin-event";
 import type { WebsiteContent } from "@/app/types/website-content";
-import type { MenuItemMetric } from "@/app/types/dashboard";
+import type { MenuItemMetric, PageMetric } from "@/app/types/dashboard";
 
 const SHOP_TIME_ZONE = "America/Los_Angeles";
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
@@ -52,5 +52,9 @@ function shopToday() {
 }
 
 export function sortMetrics(metrics: MenuItemMetric[]) {
+  return [...metrics].sort((a, b) => b.event_count - a.event_count).slice(0, 5);
+}
+
+export function sortPageMetrics(metrics: PageMetric[]) {
   return [...metrics].sort((a, b) => b.event_count - a.event_count).slice(0, 5);
 }

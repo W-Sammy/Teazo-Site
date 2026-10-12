@@ -1,20 +1,9 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { AdminEvent } from "@/app/types/admin-event";
+import { listEvents } from "@/app/lib/queries/events";
 
 /**
- * Loads the initial events for the admin page.
- * Replace this local file read with the database/API request later.
+ * Loads the initial events for the admin page from D1.
  */
 export async function getEvents(): Promise<AdminEvent[]> {
-  const filePath = path.join(
-    process.cwd(),
-    "app",
-    "admin",
-    "events",
-    "components",
-    "sample-events.txt",
-  );
-  const contents = await readFile(filePath, "utf8");
-  return JSON.parse(contents) as AdminEvent[];
+  return listEvents();
 }

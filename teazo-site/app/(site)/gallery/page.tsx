@@ -4,6 +4,7 @@ import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
 import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicGalleryImages } from "@/app/lib/gallery";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -15,7 +16,8 @@ const cabinSketch = Cabin_Sketch({
   weight: ["400"],
 });
 
-/* Placeholder images using the TEAZO logo */
+/* Placeholder images using the TEAZO logo, shown whenever there is no
+   published image or the gallery can't be read */
 const mockImages: GalleryImage[] = [
   { id: "mock-1", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Signature Drinks" },
   { id: "mock-2", url: "/TEAZO_logo.svg", alt: "TEAZO drink", caption: "Fresh Fruit Tea" },
@@ -29,7 +31,10 @@ const mockImages: GalleryImage[] = [
 ];
 
 export default async function GalleryPage() {
-  const content = await getWebsiteContent();
+  const [content, galleryImages] = await Promise.all([
+    getWebsiteContent(),
+    getPublicGalleryImages(),
+  ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
 
   return (
@@ -61,7 +66,7 @@ export default async function GalleryPage() {
           </h1>
         </section>
 
-        <GalleryGrid images={mockImages} />
+        <GalleryGrid images={galleryImages?.length ? galleryImages : mockImages} />
       </div>
     </main>
   );
