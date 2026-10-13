@@ -48,20 +48,6 @@ const galleryViewOptions: readonly AdminViewOption<GalleryViewMode>[] = [
   },
 ];
 
-// Prefer a UUID, with a timestamp/random fallback when randomUUID is unavailable.
-function createImageId() {
-  if (
-    typeof crypto !== "undefined" &&
-    "randomUUID" in crypto
-  ) {
-    return crypto.randomUUID();
-  }
-
-  return `gallery-${Date.now()}-${Math.random()
-    .toString(16)
-    .slice(2)}`;
-}
-
 export default function AdminGalleryClient({
   initialImages,
 }: AdminGalleryClientProps) {
@@ -276,19 +262,17 @@ export default function AdminGalleryClient({
     managedObjectUrls.current.delete(url);
   }
 
-  // Update local records and preview URLs only; this is not a network upload.
-  function handleSave(
+  // Upload new images through the admin gallery API.
+  // Existing image edits remain local until their API is implemented.
+  async function handleSave(
     values: GalleryUploadValues,
-  ) {
-    let nextImages: AdminGalleryImage[];
-
+  ): Promise<void> {
     if (editingImage) {
-      // Keep the existing URL unless a replacement file was selected.
       const nextUrl = values.file
         ? createManagedObjectUrl(values.file)
         : editingImage.url;
 
-      nextImages = images.map((image) =>
+      const nextImages = images.map((image) =>
         image.id === editingImage.id
           ? {
               ...image,
@@ -300,28 +284,43 @@ export default function AdminGalleryClient({
       );
 
       if (values.file) {
-        revokeManagedObjectUrl(
-          editingImage.url,
-        );
-      }
-    } else {
-      if (!values.file) {
-        return;
+        revokeManagedObjectUrl(editingImage.url);
       }
 
-      // New records require a file and receive a local ID plus a creation timestamp.
-      const newImage: AdminGalleryImage = {
-        id: createImageId(),
-        name: values.name,
-        tags: values.tags,
-        url: createManagedObjectUrl(
-          values.file,
-        ),
-        createdAt: new Date().toISOString(),
-      };
-
-      nextImages = [newImage, ...images];
+      setImages(nextImages);
+      keepAvailableSelectedTags(nextImages);
+      closeDrawer();
+      return;
     }
+
+    if (!values.file) {
+      throw new Error("Select an image before saving.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", values.file);
+    formData.append("name", values.name);
+    formData.append("tags", JSON.stringify(values.tags));
+
+    const response = await fetch("/api/admin/gallery", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+
+      throw new Error(
+        typeof result?.error === "string"
+          ? result.error
+          : "The image could not be uploaded. Please try again.",
+      );
+    }
+
+    const savedImage =
+      (await response.json()) as AdminGalleryImage;
+
+    const nextImages = [savedImage, ...images];
 
     setImages(nextImages);
     keepAvailableSelectedTags(nextImages);
@@ -657,7 +656,7 @@ export default function AdminGalleryClient({
 
               <p className="mt-2 max-w-md text-sm text-gray-500">
                 {images.length === 0
-                  ? "Use the New Image button to add the first temporary gallery image."
+                  ? "Use the New Image button to add your first gallery image."
                   : "Try changing the photo search or clearing the selected tags."}
               </p>
 
