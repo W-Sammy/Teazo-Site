@@ -51,7 +51,7 @@ const galleryViewOptions: readonly AdminViewOption<GalleryViewMode>[] = [
 export default function AdminGalleryClient({
   initialImages,
 }: AdminGalleryClientProps) {
-  // Gallery changes are local component state only; no server persistence occurs here.
+  // Start with database images; uploads and deletions are saved through the API.
   const [images, setImages] =
     useState<AdminGalleryImage[]>(initialImages);
 
@@ -327,34 +327,52 @@ export default function AdminGalleryClient({
     closeDrawer();
   }
 
-  // Remove the confirmed record, free its local URL, and close a matching editor.
+  // Delete through the API before removing the image from the local gallery.
   async function confirmDelete(): Promise<string | null> {
     if (!imagePendingDelete) {
       return null;
     }
 
-    const nextImages = images.filter(
-      (image) =>
-        image.id !== imagePendingDelete.id,
-    );
+    const imageToDelete = imagePendingDelete;
 
-    revokeManagedObjectUrl(
-      imagePendingDelete.url,
-    );
+    try {
+      const response = await fetch(
+        `/api/admin/gallery/${encodeURIComponent(imageToDelete.id)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-    setImages(nextImages);
-    keepAvailableSelectedTags(nextImages);
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
 
-    if (
-      editingImage?.id ===
-      imagePendingDelete.id
-    ) {
-      closeDrawer();
+        return typeof result?.error === "string"
+          ? result.error
+          : "The image could not be deleted. Please try again.";
+      }
+
+      // A successful deletion returns 204, so there is no JSON body to read.
+      const nextImages = images.filter(
+        (image) => image.id !== imageToDelete.id,
+      );
+
+      revokeManagedObjectUrl(imageToDelete.url);
+
+      setImages(nextImages);
+      keepAvailableSelectedTags(nextImages);
+
+      if (editingImage?.id === imageToDelete.id) {
+        closeDrawer();
+      }
+
+      setImagePendingDelete(null);
+
+      return null;
+    } catch (error) {
+      console.error("Gallery image deletion failed:", error);
+
+      return "The image could not be deleted. Please try again.";
     }
-
-    setImagePendingDelete(null);
-
-    return null;
   }
 
   // Clear only tag matching; preserve search text, sorting, and view mode.
@@ -706,7 +724,7 @@ export default function AdminGalleryClient({
         )}
       </AdminForm>
 
-      {/* Selecting Delete opens this dialog before the local record is removed. */}
+      {/* Selecting Delete opens this dialog before the image is deleted. */}
       <DeleteImageDialog
         image={imagePendingDelete}
         onCancel={() =>
