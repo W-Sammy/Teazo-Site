@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -55,7 +54,9 @@ const galleryViewOptions: readonly AdminViewOption<GalleryViewMode>[] = [
 const MAX_BULK_DELETE_CONCURRENCY = 3;
 
 // Reuse the existing per-image endpoint for single and bulk deletion.
-async function requestImageDeletion(id: string): Promise<string | null> {
+async function requestImageDeletion(
+  id: string,
+): Promise<string | null> {
   try {
     const response = await fetch(
       `/api/admin/gallery/${encodeURIComponent(id)}`,
@@ -71,7 +72,9 @@ async function requestImageDeletion(id: string): Promise<string | null> {
       return null;
     }
 
-    const result: unknown = await response.json().catch(() => null);
+    const result: unknown = await response
+      .json()
+      .catch(() => null);
 
     if (
       typeof result === "object" &&
@@ -84,16 +87,61 @@ async function requestImageDeletion(id: string): Promise<string | null> {
 
     return `The image could not be deleted (HTTP ${response.status}). Please try again.`;
   } catch (error) {
-    console.error("Gallery image deletion request failed:", id, error);
+    console.error(
+      "Gallery image deletion request failed:",
+      id,
+      error,
+    );
 
     return "The deletion request could not be completed. Check your connection and try again.";
   }
 }
 
+function getResponseError(
+  value: unknown,
+  fallback: string,
+): string {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "error" in value &&
+    typeof value.error === "string" &&
+    value.error.trim()
+  ) {
+    return value.error;
+  }
+
+  return fallback;
+}
+
+function isAdminGalleryImage(
+  value: unknown,
+): value is AdminGalleryImage {
+  if (
+    typeof value !== "object" ||
+    value === null
+  ) {
+    return false;
+  }
+
+  const image = value as Record<string, unknown>;
+
+  return (
+    typeof image.id === "string" &&
+    typeof image.name === "string" &&
+    typeof image.url === "string" &&
+    typeof image.createdAt === "string" &&
+    Array.isArray(image.tags) &&
+    image.tags.every(
+      (tag: unknown) => typeof tag === "string",
+    )
+  );
+}
+
 export default function AdminGalleryClient({
   initialImages,
 }: AdminGalleryClientProps) {
-  // Start with database images; uploads and deletions are saved through the API.
+  // Start with database images; uploads, metadata edits and deletions use the API.
   const [images, setImages] =
     useState<AdminGalleryImage[]>(initialImages);
 
@@ -138,13 +186,18 @@ export default function AdminGalleryClient({
   ] = useState<AdminGalleryImage | null>(null);
 
   // Image selection is shared by List View and Image View.
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] =
+    useState<string[]>([]);
 
   // Freeze the confirmed targets; after a partial failure, retain only failures.
-  const [imagesPendingBulkDelete, setImagesPendingBulkDelete] =
-    useState<AdminGalleryImage[] | null>(null);
+  const [
+    imagesPendingBulkDelete,
+    setImagesPendingBulkDelete,
+  ] = useState<AdminGalleryImage[] | null>(null);
 
-  const [isMutating, setIsMutating] = useState(false);
+  const [isMutating, setIsMutating] =
+    useState(false);
+
   const mutationInFlight = useRef(false);
 
   // Repeated confirmation clicks reuse the pending operation.
@@ -158,23 +211,6 @@ export default function AdminGalleryClient({
     isMutating ||
     imagePendingDelete !== null ||
     imagesPendingBulkDelete !== null;
-
-  // These URLs belong to the gallery, separate from the upload form's preview URLs.
-  const managedObjectUrls =
-    useRef<Set<string>>(new Set());
-
-  // Release all gallery-owned blob URLs when leaving this component.
-  useEffect(() => {
-    const urls = managedObjectUrls.current;
-
-    return () => {
-      urls.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
-
-      urls.clear();
-    };
-  }, []);
 
   // Rebuild alphabetized tag counts whenever the local image collection changes.
   const tagOptions = useMemo<TagOption[]>(() => {
@@ -263,33 +299,47 @@ export default function AdminGalleryClient({
   );
 
   const selectedImages = useMemo(
-    () => images.filter((image) => selectedIdSet.has(image.id)),
+    () =>
+      images.filter((image) =>
+        selectedIdSet.has(image.id),
+      ),
     [images, selectedIdSet],
   );
 
   const allDisplayedSelected =
     filteredImages.length > 0 &&
-    filteredImages.every((image) => selectedIdSet.has(image.id));
+    filteredImages.every((image) =>
+      selectedIdSet.has(image.id),
+    );
 
-  const someDisplayedSelected = filteredImages.some((image) =>
-    selectedIdSet.has(image.id),
-  );
+  const someDisplayedSelected =
+    filteredImages.some((image) =>
+      selectedIdSet.has(image.id),
+    );
 
   function toggleImageSelection(id: string) {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
     setSelectedIds((currentIds) =>
       currentIds.includes(id)
-        ? currentIds.filter((selectedId) => selectedId !== id)
+        ? currentIds.filter(
+            (selectedId) => selectedId !== id,
+          )
         : [...currentIds, id],
     );
   }
 
   // Select/deselect only images matching the current search and tag filters.
   function selectAllDisplayed(selected: boolean) {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -299,13 +349,23 @@ export default function AdminGalleryClient({
 
     setSelectedIds((currentIds) =>
       selected
-        ? Array.from(new Set([...currentIds, ...displayedIds]))
-        : currentIds.filter((id) => !displayedIds.has(id)),
+        ? Array.from(
+            new Set([
+              ...currentIds,
+              ...displayedIds,
+            ]),
+          )
+        : currentIds.filter(
+            (id) => !displayedIds.has(id),
+          ),
     );
   }
 
   function clearImageSelection() {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -314,8 +374,13 @@ export default function AdminGalleryClient({
 
   // Clear selection when the matching criteria change, so hidden images
   // are not accidentally included in a later bulk deletion.
-  function changeSearch(event: ChangeEvent<HTMLInputElement>) {
-    if (mutationInFlight.current || interactionLocked) {
+  function changeSearch(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -325,7 +390,10 @@ export default function AdminGalleryClient({
 
   // Toggle one tag without mutating the existing selected-tags array.
   function toggleTag(tagName: string) {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -365,7 +433,10 @@ export default function AdminGalleryClient({
 
   // Explicitly reset edit mode before opening the create form.
   function openNewImageDrawer() {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -377,7 +448,10 @@ export default function AdminGalleryClient({
   function openEditDrawer(
     image: AdminGalleryImage,
   ) {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -385,97 +459,125 @@ export default function AdminGalleryClient({
     setDrawerOpen(true);
   }
 
-  // Keep a saved local preview alive after the upload form unmounts.
-  function createManagedObjectUrl(file: File) {
-    const url = URL.createObjectURL(file);
-
-    managedObjectUrls.current.add(url);
-
-    return url;
-  }
-
-  // Revoke only URLs created here; leave supplied asset and remote URLs untouched.
-  function revokeManagedObjectUrl(
-    url: string,
-  ) {
-    if (!managedObjectUrls.current.has(url)) {
-      return;
-    }
-
-    URL.revokeObjectURL(url);
-    managedObjectUrls.current.delete(url);
-  }
-
-  // Upload new images through the admin gallery API.
-  // Existing image edits remain local until their API is implemented.
+  // New images use POST; metadata edits use PATCH for the existing image ID.
+  // Update the gallery only after receiving the server's saved record.
   async function handleSave(
     values: GalleryUploadValues,
   ): Promise<void> {
-    if (mutationInFlight.current || interactionLocked) {
-      throw new Error("Wait for the current gallery action to finish.");
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
+      throw new Error(
+        "Wait for the current gallery action to finish.",
+      );
+    }
+
+    const imageBeingEdited = editingImage;
+
+    // Keep the control visible, but never pretend a replacement was saved.
+    if (imageBeingEdited && values.file) {
+      throw new Error(
+        "Image replacement is not connected yet. Cancel and reopen this editor, then change only the name and tags.",
+      );
+    }
+
+    if (!imageBeingEdited && !values.file) {
+      throw new Error(
+        "Select an image before saving.",
+      );
     }
 
     mutationInFlight.current = true;
     setIsMutating(true);
 
     try {
-      if (editingImage) {
-        const nextUrl = values.file
-          ? createManagedObjectUrl(values.file)
-          : editingImage.url;
+      const formData = new FormData();
 
+      formData.append("name", values.name);
+      formData.append(
+        "tags",
+        JSON.stringify(values.tags),
+      );
+
+      if (values.file) {
+        formData.append("file", values.file);
+      }
+
+      const endpoint = imageBeingEdited
+        ? `/api/admin/gallery/${encodeURIComponent(imageBeingEdited.id)}`
+        : "/api/admin/gallery";
+
+      let response: Response;
+
+      try {
+        response = await fetch(endpoint, {
+          method: imageBeingEdited
+            ? "PATCH"
+            : "POST",
+          body: formData,
+          credentials: "same-origin",
+          redirect: "error",
+        });
+      } catch {
+        throw new Error(
+          "The save could not be confirmed. Check your connection and refresh the gallery before trying again.",
+        );
+      }
+
+      const result: unknown = await response
+        .json()
+        .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          getResponseError(
+            result,
+            "The image could not be saved. Please try again.",
+          ),
+        );
+      }
+
+      if (
+        !isAdminGalleryImage(result) ||
+        (
+          imageBeingEdited !== null &&
+          result.id !== imageBeingEdited.id
+        )
+      ) {
+        throw new Error(
+          "The server's saved image could not be confirmed. Refresh the gallery before trying again.",
+        );
+      }
+
+      const savedImage = result;
+
+      if (imageBeingEdited) {
         const nextImages = images.map((image) =>
-          image.id === editingImage.id
-            ? {
-                ...image,
-                name: values.name,
-                tags: values.tags,
-                url: nextUrl,
-              }
+          image.id === savedImage.id
+            ? savedImage
             : image,
         );
 
-        if (values.file) {
-          revokeManagedObjectUrl(editingImage.url);
-        }
-
-        setImages(nextImages);
-        keepAvailableSelectedTags(nextImages);
-        closeDrawer();
-        return;
-      }
-
-      if (!values.file) {
-        throw new Error("Select an image before saving.");
-      }
-
-      const formData = new FormData();
-      formData.append("file", values.file);
-      formData.append("name", values.name);
-      formData.append("tags", JSON.stringify(values.tags));
-
-      const response = await fetch("/api/admin/gallery", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const result = await response.json().catch(() => null);
-
-        throw new Error(
-          typeof result?.error === "string"
-            ? result.error
-            : "The image could not be uploaded. Please try again.",
+        setImages((currentImages) =>
+          currentImages.map((image) =>
+            image.id === savedImage.id
+              ? savedImage
+              : image,
+          ),
         );
+
+        keepAvailableSelectedTags(nextImages);
+
+        // Edited names/tags can change which images match the current filter.
+        // Clear bulk selection rather than leaving hidden images selected.
+        setSelectedIds([]);
+      } else {
+        setImages((currentImages) => [
+          savedImage,
+          ...currentImages,
+        ]);
       }
-
-      const savedImage =
-        (await response.json()) as AdminGalleryImage;
-
-      setImages((currentImages) => [
-        savedImage,
-        ...currentImages,
-      ]);
 
       closeDrawer();
     } finally {
@@ -501,10 +603,6 @@ export default function AdminGalleryClient({
       (image) => !deletedIds.has(image.id),
     );
 
-    deletedImages.forEach((image) => {
-      revokeManagedObjectUrl(image.url);
-    });
-
     setImages((currentImages) =>
       currentImages.filter(
         (image) => !deletedIds.has(image.id),
@@ -514,10 +612,15 @@ export default function AdminGalleryClient({
     keepAvailableSelectedTags(nextImages);
 
     setSelectedIds((currentIds) =>
-      currentIds.filter((id) => !deletedIds.has(id)),
+      currentIds.filter(
+        (id) => !deletedIds.has(id),
+      ),
     );
 
-    if (editingImage && deletedIds.has(editingImage.id)) {
+    if (
+      editingImage &&
+      deletedIds.has(editingImage.id)
+    ) {
       closeDrawer();
     }
   }
@@ -525,7 +628,10 @@ export default function AdminGalleryClient({
   function openSingleDeleteDialog(
     image: AdminGalleryImage,
   ) {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -547,9 +653,10 @@ export default function AdminGalleryClient({
     setIsMutating(true);
 
     try {
-      const errorMessage = await requestImageDeletion(
-        imageToDelete.id,
-      );
+      const errorMessage =
+        await requestImageDeletion(
+          imageToDelete.id,
+        );
 
       if (errorMessage) {
         return errorMessage;
@@ -600,7 +707,9 @@ export default function AdminGalleryClient({
       return;
     }
 
-    setImagesPendingBulkDelete([...selectedImages]);
+    setImagesPendingBulkDelete([
+      ...selectedImages,
+    ]);
   }
 
   function cancelBulkDelete() {
@@ -637,7 +746,8 @@ export default function AdminGalleryClient({
         const results = await Promise.all(
           batch.map(async (image) => ({
             image,
-            errorMessage: await requestImageDeletion(image.id),
+            errorMessage:
+              await requestImageDeletion(image.id),
           })),
         );
 
@@ -661,7 +771,9 @@ export default function AdminGalleryClient({
       // Keep failures visible and selected. Retrying this dialog sends
       // requests only for these remaining images, not prior successes.
       setImagesPendingBulkDelete(
-        failedImages.length > 0 ? failedImages : null,
+        failedImages.length > 0
+          ? failedImages
+          : null,
       );
 
       return {
@@ -711,7 +823,10 @@ export default function AdminGalleryClient({
 
   // Clear only tag matching; preserve search text, sorting, and view mode.
   function clearTagFilters() {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -721,7 +836,10 @@ export default function AdminGalleryClient({
 
   // Reset search as well as tags, without changing presentation preferences.
   function clearAllSearchAndFilters() {
-    if (mutationInFlight.current || interactionLocked) {
+    if (
+      mutationInFlight.current ||
+      interactionLocked
+    ) {
       return;
     }
 
@@ -983,7 +1101,9 @@ export default function AdminGalleryClient({
                   interactionLocked
                 }
                 onChange={(event) =>
-                  selectAllDisplayed(event.target.checked)
+                  selectAllDisplayed(
+                    event.target.checked,
+                  )
                 }
                 ref={(element) => {
                   if (element) {
@@ -1035,11 +1155,6 @@ export default function AdminGalleryClient({
               Delete selected ({selectedImages.length})
             </button>
           </div>
-
-          <p className="mt-2 text-xs text-gray-500">
-            Selection stays when switching views or sorting.
-            Changing search or tag filters clears the selection.
-          </p>
         </div>
 
         {/* Gallery content */}

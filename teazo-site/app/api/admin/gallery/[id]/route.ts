@@ -1,7 +1,11 @@
-
 import { requireAdminApi } from "@/app/lib/admin";
 import { D1Error } from "@/app/lib/d1";
-import { removeGalleryImage } from "@/app/lib/gallery";
+import {
+  editGalleryImageMetadata,
+  GalleryInputError,
+  removeGalleryImage,
+} from "@/app/lib/gallery";
+import { MediaError } from "@/app/lib/media";
 
 export const runtime = "nodejs";
 
@@ -18,6 +22,152 @@ function errorResponse(
       },
     },
   );
+}
+
+/**
+ * Stage 1: update the name and complete tag list of an existing image.
+ * File replacement is deliberately rejected until Stage 2 is connected.
+ */
+export async function PATCH(
+  request: Request,
+  context: {
+    params: Promise<{ id: string }>;
+  },
+): Promise<Response> {
+  // Gallery write access: role 1 or 2, with the existing same-origin guard.
+  const access = await requireAdminApi(request, 2);
+
+  if (!access.ok) {
+    return access.response;
+  }
+
+  try {
+    const { id } = await context.params;
+
+    if (!id?.trim()) {
+      return errorResponse(
+        "An image ID is required.",
+        400,
+      );
+    }
+
+    const contentType =
+      request.headers.get("content-type") ?? "";
+
+    if (
+      !contentType
+        .toLowerCase()
+        .startsWith("multipart/form-data")
+    ) {
+      return errorResponse(
+        "Send image edits as form data.",
+        415,
+      );
+    }
+
+    let formData: FormData;
+
+    try {
+      formData = await request.formData();
+    } catch {
+      return errorResponse(
+        "The image edit request could not be read.",
+        400,
+      );
+    }
+
+    if (formData.has("file")) {
+      return errorResponse(
+        "Image replacement is not connected yet. Reopen the editor and change only the name and tags.",
+        400,
+      );
+    }
+
+    if (
+      formData.getAll("name").length !== 1 ||
+      formData.getAll("tags").length !== 1
+    ) {
+      return errorResponse(
+        "Provide one image name and one tag list.",
+        400,
+      );
+    }
+
+    const rawTags = formData.get("tags");
+
+    if (typeof rawTags !== "string") {
+      return errorResponse(
+        "The image tags must be a JSON list.",
+        400,
+      );
+    }
+
+    let tags: unknown;
+
+    try {
+      tags = JSON.parse(rawTags);
+    } catch {
+      return errorResponse(
+        "The image tags must be a valid JSON list.",
+        400,
+      );
+    }
+
+    const image = await editGalleryImageMetadata({
+      id,
+      name: formData.get("name"),
+      tags,
+    });
+
+    return Response.json(image, {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    if (error instanceof GalleryInputError) {
+      return errorResponse(
+        error.message,
+        error.status,
+      );
+    }
+
+    if (error instanceof D1Error) {
+      console.error(
+        "Gallery metadata update failed:",
+        error,
+      );
+
+      // A lost response can leave the database outcome unknown.
+      return errorResponse(
+        "The update could not be confirmed. Refresh the gallery to check the saved values before trying again.",
+        503,
+      );
+    }
+
+    if (error instanceof MediaError) {
+      console.error(
+        "Gallery image URL configuration failed:",
+        error,
+      );
+
+      return errorResponse(
+        "The gallery image service is temporarily unavailable.",
+        503,
+      );
+    }
+
+    console.error(
+      "Unexpected gallery metadata update failure:",
+      error,
+    );
+
+    return errorResponse(
+      "The update could not be confirmed. Refresh the gallery before trying again.",
+      500,
+    );
+  }
 }
 
 /**

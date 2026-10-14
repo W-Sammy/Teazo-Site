@@ -1,5 +1,5 @@
 /**
- * Gallery images: storing, listing and removing them.
+ * Gallery images: storing, listing, editing and removing them.
  *
  * The public gallery page calls getPublicGalleryImages(), and the rest are for
  * the admin gallery's routes. The SQL is in queries/gallery.ts and file storage
@@ -26,15 +26,23 @@ import {
   MAX_GALLERY_TAGS,
   normalizeTag,
   recordGalleryImage,
+  updateGalleryImageMetadata,
   type GalleryImageRecord,
 } from "@/app/lib/queries/gallery";
 import type { AdminGalleryImage } from "@/app/types/gallery-image";
 
 /** Upload types the admin can send. Every image is stored as WebP. */
-const UPLOAD_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const UPLOAD_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
 const MAX_NAME_LENGTH = 120;
+
 /** Matches the admin gallery form. */
 const MAX_TAG_LENGTH = 30;
+
 /** Longest side after resizing. A phone photo comes out at a few hundred KB. */
 const MAX_SIDE = 2000;
 
@@ -50,34 +58,64 @@ export class GalleryInputError extends Error {
 }
 
 function cleanName(value: unknown): string {
-  const name = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
-  if (!name) throw new GalleryInputError("Give the image a name.");
-  if (name.length > MAX_NAME_LENGTH) {
-    throw new GalleryInputError(`Keep the name to ${MAX_NAME_LENGTH} characters or fewer.`);
+  const name =
+    typeof value === "string"
+      ? value.trim().replace(/\s+/g, " ")
+      : "";
+
+  if (!name) {
+    throw new GalleryInputError("Give the image a name.");
   }
+
+  if (name.length > MAX_NAME_LENGTH) {
+    throw new GalleryInputError(
+      `Keep the name to ${MAX_NAME_LENGTH} characters or fewer.`,
+    );
+  }
+
   return name;
 }
 
 function cleanTags(values: unknown): string[] {
-  if (!Array.isArray(values)) throw new GalleryInputError("Tags must be a list.");
+  if (!Array.isArray(values)) {
+    throw new GalleryInputError("Tags must be a list.");
+  }
+
   const tags = new Map<string, string>();
+
   for (const value of values) {
-    if (typeof value !== "string") throw new GalleryInputError("Each tag must be text.");
-    const tag = value.trim().replace(/\s+/g, " ");
-    if (!tag) continue;
-    if (tag.length > MAX_TAG_LENGTH) {
-      throw new GalleryInputError(`Keep each tag to ${MAX_TAG_LENGTH} characters or fewer.`);
+    if (typeof value !== "string") {
+      throw new GalleryInputError("Each tag must be text.");
     }
+
+    const tag = value.trim().replace(/\s+/g, " ");
+
+    if (!tag) continue;
+
+    if (tag.length > MAX_TAG_LENGTH) {
+      throw new GalleryInputError(
+        `Keep each tag to ${MAX_TAG_LENGTH} characters or fewer.`,
+      );
+    }
+
     // "Milk Tea" and "milk  tea" are the same tag. The first spelling wins.
-    if (!tags.has(normalizeTag(tag))) tags.set(normalizeTag(tag), tag);
+    if (!tags.has(normalizeTag(tag))) {
+      tags.set(normalizeTag(tag), tag);
+    }
   }
+
   if (tags.size > MAX_GALLERY_TAGS) {
-    throw new GalleryInputError(`You can add up to ${MAX_GALLERY_TAGS} tags.`);
+    throw new GalleryInputError(
+      `You can add up to ${MAX_GALLERY_TAGS} tags.`,
+    );
   }
+
   return [...tags.values()];
 }
 
-function toAdminImage(image: GalleryImageRecord): AdminGalleryImage {
+function toAdminImage(
+  image: GalleryImageRecord,
+): AdminGalleryImage {
   return {
     id: image.id,
     name: image.name,
@@ -91,18 +129,30 @@ function toAdminImage(image: GalleryImageRecord): AdminGalleryImage {
 // free storage from filling up. rotate() applies the phone's orientation.
 async function toWebp(file: File) {
   try {
-    return await sharp(Buffer.from(await file.arrayBuffer()))
+    return await sharp(
+      Buffer.from(await file.arrayBuffer()),
+    )
       .rotate()
-      .resize({ width: MAX_SIDE, height: MAX_SIDE, fit: "inside", withoutEnlargement: true })
+      .resize({
+        width: MAX_SIDE,
+        height: MAX_SIDE,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
       .webp({ quality: 82 })
       .toBuffer({ resolveWithObject: true });
   } catch {
-    throw new GalleryInputError("That file couldn't be read as an image.", 415);
+    throw new GalleryInputError(
+      "That file couldn't be read as an image.",
+      415,
+    );
   }
 }
 
 /** Every live image, as the admin gallery lists them. */
-export async function getAdminGalleryImages(): Promise<AdminGalleryImage[]> {
+export async function getAdminGalleryImages(): Promise<
+  AdminGalleryImage[]
+> {
   return (await listGalleryImages()).map(toAdminImage);
 }
 
@@ -121,14 +171,25 @@ export async function saveGalleryImage(input: {
   const name = cleanName(input.name);
   const tags = cleanTags(input.tags);
   const file = input.file;
+
   if (!(file instanceof File) || file.size === 0) {
-    throw new GalleryInputError("Choose an image to upload.");
+    throw new GalleryInputError(
+      "Choose an image to upload.",
+    );
   }
+
   if (!UPLOAD_TYPES.has(file.type)) {
-    throw new GalleryInputError("Upload a JPEG, PNG or WebP image.", 415);
+    throw new GalleryInputError(
+      "Upload a JPEG, PNG or WebP image.",
+      415,
+    );
   }
+
   if (file.size > MAX_MEDIA_BYTES) {
-    throw new GalleryInputError("The image is over 10 MB.", 413);
+    throw new GalleryInputError(
+      "The image is over 10 MB.",
+      413,
+    );
   }
 
   const resized = await toWebp(file);
@@ -139,9 +200,14 @@ export async function saveGalleryImage(input: {
   const url = toPublicUrl(key);
 
   // Store the bytes first, so a failure never leaves rows pointing at nothing.
-  const stored = await putMedia(key, resized.data, "image/webp");
+  const stored = await putMedia(
+    key,
+    resized.data,
+    "image/webp",
+  );
 
   const imageId = crypto.randomUUID();
+
   try {
     await recordGalleryImage({
       imageId,
@@ -159,11 +225,20 @@ export async function saveGalleryImage(input: {
     // The database refused the rows, so nothing points at the file: remove it
     // now, or it counts toward the storage cap forever. With no status the
     // outcome is unknown, so leave it rather than risk rows with no file.
-    if (error instanceof D1Error && error.status !== undefined && error.status < 500) {
+    if (
+      error instanceof D1Error &&
+      error.status !== undefined &&
+      error.status < 500
+    ) {
       await deleteMediaNow(stored.key).catch((cleanup) => {
-        console.error("Could not remove a gallery file the database refused:", stored.key, cleanup);
+        console.error(
+          "Could not remove a gallery file the database refused:",
+          stored.key,
+          cleanup,
+        );
       });
     }
+
     throw error;
   }
 
@@ -172,11 +247,74 @@ export async function saveGalleryImage(input: {
   // saved either way, so a failed read must not look like a failed upload.
   try {
     const image = await getGalleryImage(imageId);
-    if (image) return toAdminImage(image);
+
+    if (image) {
+      return toAdminImage(image);
+    }
   } catch (error) {
-    console.warn("Saved a gallery image but could not read it back:", imageId, error);
+    console.warn(
+      "Saved a gallery image but could not read it back:",
+      imageId,
+      error,
+    );
   }
-  return { id: imageId, name, url, tags, createdAt: new Date().toISOString() };
+
+  return {
+    id: imageId,
+    name,
+    url,
+    tags,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Persist name and tag edits without changing the stored image file.
+ * Call only after requireAdminApi(request, 2).
+ */
+export async function editGalleryImageMetadata(input: {
+  id: string;
+  name: unknown;
+  tags: unknown;
+}): Promise<AdminGalleryImage> {
+  const id = input.id.trim();
+
+  if (!id) {
+    throw new GalleryInputError(
+      "An image ID is required.",
+    );
+  }
+
+  const name = cleanName(input.name);
+  const tags = cleanTags(input.tags);
+  const existingImage = await getGalleryImage(id);
+
+  if (!existingImage) {
+    throw new GalleryInputError(
+      "The gallery image was not found.",
+      404,
+    );
+  }
+
+  // Validate URL configuration before changing database records.
+  toPublicUrl(existingImage.r2Key);
+
+  const updatedImage = await updateGalleryImageMetadata({
+    id,
+    name,
+    tags,
+  });
+
+  // The image could have been deleted after the initial read. The query
+  // guards its writes again inside the transaction and returns null then.
+  if (!updatedImage) {
+    throw new GalleryInputError(
+      "The gallery image was not found.",
+      404,
+    );
+  }
+
+  return toAdminImage(updatedImage);
 }
 
 /**
@@ -184,7 +322,9 @@ export async function saveGalleryImage(input: {
  * Returns false when there is no such image. Call only after
  * requireAdminApi(request, 2).
  */
-export async function removeGalleryImage(id: string): Promise<boolean> {
+export async function removeGalleryImage(
+  id: string,
+): Promise<boolean> {
   return deleteGalleryImage(id);
 }
 
@@ -203,21 +343,31 @@ let warnedAboutGallery = false;
  * for example on a machine without the Worker running. The page then shows
  * its placeholder images instead of failing.
  */
-export async function getPublicGalleryImages(): Promise<PublicGalleryImage[] | null> {
+export async function getPublicGalleryImages(): Promise<
+  PublicGalleryImage[] | null
+> {
   try {
-    return (await listPublishedGalleryImages()).map((image) => ({
-      id: image.id,
-      url: toPublicUrl(image.r2Key),
-      alt: image.alt || image.name,
-      caption: image.caption || image.name,
-    }));
+    return (await listPublishedGalleryImages()).map(
+      (image) => ({
+        id: image.id,
+        url: toPublicUrl(image.r2Key),
+        alt: image.alt || image.name,
+        caption: image.caption || image.name,
+      }),
+    );
   } catch (error) {
     // Let Next.js's "render this page on every request" signal through.
     unstable_rethrow(error);
+
     if (!warnedAboutGallery) {
       warnedAboutGallery = true;
-      console.warn("Could not load gallery images, showing the placeholders:", error);
+
+      console.warn(
+        "Could not load gallery images, showing the placeholders:",
+        error,
+      );
     }
+
     return null;
   }
 }
