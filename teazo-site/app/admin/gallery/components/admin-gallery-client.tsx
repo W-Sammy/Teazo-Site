@@ -842,6 +842,58 @@ export default function AdminGalleryClient({
 
   return (
     <div className="relative flex h-dvh w-full min-w-0 overflow-hidden bg-white">
+      {/* Only compact phone-landscape viewports receive these layout overrides. */}
+      <style jsx global>{`
+        @media (orientation: landscape) and (min-width: 650px) and (max-width: 1023px) and (max-height: 600px) {
+          .gallery-landscape-toolbar {
+            padding: 8px 12px;
+          }
+          .gallery-landscape-primary,
+          .gallery-landscape-search-view {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+          }
+          .gallery-landscape-primary {
+            justify-content: space-between;
+          }
+          .gallery-landscape-search-view {
+            flex: 1 1 auto;
+            min-width: 0;
+          }
+          .gallery-landscape-search {
+            width: auto;
+            flex: 1 1 200px;
+            min-width: 0;
+          }
+          .gallery-landscape-view {
+            flex: 0 0 auto;
+            align-self: center;
+          }
+          .gallery-landscape-new {
+            width: auto;
+            margin: 0;
+            padding: 8px 12px;
+            align-self: center;
+          }
+          .gallery-landscape-bulk {
+            margin-top: 8px;
+            padding-top: 8px;
+            gap: 8px 12px;
+            flex-wrap: nowrap;
+          }
+          .gallery-landscape-bulk > label {
+            white-space: nowrap;
+          }
+          .gallery-landscape-delete {
+            width: auto;
+            margin-left: auto;
+            padding: 8px 12px;
+            white-space: nowrap;
+          }
+        }
+      `}</style>
+
       {/* Darkened background behind the mobile filter drawer. */}
       {mobileFiltersOpen && (
         <button
@@ -849,7 +901,7 @@ export default function AdminGalleryClient({
           onClick={() =>
             setMobileFiltersOpen(false)
           }
-          className="absolute inset-0 z-30 bg-black/30 md:hidden"
+          className="absolute inset-0 z-30 bg-black/30 lg:hidden"
           aria-label="Close gallery filters"
         />
       )}
@@ -857,22 +909,22 @@ export default function AdminGalleryClient({
       {/* Filter panel */}
       <aside
         id="gallery-filter-panel"
-        className={`absolute inset-y-0 left-0 z-40 h-full w-64 max-w-[calc(100%-1rem)] overflow-y-auto border-r border-[#dbb082] bg-white p-4 shadow-xl transition-transform duration-300 md:static md:z-auto md:max-w-none md:shrink-0 md:translate-x-0 md:shadow-none md:transition-all ${
+        className={`absolute inset-y-0 left-0 z-40 h-full w-64 max-w-[calc(100%-1rem)] overflow-y-auto border-r border-[#dbb082] bg-white p-4 shadow-xl transition-transform duration-300 lg:static lg:z-auto lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:shadow-none lg:transition-all ${
           mobileFiltersOpen
             ? "translate-x-0"
             : "-translate-x-full"
         } ${
           filtersOpen
-            ? "md:w-52 md:p-4"
-            : "md:w-11 md:p-2"
+            ? "lg:w-52 lg:p-4"
+            : "lg:w-11 lg:p-2"
         }`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2
             className={`font-semibold ${
               filtersOpen
-                ? "md:block"
-                : "md:hidden"
+                ? "lg:block"
+                : "lg:hidden"
             }`}
           >
             Filters
@@ -884,7 +936,7 @@ export default function AdminGalleryClient({
             onClick={() =>
               setMobileFiltersOpen(false)
             }
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded text-xl font-bold hover:bg-gray-100 md:hidden"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded text-xl font-bold hover:bg-gray-100 lg:hidden"
             aria-label="Close filters"
             title="Close filters"
           >
@@ -899,7 +951,7 @@ export default function AdminGalleryClient({
                 (isOpen) => !isOpen,
               )
             }
-            className="hidden cursor-pointer rounded px-2 py-1 text-lg font-bold hover:bg-gray-100 md:inline-flex"
+            className="hidden cursor-pointer rounded px-2 py-1 text-lg font-bold hover:bg-gray-100 lg:inline-flex"
             aria-label={
               filtersOpen
                 ? "Collapse filters"
@@ -918,8 +970,8 @@ export default function AdminGalleryClient({
         <div
           className={`space-y-3 ${
             filtersOpen
-              ? "md:block"
-              : "md:hidden"
+              ? "lg:block"
+              : "lg:hidden"
           }`}
         >
           {/* Gallery sorting */}
@@ -1027,17 +1079,17 @@ export default function AdminGalleryClient({
       {/* Main gallery area */}
       <section className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         {/* Toolbar */}
-        <div className="shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
-          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center">
-              <div className="flex w-full min-w-0 items-center gap-2 lg:min-w-40 lg:max-w-64 lg:flex-1">
+        <div className="gallery-landscape-toolbar shrink-0 border-b border-[#dbb082] p-3 sm:p-4">
+          <div className="gallery-landscape-primary flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="gallery-landscape-search-view flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:flex-nowrap lg:items-center">
+              <div className="gallery-landscape-search flex w-full min-w-0 items-center gap-2 lg:min-w-40 lg:max-w-64 lg:flex-1">
                 {/* Mobile filter button */}
                 <button
                   type="button"
                   onClick={() =>
                     setMobileFiltersOpen(true)
                   }
-                  className="shrink-0 cursor-pointer rounded-lg border border-[#dbb082] px-3 py-2 text-sm font-semibold text-[#9b6d43] hover:bg-[#fffaf6] md:hidden"
+                  className="shrink-0 cursor-pointer rounded-lg border border-[#dbb082] px-3 py-2 text-sm font-semibold text-[#9b6d43] hover:bg-[#fffaf6] lg:hidden"
                   aria-controls="gallery-filter-panel"
                   aria-expanded={mobileFiltersOpen}
                 >
@@ -1069,7 +1121,7 @@ export default function AdminGalleryClient({
                   }
                 }}
                 ariaLabel="Gallery view"
-                className="max-w-full self-start lg:self-auto"
+                className="gallery-landscape-view max-w-full self-start lg:self-auto"
               />
             </div>
 
@@ -1077,14 +1129,14 @@ export default function AdminGalleryClient({
               type="button"
               onClick={openNewImageDrawer}
               disabled={interactionLocked}
-              className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-end lg:ml-4 lg:self-auto"
+              className="gallery-landscape-new inline-flex w-full shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-end lg:ml-4 lg:self-auto"
             >
               New Image +
             </button>
           </div>
 
           {/* Shared bulk-selection controls for both gallery views. */}
-          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#dbb082]/40 pt-3">
+          <div className="gallery-landscape-bulk mt-3 flex flex-wrap items-center gap-3 border-t border-[#dbb082]/40 pt-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
                 type="checkbox"
@@ -1143,7 +1195,7 @@ export default function AdminGalleryClient({
                   ? "Close the image form before deleting selected images."
                   : undefined
               }
-              className="w-full cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-auto sm:w-auto"
+              className="gallery-landscape-delete w-full cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-auto sm:w-auto"
             >
               Delete selected ({selectedImages.length})
             </button>
