@@ -4,6 +4,7 @@ import {
   editGalleryImageMetadata,
   GalleryInputError,
   removeGalleryImage,
+  replaceGalleryImage,
 } from "@/app/lib/gallery";
 import { MediaError } from "@/app/lib/media";
 
@@ -25,8 +26,7 @@ function errorResponse(
 }
 
 /**
- * Stage 1: update the name and complete tag list of an existing image.
- * File replacement is deliberately rejected until Stage 2 is connected.
+ * Update image metadata, optionally replacing its stored file.
  */
 export async function PATCH(
   request: Request,
@@ -76,13 +76,6 @@ export async function PATCH(
       );
     }
 
-    if (formData.has("file")) {
-      return errorResponse(
-        "Image replacement is not connected yet. Reopen the editor and change only the name and tags.",
-        400,
-      );
-    }
-
     if (
       formData.getAll("name").length !== 1 ||
       formData.getAll("tags").length !== 1
@@ -113,11 +106,21 @@ export async function PATCH(
       );
     }
 
-    const image = await editGalleryImageMetadata({
-      id,
-      name: formData.get("name"),
-      tags,
-    });
+    if (formData.getAll("file").length > 1) {
+      return errorResponse("Provide only one replacement file.", 400);
+    }
+    const file = formData.get("file");
+    if (file !== null && !(file instanceof File)) {
+      return errorResponse("The replacement must be an image file.", 400);
+    }
+    const image = file
+      ? await replaceGalleryImage({
+          id, name: formData.get("name"), tags, file,
+          adminId: access.admin.id,
+        })
+      : await editGalleryImageMetadata({
+          id, name: formData.get("name"), tags,
+        });
 
     return Response.json(image, {
       status: 200,

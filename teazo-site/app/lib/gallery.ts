@@ -26,6 +26,7 @@ import {
   MAX_GALLERY_TAGS,
   normalizeTag,
   recordGalleryImage,
+  replaceGalleryImageMedia,
   updateGalleryImageMetadata,
   type GalleryImageRecord,
 } from "@/app/lib/queries/gallery";
@@ -315,6 +316,63 @@ export async function editGalleryImageMetadata(input: {
   }
 
   return toAdminImage(updatedImage);
+}
+
+/** Replace an existing gallery image file, preserving its image ID and metadata. */
+export async function replaceGalleryImage(input: {
+  id: string;
+  file: unknown;
+  name: unknown;
+  tags: unknown;
+  adminId: string;
+}): Promise<AdminGalleryImage> {
+  const id = input.id.trim();
+  if (!id) throw new GalleryInputError('An image ID is required.');
+  const name = cleanName(input.name);
+  const tags = cleanTags(input.tags);
+  const file = input.file;
+  if (!(file instanceof File) || file.size === 0) {
+    throw new GalleryInputError('Choose a replacement image.');
+  }
+  if (!UPLOAD_TYPES.has(file.type)) {
+    throw new GalleryInputError('Upload a JPEG, PNG or WebP image.', 415);
+  }
+  if (file.size > MAX_MEDIA_BYTES) {
+    throw new GalleryInputError('The image is over 10 MB.', 413);
+  }
+  const original = await getGalleryImage(id);
+  if (!original) throw new GalleryInputError('The gallery image was not found.', 404);
+
+  const resized = await toWebp(file);
+  const key = mintKey('gallery', 'webp');
+  toPublicUrl(key); // Fail before upload if public URL configuration is missing.
+  const stored = await putMedia(key, resized.data, 'image/webp');
+  let saved: GalleryImageRecord | null;
+  try {
+    saved = await replaceGalleryImageMedia({
+      id, expectedMediaId: original.mediaId,
+      newMediaId: crypto.randomUUID(), stored,
+      width: resized.info.width, height: resized.info.height,
+      originalFilename: file.name, adminId: input.adminId,
+      name, tags,
+    });
+  } catch (error) {
+    // A definite 4xx rejection cannot have committed. On transport/5xx
+    // uncertainty leave the uploaded file in place for reconciliation.
+    if (error instanceof D1Error && error.status !== undefined && error.status < 500) {
+      await deleteMediaNow(stored.key).catch((cleanup) =>
+        console.error('Could not clean up rejected replacement:', stored.key, cleanup));
+    }
+    throw error;
+  }
+  if (!saved) {
+    // Another edit or deletion won the race; this upload was never linked.
+    await deleteMediaNow(stored.key).catch((cleanup) =>
+      console.error('Could not clean up stale replacement:', stored.key, cleanup));
+    throw new GalleryInputError(
+      'This image changed while you were editing. Refresh the gallery and try again.', 409);
+  }
+  return toAdminImage(saved);
 }
 
 /**

@@ -475,13 +475,6 @@ export default function AdminGalleryClient({
 
     const imageBeingEdited = editingImage;
 
-    // Keep the control visible, but never pretend a replacement was saved.
-    if (imageBeingEdited && values.file) {
-      throw new Error(
-        "Image replacement is not connected yet. Cancel and reopen this editor, then change only the name and tags.",
-      );
-    }
-
     if (!imageBeingEdited && !values.file) {
       throw new Error(
         "Select an image before saving.",

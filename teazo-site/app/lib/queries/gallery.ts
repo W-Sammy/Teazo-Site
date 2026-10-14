@@ -11,6 +11,8 @@ export type GalleryImageRecord = {
   isPublished: boolean;
   createdAt: string;
   r2Key: string;
+  mediaId: string;
+  r2Bucket: string;
   width: number | null;
   height: number | null;
   tags: string[];
@@ -27,6 +29,8 @@ type ImageRow = {
   is_published: number;
   created_at: string;
   r2_key: string;
+  media_id: string;
+  r2_bucket: string;
   width: number | null;
   height: number | null;
   tags: string;
@@ -35,6 +39,7 @@ type ImageRow = {
 // Tags come back as a JSON array, sorted, so one query returns everything.
 const IMAGE_SELECT = `
   SELECT g.id, g.name, g.caption, g.alt, g.is_published, g.created_at,
+         g.media_id, m.r2_bucket,
          m.r2_key, m.width, m.height,
          (SELECT json_group_array(name) FROM (
             SELECT t.name
@@ -56,6 +61,8 @@ function toRecord(row: ImageRow): GalleryImageRecord {
     isPublished: row.is_published === 1,
     createdAt: row.created_at,
     r2Key: row.r2_key,
+    mediaId: row.media_id,
+    r2Bucket: row.r2_bucket,
     width: row.width,
     height: row.height,
     tags: JSON.parse(row.tags) as string[],
@@ -271,6 +278,167 @@ export async function updateGalleryImageMetadata(input: {
   const row = readResult.results[0];
 
   return row ? toRecord(row) : null;
+}
+
+/**
+ * Atomically swap a live gallery image to a newly uploaded media object.
+ * All writes, including the old-file cleanup queue, are one D1 transaction.
+ * The old media ID guards against another replacement changing that reference.
+ * If another replacement or deletion won, no media record is created and
+ * null is returned.
+ */
+export async function replaceGalleryImageMedia(input: {
+  id: string;
+  expectedMediaId: string;
+  newMediaId: string;
+  stored: StoredMedia;
+  width: number;
+  height: number;
+  originalFilename: string;
+  adminId: string;
+  name: string;
+  tags: string[];
+}): Promise<GalleryImageRecord | null> {
+  const {
+    id,
+    expectedMediaId,
+    newMediaId,
+    stored,
+    width,
+    height,
+    originalFilename,
+    adminId,
+    name,
+    tags,
+  } = input;
+
+  if (tags.length > MAX_GALLERY_TAGS) {
+    throw new D1Error(
+      `A gallery image cannot have more than ${MAX_GALLERY_TAGS} tags.`,
+    );
+  }
+
+  // The first statement only inserts if the image still references the
+  // expected live media. Subsequent statements require that new row.
+  const inserted = `EXISTS (
+    SELECT 1 FROM media_asset WHERE id = ?2 AND deleted_at IS NULL
+  )`;
+
+  const statements = [
+    prepare(
+      `INSERT INTO media_asset
+         (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
+          original_filename, purpose, uploaded_by)
+       SELECT ?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8
+        WHERE EXISTS (
+          SELECT 1
+            FROM gallery_image AS g
+            JOIN media_asset AS m ON m.id = g.media_id
+           WHERE g.id = ?9
+             AND g.media_id = ?10
+             AND g.deleted_at IS NULL
+             AND m.deleted_at IS NULL
+        )`,
+    ).bind(
+      newMediaId,
+      stored.bucket,
+      stored.key,
+      stored.size,
+      width,
+      height,
+      originalFilename,
+      adminId,
+      id,
+      expectedMediaId,
+    ),
+    prepare(
+      `UPDATE gallery_image
+          SET media_id = ?2, name = ?4, name_sort_key = ?5
+        WHERE id = ?1
+          AND media_id = ?3
+          AND deleted_at IS NULL
+          AND ${inserted}`,
+    ).bind(
+      id,
+      newMediaId,
+      expectedMediaId,
+      name,
+      sortKey(name),
+    ),
+    prepare(
+      `DELETE FROM gallery_image_tag
+        WHERE image_id = ?1 AND ${inserted}`,
+    ).bind(id, newMediaId),
+    ...tags.flatMap((tag) => {
+      const normalized = normalizeTag(tag);
+
+      return [
+        prepare(
+          `INSERT INTO gallery_tag (name, name_normalized)
+           SELECT ?3, ?4 WHERE ${inserted}
+           ON CONFLICT (name_normalized) DO NOTHING`,
+        ).bind(id, newMediaId, tag, normalized),
+        prepare(
+          `INSERT INTO gallery_image_tag (image_id, tag_id)
+           SELECT ?1, t.id FROM gallery_tag AS t
+            WHERE t.name_normalized = ?4 AND ${inserted}
+           ON CONFLICT (image_id, tag_id) DO NOTHING`,
+        ).bind(id, newMediaId, expectedMediaId, normalized),
+      ];
+    }),
+    // Never retire media still referenced by any live gallery image.
+    prepare(
+      `UPDATE media_asset
+          SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = ?3
+          AND deleted_at IS NULL
+          AND ${inserted}
+          AND NOT EXISTS (
+            SELECT 1 FROM gallery_image
+             WHERE media_id = ?3 AND deleted_at IS NULL
+          )`,
+    ).bind(id, newMediaId, expectedMediaId),
+    prepare(
+      `INSERT INTO pending_r2_deletion (r2_bucket, r2_key)
+       SELECT m.r2_bucket, m.r2_key FROM media_asset AS m
+        WHERE m.id = ?3
+          AND m.deleted_at IS NOT NULL
+          AND ${inserted}
+          AND NOT EXISTS (
+            SELECT 1 FROM pending_r2_deletion AS p
+             WHERE p.r2_bucket = m.r2_bucket
+               AND p.r2_key = m.r2_key
+               AND p.deleted_at IS NULL
+          )`,
+    ).bind(id, newMediaId, expectedMediaId),
+    prepare(`${IMAGE_SELECT} AND g.id = ?1`).bind(id),
+  ];
+
+  // At most 30 statements for 12 tags.
+  const { results } = await batch(statements);
+
+  const readResult = results[results.length - 1] as
+    | D1Result<ImageRow>
+    | undefined;
+
+  if (
+    results.length !== statements.length ||
+    !readResult ||
+    readResult.success !== true ||
+    !Array.isArray(readResult.results)
+  ) {
+    throw new D1Error(
+      "The image replacement transaction could not be confirmed.",
+    );
+  }
+
+  const row = readResult.results[0];
+
+  if (!row || row.media_id !== newMediaId) {
+    return null;
+  }
+
+  return toRecord(row);
 }
 
 /**
