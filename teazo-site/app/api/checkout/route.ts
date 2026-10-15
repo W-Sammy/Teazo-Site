@@ -4,8 +4,22 @@ import { validateCheckoutRequestBody } from "@/app/lib/checkout-validators";
 import { ONLINE_ORDERING_PAUSED_MESSAGE, validatePickupTiming } from "@/app/lib/store-hours";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { resolveSquareLocationId } from "@/app/lib/square-location";
+import { verifyTurnstile } from "@/app/lib/turnstile";
+import { CHECKOUT_RATE_LIMIT, consumeRateLimit } from "@/app/lib/queries/rate-limit";
 
 export const runtime = "nodejs";
+
+const BOT_CHECK_MESSAGES = {
+  missing: "Please wait for the security check above the checkout button to finish, then try again.",
+  rejected: "The security check didn't pass. Please try it again.",
+  unavailable: "The security check isn't working right now. Please try again in a moment.",
+} as const;
+
+/** The visitor's IP as Vercel reports it, for the rate limit and as a Turnstile signal. */
+function visitorIp(request: Request): string | undefined {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded && /^[0-9a-fA-F:.]{3,45}$/.test(forwarded) ? forwarded : undefined;
+}
 
 /**
  * Returns the canonical base URL for post-payment redirects.
@@ -30,8 +44,10 @@ function getSiteBaseUrl(): string {
  * and generates a Square Hosted Checkout payment link.
  *
  * @returns 200 - { checkoutUrl: string, orderId: string }
- * @returns 400 - Validation failure (missing fields, ordering paused, store closed, lead time violation, etc.)
+ * @returns 400 - Validation failure (missing fields, failed bot check, ordering paused, store closed, lead time violation, etc.)
+ * @returns 429 - Too many attempts from this visitor
  * @returns 500 - Server or Square API error
+ * @returns 503 - The bot check can't run right now
  */
 export async function POST(request: Request) {
   // 1. Parse JSON body
@@ -51,6 +67,31 @@ export async function POST(request: Request) {
     return Response.json({ error: validation.error }, { status: 400 });
   }
   const body = validation.data;
+
+  // 2a. Limit attempts per visitor. Every attempt that gets past here creates a Square order.
+  const ip = visitorIp(request);
+  if (!(await consumeRateLimit(CHECKOUT_RATE_LIMIT, ip))) {
+    return Response.json(
+      {
+        error: "Too many checkout attempts from your connection. Please wait a few minutes and try again.",
+        code: "RATE_LIMITED",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(CHECKOUT_RATE_LIMIT.windowMs / 1000) },
+      },
+    );
+  }
+
+  // 2b. Bot check, before anything reaches Square
+  const token = (rawBody as { turnstileToken?: unknown }).turnstileToken;
+  const botCheck = await verifyTurnstile(typeof token === "string" ? token : "", ip);
+  if (!botCheck.ok) {
+    return Response.json(
+      { error: BOT_CHECK_MESSAGES[botCheck.reason], code: "BOT_CHECK_FAILED" },
+      { status: botCheck.reason === "unavailable" ? 503 : 400 },
+    );
+  }
 
   // 3. Refuse orders while the owner has paused online ordering
   const content = await getWebsiteContent();

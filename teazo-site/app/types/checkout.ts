@@ -48,6 +48,8 @@ export interface CheckoutRequestBody {
   customer: CustomerContact;
   pickupTiming: PickupTiming;
   items: CheckoutItemRequest[];
+  /** Token from the cart's Turnstile widget. Checked by the server before Square is contacted. */
+  turnstileToken?: string;
 }
 
 export interface CheckoutSuccessResponse {
@@ -57,5 +59,7 @@ export interface CheckoutSuccessResponse {
 
 export interface CheckoutErrorResponse {
   error: string;
+  /** e.g. "ORDERING_PAUSED", "RATE_LIMITED", "BOT_CHECK_FAILED" */
+  code?: string;
   details?: unknown;
 }

@@ -5,6 +5,14 @@ import { pacificToUtc } from "@/app/lib/store-hours";
 const mocks = vi.hoisted(() => ({
   createPaymentLink: vi.fn(),
   getWebsiteContent: vi.fn(),
+  verifyTurnstile: vi.fn(),
+  consumeRateLimit: vi.fn(),
+}));
+
+vi.mock("@/app/lib/turnstile", () => ({ verifyTurnstile: mocks.verifyTurnstile }));
+vi.mock("@/app/lib/queries/rate-limit", () => ({
+  CHECKOUT_RATE_LIMIT: { name: "checkout", limit: 10, windowMs: 600_000 },
+  consumeRateLimit: mocks.consumeRateLimit,
 }));
 
 vi.mock("@/app/lib/square", () => ({
@@ -37,12 +45,12 @@ function content(overrides: Partial<WebsiteContent> = {}): WebsiteContent {
 const customer = { displayName: "Test Customer", email: "test@example.com", phone: "(415) 555-0100" };
 const items = [{ variationId: "VAR1", quantity: 2, modifierOptionIds: ["MOD1"] }];
 
-function checkout(body: unknown) {
+function checkout(body: Record<string, unknown>) {
   return POST(
     new Request("http://localhost:3000/api/checkout", {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.7, 10.0.0.1" },
+      body: JSON.stringify({ turnstileToken: "token-1", ...body }),
     }),
   );
 }
@@ -52,6 +60,8 @@ beforeEach(() => {
   // Wednesday October 14, 2026 at 3:00 PM in San Francisco: the store is open
   vi.setSystemTime(pacificToUtc(2026, 10, 14, 15, 0));
   mocks.getWebsiteContent.mockResolvedValue(content());
+  mocks.verifyTurnstile.mockResolvedValue({ ok: true });
+  mocks.consumeRateLimit.mockResolvedValue(true);
   mocks.createPaymentLink.mockResolvedValue({
     paymentLink: { url: "https://sandbox.square.link/u/test", orderId: "ORDER_1" },
   });
@@ -103,6 +113,38 @@ describe("POST /api/checkout", () => {
     const pickupAt = pacificToUtc(2026, 10, 19, 12, 0).toISOString();
     const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
     expect(res.status).toBe(400);
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("checks the bot token with the visitor's IP (TZ-445)", async () => {
+    await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    expect(mocks.verifyTurnstile).toHaveBeenCalledWith("token-1", "203.0.113.7");
+    expect(mocks.consumeRateLimit).toHaveBeenCalledWith(expect.objectContaining({ name: "checkout" }), "203.0.113.7");
+  });
+
+  it("refuses a missing or failed bot check without contacting Square (TZ-445)", async () => {
+    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "rejected" });
+    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items, turnstileToken: undefined });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ code: "BOT_CHECK_FAILED" });
+    expect(mocks.verifyTurnstile).toHaveBeenCalledWith("", "203.0.113.7");
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("answers 503 when the bot check itself can't run", async () => {
+    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "unavailable" });
+    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    expect(res.status).toBe(503);
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("answers 429 past the rate limit, before the bot check or Square (TZ-445)", async () => {
+    mocks.consumeRateLimit.mockResolvedValue(false);
+    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("600");
+    expect(await res.json()).toMatchObject({ code: "RATE_LIMITED" });
+    expect(mocks.verifyTurnstile).not.toHaveBeenCalled();
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 

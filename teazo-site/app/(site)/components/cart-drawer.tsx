@@ -28,6 +28,7 @@ import {
   ONLINE_ORDERING_PAUSED_MESSAGE,
 } from "@/app/lib/store-hours";
 import { toE164Phone } from "@/app/lib/checkout-validators";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/app/components/turnstile-widget";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItem } from "@/app/(site)/components/menu-item-card";
 import type {
@@ -164,6 +165,11 @@ export default function CartDrawer() {
   // Time slots follow the server's clock, since the customer's device clock may be wrong.
   const clockOffsetMsRef = useRef(0);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  // Bot check. A token works once, so each failed attempt bumps the reset key for a new one.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [botCheckFailed, setBotCheckFailed] = useState(!TURNSTILE_SITE_KEY);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -499,6 +505,7 @@ export default function CartDrawer() {
           notes: it.notes?.trim() || undefined,
           modifierOptionIds: it.selectedModifiers.map((m) => m.optionId),
         })),
+        turnstileToken: turnstileToken ?? undefined,
       };
 
       const res = await fetch("/api/checkout", {
@@ -531,6 +538,9 @@ export default function CartDrawer() {
       setErrorMessage(
         err instanceof Error ? err.message : "An unexpected error occurred during checkout."
       );
+      // The server may have used up the token, so get a fresh one for the next try.
+      setTurnstileToken(null);
+      setTurnstileResetKey((key) => key + 1);
       setIsSubmitting(false);
     }
   };
@@ -540,6 +550,7 @@ export default function CartDrawer() {
     items.length === 0 ||
     scheduleStatus !== "ready" ||
     isOrderingPaused ||
+    !turnstileToken ||
     (effectivePickupType === "ASAP" && !isAsapAvailable) ||
     (effectivePickupType === "SCHEDULED" && (availableSlots.length === 0 || !activeSlot));
 
@@ -1041,6 +1052,24 @@ export default function CartDrawer() {
           {/* Footer & Checkout CTA */}
           {items.length > 0 && (
             <div className="p-6 border-t border-gray-100 bg-white space-y-3">
+              {/* Bot check. Stays mounted while the bag has items so its token never goes stale unseen. */}
+              {!isOrderingPaused && (
+                <TurnstileWidget
+                  action="checkout"
+                  resetKey={turnstileResetKey}
+                  onToken={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onFailedChange={setBotCheckFailed}
+                  className="flex justify-center min-h-[65px]"
+                />
+              )}
+              {!isOrderingPaused && botCheckFailed && (
+                <p className="text-[11px] text-amber-700 leading-relaxed">
+                  The security check couldn&apos;t load, so checkout is unavailable right now. Please
+                  try again later, or call us at {websiteContent.address.phone} to order.
+                </p>
+              )}
+
               {/* Error Banner */}
               {errorMessage && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-start gap-2">

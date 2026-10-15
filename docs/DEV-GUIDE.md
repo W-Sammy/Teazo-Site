@@ -455,12 +455,23 @@ to `.env.local`, restart the app, and submit the form:
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes. After the click, Submit sends the message as usual, and the widget asks for a click again after each message |
 
 In the first two rows Cloudflare refuses the widget's answer, and the app's
-terminal logs `Turnstile rejected a contact form submission:` with Cloudflare's
+terminal logs `Turnstile rejected a submission:` with Cloudflare's
 error code (`invalid-input-response` or `timeout-or-duplicate`). The third row
 logs no refusal: the widget never gives the form an answer, so the server turns
 it away without asking Cloudflare. Instead the terminal repeats `[browser]
 [Cloudflare Turnstile] Error: 600010.` while the page is open. That is the
 widget's own error, copied from the browser, not a problem with the server.
+
+**Checkout.** The cart uses the same bot check and keys. Its widget sits above
+**Proceed to Checkout** while the bag has items, and the button stays grey until
+the check passes. The rows above work there too, except that a failed check
+answers "The security check didn't pass. Please try it again." or "Please wait
+for the security check above the checkout button to finish, then try again."
+Checkout also allows each visitor 10 attempts every 10 minutes, then answers
+"Too many checkout attempts from your connection" with a `429`. Locally every
+attempt counts against one shared key. To start over, empty the counters from
+`teazo-d1-proxy` with
+`npx wrangler d1 execute teazo-db --local --command "DELETE FROM analytics_rate_limit WHERE identifier LIKE 'checkout:%'"`.
 
 **The hidden field.** The form also has a `company` field that people never
 see and bots fill in. A submission with it filled in gets the usual thank-you
