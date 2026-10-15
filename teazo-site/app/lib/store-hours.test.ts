@@ -146,3 +146,39 @@ describe("store schedule for a date", () => {
     expect(schedule).toMatchObject({ closed: false, openMinuteOfDay: 660, closeMinuteOfDay: 840 });
   });
 });
+
+describe("one-time holidays (YYYY-MM-DD)", () => {
+  const content = makeContent({
+    holidays: [
+      { id: "xmas", name: "Christmas", date: "12-25", closed: true },
+      { id: "xmas26", name: "Christmas 2026", date: "2026-12-25", closed: false, start: 11, end: 14 },
+      { id: "thanks", name: "Thanksgiving", date: "2026-11-26", closed: true },
+    ],
+  });
+
+  it("win over a yearly holiday on the same date", async () => {
+    expect(getStoreScheduleForDate(pt(12, 25, 12, 0), content)).toMatchObject({
+      closed: false,
+      closeMinuteOfDay: 840,
+      holiday: { name: "Christmas 2026" },
+    });
+    const asap = await validatePickupTiming({ type: "ASAP" }, { content, referenceNow: pt(12, 25, 12, 0) });
+    expect(asap.valid).toBe(true);
+  });
+
+  it("apply only in their own year", () => {
+    expect(getStoreScheduleForDate(pt(12, 25, 12, 0, 2027), content)).toMatchObject({
+      closed: true,
+      holiday: { name: "Christmas" },
+    });
+    expect(getStoreScheduleForDate(pt(11, 26, 12, 0), content)).toMatchObject({ closed: true });
+    expect(getStoreScheduleForDate(pt(11, 25, 12, 0, 2027), content).closed).toBe(false);
+  });
+
+  it("show on the contact page's week", () => {
+    const week = getWeeklyCustomerHours(content, pt(11, 24, 12, 0));
+    expect(week[3]).toMatchObject({ day: "Thursday", hours: "Closed", holidayName: "Thanksgiving" });
+    const christmasWeek = getWeeklyCustomerHours(content, pt(12, 23, 12, 0));
+    expect(christmasWeek[4]).toMatchObject({ hours: "11:00 AM - 2:00 PM", holidayName: "Christmas 2026" });
+  });
+});

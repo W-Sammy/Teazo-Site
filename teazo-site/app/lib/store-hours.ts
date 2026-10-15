@@ -199,8 +199,10 @@ export function getStoreScheduleForDate(
 ): DaySchedule {
   const parts = getPacificParts(date);
 
-  // 1. Check for holiday exception matching MM-DD
-  const holiday = content.holidays?.find((h) => h.date === parts.monthDayString);
+  // 1. Check for a holiday on this exact date (YYYY-MM-DD), then one that repeats every year (MM-DD)
+  const holiday =
+    content.holidays?.find((h) => h.date === parts.isoDateString) ??
+    content.holidays?.find((h) => h.date === parts.monthDayString);
   if (holiday) {
     if (holiday.closed) {
       return {

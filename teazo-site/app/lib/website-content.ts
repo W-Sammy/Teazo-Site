@@ -107,12 +107,6 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function normalizeHolidayDate(date: string): string {
-  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
-  // values from the database as well.
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
-}
-
 
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
@@ -275,7 +269,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         return {
           id: `holiday-${h.date || i}`,
           name: h.note || `Holiday`,
-          date: normalizeHolidayDate(h.date),
+          // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+          date: h.date,
           closed: h.is_closed === 1,
           start: timeRange.start,
           end: timeRange.end,

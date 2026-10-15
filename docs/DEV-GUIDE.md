@@ -1185,7 +1185,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form's action, which reads the switch |
 | `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `hours_exception` | holidays. `/admin/website-content` stores each date as `MM-DD`, repeating every year, not the `YYYY-MM-DD` the schema comment describes | `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `hours_exception` | holidays. `/admin/website-content` stores a holiday that repeats every year as `MM-DD`, and a one-time holiday as `YYYY-MM-DD`. When both fall on the same day, the one-time holiday wins | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `content_block` | editable text on the site, including the story and the logo | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
