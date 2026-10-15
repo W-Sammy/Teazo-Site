@@ -69,8 +69,20 @@ export async function POST(request: Request) {
   }
   const body = validation.data;
 
-  // 2a. Limit attempts per visitor. Every attempt that gets past here creates a Square order.
+  // 2a. Bot check, before anything reaches Square
   const ip = visitorIp(request);
+  const token = (rawBody as { turnstileToken?: unknown }).turnstileToken;
+  const botCheck = await verifyTurnstile(typeof token === "string" ? token : "", ip);
+  if (!botCheck.ok) {
+    return Response.json(
+      { error: BOT_CHECK_MESSAGES[botCheck.reason], code: "BOT_CHECK_FAILED" },
+      { status: botCheck.reason === "unavailable" ? 503 : 400 },
+    );
+  }
+
+  // 2b. Limit attempts per visitor. Only attempts that passed the bot check
+  // count, so junk requests can't use up the limit for everyone sharing an IP.
+  // Every attempt that gets past here creates a Square order.
   if (!(await consumeRateLimit(CHECKOUT_RATE_LIMIT, ip))) {
     return Response.json(
       {
@@ -81,16 +93,6 @@ export async function POST(request: Request) {
         status: 429,
         headers: { "Retry-After": String(CHECKOUT_RATE_LIMIT.windowMs / 1000) },
       },
-    );
-  }
-
-  // 2b. Bot check, before anything reaches Square
-  const token = (rawBody as { turnstileToken?: unknown }).turnstileToken;
-  const botCheck = await verifyTurnstile(typeof token === "string" ? token : "", ip);
-  if (!botCheck.ok) {
-    return Response.json(
-      { error: BOT_CHECK_MESSAGES[botCheck.reason], code: "BOT_CHECK_FAILED" },
-      { status: botCheck.reason === "unavailable" ? 503 : 400 },
     );
   }
 

@@ -140,14 +140,19 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("answers 429 past the rate limit, before the bot check or Square (TZ-445)", async () => {
+  it("answers 429 past the rate limit, without contacting Square (TZ-445)", async () => {
     mocks.consumeRateLimit.mockResolvedValue(false);
     const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
     expect(res.status).toBe(429);
     expect(res.headers.get("retry-after")).toBe("600");
     expect(await res.json()).toMatchObject({ code: "RATE_LIMITED" });
-    expect(mocks.verifyTurnstile).not.toHaveBeenCalled();
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("doesn't count requests that fail the bot check against the rate limit", async () => {
+    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "missing" });
+    await checkout({ customer, pickupTiming: { type: "ASAP" }, items, turnstileToken: undefined });
+    expect(mocks.consumeRateLimit).not.toHaveBeenCalled();
   });
 
   it("refuses a malformed body without contacting Square", async () => {

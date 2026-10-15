@@ -170,17 +170,31 @@ export function pacificToUtc(
   hour: number,
   minute: number,
 ): Date {
-  const guessUtc = new Date(Date.UTC(year, month - 1, day, hour, minute));
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: STORE_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(guessUtc);
+  const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute);
+
+  // The offset is read at a guess 7-8 hours away from the real moment, which on
+  // a clock-change day can fall on the other side of the 2 AM change. Reading it
+  // again at the first result lands on the right side.
+  const firstTry = wallClockAsUtc - pacificOffsetMs(new Date(wallClockAsUtc));
+  const offsetMs = pacificOffsetMs(new Date(firstTry));
+  return new Date(wallClockAsUtc - offsetMs);
+}
+
+// Built once: listing a week of pickup slots converts a few hundred times.
+const PACIFIC_WALL_CLOCK = new Intl.DateTimeFormat("en-US", {
+  timeZone: STORE_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+/** San Francisco's offset from UTC at `date`, in ms (-7h in summer, -8h in winter). */
+function pacificOffsetMs(date: Date): number {
+  const parts = PACIFIC_WALL_CLOCK.formatToParts(date);
 
   const getPart = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
   const localAsUtc = Date.UTC(
@@ -191,9 +205,7 @@ export function pacificToUtc(
     getPart("minute"),
     getPart("second"),
   );
-  const offsetMs = localAsUtc - guessUtc.getTime();
-
-  return new Date(Date.UTC(year, month - 1, day, hour, minute) - offsetMs);
+  return localAsUtc - (date.getTime() - date.getMilliseconds());
 }
 
 /** Noon in San Francisco, `days` calendar days after `date`'s San Francisco date. */

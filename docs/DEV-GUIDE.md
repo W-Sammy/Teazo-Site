@@ -468,8 +468,9 @@ the check passes. The rows above work there too, except that a failed check
 answers "The security check didn't pass. Please try it again." or "Please wait
 for the security check above the checkout button to finish, then try again."
 Checkout also allows each visitor 10 attempts every 10 minutes, then answers
-"Too many checkout attempts from your connection" with a `429`. Locally every
-attempt counts against one shared key. To start over, empty the counters from
+"Too many checkout attempts from your connection" with a `429`. Only attempts
+that pass the bot check count. Locally every attempt counts against one shared
+key. To start over, empty the counters from
 `teazo-d1-proxy` with
 `npx wrangler d1 execute teazo-db --local --command "DELETE FROM analytics_rate_limit WHERE identifier LIKE 'checkout:%'"`.
 

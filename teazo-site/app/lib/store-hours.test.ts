@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WebsiteContent } from "@/app/types/website-content";
 import {
   getAvailablePickupSlots,
+  getPacificParts,
   getPickupDays,
   getStoreScheduleForDate,
   getWeeklyCustomerHours,
@@ -157,6 +158,54 @@ describe("scheduling ahead (TZ-435)", () => {
     const days = getPickupDays(content, pt(10, 14, 15, 2));
     expect(days[0]).toMatchObject({ date: "2026-10-14", label: "Today" });
     expect(ptTime(days[0].slots[0])).toBe("3:30 PM");
+  });
+
+  it.each([
+    // Before the 2 AM clock change on the day it happens: still the old offset
+    [2026, 11, 1, 0, 30, "2026-11-01T07:30:00.000Z"],
+    [2026, 3, 8, 1, 30, "2026-03-08T09:30:00.000Z"],
+    // After the change
+    [2026, 11, 1, 8, 0, "2026-11-01T16:00:00.000Z"],
+    [2026, 11, 1, 9, 0, "2026-11-01T17:00:00.000Z"],
+    [2026, 3, 8, 9, 0, "2026-03-08T16:00:00.000Z"],
+    // Ordinary days either side of the year
+    [2026, 10, 14, 15, 0, "2026-10-14T22:00:00.000Z"],
+    [2026, 12, 25, 11, 0, "2026-12-25T19:00:00.000Z"],
+  ])("converts %i-%i-%i %i:%i San Francisco time to %s", (y, mo, d, h, mi, expected) => {
+    expect(pacificToUtc(y, mo, d, h, mi).toISOString()).toBe(expected);
+  });
+
+  it("round-trips San Francisco wall-clock times through UTC for two years", () => {
+    const wallClock = (date: Date) => {
+      const p = getPacificParts(date);
+      return `${p.isoDateString} ${p.hour}:${p.minute}`;
+    };
+    const checks: [number, number, number, number, number][] = [];
+    // Every hour of both clock-change days, except 2 AM on the spring day, which doesn't exist
+    for (const [y, mo, d] of [[2026, 3, 8], [2026, 11, 1], [2027, 3, 14], [2027, 11, 7]]) {
+      for (let h = 0; h < 24; h++) if (!(mo === 3 && h === 2)) checks.push([y, mo, d, h, 0]);
+    }
+    // Four times a day for two years
+    for (let day = 0; day < 730; day++) {
+      const date = new Date(Date.UTC(2026, 0, 1 + day));
+      for (const [h, mi] of [[0, 0], [8, 15], [12, 0], [23, 45]]) {
+        checks.push([date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), h, mi]);
+      }
+    }
+    for (const [y, mo, d, h, mi] of checks) {
+      const expected = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")} ${h}:${mi}`;
+      expect(wallClock(pacificToUtc(y, mo, d, h, mi))).toBe(expected);
+    }
+  });
+
+  it("offers early slots at the right times on both clock-change Sundays", () => {
+    const early = makeContent({
+      hours: DAYS.map((day) => ({ day, start: 8, end: 20, closed: false })),
+    });
+    for (const [month, day] of [[3, 8], [11, 1]]) {
+      const slots = getAvailablePickupSlots(early, pt(month, day - 1, 12, 0), 1);
+      expect(ptTime(slots[0]), `${month}/${day}`).toBe("8:00 AM");
+    }
   });
 
   it("keeps wall-clock times across the daylight saving change", () => {
