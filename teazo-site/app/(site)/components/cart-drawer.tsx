@@ -120,7 +120,6 @@ export default function CartDrawer() {
     isHydrated,
     openCart,
     closeCart,
-    addItem,
     updateQuantity,
     removeItem,
     clearCart,
@@ -603,44 +602,6 @@ export default function CartDrawer() {
                   >
                     EXPLORE MENU
                   </Link>
-                  {process.env.NODE_ENV === "development" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addItem({
-                          cartItemId: `test-item-${Date.now()}`,
-                          catalogObjectId: "ITEM_TARO",
-                          variationId: "VAR_REGULAR",
-                          variationName: "Regular",
-                          name: "Taro Milk Tea",
-                          basePriceCents: 575,
-                          imageUrl: null,
-                          selectedModifiers: [
-                            {
-                              modifierListId: "M_SWEET",
-                              modifierListName: "Sweetness",
-                              optionId: "SWEET_50",
-                              optionName: "50% Sweet",
-                              priceCents: 0,
-                            },
-                            {
-                              modifierListId: "M_TOPPINGS",
-                              modifierListName: "Toppings",
-                              optionId: "TOPPING_BOBA",
-                              optionName: "Honey Boba",
-                              priceCents: 50,
-                            },
-                          ],
-                          quantity: 1,
-                          notes: "Less ice please",
-                          itemTotalCents: 625,
-                        });
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-dashed border-[#DBAF82] text-[#DBAF82] hover:bg-[#FAF7F2] text-[11px] font-semibold transition"
-                    >
-                      + Add Sample Drink (Dev Test)
-                    </button>
-                  )}
                 </div>
               </div>
             ) : (
