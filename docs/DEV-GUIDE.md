@@ -751,6 +751,7 @@ The values for Vercel are in §8.1.
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
 | | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint "<file>"` and add no new errors. Keep the quotes: bash rejects paths such as `app/(site)/contact/actions.ts` without them |
+| | `npm test` | Runs the automated tests (Vitest). Each `*.test.ts` file sits next to the code it tests, under `app/`. They need no database, Worker or network | Yes, before a pull request, and add tests when you change checkout, pickup-time or order logic |
 | | `npm run build`, `npm start` | A production build | Only as in §2.8 |
 
 ### 2.8 Checking a production build locally
