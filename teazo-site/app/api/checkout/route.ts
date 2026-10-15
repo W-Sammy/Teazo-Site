@@ -5,6 +5,7 @@ import { ONLINE_ORDERING_PAUSED_MESSAGE, validatePickupTiming } from "@/app/lib/
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { resolveSquareLocationId } from "@/app/lib/square-location";
 import { verifyTurnstile } from "@/app/lib/turnstile";
+import { ONLINE_ORDER_METADATA } from "@/app/lib/online-orders";
 import { CHECKOUT_RATE_LIMIT, consumeRateLimit } from "@/app/lib/queries/rate-limit";
 
 export const runtime = "nodejs";
@@ -133,6 +134,8 @@ export async function POST(request: Request) {
       idempotencyKey: crypto.randomUUID(),
       order: {
         locationId,
+        // Lets /api/orders/[id] show this order's receipt, and only orders like it.
+        metadata: ONLINE_ORDER_METADATA,
         lineItems: body.items.map((item) => ({
           catalogObjectId: item.variationId,
           quantity: String(item.quantity),

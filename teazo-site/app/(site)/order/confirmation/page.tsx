@@ -37,6 +37,8 @@ interface SquareOrderLineItem {
 interface SquareOrderDetails {
   id: string;
   state?: string;
+  /** true once Square has a payment for the order */
+  isPaid?: boolean;
   locationId?: string;
   lineItems?: SquareOrderLineItem[];
   fulfillments?: Array<{
@@ -95,6 +97,18 @@ function formatPickupTiming(scheduleType?: string, pickupAt?: string): string {
   return "Pickup ASAP (~20–25 minutes)";
 }
 
+// Square can send the customer back a moment before the payment shows on the
+// order, so an unpaid order is checked a few more times before saying so.
+const PAYMENT_CHECKS = 4;
+const PAYMENT_CHECK_DELAY_MS = 1500;
+
+type StoreAddress = { businessName: string; streetAddress: string; locality: string };
+const FALLBACK_ADDRESS: StoreAddress = {
+  businessName: "TEAZO",
+  streetAddress: "1050 Taraval St",
+  locality: "San Francisco, CA 94116",
+};
+
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
   window.addEventListener("teazo_cart_sync", callback);
@@ -149,12 +163,34 @@ function OrderConfirmationContent() {
   const orderId =
     urlOrderId || (storedOrderId.length > 0 ? storedOrderId : null);
 
-  const { clearCart } = useCart();
+  const { clearCart, openCart } = useCart();
   const [order, setOrder] = useState<SquareOrderDetails | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [storeAddress, setStoreAddress] = useState<StoreAddress>(FALLBACK_ADDRESS);
 
   // Derived loading state: true while an orderId exists and neither receipt nor error has resolved
   const isLoading = Boolean(orderId) && order === null && errorMessage === null;
+
+  // The pickup address the owner set in the admin
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/website-content")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((content) => {
+        const address = content?.address;
+        if (isMounted && address?.streetAddress) {
+          setStoreAddress({
+            businessName: address.businessName || FALLBACK_ADDRESS.businessName,
+            streetAddress: address.streetAddress,
+            locality: address.locality || FALLBACK_ADDRESS.locality,
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Fetch verified order receipt from Square API
   useEffect(() => {
@@ -167,18 +203,27 @@ function OrderConfirmationContent() {
 
     async function loadOrder() {
       try {
-        const res = await fetch(`/api/orders/${validOrderId}`);
-        if (!res.ok) {
-          throw new Error("Unable to load order receipt from Square.");
+        let latest: SquareOrderDetails | null = null;
+        for (let check = 1; check <= PAYMENT_CHECKS; check++) {
+          const res = await fetch(`/api/orders/${validOrderId}`, { cache: "no-store" });
+          if (!res.ok) {
+            throw new Error("Unable to load order receipt from Square.");
+          }
+          latest = (await res.json()).order as SquareOrderDetails;
+          if (!isMounted) return;
+          if (latest.isPaid || latest.state === "CANCELED" || check === PAYMENT_CHECKS) break;
+          await new Promise((resolve) => setTimeout(resolve, PAYMENT_CHECK_DELAY_MS));
+          if (!isMounted) return;
         }
-        const data = await res.json();
-        if (isMounted) {
-          setOrder(data.order);
+        if (!isMounted || !latest) return;
+
+        setOrder(latest);
+        // Only a paid order empties the bag. An unpaid one keeps it for another try.
+        if (latest.isPaid) {
           // Persist confirmed order ID in session so refreshing preserves receipt
           try {
             sessionStorage.setItem("teazo_confirmed_order_id", validOrderId);
           } catch {}
-          // Clear active cart now that the order has been completed and displayed
           clearCart();
         }
       } catch (err) {
@@ -254,6 +299,39 @@ function OrderConfirmationContent() {
     );
   }
 
+  if (!order.isPaid) {
+    return (
+      <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex items-center justify-center`}>
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
+            ⏳
+          </div>
+          <h1 className="text-xl font-bold text-stone-900">Payment Not Completed</h1>
+          <p className="text-sm text-stone-600 leading-relaxed">
+            Square hasn&apos;t received a payment for this order, so it hasn&apos;t been sent to our
+            kitchen. Your bag is still saved. If you just paid, wait a moment and check again.
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-[#DBAF82] text-[#c69a6d] font-bold text-xs tracking-wider hover:bg-[#FAF7F2] transition"
+            >
+              CHECK AGAIN
+            </button>
+            <button
+              type="button"
+              onClick={openCart}
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+            >
+              BACK TO YOUR BAG
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const pickupDetails = order.fulfillments?.[0]?.pickupDetails;
   const recipient = pickupDetails?.recipient;
   const lineItems = order.lineItems ?? [];
@@ -294,9 +372,9 @@ function OrderConfirmationContent() {
               <span className="text-gray-400 font-medium uppercase tracking-wider block text-[10px]">
                 Pickup Location
               </span>
-              <p className="font-bold text-gray-900">TEAZO</p>
-              <p className="text-gray-600">1050 Taraval St</p>
-              <p className="text-gray-600">San Francisco, CA 94116</p>
+              <p className="font-bold text-gray-900">{storeAddress.businessName}</p>
+              <p className="text-gray-600">{storeAddress.streetAddress}</p>
+              <p className="text-gray-600">{storeAddress.locality}</p>
             </div>
 
             <div className="space-y-1">

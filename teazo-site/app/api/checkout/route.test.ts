@@ -80,6 +80,8 @@ describe("POST /api/checkout", () => {
 
     const request = mocks.createPaymentLink.mock.calls[0][0];
     expect(request.order.locationId).toBe("LOCATION_1");
+    // Tagged so the receipt lookup will show it (TZ-444)
+    expect(request.order.metadata).toEqual({ teazo_source: "website_checkout" });
     expect(request.order.lineItems).toEqual([
       { catalogObjectId: "VAR1", quantity: "2", note: undefined, modifiers: [{ catalogObjectId: "MOD1" }] },
     ]);
