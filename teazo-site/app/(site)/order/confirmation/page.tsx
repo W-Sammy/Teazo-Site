@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { useCart } from "@/app/context/cart-context";
+import { BubbleField } from "@/app/components/bubble-field";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -108,6 +109,30 @@ const FALLBACK_ADDRESS: StoreAddress = {
   streetAddress: "1050 Taraval St",
   locality: "San Francisco, CA 94116",
 };
+
+/** Every state of this page sits on the same bubble background as the menu and contact pages. */
+function ConfirmationShell({
+  children,
+  centered = false,
+}: {
+  children: React.ReactNode;
+  centered?: boolean;
+}) {
+  return (
+    <main className={`relative min-h-screen bg-[#FFF8F9] text-stone-900 ${montserrat.className}`}>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <BubbleField />
+      </div>
+      <div
+        className={`relative z-10 min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 ${
+          centered ? "flex flex-col items-center justify-center" : ""
+        }`}
+      >
+        {children}
+      </div>
+    </main>
+  );
+}
 
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -243,16 +268,16 @@ function OrderConfirmationContent() {
 
   if (isLoading) {
     return (
-      <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex flex-col items-center justify-center`}>
+      <ConfirmationShell centered>
         <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-stone-600 font-medium text-sm">Verifying your order with Square...</p>
-      </div>
+      </ConfirmationShell>
     );
   }
 
   if (!orderId || errorMessage || !order) {
     return (
-      <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex items-center justify-center`}>
+      <ConfirmationShell centered>
         <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
             ℹ️
@@ -271,13 +296,13 @@ function OrderConfirmationContent() {
             </Link>
           </div>
         </div>
-      </div>
+      </ConfirmationShell>
     );
   }
 
   if (order.state === "CANCELED") {
     return (
-      <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex items-center justify-center`}>
+      <ConfirmationShell centered>
         <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
           <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mx-auto">
             ⚠️
@@ -295,13 +320,13 @@ function OrderConfirmationContent() {
             </Link>
           </div>
         </div>
-      </div>
+      </ConfirmationShell>
     );
   }
 
   if (!order.isPaid) {
     return (
-      <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex items-center justify-center`}>
+      <ConfirmationShell centered>
         <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
             ⏳
@@ -328,7 +353,7 @@ function OrderConfirmationContent() {
             </button>
           </div>
         </div>
-      </div>
+      </ConfirmationShell>
     );
   }
 
@@ -337,7 +362,7 @@ function OrderConfirmationContent() {
   const lineItems = order.lineItems ?? [];
 
   return (
-    <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] ${montserrat.className}`}>
+    <ConfirmationShell>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Success Header Card */}
         <div className="bg-white rounded-2xl p-6 sm:p-8 text-center shadow-sm border border-gray-100">
@@ -480,7 +505,7 @@ function OrderConfirmationContent() {
           </Link>
         </div>
       </div>
-    </div>
+    </ConfirmationShell>
   );
 }
 
@@ -488,10 +513,10 @@ export default function OrderConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <div className={`min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 bg-[#FAF7F2] text-stone-900 ${montserrat.className} flex flex-col items-center justify-center`}>
+        <ConfirmationShell centered>
           <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-stone-600 font-medium text-sm">Loading order confirmation...</p>
-        </div>
+        </ConfirmationShell>
       }
     >
       <OrderConfirmationContent />
