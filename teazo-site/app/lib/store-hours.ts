@@ -9,6 +9,9 @@ export const STORE_TIMEZONE = "America/Los_Angeles";
 export const PREP_LEAD_TIME_MINUTES = 25;
 export const PREP_LEAD_TIME_GRACE_MINUTES = 3;
 export const ORDER_CUTOFF_MINUTES_BEFORE_CLOSE = 30;
+/** Scheduled pickups can be up to this many days after today. ASAP is today only. */
+export const MAX_SCHEDULE_DAYS_AHEAD = 7;
+export const SLOT_MINUTES = 15;
 
 export interface PacificDateParts {
   date: Date;
@@ -189,6 +192,19 @@ export function pacificToUtc(
   return new Date(Date.UTC(year, month - 1, day, hour, minute) - offsetMs);
 }
 
+/** Noon in San Francisco, `days` calendar days after `date`'s San Francisco date. */
+export function addPacificDays(date: Date, days: number): Date {
+  const parts = getPacificParts(date);
+  return pacificToUtc(parts.year, parts.month, parts.day + days, 12, 0);
+}
+
+/** Whole calendar days from `from`'s San Francisco date to `to`'s. */
+export function pacificDaysBetween(from: Date, to: Date): number {
+  const a = getPacificParts(from);
+  const b = getPacificParts(to);
+  return Math.round((Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000);
+}
+
 /**
  * Resolves the effective operating hours for a given date from website content,
  * evaluating holiday exceptions first and falling back to weekly day-of-week hours.
@@ -363,19 +379,22 @@ export async function validatePickupTiming(
 
     const pickupParts = getPacificParts(pickupDate);
 
-    // Enforce same-day pickup
-    if (pickupParts.isoDateString !== nowParts.isoDateString) {
+    // Scheduled pickups run from today through MAX_SCHEDULE_DAYS_AHEAD days from now
+    const daysAhead = pacificDaysBetween(referenceNow, pickupDate);
+    if (daysAhead < 0 || daysAhead > MAX_SCHEDULE_DAYS_AHEAD) {
       return {
         valid: false,
-        error: "Scheduled pickup orders are only available for same-day pickup.",
+        error: `Scheduled pickup must be within the next ${MAX_SCHEDULE_DAYS_AHEAD} days.`,
       };
     }
 
-    if (todaySchedule.closed) {
-      const holidayMsg = todaySchedule.holiday ? ` for ${todaySchedule.holiday.name}` : "";
+    const pickupSchedule = getStoreScheduleForDate(pickupDate, content);
+    const dayLabel = daysAhead === 0 ? "today" : `on ${formatPickupDay(pickupDate, referenceNow)}`;
+    if (pickupSchedule.closed) {
+      const holidayMsg = pickupSchedule.holiday ? ` for ${pickupSchedule.holiday.name}` : "";
       return {
         valid: false,
-        error: `Store is closed today${holidayMsg}. Pickup orders are unavailable.`,
+        error: `Store is closed ${dayLabel}${holidayMsg}. Please choose another day.`,
       };
     }
 
@@ -391,18 +410,18 @@ export async function validatePickupTiming(
       };
     }
 
-    // Enforce store operating window [openMinuteOfDay, cutoffMinuteOfDay]
-    if (pickupParts.minuteOfDay < todaySchedule.openMinuteOfDay) {
+    // Enforce that day's operating window [openMinuteOfDay, cutoffMinuteOfDay]
+    if (pickupParts.minuteOfDay < pickupSchedule.openMinuteOfDay) {
       return {
         valid: false,
-        error: `Scheduled pickup cannot be earlier than store opening (${formatMinuteOfDay(todaySchedule.openMinuteOfDay)} PT).`,
+        error: `Scheduled pickup cannot be earlier than store opening (${formatMinuteOfDay(pickupSchedule.openMinuteOfDay)} PT ${dayLabel}).`,
       };
     }
 
-    if (pickupParts.minuteOfDay > todaySchedule.cutoffMinuteOfDay) {
+    if (pickupParts.minuteOfDay > pickupSchedule.cutoffMinuteOfDay) {
       return {
         valid: false,
-        error: `Scheduled pickup cannot be later than ${formatMinuteOfDay(todaySchedule.cutoffMinuteOfDay)} PT (store closes at ${formatMinuteOfDay(todaySchedule.closeMinuteOfDay)} PT).`,
+        error: `Scheduled pickup cannot be later than ${formatMinuteOfDay(pickupSchedule.cutoffMinuteOfDay)} PT ${dayLabel} (store closes at ${formatMinuteOfDay(pickupSchedule.closeMinuteOfDay)} PT).`,
       };
     }
 
@@ -419,42 +438,89 @@ export async function validatePickupTiming(
 }
 
 /**
- * Returns available 15-minute pickup slots for today in ISO-8601 UTC format
- * based on the database-backed schedule and order cutoff time.
+ * Returns the 15-minute pickup slots, in ISO-8601 UTC, on the San Francisco
+ * date `daysAhead` days after today, based on that day's hours and holidays.
+ * Today's slots also leave the 25-minute prep time.
  */
 export function getAvailablePickupSlots(
   content: WebsiteContent,
   referenceNow: Date = new Date(),
+  daysAhead = 0,
 ): string[] {
-  const nowParts = getPacificParts(referenceNow);
-  const todaySchedule = getStoreScheduleForDate(referenceNow, content);
+  if (daysAhead < 0 || daysAhead > MAX_SCHEDULE_DAYS_AHEAD) return [];
 
-  if (todaySchedule.closed || nowParts.minuteOfDay > todaySchedule.cutoffMinuteOfDay) {
-    return [];
+  const day = addPacificDays(referenceNow, daysAhead);
+  const dayParts = getPacificParts(day);
+  const schedule = getStoreScheduleForDate(day, content);
+  if (schedule.closed) return [];
+
+  let earliestMinute = schedule.openMinuteOfDay;
+  if (daysAhead === 0) {
+    // Earliest pickup today is at least now + 25m prep time
+    const minLeadParts = getPacificParts(
+      new Date(referenceNow.getTime() + PREP_LEAD_TIME_MINUTES * 60 * 1000),
+    );
+    if (minLeadParts.isoDateString !== dayParts.isoDateString) return [];
+    earliestMinute = Math.max(earliestMinute, minLeadParts.minuteOfDay);
   }
 
-  // Earliest pickup is at least now + 25m prep time
-  const minLeadTimeMs = referenceNow.getTime() + PREP_LEAD_TIME_MINUTES * 60 * 1000;
-  const minLeadParts = getPacificParts(new Date(minLeadTimeMs));
-
-  const earliestMinuteRaw = Math.max(todaySchedule.openMinuteOfDay, minLeadParts.minuteOfDay);
-  const roundedMinute = Math.ceil(earliestMinuteRaw / 15) * 15;
-
   const slots: string[] = [];
-  for (let m = roundedMinute; m <= todaySchedule.cutoffMinuteOfDay; m += 15) {
-    const slotHour = Math.floor(m / 60);
-    const slotMin = m % 60;
+  const firstSlot = Math.ceil(earliestMinute / SLOT_MINUTES) * SLOT_MINUTES;
+  for (let m = firstSlot; m <= schedule.cutoffMinuteOfDay; m += SLOT_MINUTES) {
     const slotUtc = pacificToUtc(
-      nowParts.year,
-      nowParts.month,
-      nowParts.day,
-      slotHour,
-      slotMin,
+      dayParts.year,
+      dayParts.month,
+      dayParts.day,
+      Math.floor(m / 60),
+      m % 60,
     );
     slots.push(slotUtc.toISOString());
   }
 
   return slots;
+}
+
+export interface PickupDay {
+  /** San Francisco date, "YYYY-MM-DD" */
+  date: string;
+  /** "Today", "Tomorrow", or e.g. "Fri, Oct 16" */
+  label: string;
+  slots: string[];
+}
+
+/** "Today", "Tomorrow", or e.g. "Fri, Oct 16", for a pickup time seen from referenceNow. */
+export function formatPickupDay(pickup: Date, referenceNow: Date = new Date()): string {
+  const daysAhead = pacificDaysBetween(referenceNow, pickup);
+  if (daysAhead === 0) return "Today";
+  if (daysAhead === 1) return "Tomorrow";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TIMEZONE,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(pickup);
+}
+
+/**
+ * The days from today through MAX_SCHEDULE_DAYS_AHEAD that still have at
+ * least one pickup slot, each with its slots. Closed days are left out.
+ */
+export function getPickupDays(
+  content: WebsiteContent,
+  referenceNow: Date = new Date(),
+): PickupDay[] {
+  const days: PickupDay[] = [];
+  for (let daysAhead = 0; daysAhead <= MAX_SCHEDULE_DAYS_AHEAD; daysAhead++) {
+    const slots = getAvailablePickupSlots(content, referenceNow, daysAhead);
+    if (slots.length === 0) continue;
+    const day = addPacificDays(referenceNow, daysAhead);
+    days.push({
+      date: getPacificParts(day).isoDateString,
+      label: formatPickupDay(day, referenceNow),
+      slots,
+    });
+  }
+  return days;
 }
 
 export const WEEKDAY_NAMES_FROM_MONDAY = [

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WebsiteContent } from "@/app/types/website-content";
 import {
   getAvailablePickupSlots,
+  getPickupDays,
   getStoreScheduleForDate,
   getWeeklyCustomerHours,
   pacificToUtc,
@@ -119,6 +120,84 @@ describe("scheduled pickup", () => {
     expect((await scheduled(pt(10, 14, 15, 10).toISOString())).valid).toBe(false);
     expect((await scheduled(pt(10, 14, 19, 45).toISOString())).valid).toBe(false);
     expect((await scheduled("not a date")).valid).toBe(false);
+  });
+});
+
+describe("scheduling ahead (TZ-435)", () => {
+  const content = makeContent();
+  const scheduledAt = (pickup: Date, now: Date) =>
+    validatePickupTiming({ type: "SCHEDULED", pickupAt: pickup.toISOString() }, { content, referenceNow: now });
+
+  it("offers the next 7 days with slots, skipping closed days, once today is over", () => {
+    // Wednesday Oct 14 at 7:24 PM, past the last slot today
+    const days = getPickupDays(content, pt(10, 14, 19, 24));
+    expect(days.map((d) => d.date)).toEqual([
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-17",
+      "2026-10-18",
+      // Monday Oct 19 is closed
+      "2026-10-20",
+      "2026-10-21",
+    ]);
+    expect(days.map((d) => d.label).slice(0, 3)).toEqual(["Tomorrow", "Fri, Oct 16", "Sat, Oct 17"]);
+  });
+
+  it("gives a future day's slots from opening to the cutoff, and a holiday's adjusted hours", () => {
+    const days = getPickupDays(content, pt(10, 14, 19, 24));
+    const thursday = days[0].slots;
+    expect(ptTime(thursday[0])).toBe("11:00 AM");
+    expect(ptTime(thursday[thursday.length - 1])).toBe("7:30 PM");
+    const halfDay = days[1].slots;
+    expect(ptTime(halfDay[halfDay.length - 1])).toBe("1:30 PM");
+  });
+
+  it("starts with today while today still has slots", () => {
+    const days = getPickupDays(content, pt(10, 14, 15, 2));
+    expect(days[0]).toMatchObject({ date: "2026-10-14", label: "Today" });
+    expect(ptTime(days[0].slots[0])).toBe("3:30 PM");
+  });
+
+  it("keeps wall-clock times across the daylight saving change", () => {
+    const days = getPickupDays(content, pt(10, 30, 12, 0));
+    const nov1 = days.find((d) => d.date === "2026-11-01");
+    expect(nov1 && ptTime(nov1.slots[0])).toBe("11:00 AM");
+    expect(nov1 && ptTime(nov1.slots[nov1.slots.length - 1])).toBe("7:30 PM");
+  });
+
+  it("accepts every offered slot on every offered day", async () => {
+    const now = pt(10, 14, 15, 2);
+    for (const day of getPickupDays(content, now)) {
+      for (const slot of day.slots) {
+        const result = await validatePickupTiming({ type: "SCHEDULED", pickupAt: slot }, { content, referenceNow: now });
+        expect(result.valid, `${day.date} ${slot}`).toBe(true);
+      }
+    }
+  });
+
+  it("refuses a day more than 7 days ahead, a past day, a closed day, and a closed holiday", async () => {
+    const now = pt(10, 14, 15, 0);
+    expect((await scheduledAt(pt(10, 21, 12, 0), now)).valid).toBe(true);
+    expect((await scheduledAt(pt(10, 22, 12, 0), now)).valid).toBe(false);
+    expect((await scheduledAt(pt(10, 13, 12, 0), now)).valid).toBe(false);
+    const monday = await scheduledAt(pt(10, 19, 12, 0), now);
+    expect(monday.valid).toBe(false);
+    expect(monday.error).toContain("closed");
+    const christmas = await scheduledAt(pt(12, 25, 12, 0), pt(12, 20, 12, 0));
+    expect(christmas.valid).toBe(false);
+    expect(christmas.error).toContain("Christmas");
+  });
+
+  it("refuses times outside a future day's hours", async () => {
+    const now = pt(10, 14, 15, 0);
+    expect((await scheduledAt(pt(10, 15, 10, 45), now)).valid).toBe(false);
+    expect((await scheduledAt(pt(10, 15, 19, 45), now)).valid).toBe(false);
+    expect((await scheduledAt(pt(10, 16, 13, 45), now)).valid).toBe(false);
+  });
+
+  it("keeps ASAP to today", async () => {
+    const result = await validatePickupTiming({ type: "ASAP" }, { content, referenceNow: pt(10, 14, 19, 45) });
+    expect(result.valid).toBe(false);
   });
 });
 
