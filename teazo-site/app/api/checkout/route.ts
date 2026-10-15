@@ -1,7 +1,8 @@
 import { squareClient } from "@/app/lib/square";
 import { SquareError } from "square";
 import { validateCheckoutRequestBody } from "@/app/lib/checkout-validators";
-import { validatePickupTiming } from "@/app/lib/store-hours";
+import { ONLINE_ORDERING_PAUSED_MESSAGE, validatePickupTiming } from "@/app/lib/store-hours";
+import { getWebsiteContent } from "@/app/lib/website-content";
 import { resolveSquareLocationId } from "@/app/lib/square-location";
 
 export const runtime = "nodejs";
@@ -29,7 +30,7 @@ function getSiteBaseUrl(): string {
  * and generates a Square Hosted Checkout payment link.
  *
  * @returns 200 - { checkoutUrl: string, orderId: string }
- * @returns 400 - Validation failure (missing fields, store closed, lead time violation, etc.)
+ * @returns 400 - Validation failure (missing fields, ordering paused, store closed, lead time violation, etc.)
  * @returns 500 - Server or Square API error
  */
 export async function POST(request: Request) {
@@ -51,8 +52,17 @@ export async function POST(request: Request) {
   }
   const body = validation.data;
 
-  // 3. Validate store operating hours, holiday exceptions, and pickup lead times
-  const timingResult = await validatePickupTiming(body.pickupTiming);
+  // 3. Refuse orders while the owner has paused online ordering
+  const content = await getWebsiteContent();
+  if (!content.onlineOrderingEnabled) {
+    return Response.json(
+      { error: ONLINE_ORDERING_PAUSED_MESSAGE, code: "ORDERING_PAUSED" },
+      { status: 400 },
+    );
+  }
+
+  // 4. Validate store operating hours, holiday exceptions, and pickup lead times
+  const timingResult = await validatePickupTiming(body.pickupTiming, { content });
   if (!timingResult.valid) {
     return Response.json(
       { error: timingResult.error || "Pickup timing is invalid." },
@@ -60,7 +70,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // 4. Resolve active Square store location
+  // 5. Resolve active Square store location
   let locationId: string;
   try {
     locationId = await resolveSquareLocationId();
@@ -72,7 +82,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. Construct Order and create Square Payment Link
+  // 6. Construct Order and create Square Payment Link
   const baseUrl = getSiteBaseUrl();
   // Square automatically appends ?orderId=...&transactionId=... to the redirectUrl upon successful payment
   const redirectUrl = `${baseUrl}/order/confirmation`;

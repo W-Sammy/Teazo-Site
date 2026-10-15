@@ -30,6 +30,7 @@ function makeContent(overrides: Partial<WebsiteContent> = {}): WebsiteContent {
       { id: "half", name: "Half day", date: "10-16", closed: false, start: 11, end: 14 },
     ],
     contactFormEnabled: true,
+    onlineOrderingEnabled: true,
     ...overrides,
   };
 }

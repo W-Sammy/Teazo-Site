@@ -63,5 +63,7 @@ export type WebsiteContent = {
   hours: DayHours[];
   holidays: Holiday[];
   contactFormEnabled: boolean;
+  /** false while the owner has paused online pickup orders. The menu stays browsable. */
+  onlineOrderingEnabled: boolean;
 };
 

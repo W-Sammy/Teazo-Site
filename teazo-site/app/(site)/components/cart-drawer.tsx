@@ -25,6 +25,7 @@ import {
   type DaySchedule,
   getStoreScheduleForDate,
   MAX_SCHEDULE_DAYS_AHEAD,
+  ONLINE_ORDERING_PAUSED_MESSAGE,
 } from "@/app/lib/store-hours";
 import { toE164Phone } from "@/app/lib/checkout-validators";
 import type { WebsiteContent } from "@/app/types/website-content";
@@ -47,6 +48,7 @@ const FALLBACK_WEBSITE_CONTENT: WebsiteContent = {
   story: "",
   socialLinks: [],
   contactFormEnabled: true,
+  onlineOrderingEnabled: true,
   hours: [
     { day: "Sun", start: 11.5, end: 20, closed: false },
     { day: "Mon", start: 11.5, end: 20, closed: false },
@@ -288,6 +290,9 @@ export default function CartDrawer() {
     }
   }, [scheduleStatus, websiteContent, currentTime]);
 
+  // The owner can pause online ordering from the admin. Checkout refuses orders then too.
+  const isOrderingPaused = scheduleStatus === "ready" && !websiteContent.onlineOrderingEnabled;
+
   const activeDay = pickupDays.find((day) => day.date === userSelectedDay) ?? pickupDays[0];
   const availableSlots = useMemo(() => activeDay?.slots ?? [], [activeDay]);
 
@@ -424,6 +429,8 @@ export default function CartDrawer() {
 
     if (scheduleStatus !== "ready") {
       errors.timing = "Pickup times haven't loaded yet.";
+    } else if (isOrderingPaused) {
+      errors.timing = ONLINE_ORDERING_PAUSED_MESSAGE;
     } else if (effectivePickupType === "ASAP" && !isAsapAvailable) {
       errors.timing = "Store is currently closed for ASAP orders.";
     }
@@ -532,6 +539,7 @@ export default function CartDrawer() {
     isSubmitting ||
     items.length === 0 ||
     scheduleStatus !== "ready" ||
+    isOrderingPaused ||
     (effectivePickupType === "ASAP" && !isAsapAvailable) ||
     (effectivePickupType === "SCHEDULED" && (availableSlots.length === 0 || !activeSlot));
 
@@ -805,7 +813,19 @@ export default function CartDrawer() {
                     </div>
                   )}
 
-                  {scheduleStatus === "ready" && (
+                  {isOrderingPaused && (
+                    <div
+                      role="status"
+                      className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-1"
+                    >
+                      <div className="font-bold">Online Ordering Paused</div>
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        {ONLINE_ORDERING_PAUSED_MESSAGE}
+                      </p>
+                    </div>
+                  )}
+
+                  {scheduleStatus === "ready" && !isOrderingPaused && (
                   <>
                   {/* ASAP vs Scheduled Segmented Buttons */}
                   <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">

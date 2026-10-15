@@ -13,6 +13,10 @@ export const ORDER_CUTOFF_MINUTES_BEFORE_CLOSE = 30;
 export const MAX_SCHEDULE_DAYS_AHEAD = 7;
 export const SLOT_MINUTES = 15;
 
+/** Shown in the cart and returned by checkout while the owner has paused online ordering. */
+export const ONLINE_ORDERING_PAUSED_MESSAGE =
+  "Online ordering is paused right now. You can still order at the counter, or check back soon.";
+
 export interface PacificDateParts {
   date: Date;
   year: number;

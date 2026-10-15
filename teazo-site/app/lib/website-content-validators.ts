@@ -287,5 +287,11 @@ export function validateWebsiteContentPatch(
     if (!valid) errors.push(...holidayErrors);
   }
 
+  for (const key of ["contactFormEnabled", "onlineOrderingEnabled"] as const) {
+    if (patch[key] !== undefined && typeof patch[key] !== "boolean") {
+      errors.push(`${key} must be true or false`);
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }

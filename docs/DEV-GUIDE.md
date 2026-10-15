@@ -575,9 +575,11 @@ npm run db:seed:local -- you@gmail.com --role 1    # Owner again
 ```
 
 - **Can View** opens every admin page, and the server refuses every admin
-  write with `403`. Today two pages write to the server: the menu PDF upload on
-  `/admin/menu`, whose button is disabled for Can View, and the admins list in
-  Settings, which shows Can View no edit controls. The Square product routes
+  write with `403`. Today three pages write to the server: the menu PDF upload on
+  `/admin/menu`, whose button is disabled for Can View, the admins list in
+  Settings, which shows Can View no edit controls, and `/admin/website-content`,
+  whose saves (hours, holidays, contact details, the logo and the Online
+  Ordering switch) show "Save failed" for Can View. The Square product routes
   also refuse Can View. The other admin pages only change the page in your
   browser for now, so their buttons seem to work at any role and the changes
   are gone when you reload. Use the terminal check below to see the `403`.
