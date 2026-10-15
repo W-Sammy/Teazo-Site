@@ -4,7 +4,7 @@ import type {
   CustomerContact,
   PickupTiming,
 } from "@/app/types/checkout";
-import { isValidEmail, isValidPhone } from "@/app/lib/website-content-validators";
+import { isValidEmail } from "@/app/lib/website-content-validators";
 
 export type ValidationResult<T> =
   | {
@@ -23,6 +23,30 @@ const MAX_NAME_LENGTH = 100;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** A US or Canadian number: area code and exchange can't start with 0 or 1. */
+const NANP_NUMBER = /^1[2-9]\d{2}[2-9]\d{6}$/;
+
+/**
+ * Turns a phone number as the customer typed it into E.164 (+14155550199),
+ * the format Square stores and texts. Ten digits, or eleven starting with 1,
+ * are read as US numbers. Anything else needs a leading + and a country code.
+ * Returns null for anything that can't be a real number.
+ */
+export function toE164Phone(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!/^\+?[\d\s().-]+$/.test(trimmed)) return null;
+
+  const digits = trimmed.replace(/\D/g, "");
+  if (trimmed.startsWith("+")) {
+    if (digits.startsWith("1")) return NANP_NUMBER.test(digits) ? `+${digits}` : null;
+    return /^[2-9]\d{7,14}$/.test(digits) ? `+${digits}` : null;
+  }
+
+  const national = digits.length === 10 ? `1${digits}` : digits;
+  return NANP_NUMBER.test(national) ? `+${national}` : null;
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -61,10 +85,12 @@ export function validateCustomerContact(
     };
   }
 
-  if (!isValidPhone(value.phone)) {
+  const phone = toE164Phone(value.phone);
+  if (!phone) {
     return {
       ok: false,
-      error: "A valid customer phone number (at least 10 digits) is required.",
+      error:
+        "A valid customer phone number is required, such as (415) 555-0199, or an international number starting with +.",
     };
   }
 
@@ -73,7 +99,7 @@ export function validateCustomerContact(
     data: {
       displayName,
       email: (value.email as string).trim(),
-      phone: (value.phone as string).trim(),
+      phone,
     },
   };
 }

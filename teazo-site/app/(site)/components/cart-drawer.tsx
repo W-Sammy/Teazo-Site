@@ -25,6 +25,7 @@ import {
   type DaySchedule,
   getStoreScheduleForDate,
 } from "@/app/lib/store-hours";
+import { toE164Phone } from "@/app/lib/checkout-validators";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItem } from "@/app/(site)/components/menu-item-card";
 import type {
@@ -389,11 +390,10 @@ export default function CartDrawer() {
       errors.name = "Name must be at least 2 characters";
     }
 
-    const cleanPhone = customerPhone.replace(/\D/g, "");
-    if (!cleanPhone) {
+    if (!customerPhone.trim()) {
       errors.phone = "Phone number is required for SMS order alerts";
-    } else if (cleanPhone.length < 10) {
-      errors.phone = "Please enter a valid 10-digit phone number";
+    } else if (!toE164Phone(customerPhone)) {
+      errors.phone = "Please enter a valid phone number, such as (415) 555-0199";
     }
 
     const cleanEmail = customerEmail.trim();
@@ -455,19 +455,12 @@ export default function CartDrawer() {
     setIsSubmitting(true);
 
     try {
-      // Normalize phone to E.164 (+1XXXXXXXXXX) format for Square Orders API compliance
-      const digits = customerPhone.replace(/\D/g, "");
-      const e164Phone = digits.length === 10
-        ? `+1${digits}`
-        : digits.startsWith("1") && digits.length === 11
-        ? `+${digits}`
-        : `+1${digits}`;
-
+      // The server turns the phone number into E.164 for Square.
       const body: CheckoutRequestBody = {
         customer: {
           displayName: customerName.trim(),
           email: customerEmail.trim(),
-          phone: e164Phone,
+          phone: customerPhone.trim(),
         },
         pickupTiming:
           effectivePickupType === "SCHEDULED" && activeSlot
