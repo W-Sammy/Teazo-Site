@@ -7,6 +7,7 @@ type MenuItemsSectionProps = {
 	className?: string;
 	headingClassName: string;
 	bodyClassName: string;
+	onCustomizeItem?: (item: MenuItem) => void;
 };
 
 /* Shared section renderer for menu item groups.
@@ -19,6 +20,7 @@ export default function MenuItemsSection({
 	className = "",
 	headingClassName,
 	bodyClassName,
+	onCustomizeItem,
 }: MenuItemsSectionProps) {
 	return (
 		<section
@@ -42,7 +44,11 @@ export default function MenuItemsSection({
 
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				{items.map((item) => (
-					<MenuItemCard key={item.catalogObjectId} item={item} />
+					<MenuItemCard
+						key={item.catalogObjectId}
+						item={item}
+						onCustomize={onCustomizeItem}
+					/>
 				))}
 			</div>
 		</section>
