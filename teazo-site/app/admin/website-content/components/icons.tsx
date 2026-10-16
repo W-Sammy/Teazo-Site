@@ -1,3 +1,12 @@
+export function IconOrdering() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-[17px] w-[17px]">
+      <path d="M5 7h10l-1 10H6L5 7z" />
+      <path d="M7.5 7V5.5a2.5 2.5 0 015 0V7" />
+    </svg>
+  );
+}
+
 export function IconLogo() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-[17px] w-[17px]">

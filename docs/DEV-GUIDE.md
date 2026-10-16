@@ -82,7 +82,7 @@ page, the gallery admin page (the gallery functions its routes need are ready,
 
 ## 2. Set up your machine
 
-You need **Node.js 22 or newer** and **Git**. Wrangler refuses to start on
+You need **Node.js 22.13 or newer** and **Git**. Wrangler refuses to start on
 anything older, and it says which version it wants.
 
 > **Windows: keep the repo at a short path**, such as `C:\dev\Teazo-Site`. The
@@ -455,12 +455,24 @@ to `.env.local`, restart the app, and submit the form:
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes. After the click, Submit sends the message as usual, and the widget asks for a click again after each message |
 
 In the first two rows Cloudflare refuses the widget's answer, and the app's
-terminal logs `Turnstile rejected a contact form submission:` with Cloudflare's
+terminal logs `Turnstile rejected a submission:` with Cloudflare's
 error code (`invalid-input-response` or `timeout-or-duplicate`). The third row
 logs no refusal: the widget never gives the form an answer, so the server turns
 it away without asking Cloudflare. Instead the terminal repeats `[browser]
 [Cloudflare Turnstile] Error: 600010.` while the page is open. That is the
 widget's own error, copied from the browser, not a problem with the server.
+
+**Checkout.** The cart uses the same bot check and keys. Its widget sits above
+**Proceed to Checkout** while the bag has items, and the button stays grey until
+the check passes. The rows above work there too, except that a failed check
+answers "The security check didn't pass. Please try it again." or "Please wait
+for the security check above the checkout button to finish, then try again."
+Checkout also allows each visitor 10 attempts every 10 minutes, then answers
+"Too many checkout attempts from your connection" with a `429`. Only attempts
+that pass the bot check count. Locally every attempt counts against one shared
+key. To start over, empty the counters from
+`teazo-d1-proxy` with
+`npx wrangler d1 execute teazo-db --local --command "DELETE FROM analytics_rate_limit WHERE identifier LIKE 'checkout:%'"`.
 
 **The hidden field.** The form also has a `company` field that people never
 see and bots fill in. A submission with it filled in gets the usual thank-you
@@ -575,9 +587,11 @@ npm run db:seed:local -- you@gmail.com --role 1    # Owner again
 ```
 
 - **Can View** opens every admin page, and the server refuses every admin
-  write with `403`. Today two pages write to the server: the menu PDF upload on
-  `/admin/menu`, whose button is disabled for Can View, and the admins list in
-  Settings, which shows Can View no edit controls. The Square product routes
+  write with `403`. Today three pages write to the server: the menu PDF upload on
+  `/admin/menu`, whose button is disabled for Can View, the admins list in
+  Settings, which shows Can View no edit controls, and `/admin/website-content`,
+  whose saves (hours, holidays, contact details, the logo and the Online
+  Ordering switch) show "Save failed" for Can View. The Square product routes
   also refuse Can View. The other admin pages only change the page in your
   browser for now, so their buttons seem to work at any role and the changes
   are gone when you reload. Use the terminal check below to see the `403`.
@@ -751,6 +765,7 @@ The values for Vercel are in §8.1.
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
 | | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint "<file>"` and add no new errors. Keep the quotes: bash rejects paths such as `app/(site)/contact/actions.ts` without them |
+| | `npm test` | Runs the automated tests (Vitest). Each `*.test.ts` file sits next to the code it tests, under `app/`. They need no database, Worker or network | Yes, before a pull request, and add tests when you change checkout, pickup-time or order logic |
 | | `npm run build`, `npm start` | A production build | Only as in §2.8 |
 
 ### 2.8 Checking a production build locally
@@ -1184,9 +1199,9 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form's action, which reads the switch |
 | `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `hours_exception` | holidays. `/admin/website-content` stores each date as `MM-DD`, repeating every year, not the `YYYY-MM-DD` the schema comment describes | `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `hours_exception` | holidays. `/admin/website-content` stores a holiday that repeats every year as `MM-DD`, and a one-time holiday as `YYYY-MM-DD`. When both fall on the same day, the one-time holiday wins | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `content_block` | editable text on the site, including the story and the logo | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `content_block` | editable text on the site, including the story and the logo, plus the Online Ordering switch (`site.online_ordering`, `off` while paused) | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
 | `media_asset` | one row per stored file | the PDF menu upload and `saveGalleryImage()` | `/api/menu/pdf` and the gallery functions (§4.1) |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |

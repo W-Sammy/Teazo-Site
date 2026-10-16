@@ -53,7 +53,12 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
   contactFormEnabled: true,
+  onlineOrderingEnabled: true,
 };
+
+// content_block row that pauses online ordering. Its value is "off" while
+// paused; any other value, or no row, means orders are open.
+const ONLINE_ORDERING_KEY = "site.online_ordering";
 
 function cloneDefaultWebsiteContent(): WebsiteContent {
   return {
@@ -65,6 +70,7 @@ function cloneDefaultWebsiteContent(): WebsiteContent {
     hours: DEFAULT_WEBSITE_CONTENT.hours.map((h) => ({ ...h })),
     holidays: DEFAULT_WEBSITE_CONTENT.holidays.map((h) => ({ ...h })),
     contactFormEnabled: DEFAULT_WEBSITE_CONTENT.contactFormEnabled,
+    onlineOrderingEnabled: DEFAULT_WEBSITE_CONTENT.onlineOrderingEnabled,
   };
 }
 
@@ -105,12 +111,6 @@ function hourToTimeString(hour: number): string {
   const h = Math.floor(totalMinutes / 60) % 24;
   const m = totalMinutes % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-function normalizeHolidayDate(date: string): string {
-  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
-  // values from the database as well.
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
 }
 
 
@@ -188,8 +188,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     }>();
 
     const d1Copy = await prepare(
-      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo')`
-    ).all<{ key: string; value: string | null }>();
+      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', ?1)`
+    ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>();
 
     const d1Holidays = await prepare(
       `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`
@@ -265,6 +265,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           content.story = block.value;
         } else if (block.key === "site.logo" && block.value) {
           content.logo = block.value;
+        } else if (block.key === ONLINE_ORDERING_KEY) {
+          content.onlineOrderingEnabled = block.value !== "off";
         }
       }
     }
@@ -275,7 +277,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         return {
           id: `holiday-${h.date || i}`,
           name: h.note || `Holiday`,
-          date: normalizeHolidayDate(h.date),
+          // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+          date: h.date,
           closed: h.is_closed === 1,
           start: timeRange.start,
           end: timeRange.end,
@@ -371,6 +374,16 @@ export async function updateWebsiteContent(
            VALUES ('site.logo', 'site', 'logo', 'text', ?1)
            ON CONFLICT (key) DO UPDATE SET value = ?1, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`
         ).bind(patch.logo)
+      );
+    }
+
+    if (patch.onlineOrderingEnabled !== undefined) {
+      stmts.push(
+        prepare(
+          `INSERT INTO content_block (key, page_key, slot_key, block_type, value)
+           VALUES (?1, 'site', 'online_ordering', 'text', ?2)
+           ON CONFLICT (key) DO UPDATE SET value = ?2, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`
+        ).bind(ONLINE_ORDERING_KEY, patch.onlineOrderingEnabled ? "on" : "off")
       );
     }
 

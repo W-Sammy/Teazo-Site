@@ -38,9 +38,14 @@ export function getWeekDates(referenceDate: Date) {
   });
 }
 
-// "MM-DD" to match Holiday.date's format
+// "MM-DD", the date of a holiday that repeats every year
 export function toMonthDay(date: Date) {
   return `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// "YYYY-MM-DD", the date of a one-time holiday
+export function toIsoDate(date: Date) {
+  return `${date.getFullYear()}-${toMonthDay(date)}`;
 }
 
 export function getCurrentWeekLabel(referenceDate: Date) {
