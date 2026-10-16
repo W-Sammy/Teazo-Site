@@ -111,6 +111,13 @@ describe("POST /api/checkout", () => {
     expect(fulfillment.pickupDetails).toMatchObject({ scheduleType: "SCHEDULED", pickupAt });
   });
 
+  it("refuses a scheduled time between the 15-minute marks without contacting Square", async () => {
+    const pickupAt = pacificToUtc(2026, 10, 17, 14, 7).toISOString();
+    const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
+    expect(res.status).toBe(400);
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
   it("refuses a pickup on a closed day without contacting Square", async () => {
     const pickupAt = pacificToUtc(2026, 10, 19, 12, 0).toISOString();
     const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });

@@ -404,6 +404,14 @@ export async function validatePickupTiming(
       };
     }
 
+    // Only the 15-minute marks the cart offers (2:00, 2:15, ...), to the second
+    if (pickupParts.minuteOfDay % SLOT_MINUTES !== 0 || pickupDate.getTime() % 60_000 !== 0) {
+      return {
+        valid: false,
+        error: `Scheduled pickup must be on a ${SLOT_MINUTES}-minute mark, such as 2:00, 2:15, 2:30 or 2:45. Please select a pickup time from the list.`,
+      };
+    }
+
     const pickupSchedule = getStoreScheduleForDate(pickupDate, content);
     // "today", "tomorrow", or e.g. "on Fri, Oct 16", to fit "Store is closed ..." and "... PT today"
     const dayLabel =

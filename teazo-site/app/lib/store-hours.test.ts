@@ -249,6 +249,17 @@ describe("scheduling ahead (TZ-435)", () => {
     expect(today.error).toContain("PT today");
   });
 
+  it("only accepts times on the 15-minute marks the cart offers", async () => {
+    const now = pt(10, 14, 11, 0);
+    const offGrid = await scheduledAt(pt(10, 14, 14, 7), now);
+    expect(offGrid.valid).toBe(false);
+    expect(offGrid.error).toContain("15-minute");
+    const withSeconds = new Date(pt(10, 14, 14, 15).getTime() + 30_000);
+    expect((await scheduledAt(withSeconds, now)).valid).toBe(false);
+    expect((await scheduledAt(pt(10, 14, 14, 15), now)).valid).toBe(true);
+    expect((await scheduledAt(pt(10, 16, 12, 45), now)).valid).toBe(true);
+  });
+
   it("refuses times outside a future day's hours", async () => {
     const now = pt(10, 14, 15, 0);
     expect((await scheduledAt(pt(10, 15, 10, 45), now)).valid).toBe(false);
