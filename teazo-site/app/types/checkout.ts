@@ -59,7 +59,9 @@ export interface CheckoutSuccessResponse {
 
 export interface CheckoutErrorResponse {
   error: string;
-  /** e.g. "ORDERING_PAUSED", "RATE_LIMITED", "BOT_CHECK_FAILED" */
+  /** e.g. "ORDERING_PAUSED", "RATE_LIMITED", "BOT_CHECK_FAILED", "ITEM_UNAVAILABLE", "INVALID_OPTIONS" */
   code?: string;
+  /** With ITEM_UNAVAILABLE or INVALID_OPTIONS: the Square variation IDs of the cart lines at fault. */
+  variationIds?: string[];
   details?: unknown;
 }

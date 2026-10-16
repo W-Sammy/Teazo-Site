@@ -28,6 +28,12 @@ import {
   ONLINE_ORDERING_PAUSED_MESSAGE,
 } from "@/app/lib/store-hours";
 import { toE164Phone } from "@/app/lib/checkout-validators";
+import {
+  cartIssueMessage,
+  cartItemsWithIssue,
+  readCartIssue,
+  type CartIssue,
+} from "@/app/lib/cart-issues";
 import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/app/components/turnstile-widget";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItem } from "@/app/(site)/components/menu-item-card";
@@ -174,6 +180,16 @@ export default function CartDrawer() {
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Cart lines the last checkout attempt refused (sold out, or options that no longer fit)
+  const [cartIssue, setCartIssue] = useState<CartIssue | null>(null);
+  const flaggedItems = useMemo(() => cartItemsWithIssue(items, cartIssue), [items, cartIssue]);
+  const flaggedItemIds = useMemo(() => new Set(flaggedItems.map((it) => it.cartItemId)), [flaggedItems]);
+
+  const removeFlaggedItems = () => {
+    for (const it of flaggedItems) removeItem(it.cartItemId);
+    setCartIssue(null);
+    setErrorMessage(null);
+  };
   const [formErrors, setFormErrors] = useState<{
     name?: string;
     phone?: string;
@@ -463,6 +479,7 @@ export default function CartDrawer() {
   const handleProceedToCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setCartIssue(null);
 
     if (items.length === 0) {
       setErrorMessage("Your cart is empty. Add drinks to proceed.");
@@ -518,6 +535,8 @@ export default function CartDrawer() {
         const errorData: CheckoutErrorResponse = await res.json().catch(() => ({
           error: "Checkout service returned an error. Please try again.",
         }));
+        // Items that are sold out or whose options no longer fit get marked in the bag.
+        setCartIssue(readCartIssue(errorData));
         throw new Error(errorData.error || "Failed to create checkout session.");
       }
 
@@ -655,7 +674,19 @@ export default function CartDrawer() {
 
                   <div className="divide-y divide-gray-100">
                     {items.map((item) => (
-                      <div key={item.cartItemId} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-2">
+                      <div
+                        key={item.cartItemId}
+                        className={`py-4 first:pt-0 last:pb-0 flex flex-col gap-2 ${
+                          flaggedItemIds.has(item.cartItemId)
+                            ? "-mx-2 px-2 rounded-lg bg-red-50/60 ring-1 ring-red-300 first:pt-2 last:pb-2"
+                            : ""
+                        }`}
+                      >
+                        {cartIssue && flaggedItemIds.has(item.cartItemId) && (
+                          <p role="alert" className="text-[11px] font-semibold text-red-600">
+                            {cartIssueMessage(cartIssue.code)}
+                          </p>
+                        )}
                         {/* Title, Thumbnail & Price */}
                         <div className="flex items-start gap-3">
                           {/* Drink Thumbnail */}
@@ -1076,7 +1107,18 @@ export default function CartDrawer() {
                   <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>{errorMessage}</span>
+                  <div className="space-y-2">
+                    <span className="block">{errorMessage}</span>
+                    {flaggedItems.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={removeFlaggedItems}
+                        className="inline-flex items-center px-3 py-1 rounded-full border border-red-300 bg-white text-red-700 font-semibold hover:bg-red-100 transition"
+                      >
+                        Remove {flaggedItems.length === 1 ? "this item" : `these ${flaggedItems.length} items`}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
