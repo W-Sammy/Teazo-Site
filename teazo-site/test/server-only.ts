@@ -1,2 +1,2 @@
-// Stands in for the "server-only" package under Vitest (see vitest.config.ts).
+// Stands in for the "server-only" package under Vitest (see vitest.config.mts).
 export {};

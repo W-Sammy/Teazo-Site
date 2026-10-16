@@ -82,7 +82,7 @@ page, the gallery admin page (the gallery functions its routes need are ready,
 
 ## 2. Set up your machine
 
-You need **Node.js 22 or newer** and **Git**. Wrangler refuses to start on
+You need **Node.js 22.13 or newer** and **Git**. Wrangler refuses to start on
 anything older, and it says which version it wants.
 
 > **Windows: keep the repo at a short path**, such as `C:\dev\Teazo-Site`. The
@@ -1201,7 +1201,7 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `hours_exception` | holidays. `/admin/website-content` stores a holiday that repeats every year as `MM-DD`, and a one-time holiday as `YYYY-MM-DD`. When both fall on the same day, the one-time holiday wins | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `content_block` | editable text on the site, including the story and the logo | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `content_block` | editable text on the site, including the story and the logo, plus the Online Ordering switch (`site.online_ordering`, `off` while paused) | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
 | `media_asset` | one row per stored file | the PDF menu upload and `saveGalleryImage()` | `/api/menu/pdf` and the gallery functions (§4.1) |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |

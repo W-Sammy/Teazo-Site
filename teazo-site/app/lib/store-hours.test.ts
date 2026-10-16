@@ -238,6 +238,17 @@ describe("scheduling ahead (TZ-435)", () => {
     expect(christmas.error).toContain("Christmas");
   });
 
+  it("names the day naturally in its refusals", async () => {
+    const now = pt(10, 18, 15, 0); // Sunday, so tomorrow is the closed Monday
+    const tomorrow = await scheduledAt(pt(10, 19, 12, 0), now);
+    expect(tomorrow.error).toContain("closed tomorrow");
+    expect(tomorrow.error).not.toMatch(/on tomorrow/i);
+    const later = await scheduledAt(pt(10, 20, 10, 0), now);
+    expect(later.error).toContain("on Tue, Oct 20");
+    const today = await scheduledAt(pt(10, 18, 20, 0), now);
+    expect(today.error).toContain("PT today");
+  });
+
   it("refuses times outside a future day's hours", async () => {
     const now = pt(10, 14, 15, 0);
     expect((await scheduledAt(pt(10, 15, 10, 45), now)).valid).toBe(false);

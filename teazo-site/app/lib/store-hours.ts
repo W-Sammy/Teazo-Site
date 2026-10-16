@@ -405,7 +405,13 @@ export async function validatePickupTiming(
     }
 
     const pickupSchedule = getStoreScheduleForDate(pickupDate, content);
-    const dayLabel = daysAhead === 0 ? "today" : `on ${formatPickupDay(pickupDate, referenceNow)}`;
+    // "today", "tomorrow", or e.g. "on Fri, Oct 16", to fit "Store is closed ..." and "... PT today"
+    const dayLabel =
+      daysAhead === 0
+        ? "today"
+        : daysAhead === 1
+          ? "tomorrow"
+          : `on ${formatPickupDay(pickupDate, referenceNow)}`;
     if (pickupSchedule.closed) {
       const holidayMsg = pickupSchedule.holiday ? ` for ${pickupSchedule.holiday.name}` : "";
       return {
