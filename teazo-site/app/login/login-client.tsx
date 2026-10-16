@@ -166,7 +166,6 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
               </p>
             )}
 
-            {/* the disabled feature look bad. ew. */}
             <button
               type="submit"
               disabled={isSubmitting || !email.trim() || !password}
