@@ -24,6 +24,15 @@ export default function AdminGalleryGrid({
       {images.map((image, index) => {
         const isSelected = selectedIds.includes(image.id);
 
+        const uploadedDate = image.createdAt
+          ? new Date(image.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              timeZone: "UTC",
+            })
+          : null;
+
         return (
           <article
             key={image.id}
@@ -122,6 +131,12 @@ export default function AdminGalleryGrid({
                   </span>
                 )}
               </div>
+
+              {uploadedDate && (
+                <p className="mt-2 text-xs text-gray-500">
+                  Added: {uploadedDate}
+                </p>
+              )}
             </div>
           </article>
         );
