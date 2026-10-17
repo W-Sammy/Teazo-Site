@@ -1,1 +1,1 @@
-export type SectionId = "logo" | "story" | "social" | "contact" | "hours" | "holidays";
+export type SectionId = "logo" | "story" | "social" | "contact" | "hours" | "holidays" | "carousel";
