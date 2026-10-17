@@ -7,6 +7,7 @@ import type { AdminGalleryImage } from "../../../types/gallery-image";
 
 type AdminGalleryListProps = {
   images: AdminGalleryImage[];
+  canEdit: boolean;
   onEdit: (image: AdminGalleryImage) => void;
   onDelete: (image: AdminGalleryImage) => void;
   selectedIds: string[];
@@ -30,6 +31,7 @@ function formatDate(value: string) {
 
 export default function AdminGalleryList({
   images,
+  canEdit,
   onEdit,
   onDelete,
   selectedIds,
@@ -37,42 +39,59 @@ export default function AdminGalleryList({
   onSelectAll,
 }: AdminGalleryListProps) {
   const allSelected =
+    canEdit &&
     images.length > 0 &&
     images.every((image) => selectedIds.includes(image.id));
 
   const someSelected =
+    canEdit &&
     images.some((image) => selectedIds.includes(image.id));
 
   return (
     <div className="w-full overflow-x-auto rounded-lg border border-[#dbb082]/60 bg-white">
-      <table className="w-full min-w-[760px] border-collapse">
+      <table
+        className={`w-full ${
+          canEdit ? "min-w-[760px]" : "min-w-[500px]"
+        } border-collapse`}
+      >
         <thead>
           <tr className="border-b border-[#dbb082] bg-[#fffaf6] text-left text-sm text-gray-700">
-            <th className="w-12 px-3 py-3">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                aria-label="Select all displayed images"
-                title={
-                  allSelected
-                    ? "Deselect displayed images"
-                    : "Select all displayed images"
-                }
-                onChange={(event) =>
-                  onSelectAll(event.target.checked)
-                }
-                ref={(element) => {
-                  if (element) {
-                    element.indeterminate =
-                      someSelected && !allSelected;
-                  }
-                }}
-                className="h-4 w-4 cursor-pointer accent-[#b98555]"
-              />
-            </th>
+            {canEdit && (
+              <>
+                <th className="w-12 px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    aria-label="Select all displayed images"
+                    title={
+                      allSelected
+                        ? "Deselect displayed images"
+                        : "Select all displayed images"
+                    }
+                    onChange={(event) =>
+                      onSelectAll(event.target.checked)
+                    }
+                    ref={(element) => {
+                      if (element) {
+                        element.indeterminate =
+                          someSelected && !allSelected;
+                      }
+                    }}
+                    className="h-4 w-4 cursor-pointer accent-[#b98555]"
+                  />
+                </th>
 
-            <th className="w-14 px-3 py-3" aria-label="Delete" />
-            <th className="w-20 px-3 py-3" aria-label="Edit" />
+                <th
+                  className="w-14 px-3 py-3"
+                  aria-label="Delete"
+                />
+                <th
+                  className="w-20 px-3 py-3"
+                  aria-label="Edit"
+                />
+              </>
+            )}
+
             <th className="w-20 px-3 py-3">Icon</th>
             <th className="px-3 py-3">Name</th>
             <th className="px-3 py-3">Tags</th>
@@ -82,58 +101,73 @@ export default function AdminGalleryList({
 
         <tbody>
           {images.map((image) => {
-            const isSelected = selectedIds.includes(image.id);
+            const isSelected =
+              canEdit && selectedIds.includes(image.id);
 
             return (
               <tr
                 key={image.id}
-                onClick={() => onEdit(image)}
-                className={`cursor-pointer border-b border-[#dbb082]/40 text-sm last:border-b-0 hover:bg-[#dbb082]/15 ${
+                onClick={
+                  canEdit
+                    ? () => onEdit(image)
+                    : undefined
+                }
+                className={`border-b border-[#dbb082]/40 text-sm last:border-b-0 hover:bg-[#dbb082]/15 ${
+                  canEdit ? "cursor-pointer" : ""
+                } ${
                   isSelected ? "bg-[#fff0df]" : ""
                 }`}
               >
-                <td className="px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    aria-label={`Select ${image.name}`}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={() => onToggleSelect(image.id)}
-                    className="h-4 w-4 cursor-pointer accent-[#b98555]"
-                  />
-                </td>
+                {canEdit && (
+                  <>
+                    <td className="px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        aria-label={`Select ${image.name}`}
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                        onChange={() =>
+                          onToggleSelect(image.id)
+                        }
+                        className="h-4 w-4 cursor-pointer accent-[#b98555]"
+                      />
+                    </td>
 
-                <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={(
-                      event: MouseEvent<HTMLButtonElement>,
-                    ) => {
-                      event.stopPropagation();
-                      onDelete(image);
-                    }}
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg font-bold text-red-500 hover:bg-red-50 hover:text-red-700"
-                    aria-label={`Delete ${image.name}`}
-                    title="Delete image"
-                  >
-                    ×
-                  </button>
-                </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={(
+                          event: MouseEvent<HTMLButtonElement>,
+                        ) => {
+                          event.stopPropagation();
+                          onDelete(image);
+                        }}
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg font-bold text-red-500 hover:bg-red-50 hover:text-red-700"
+                        aria-label={`Delete ${image.name}`}
+                        title="Delete image"
+                      >
+                        ×
+                      </button>
+                    </td>
 
-                <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={(
-                      event: MouseEvent<HTMLButtonElement>,
-                    ) => {
-                      event.stopPropagation();
-                      onEdit(image);
-                    }}
-                    className="cursor-pointer rounded bg-[#dbb082] px-2 py-1 text-xs font-bold text-white hover:bg-[#c89968]"
-                  >
-                    EDIT
-                  </button>
-                </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={(
+                          event: MouseEvent<HTMLButtonElement>,
+                        ) => {
+                          event.stopPropagation();
+                          onEdit(image);
+                        }}
+                        className="cursor-pointer rounded bg-[#dbb082] px-2 py-1 text-xs font-bold text-white hover:bg-[#c89968]"
+                      >
+                        EDIT
+                      </button>
+                    </td>
+                  </>
+                )}
 
                 <td className="px-3 py-2">
                   <div className="relative h-11 w-11 overflow-hidden rounded bg-[#f3ece6]">

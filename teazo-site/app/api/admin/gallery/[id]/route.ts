@@ -187,7 +187,7 @@ export async function DELETE(
     params: Promise<{ id: string }>;
   },
 ): Promise<Response> {
-  const access = await requireAdminApi(request, 3);
+  const access = await requireAdminApi(request, 2);
 
   if (!access.ok) {
     return access.response;

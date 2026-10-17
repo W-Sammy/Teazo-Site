@@ -29,6 +29,7 @@ import GalleryUploadForm, {
 
 type AdminGalleryClientProps = {
   initialImages: AdminGalleryImage[];
+  canEdit: boolean;
 };
 
 // Filter labels include counts across the complete current image collection.
@@ -140,6 +141,7 @@ function isAdminGalleryImage(
 
 export default function AdminGalleryClient({
   initialImages,
+  canEdit,
 }: AdminGalleryClientProps) {
   // Start with database images; uploads, metadata edits and deletions use the API.
   const [images, setImages] =
@@ -318,6 +320,7 @@ export default function AdminGalleryClient({
     );
 
   function toggleImageSelection(id: string) {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -336,6 +339,7 @@ export default function AdminGalleryClient({
 
   // Select/deselect only images matching the current search and tag filters.
   function selectAllDisplayed(selected: boolean) {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -362,6 +366,7 @@ export default function AdminGalleryClient({
   }
 
   function clearImageSelection() {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -433,6 +438,7 @@ export default function AdminGalleryClient({
 
   // Explicitly reset edit mode before opening the create form.
   function openNewImageDrawer() {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -448,6 +454,7 @@ export default function AdminGalleryClient({
   function openEditDrawer(
     image: AdminGalleryImage,
   ) {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -464,6 +471,9 @@ export default function AdminGalleryClient({
   async function handleSave(
     values: GalleryUploadValues,
   ): Promise<void> {
+    if (!canEdit) {
+      throw new Error("You do not have permission to edit gallery images.");
+    }
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -621,6 +631,7 @@ export default function AdminGalleryClient({
   function openSingleDeleteDialog(
     image: AdminGalleryImage,
   ) {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked
@@ -667,6 +678,7 @@ export default function AdminGalleryClient({
   }
 
   function confirmDelete(): Promise<string | null> {
+    if (!canEdit) return Promise.resolve("You do not have permission to delete gallery images.");
     if (singleDeleteInFlight.current) {
       return singleDeleteInFlight.current;
     }
@@ -691,6 +703,7 @@ export default function AdminGalleryClient({
   }
 
   function openBulkDeleteDialog() {
+    if (!canEdit) return;
     if (
       mutationInFlight.current ||
       interactionLocked ||
@@ -783,6 +796,7 @@ export default function AdminGalleryClient({
   }
 
   function confirmBulkDelete(): Promise<BulkDeleteResult> {
+    if (!canEdit) return Promise.reject(new Error("You do not have permission to delete gallery images."));
     if (bulkDeleteInFlight.current) {
       return bulkDeleteInFlight.current;
     }
@@ -1125,6 +1139,7 @@ export default function AdminGalleryClient({
               />
             </div>
 
+            {canEdit && (
             <button
               type="button"
               onClick={openNewImageDrawer}
@@ -1133,9 +1148,11 @@ export default function AdminGalleryClient({
             >
               New Image +
             </button>
+            )}
           </div>
 
           {/* Shared bulk-selection controls for both gallery views. */}
+          {canEdit && (
           <div className="gallery-landscape-bulk mt-3 flex flex-wrap items-center gap-3 border-t border-[#dbb082]/40 pt-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -1200,6 +1217,7 @@ export default function AdminGalleryClient({
               Delete selected ({selectedImages.length})
             </button>
           </div>
+          )}
         </div>
 
         {/* Gallery content */}
@@ -1230,6 +1248,7 @@ export default function AdminGalleryClient({
             viewMode === "grid" ? (
               <AdminGalleryGrid
                 images={filteredImages}
+                canEdit={canEdit}
                 onEdit={openEditDrawer}
                 onDelete={openSingleDeleteDialog}
                 selectedIds={selectedIds}
@@ -1238,6 +1257,7 @@ export default function AdminGalleryClient({
             ) : (
               <AdminGalleryList
                 images={filteredImages}
+                canEdit={canEdit}
                 onEdit={openEditDrawer}
                 onDelete={openSingleDeleteDialog}
                 selectedIds={selectedIds}
@@ -1255,11 +1275,13 @@ export default function AdminGalleryClient({
 
               <p className="mt-2 max-w-md text-sm text-gray-500">
                 {images.length === 0
-                  ? "Use the New Image button to add your first gallery image."
+                  ? canEdit
+                    ? "Use the New Image button to add your first gallery image."
+                    : "No gallery images have been added yet."
                   : "Try changing the photo search or clearing the selected tags."}
               </p>
 
-              {images.length === 0 ? (
+              {images.length === 0 && canEdit ? (
                 <button
                   type="button"
                   onClick={
@@ -1269,7 +1291,7 @@ export default function AdminGalleryClient({
                 >
                   Add an image
                 </button>
-              ) : (
+              ) : images.length > 0 ? (
                 <button
                   type="button"
                   onClick={
@@ -1279,7 +1301,7 @@ export default function AdminGalleryClient({
                 >
                   Clear search and filters
                 </button>
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -1287,6 +1309,7 @@ export default function AdminGalleryClient({
 
       {/* Right-side upload/edit form */}
       {/* Mount a fresh form for each selected record, and unmount its contents on close. */}
+      {canEdit && (
       <AdminForm
         isOpen={drawerOpen}
         onClose={() => {
@@ -1318,9 +1341,10 @@ export default function AdminGalleryClient({
           />
         )}
       </AdminForm>
+      )}
 
       {/* Selecting Delete opens this dialog before the image is deleted. */}
-      {imagePendingDelete && (
+      {canEdit && imagePendingDelete && (
         <DeleteImageDialog
           key={imagePendingDelete.id}
           image={imagePendingDelete}
@@ -1330,7 +1354,7 @@ export default function AdminGalleryClient({
       )}
 
       {/* Keep this mounted after a partial failure so its error stays visible. */}
-      {imagesPendingBulkDelete !== null && (
+      {canEdit && imagesPendingBulkDelete !== null && (
         <DeleteSelectedImagesDialog
           images={imagesPendingBulkDelete}
           onCancel={cancelBulkDelete}

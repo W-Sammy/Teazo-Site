@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import AdminGalleryClient from "./components/admin-gallery-client";
 import { requireAdminPage } from "@/app/lib/admin";
@@ -10,9 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminGalleryPage() {
-  await requireAdminPage(3);
+  const admin = await requireAdminPage(3);
 
   const initialImages = await getAdminGalleryImages();
 
-  return <AdminGalleryClient initialImages={initialImages} />;
+  return (
+    <AdminGalleryClient
+      initialImages={initialImages}
+      canEdit={admin.role_id <= 2}
+    />
+  );
 }
