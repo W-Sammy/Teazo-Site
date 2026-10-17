@@ -385,6 +385,18 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
+  function updateOnlineOrderingEnabled(enabled: boolean) {
+    setErrorMessage("");
+    try {
+      setContent((prev) => ({ ...prev, onlineOrderingEnabled: enabled }));
+      flushPatch({ onlineOrderingEnabled: enabled });
+      return true;
+    } catch {
+      setErrorMessage("Failed to update the online ordering setting.");
+      return false;
+    }
+  }
+
   return {
     content,
     saveStatus,
@@ -402,5 +414,6 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     updateHoliday,
     removeHoliday,
     updateContactFormEnabled,
+    updateOnlineOrderingEnabled,
   };
 }

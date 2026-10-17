@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Holiday } from "@/app/types/website-content";
 import { fieldClass, ErrorText } from "../field-controls";
-import { daysInMonth } from "../validators";
+import { daysInMonth, parseHolidayDate } from "../validators";
 import {
   hourToTimeValue,
   timeValueToHour,
@@ -31,12 +31,37 @@ const MONTH_NAMES = [
 const timeInputClass =
   "block min-h-11 w-full min-w-0 max-w-full cursor-pointer rounded border border-[#ecdfd7] bg-white px-1.5 py-1.5 text-base text-gray-700 sm:min-h-0 sm:text-xs";
 
+const YEARS_AHEAD = 4;
+
 function formatHolidayDate(value: string) {
-  const [m, d] = value.split("-").map(Number);
+  const { year, month, day } = parseHolidayDate(value);
 
-  if (!m || !d) return "No date set";
+  if (!month || !day) return "No date set";
 
-  return `${MONTH_NAMES[m - 1]} ${d}`;
+  return year
+    ? `${MONTH_NAMES[month - 1]} ${day}, ${year} · this year only`
+    : `${MONTH_NAMES[month - 1]} ${day} · repeats yearly`;
+}
+
+// "MM-DD" repeats every year, "YYYY-MM-DD" is that one day (see Holiday.date)
+function splitDate(value: string) {
+  const parts = value.split("-");
+  return parts.length === 3
+    ? { year: parts[0], month: parts[1], day: parts[2] }
+    : { year: "", month: parts[0] ?? "", day: parts[1] ?? "" };
+}
+
+function joinDate(year: string, month: string, day: string) {
+  return year ? `${year}-${month}-${day}` : `${month}-${day}`;
+}
+
+// The first year in which month/day is still ahead, so a new one-time holiday isn't already over.
+function nextYearFor(month: string, day: string) {
+  const today = new Date();
+  const thisYear = today.getFullYear();
+  if (!month || !day) return thisYear;
+  const thisYearsDate = new Date(thisYear, Number(month) - 1, Number(day), 23, 59);
+  return thisYearsDate < today ? thisYear + 1 : thisYear;
 }
 
 export default function HolidayCard({
@@ -53,13 +78,19 @@ export default function HolidayCard({
   onBlur?: () => void;
 }) {
   const [nameTouched, setNameTouched] = useState(false);
-  const [month, day] = holiday.date.split("-");
+  const { year, month, day } = splitDate(holiday.date);
+  const repeatsYearly = !year;
 
   const nameError =
     nameTouched && !holiday.name.trim() ? "Name is required" : undefined;
 
   const monthNum = month ? Number(month) : null;
-  const dayCount = daysInMonth(monthNum);
+  const yearNum = year ? Number(year) : null;
+  const dayCount = daysInMonth(monthNum, yearNum);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: YEARS_AHEAD + 1 }, (_, i) => currentYear + i);
+  if (yearNum && !yearOptions.includes(yearNum)) yearOptions.unshift(yearNum);
   const hasAnyDatePart = Boolean(month || day);
   const dateComplete = Boolean(month && day);
 
@@ -73,23 +104,32 @@ export default function HolidayCard({
     dateError = "Select both a month and a day";
   }
 
-  // re-clamp the already-picked day if switching to a shorter month would make it invalid (e.g. 31 -> Feb)
+  // re-clamp the already-picked day if the new month or year makes it invalid (e.g. 31 -> Feb, or Feb 29 -> 2027)
+  function clampDay(newMonth: string, newYear: string) {
+    if (!day) return "";
+    const maxDay = daysInMonth(newMonth ? Number(newMonth) : null, newYear ? Number(newYear) : null);
+    return String(Math.min(Number(day), maxDay)).padStart(2, "0");
+  }
+
   function setMonth(newMonth: string) {
-    const newMonthNum = newMonth ? Number(newMonth) : null;
-
-    const clampedDay = day
-      ? Math.min(Number(day), daysInMonth(newMonthNum))
-      : null;
-
-    onChange({
-      date: `${newMonth}-${
-        clampedDay ? String(clampedDay).padStart(2, "0") : ""
-      }`,
-    });
+    onChange({ date: joinDate(year, newMonth, clampDay(newMonth, year)) });
   }
 
   function setDay(newDay: string) {
-    onChange({ date: `${month || ""}-${newDay}` });
+    onChange({ date: joinDate(year, month || "", newDay) });
+  }
+
+  function setYear(newYear: string) {
+    onChange({ date: joinDate(newYear, month || "", clampDay(month, newYear)) });
+  }
+
+  function setRepeatsYearly(repeats: boolean) {
+    if (repeats) {
+      onChange({ date: joinDate("", month || "", day || "") });
+    } else {
+      const newYear = String(nextYearFor(month, day));
+      onChange({ date: joinDate(newYear, month || "", clampDay(month, newYear)) });
+    }
   }
 
   return (
@@ -97,7 +137,7 @@ export default function HolidayCard({
     <div className="flex w-full min-w-0 max-w-full flex-col gap-3 rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-3 sm:w-[245px] sm:gap-2.5 sm:p-4">
       <div className="flex min-w-0 items-start justify-between gap-2">
         <span className="min-w-0 break-words text-[11px] font-semibold uppercase tracking-wide text-[#a99584]">
-          {formatHolidayDate(holiday.date)} · repeats yearly
+          {formatHolidayDate(holiday.date)}
         </span>
 
         <button
@@ -183,6 +223,31 @@ export default function HolidayCard({
             ))}
           </select>
         </div>
+
+        {!repeatsYearly && (
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            aria-label="Holiday year"
+            className={`${fieldClass(Boolean(dateError))} mt-2 cursor-pointer bg-white`}
+          >
+            {yearOptions.map((option) => (
+              <option key={option} value={String(option)}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-xs text-gray-600 sm:min-h-0">
+          <input
+            type="checkbox"
+            checked={repeatsYearly}
+            onChange={(e) => setRepeatsYearly(e.target.checked)}
+            className="h-4 w-4 cursor-pointer accent-[#6f8f6a]"
+          />
+          Repeats every year
+        </label>
 
         {dateError && <ErrorText>{dateError}</ErrorText>}
       </div>

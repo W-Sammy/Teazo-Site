@@ -2,7 +2,10 @@ import type {
   DayHours,
   SocialLink,
   WebsiteContent,
+  ContactHour,
+  ContactContent,
 } from "@/app/types/website-content";
+import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
 import {
   isValidPhone,
@@ -12,25 +15,7 @@ import {
   validateWebsiteContentPatch,
 } from "@/app/lib/website-content-validators";
 
-export type ContactHour = {
-  day: string;
-  hours: string;
-};
-
-export type ContactContent = {
-  logo?: string;
-  location: {
-    businessName: string;
-    streetAddress: string;
-    locality: string;
-    phone: string;
-    email: string;
-    mapQuery: string;
-  };
-  hours: ContactHour[];
-  socialLinks?: SocialLink[];
-  contactFormEnabled: boolean;
-};
+export type { ContactHour, ContactContent, SocialLink };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
   logo: "/TEAZO_logo.svg",
@@ -68,7 +53,12 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
   contactFormEnabled: true,
+  onlineOrderingEnabled: true,
 };
+
+// content_block row that pauses online ordering. Its value is "off" while
+// paused; any other value, or no row, means orders are open.
+const ONLINE_ORDERING_KEY = "site.online_ordering";
 
 function cloneDefaultWebsiteContent(): WebsiteContent {
   return {
@@ -80,6 +70,7 @@ function cloneDefaultWebsiteContent(): WebsiteContent {
     hours: DEFAULT_WEBSITE_CONTENT.hours.map((h) => ({ ...h })),
     holidays: DEFAULT_WEBSITE_CONTENT.holidays.map((h) => ({ ...h })),
     contactFormEnabled: DEFAULT_WEBSITE_CONTENT.contactFormEnabled,
+    onlineOrderingEnabled: DEFAULT_WEBSITE_CONTENT.onlineOrderingEnabled,
   };
 }
 
@@ -89,15 +80,6 @@ function isD1Configured(): boolean {
   return Boolean(process.env.D1_PROXY_URL && process.env.PROXY_TOKEN);
 }
 
-const WEEKDAY_NAMES_FROM_MONDAY = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
 const WEEKDAY_ABBRS_FROM_SUNDAY = [
   "Sun",
@@ -131,25 +113,6 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function normalizeHolidayDate(date: string): string {
-  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
-  // values from the database as well.
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
-}
-
-function parseDisplayHour(value: string): number | undefined {
-  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if (!match) return undefined;
-  let hour = Number(match[1]) % 12;
-  if (match[3].toUpperCase() === "PM") hour += 12;
-  return hour + Number(match[2]) / 60;
-}
-
-function parseHolidayHours(displayText: string | null) {
-  if (!displayText || !displayText.includes("-")) return {};
-  const [open, close] = displayText.split("-").map((part) => parseDisplayHour(part));
-  return open !== undefined && close !== undefined ? { start: open, end: close } : {};
-}
 
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
@@ -225,8 +188,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     }>();
 
     const d1Copy = await prepare(
-      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo')`
-    ).all<{ key: string; value: string | null }>();
+      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', ?1)`
+    ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>();
 
     const d1Holidays = await prepare(
       `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`
@@ -302,18 +265,26 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           content.story = block.value;
         } else if (block.key === "site.logo" && block.value) {
           content.logo = block.value;
+        } else if (block.key === ONLINE_ORDERING_KEY) {
+          content.onlineOrderingEnabled = block.value !== "off";
         }
       }
     }
 
     if (d1Holidays.results.length > 0) {
-      content.holidays = d1Holidays.results.map((h, i) => ({
-        id: `holiday-${h.date || i}`,
-        name: h.note || `Holiday`,
-        date: normalizeHolidayDate(h.date),
-        closed: h.is_closed === 1,
-        ...parseHolidayHours(h.display_text),
-      }));
+      content.holidays = d1Holidays.results.map((h, i) => {
+        const timeRange = parseDisplayTextRange(h.display_text);
+        return {
+          id: `holiday-${h.date || i}`,
+          name: h.note || `Holiday`,
+          // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+          date: h.date,
+          closed: h.is_closed === 1,
+          start: timeRange.start,
+          end: timeRange.end,
+          displayText: h.display_text || undefined,
+        };
+      });
     }
 
     inMemoryContent = { ...content };
@@ -406,6 +377,16 @@ export async function updateWebsiteContent(
       );
     }
 
+    if (patch.onlineOrderingEnabled !== undefined) {
+      stmts.push(
+        prepare(
+          `INSERT INTO content_block (key, page_key, slot_key, block_type, value)
+           VALUES (?1, 'site', 'online_ordering', 'text', ?2)
+           ON CONFLICT (key) DO UPDATE SET value = ?2, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`
+        ).bind(ONLINE_ORDERING_KEY, patch.onlineOrderingEnabled ? "on" : "off")
+      );
+    }
+
     if (patch.hours && patch.hours.length === 7) {
       WEEKDAY_ABBRS_FROM_SUNDAY.forEach((_, jsDay) => {
         const d1Day = (jsDay + 6) % 7;
@@ -447,9 +428,9 @@ export async function updateWebsiteContent(
         if (!holiday.date) continue;
         const displayText = holiday.closed
           ? "Closed"
-          : holiday.start && holiday.end
+          : holiday.start !== undefined && holiday.end !== undefined
           ? `${formatTime(holiday.start)} - ${formatTime(holiday.end)}`
-          : "Closed";
+          : holiday.displayText || "Closed";
         stmts.push(
           prepare(
             `INSERT INTO hours_exception (date, is_closed, display_text, note)
@@ -511,22 +492,7 @@ export async function updateWebsiteContent(
  */
 export async function getContactContent(): Promise<ContactContent> {
   const content = await getWebsiteContent();
-
-  // Convert DayHours (Sun-first) to ContactHour (Mon-first)
-  const hours: ContactHour[] = WEEKDAY_NAMES_FROM_MONDAY.map((dayName, monIdx) => {
-    // monIdx 0 = Mon -> jsDay 1; monIdx 6 = Sun -> jsDay 0
-    const jsDay = (monIdx + 1) % 7;
-    const entry = content.hours[jsDay];
-    const hoursText = entry?.closed
-      ? "Closed"
-      : entry
-      ? `${formatTime(entry.start)} - ${formatTime(entry.end)}`
-      : "11:00 AM - 8:00 PM";
-    return {
-      day: dayName,
-      hours: hoursText,
-    };
-  });
+  const hours = getWeeklyCustomerHours(content);
 
   return {
     logo: content.logo,
