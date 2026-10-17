@@ -83,14 +83,19 @@ export default function DeleteSelectedImagesDialog({
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-gray-600">
-          Are you sure you want to delete{" "}
-          <strong>
-            {images.length}{" "}
-            {images.length === 1 ? "image" : "images"}
-          </strong>
-          ? The images will be removed from the gallery,
-          and their stored files will be scheduled for
-          deletion after 24 hours.
+          {images.length === 1 ? (
+            <>
+              Are you sure you want to delete{" "}
+              <strong>{images[0].name}</strong>? This permanently
+              removes the image from the Gallery page.
+            </>
+          ) : (
+            <>
+              Are you sure you want to delete{" "}
+              <strong>{images.length} images</strong>? This
+              permanently removes the images from the Gallery page.
+            </>
+          )}
         </p>
 
         <div className="mt-4 max-h-40 overflow-y-auto rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3">
