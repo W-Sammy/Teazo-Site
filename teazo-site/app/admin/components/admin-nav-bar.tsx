@@ -79,16 +79,16 @@ export default function Sidebar({
 
   // Reserve a narrow mobile rail while the expanded fixed navigation overlays content.
   return (
-    <div className="relative h-dvh w-16 shrink-0 md:w-auto">
+    <div className="relative h-dvh w-16 shrink-0 lg:w-auto">
       <nav
-        className={`fixed inset-y-0 left-0 z-50 flex h-dvh flex-col gap-2 overflow-y-auto bg-[#E5E7EB] p-2 transition-[width] duration-300 md:static md:w-fit md:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-dvh flex-col gap-2 overflow-y-auto bg-[#E5E7EB] p-2 transition-[width] duration-300 lg:static lg:w-fit lg:shadow-none ${
           mobileOpen ? "w-64 shadow-xl" : "w-16"
         }`}
         aria-label="Admin navigation"
       >
         {/* Mobile navigation toggle */}
         <div
-          className={`flex md:hidden ${
+          className={`flex lg:hidden ${
             mobileOpen ? "justify-end" : "justify-center"
           }`}
         >
@@ -156,7 +156,7 @@ export default function Sidebar({
                 <div
                   className={`flex items-center rounded-lg py-3 transition-all duration-200 ${
                     mobileOpen ? "gap-3 px-2" : "justify-center px-1"
-                  } md:justify-start md:gap-3 md:px-2`}
+                  } lg:justify-start lg:gap-3 lg:px-2`}
                   style={{
                     color: isActive ? "#dbb082" : "#374151",
                     backgroundColor: isActive ? "#ffffff" : "transparent",
@@ -177,7 +177,7 @@ export default function Sidebar({
                   <span
                     className={`whitespace-nowrap text-sm font-medium ${
                       mobileOpen ? "block" : "hidden"
-                    } md:block`}
+                    } lg:block`}
                   >
                     {page.label}
                   </span>
@@ -189,7 +189,7 @@ export default function Sidebar({
 
         {/* Secondary links stay at the bottom and hide when mobile navigation is collapsed. */}
         <div
-          className={`mt-auto flex-col pb-6 md:flex md:pb-20 ${
+          className={`mt-auto flex-col pb-6 lg:flex lg:pb-20 ${
             mobileOpen ? "flex" : "hidden"
           }`}
         >
