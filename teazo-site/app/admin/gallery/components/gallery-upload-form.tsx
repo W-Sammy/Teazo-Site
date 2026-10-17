@@ -28,12 +28,27 @@ type GalleryUploadFormProps = {
   ) => void | Promise<void>;
 };
 
-// Client-side constraints for file selection and tag entry.
+// JPG, PNG and WebP can be processed by the existing backend.
 const acceptedImageTypes = [
   "image/jpeg",
   "image/png",
   "image/webp",
 ];
+
+// Some browsers report HEIC/HEIF as an empty or generic MIME type.
+const heicImageTypes = new Set([
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
+]);
+
+function isHeicImage(file: File) {
+  return (
+    heicImageTypes.has(file.type.toLowerCase()) ||
+    /\.(heic|heif)$/i.test(file.name)
+  );
+}
 
 const maxFileSize = 10 * 1024 * 1024;
 const maxTags = 12;
@@ -65,7 +80,7 @@ export default function GalleryUploadForm({
   onCancel,
   onSave,
 }: GalleryUploadFormProps) {
-  // Seed local form fields from the image being edited, or start a blank new image.
+  // Seed fields from the image being edited, or start a blank new image.
   const [name, setName] = useState(
     initialImage?.name ?? "",
   );
@@ -87,7 +102,7 @@ export default function GalleryUploadForm({
   const [isDragging, setIsDragging] =
     useState(false);
 
-  // Keep field-specific messages beside the control that needs attention.
+  // Keep field-specific messages beside the relevant control.
   const [nameError, setNameError] =
     useState<string | null>(null);
 
@@ -97,40 +112,94 @@ export default function GalleryUploadForm({
   const [imageError, setImageError] =
     useState<string | null>(null);
 
-  // Report failures that happen after validation, such as a server or network error.
+  // Report failures after validation, including server/network errors.
   const [uploadError, setUploadError] =
     useState<string | null>(null);
 
-  // Prevent duplicate submissions while a save/upload is still running.
+  // Prevent duplicate submissions.
   const [isSaving, setIsSaving] =
+    useState(false);
+
+  // Prevent saving while HEIC/HEIF conversion is running.
+  const [isConverting, setIsConverting] =
     useState(false);
 
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
 
-  // Only blob URLs created by this form should be revoked by this form.
+  // Only revoke object URLs created by this form.
   const temporaryPreviewUrl =
     useRef<string | null>(null);
 
-  // Free the latest local preview when the form closes or switches records.
+  // Prevent unfinished conversions from updating a closed form.
+  const isMounted = useRef(true);
+  const selectionSequence = useRef(0);
+
+  // Free the latest preview when the form closes.
   useEffect(() => {
+    isMounted.current = true;
+
     return () => {
+      isMounted.current = false;
+      selectionSequence.current += 1;
+
       if (temporaryPreviewUrl.current) {
         URL.revokeObjectURL(
           temporaryPreviewUrl.current,
         );
+        temporaryPreviewUrl.current = null;
       }
     };
   }, []);
 
-  // Both the file picker and drag-and-drop use the same file checks and preview setup.
-  function selectFile(file: File) {
+  // Replace the preview only after validation/conversion succeeds.
+  // A conversion failure must preserve the previous selection.
+  function applySelectedFile(
+    file: File,
+    originalName: string,
+  ) {
+    const nextPreviewUrl =
+      URL.createObjectURL(file);
+
+    const previousPreviewUrl =
+      temporaryPreviewUrl.current;
+
+    temporaryPreviewUrl.current =
+      nextPreviewUrl;
+
+    setSelectedFile(file);
+    setPreviewUrl(nextPreviewUrl);
+
+    if (previousPreviewUrl) {
+      URL.revokeObjectURL(previousPreviewUrl);
+    }
+
+    // Suggest a filename-based title only when the name is blank.
+    if (!name.trim()) {
+      setName(fileNameToTitle(originalName));
+      setNameError(null);
+    }
+  }
+
+  // Both file picking and drag-and-drop use the same validation.
+  async function selectFile(file: File) {
+    if (isSaving || isConverting) {
+      return;
+    }
+
     setImageError(null);
     setUploadError(null);
 
-    if (!acceptedImageTypes.includes(file.type)) {
+    const needsConversion = isHeicImage(file);
+
+    if (
+      !needsConversion &&
+      !acceptedImageTypes.includes(
+        file.type.toLowerCase(),
+      )
+    ) {
       setImageError(
-        "Choose a JPG, PNG, or WEBP image.",
+        "Choose a JPG, PNG, WebP, HEIC, or HEIF image.",
       );
       return;
     }
@@ -142,26 +211,93 @@ export default function GalleryUploadForm({
       return;
     }
 
-    if (temporaryPreviewUrl.current) {
-      URL.revokeObjectURL(
-        temporaryPreviewUrl.current,
-      );
+    // Regular images keep the existing upload workflow.
+    if (!needsConversion) {
+      applySelectedFile(file, file.name);
+      return;
     }
 
-    // Previewing creates a local object URL; saving is delegated to the parent.
-    const nextPreviewUrl =
-      URL.createObjectURL(file);
+    // HEIC/HEIF files must be converted before preview/upload.
+    const requestId = ++selectionSequence.current;
 
-    temporaryPreviewUrl.current =
-      nextPreviewUrl;
+    setIsConverting(true);
 
-    setSelectedFile(file);
-    setPreviewUrl(nextPreviewUrl);
+    try {
+      // Dynamically load the converter only for HEIC/HEIF files.
+      const { default: heic2any } =
+        await import("heic2any");
 
-    // Suggest a filename-based title only when the user has not entered a name.
-    if (!name.trim()) {
-      setName(fileNameToTitle(file.name));
-      setNameError(null);
+      const result = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.85,
+      });
+
+      // Use the first still image if multiple frames are returned.
+      const jpegBlob = Array.isArray(result)
+        ? result[0]
+        : result;
+
+      if (!jpegBlob || jpegBlob.size === 0) {
+        throw new Error(
+          "The converted image was empty.",
+        );
+      }
+
+      // Preserve the 10 MB upload limit after conversion.
+      if (jpegBlob.size > maxFileSize) {
+        throw new Error(
+          "The converted image exceeds 10 MB.",
+        );
+      }
+
+      // Create a normal JPEG file for the existing upload API.
+      const jpegName =
+        file.name.replace(
+          /\.(heic|heif)$/i,
+          "",
+        ) + ".jpg";
+
+      const jpegFile = new File(
+        [jpegBlob],
+        jpegName,
+        {
+          type: "image/jpeg",
+          lastModified: file.lastModified,
+        },
+      );
+
+      // Do not update state if the form closed during conversion.
+      if (
+        isMounted.current &&
+        selectionSequence.current === requestId
+      ) {
+        applySelectedFile(
+          jpegFile,
+          file.name,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "HEIC/HEIF conversion failed:",
+        error,
+      );
+
+      if (
+        isMounted.current &&
+        selectionSequence.current === requestId
+      ) {
+        setImageError(
+          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+        );
+      }
+    } finally {
+      if (
+        isMounted.current &&
+        selectionSequence.current === requestId
+      ) {
+        setIsConverting(false);
+      }
     }
   }
 
@@ -171,17 +307,14 @@ export default function GalleryUploadForm({
     const file = event.target.files?.[0];
 
     if (file) {
-      selectFile(file);
+      void selectFile(file);
     }
 
-    /*
-     * Allows the same file to be selected again
-     * after a failed or canceled selection.
-     */
+    // Allow the same file to be selected again.
     event.target.value = "";
   }
 
-  // Prevent browser navigation and process only the first dropped file.
+  // Prevent browser navigation and process the first dropped file.
   function handleDrop(
     event: DragEvent<HTMLDivElement>,
   ) {
@@ -191,11 +324,11 @@ export default function GalleryUploadForm({
     const file = event.dataTransfer.files?.[0];
 
     if (file) {
-      selectFile(file);
+      void selectFile(file);
     }
   }
 
-  // Add one normalized tag, enforcing length, count, and case-insensitive uniqueness.
+  // Add a normalized tag with length, count and duplicate validation.
   function addTag(rawValue = tagInput) {
     const nextTag = normalizeTag(rawValue);
 
@@ -241,8 +374,7 @@ export default function GalleryUploadForm({
     return true;
   }
 
-  // Enter/comma add a tag instead of submitting.
-  // Backspace removes the last tag when the input is empty.
+  // Enter/comma add a tag. Backspace removes the last tag if empty.
   function handleTagKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
@@ -265,7 +397,7 @@ export default function GalleryUploadForm({
     }
   }
 
-  // Remove only the requested tag and clear any previous tag validation message.
+  // Remove only the requested tag.
   function removeTag(tagToRemove: string) {
     setTags((currentTags) =>
       currentTags.filter(
@@ -276,11 +408,15 @@ export default function GalleryUploadForm({
     setTagError(null);
   }
 
-  // Validate the image/name and include an unfinished tag before invoking onSave.
+  // Validate fields and include any unfinished tag before saving.
   async function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (isSaving || isConverting) {
+      return;
+    }
 
     const cleanName = name.trim();
     let submittedTags = tags;
@@ -304,7 +440,7 @@ export default function GalleryUploadForm({
       return;
     }
 
-    // Include typed text even when Add was not clicked; ignore an existing duplicate.
+    // Include typed text even if Add wasn't clicked.
     const pendingTag = normalizeTag(tagInput);
 
     if (pendingTag) {
@@ -336,8 +472,8 @@ export default function GalleryUploadForm({
       }
     }
 
-    // Pass the file itself, not this form's short-lived preview URL.
-    // A future server upload can reject this promise, which is reported below.
+    // Submit the converted JPEG or original supported image.
+    // The parent handles the API request and persistent storage.
     try {
       setIsSaving(true);
 
@@ -362,9 +498,9 @@ export default function GalleryUploadForm({
     }
   }
 
-  // This checks basic readiness only; submission still validates a pending tag.
+  // Submission remains unavailable during conversion.
   const canSave = Boolean(
-    name.trim() && previewUrl,
+    name.trim() && previewUrl && !isConverting,
   );
 
   return (
@@ -528,13 +664,15 @@ export default function GalleryUploadForm({
             </div>
           )}
 
+          {/* Shared file picker for standard and HEIC/HEIF images */}
           <input
             ref={fileInputRef}
             id="gallery-image-file"
             name="galleryImageFile"
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             onChange={handleFileChange}
+            disabled={isSaving || isConverting}
             className="hidden"
           />
 
@@ -542,27 +680,38 @@ export default function GalleryUploadForm({
             <div className="flex flex-col items-center gap-2">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSaving}
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                disabled={isSaving || isConverting}
                 className="cursor-pointer rounded-lg border border-[#dbb082] bg-[#fffaf6] px-4 py-2 text-sm font-semibold text-[#9b6d43] hover:bg-[#f3ece6] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Change Image
+                {isConverting
+                  ? "Converting HEIC..."
+                  : "Change Image"}
               </button>
+
               <p className="text-center text-xs text-gray-500">
-                JPG, PNG, or WEBP · 10 MB maximum
+                JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum
               </p>
             </div>
           ) : (
             <div
-              onDragEnter={(event: DragEvent<HTMLDivElement>) => {
+              onDragEnter={(
+                event: DragEvent<HTMLDivElement>,
+              ) => {
                 event.preventDefault();
                 setIsDragging(true);
               }}
-              onDragOver={(event: DragEvent<HTMLDivElement>) => {
+              onDragOver={(
+                event: DragEvent<HTMLDivElement>,
+              ) => {
                 event.preventDefault();
                 setIsDragging(true);
               }}
-              onDragLeave={(event: DragEvent<HTMLDivElement>) => {
+              onDragLeave={(
+                event: DragEvent<HTMLDivElement>,
+              ) => {
                 event.preventDefault();
                 setIsDragging(false);
               }}
@@ -575,16 +724,30 @@ export default function GalleryUploadForm({
             >
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSaving}
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                disabled={isSaving || isConverting}
                 className="w-full max-w-full cursor-pointer whitespace-normal break-words rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4"
               >
-                Select/Drag Image Here
+                {isConverting
+                  ? "Converting HEIC..."
+                  : "Select/Drag Image Here"}
               </button>
+
               <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-                JPG, PNG, or WEBP · 10 MB maximum
+                JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum
               </p>
             </div>
+          )}
+
+          {isConverting && (
+            <p
+              role="status"
+              className="mt-2 text-center text-xs text-gray-500"
+            >
+              Converting image for preview and upload...
+            </p>
           )}
 
           {imageError && (
@@ -618,7 +781,7 @@ export default function GalleryUploadForm({
 
           <button
             type="submit"
-            disabled={!canSave || isSaving}
+            disabled={!canSave || isSaving || isConverting}
             className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
           >
             {isSaving
@@ -632,4 +795,3 @@ export default function GalleryUploadForm({
     </form>
   );
 }
-
