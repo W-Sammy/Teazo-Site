@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -527,58 +528,64 @@ export default function GalleryUploadForm({
             </div>
           )}
 
-          <div
-            onDragEnter={(
-              event: DragEvent<HTMLDivElement>,
-            ) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragOver={(
-              event: DragEvent<HTMLDivElement>,
-            ) => {
-              event.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={(
-              event: DragEvent<HTMLDivElement>,
-            ) => {
-              event.preventDefault();
-              setIsDragging(false);
-            }}
-            onDrop={handleDrop}
-            className={`flex min-h-40 w-full min-w-0 flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition sm:p-4 ${
-              isDragging
-                ? "border-[#f08a9b] bg-[#fff0f2]"
-                : "border-[#dbb082] bg-[#fffaf6]"
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              id="gallery-image-file"
-              name="galleryImageFile"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+          <input
+            ref={fileInputRef}
+            id="gallery-image-file"
+            name="galleryImageFile"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
-            <button
-              type="button"
-              onClick={() =>
-                fileInputRef.current?.click()
-              }
-              className="w-full max-w-full cursor-pointer whitespace-normal break-words rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] sm:w-auto sm:px-4"
+          {previewUrl ? (
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSaving}
+                className="cursor-pointer rounded-lg border border-[#dbb082] bg-[#fffaf6] px-4 py-2 text-sm font-semibold text-[#9b6d43] hover:bg-[#f3ece6] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Change Image
+              </button>
+              <p className="text-center text-xs text-gray-500">
+                JPG, PNG, or WEBP · 10 MB maximum
+              </p>
+            </div>
+          ) : (
+            <div
+              onDragEnter={(event: DragEvent<HTMLDivElement>) => {
+                event.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragOver={(event: DragEvent<HTMLDivElement>) => {
+                event.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={(event: DragEvent<HTMLDivElement>) => {
+                event.preventDefault();
+                setIsDragging(false);
+              }}
+              onDrop={handleDrop}
+              className={`flex min-h-40 w-full min-w-0 flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition sm:p-4 ${
+                isDragging
+                  ? "border-[#f08a9b] bg-[#fff0f2]"
+                  : "border-[#dbb082] bg-[#fffaf6]"
+              }`}
             >
-              {initialImage || selectedFile
-                ? "Select/Drag New Image Here"
-                : "Select/Drag Image Here"}
-            </button>
-
-            <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-              JPG, PNG, or WEBP · 10 MB maximum
-            </p>
-          </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSaving}
+                className="w-full max-w-full cursor-pointer whitespace-normal break-words rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4"
+              >
+                Select/Drag Image Here
+              </button>
+              <p className="mt-2 max-w-full break-words text-xs text-gray-500">
+                JPG, PNG, or WEBP · 10 MB maximum
+              </p>
+            </div>
+          )}
 
           {imageError && (
             <p className="mt-2 break-words text-center text-xs text-red-600">
