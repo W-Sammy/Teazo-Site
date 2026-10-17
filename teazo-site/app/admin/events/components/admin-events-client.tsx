@@ -83,7 +83,7 @@ export default function AdminEventsClient({
   ] = useState<EventStatus[]>([]);
 
   const [sortBy, setSortBy] =
-    useState<EventSortOption>("start-asc");
+    useState<EventSortOption>("name-asc");
 
   // Start in List View on both mobile and desktop.
   const [viewMode, setViewMode] =
@@ -393,7 +393,7 @@ export default function AdminEventsClient({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2
-            className={`font-semibold ${
+            className={`text-base font-semibold ${
               filtersOpen
                 ? "md:block"
                 : "md:hidden"
@@ -432,18 +432,15 @@ export default function AdminEventsClient({
         </div>
 
         <div
-          className={`space-y-4 ${
+          className={`space-y-3 ${
             filtersOpen
               ? "md:block"
               : "md:hidden"
           }`}
         >
-          <label
-            className="block text-sm text-gray-600"
-            htmlFor="event-sort"
-          >
-            Sort by:
-
+          <div>
+            <label htmlFor="event-sort" className="mb-1 block text-sm text-gray-600">Sort by:</label>
+            <div className="relative">
             <select
               id="event-sort"
               value={sortBy}
@@ -455,25 +452,26 @@ export default function AdminEventsClient({
                     .value as EventSortOption,
                 )
               }
-              className="mt-1 w-full cursor-pointer rounded bg-gray-200 px-3 py-2 text-sm"
+              className="w-full min-w-0 cursor-pointer appearance-none rounded bg-gray-200 px-3 py-2 pr-10 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#FFBDC7]/50"
             >
-              <option value="start-asc">
-                Start (Soonest)
-              </option>
-
-              <option value="start-desc">
-                Start (Latest)
-              </option>
-
-              <option value="name-asc">
-                Name A to Z
-              </option>
-
-              <option value="name-desc">
-                Name Z to A
-              </option>
+              <option value="name-asc">Name A to Z</option>
+              <option value="name-desc">Name Z to A</option>
+              <option value="start-asc">Start (Soonest)</option>
+              <option value="start-desc">Start (Latest)</option>
             </select>
-          </label>
+            <svg aria-hidden="true" viewBox="0 0 20 20" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 7 5 5 5-5" /></svg>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedStatuses([])
+            }
+            className="cursor-pointer text-xs text-blue-500 hover:underline"
+          >
+            Clear filters
+          </button>
 
           <div>
             <p className="mb-1 text-sm text-gray-600">
@@ -507,15 +505,6 @@ export default function AdminEventsClient({
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={() =>
-              setSelectedStatuses([])
-            }
-            className="cursor-pointer text-xs text-blue-500 hover:underline"
-          >
-            Clear filters
-          </button>
         </div>
       </aside>
 
