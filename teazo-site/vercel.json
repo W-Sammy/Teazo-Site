@@ -1,0 +1,13 @@
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/brevo-health",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-analytics",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
