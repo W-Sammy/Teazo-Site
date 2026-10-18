@@ -421,11 +421,11 @@ export default async function ContactPage() {
             </div>
 
             <a
-              href={phoneHref}
+              href={emailHref}
               className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
             >
-              <PhoneIcon />
-              CALL TO ORDER
+              <MailIcon />
+              ORDER WITH US
             </a>
           </div>
         </section>
