@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import Image from "next/image";
 import type { MouseEvent } from "react";
@@ -54,14 +57,14 @@ export default function DeleteEventDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300"
+            className={adminButtonStyles.secondary}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+            className={adminButtonStyles.danger}
           >
             Delete
           </button>

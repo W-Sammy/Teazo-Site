@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import Image from "next/image";
 import {
@@ -402,7 +405,7 @@ export default function EventForm({
                 onClick={() =>
                   fileInputRef.current?.click()
                 }
-                className="w-full shrink-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] sm:w-auto"
+                className={`w-full shrink-0 ${adminButtonStyles.primary} sm:w-auto`}
               >
                 Choose File
               </button>
@@ -624,14 +627,14 @@ export default function EventForm({
           <button
             type="button"
             onClick={onCancel}
-            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 md:w-auto"
+            className={`w-full ${adminButtonStyles.secondary} md:w-auto`}
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] md:w-auto"
+            className={`w-full ${adminButtonStyles.primary} md:w-auto`}
           >
             {initialEvent
               ? "Save Changes"

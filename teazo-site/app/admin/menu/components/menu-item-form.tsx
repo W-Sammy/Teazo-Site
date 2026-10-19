@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import Image from "next/image";
 import {
@@ -578,7 +581,7 @@ export default function MenuItemForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSaving}
-            className="w-full cursor-pointer whitespace-normal rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+            className={`w-full whitespace-normal ${adminButtonStyles.primary}`}
           >
             {previewUrl
               ? "Choose / Drop a Replacement"
@@ -649,7 +652,7 @@ export default function MenuItemForm({
           type="button"
           onClick={onCancel}
           disabled={isSaving}
-          className="min-w-0 cursor-pointer rounded-lg bg-gray-400 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500"
+          className={`min-w-0 ${adminButtonStyles.secondary}`}
         >
           Cancel
         </button>
@@ -657,7 +660,7 @@ export default function MenuItemForm({
         <button
           type="submit"
           disabled={checkingImage || isSaving}
-          className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-wait disabled:opacity-50"
+          className={`min-w-0 ${adminButtonStyles.primary} disabled:cursor-wait`}
         >
           {isSaving
             ? isEditing ? "Saving..." : "Adding..."

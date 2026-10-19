@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import {
   useEffect,
@@ -201,7 +204,7 @@ export default function DeleteMenuItemDialog({
           type="button"
           onClick={handleCancel}
           disabled={isDeleting}
-          className="cursor-pointer rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className={adminButtonStyles.secondary}
         >
           Cancel
         </button>
@@ -210,7 +213,7 @@ export default function DeleteMenuItemDialog({
           type="button"
           onClick={handleConfirm}
           disabled={isDeleting}
-          className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className={adminButtonStyles.danger}
         >
           {isDeleting ? "Deleting..." : "Delete"}
         </button>

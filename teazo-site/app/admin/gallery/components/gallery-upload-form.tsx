@@ -12,6 +12,7 @@ import {
   type SubmitEvent,
 } from "react";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
+import { adminButtonStyles } from "../../components/admin-button-styles";
 
 // A null file lets edits keep the existing image while updating its name or tags.
 export type GalleryUploadValues = {
@@ -728,7 +729,7 @@ export default function GalleryUploadForm({
                   fileInputRef.current?.click()
                 }
                 disabled={isSaving || isConverting}
-                className="w-full max-w-full cursor-pointer whitespace-normal break-words rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4"
+                className={`w-full max-w-full whitespace-normal break-words ${adminButtonStyles.primary} sm:w-auto`}
               >
                 {isConverting
                   ? "Converting HEIC..."
@@ -774,7 +775,7 @@ export default function GalleryUploadForm({
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+            className={`w-full ${adminButtonStyles.secondary} md:w-auto`}
           >
             Cancel
           </button>
@@ -782,7 +783,7 @@ export default function GalleryUploadForm({
           <button
             type="submit"
             disabled={!canSave || isSaving || isConverting}
-            className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+            className={`w-full ${adminButtonStyles.primary} md:w-auto`}
           >
             {isSaving
               ? "Saving..."

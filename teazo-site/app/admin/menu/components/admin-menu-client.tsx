@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import {
   useEffect,
@@ -1079,6 +1082,7 @@ export default function AdminMenuClient({
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path d="M5 5l10 10M15 5L5 15" />
             </svg>
@@ -1256,7 +1260,7 @@ export default function AdminMenuClient({
                       ? "Add a menu item"
                       : "Owner or Can Edit access is required"
                   }
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#dbb082] px-4 py-2 text-center font-bold text-white hover:bg-[#c99d70] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
+                  className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Add Item
                 </button>
@@ -1275,7 +1279,7 @@ export default function AdminMenuClient({
                       ? "Upload a PDF menu"
                       : "Owner or Can Edit access is required"
                   }
-                  className="min-w-0 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-center font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 [overflow-wrap:anywhere] md:inline-flex md:items-center md:justify-center md:text-sm"
+                  className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Upload Menu
                 </button>
@@ -1348,7 +1352,7 @@ export default function AdminMenuClient({
                 role="status"
                 className="[overflow-wrap:anywhere]"
               >
-                {itemDeleteSuccess} 
+                {itemDeleteSuccess}
               </p>
 
               {(search || selectedCategories.length > 0) && (
@@ -1398,12 +1402,6 @@ export default function AdminMenuClient({
           >
             {drawer.kind !== "upload-menu" ? (
               <>
-                <p className="mb-3 rounded-lg border border-[#dbb082]/60 bg-[#fffaf6] p-3 text-sm text-gray-700">
-                  {drawer.kind === "edit-item"
-                    ? "Name, price, description, and category changes are saved to Square. Replacing or removing an image only changes this page's preview; the saved Square image stays unchanged."
-                    : "New items are saved to Square. Image upload is not connected yet, so a selected image is only a preview for this page."}
-                </p>
-
                 {itemSaveError && (
                   <div
                     role="alert"
@@ -1510,7 +1508,7 @@ export default function AdminMenuClient({
                         fileInputRef.current?.click()
                       }
                       disabled={isUploading}
-                      className="w-full cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50"
+                      className={`w-full ${adminButtonStyles.primary}`}
                     >
                       Choose File
                     </button>
@@ -1538,7 +1536,7 @@ export default function AdminMenuClient({
                     type="button"
                     onClick={closeDrawer}
                     disabled={isUploading}
-                    className="min-w-0 cursor-pointer rounded bg-gray-400 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`min-w-0 ${adminButtonStyles.secondary}`}
                   >
                     Cancel
                   </button>
@@ -1551,7 +1549,7 @@ export default function AdminMenuClient({
                       !uploadFile ||
                       !!getMenuFileError(uploadFile)
                     }
-                    className="min-w-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`min-w-0 ${adminButtonStyles.primary}`}
                   >
                     {isUploading ? "Uploading…" : "Upload"}
                   </button>

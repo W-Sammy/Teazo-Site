@@ -1,4 +1,7 @@
+
 "use client";
+
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 import {
   useMemo,
@@ -571,7 +574,7 @@ export default function AdminEventsClient({
               onClick={
                 openNewEventDrawer
               }
-              className="inline-flex w-full justify-center rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-bold text-white hover:bg-[#F59AA3] sm:w-auto"
+              className={`inline-flex w-full justify-center ${adminButtonStyles.primary} sm:w-auto`}
             >
               New Event +
             </button>
@@ -663,7 +666,7 @@ export default function AdminEventsClient({
                     ? openNewEventDrawer
                     : clearSearchAndFilters
                 }
-                className="mt-4 rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+                className={`mt-4 ${adminButtonStyles.primary}`}
               >
                 {events.length === 0
                   ? "Add an event"
