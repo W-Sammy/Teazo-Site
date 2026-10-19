@@ -1,8 +1,6 @@
 
 "use client";
 
-import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
-
 import Image from "next/image";
 import {
   useEffect,
@@ -12,6 +10,7 @@ import {
   type SyntheticEvent,
 } from "react";
 import type { CreateMenuItemBody } from "@/app/types/menu-item";
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 
 // Keep the existing create-item fields; the selected image remains a local File.
 export type MenuItemFormValues = CreateMenuItemBody & {
@@ -59,23 +58,39 @@ const acceptedImageTypes = [
 
 const maxFileSize = 10 * 1024 * 1024;
 
-// Parse a nonnegative dollar amount without rounding extra decimal places.
-function parsePriceCents(value: string): number | null {
-  const trimmed = value.trim();
+// Price entry works like a payment terminal: 1, 0, 0, 0 becomes $10.00.
+// Keep the amount as integer cents so it can be sent directly to Square.
+const MAX_PRICE_DIGITS = 12;
 
-  if (!/^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(trimmed)) {
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+function normalizePriceDigits(value: string): string {
+  return value
+    .replace(/\D/g, "")
+    .replace(/^0+(?=\d)/, "")
+    .slice(0, MAX_PRICE_DIGITS);
+}
+
+function formatPriceDigits(digits: string): string {
+  return currencyFormatter.format(Number(digits || "0") / 100);
+}
+
+// Pasting a regular price (for example, $10.00 or 10) replaces the amount.
+function pastedPriceDigits(value: string): string | null {
+  const cleaned = value.trim().replace(/[$,\s]/g, "");
+
+  if (!/^\d+(?:\.\d{1,2})?$/.test(cleaned)) {
     return null;
   }
 
-  const [dollars, fraction = ""] = trimmed.split(".");
+  const [dollars, fraction = ""] = cleaned.split(".");
+  const cents = `${dollars}${fraction.padEnd(2, "0")}`
+    .replace(/^0+(?=\d)/, "");
 
-  const cents = Number(
-    `${dollars || "0"}${fraction.padEnd(2, "0")}`,
-  );
-
-  return Number.isSafeInteger(cents) && cents >= 0
-    ? cents
-    : null;
+  return cents.length <= MAX_PRICE_DIGITS ? cents : null;
 }
 
 export default function MenuItemForm({
@@ -99,10 +114,9 @@ export default function MenuItemForm({
     initialItem?.description ?? "",
   );
 
-  const [price, setPrice] = useState(
-    initialItem
-      ? (initialItem.priceCents / 100).toFixed(2)
-      : "",
+  // An untouched new-item price looks like $0.00, but still requires entry.
+  const [priceDigits, setPriceDigits] = useState(
+    initialItem ? String(initialItem.priceCents) : "",
   );
 
   const [categoryIds, setCategoryIds] = useState<string[]>(
@@ -147,6 +161,7 @@ export default function MenuItemForm({
 
   function selectFiles(files: FileList | null) {
     if (submitted.current || isSaving) return;
+
     if (!files?.length) {
       return;
     }
@@ -232,7 +247,8 @@ export default function MenuItemForm({
 
     const nextErrors: FieldErrors = {};
     const cleanName = name.trim();
-    const priceCents = parsePriceCents(price);
+    const priceCents =
+      priceDigits === "" ? null : Number(priceDigits);
 
     if (!cleanName) {
       nextErrors.name = "Enter a menu item name.";
@@ -240,7 +256,7 @@ export default function MenuItemForm({
 
     if (priceCents === null) {
       nextErrors.price =
-        "Enter a price of 0 or more, with up to two decimal places.";
+        "Enter a price using the number keys.";
     }
 
     setErrors(nextErrors);
@@ -367,12 +383,72 @@ export default function MenuItemForm({
           name="menuItemPrice"
           disabled={isSaving}
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           required
-          placeholder="0.00"
-          value={price}
+          value={formatPriceDigits(priceDigits)}
+          onKeyDown={(event) => {
+            // Shift new digits into cents; Backspace removes the last digit.
+            if (
+              event.ctrlKey ||
+              event.metaKey ||
+              event.altKey
+            ) {
+              return;
+            }
+
+            if (/^[0-9]$/.test(event.key)) {
+              event.preventDefault();
+
+              setPriceDigits((current) =>
+                normalizePriceDigits(current + event.key),
+              );
+            } else if (
+              event.key === "Backspace" ||
+              event.key === "Delete"
+            ) {
+              event.preventDefault();
+
+              setPriceDigits((current) =>
+                current.slice(0, -1),
+              );
+            } else {
+              return;
+            }
+
+            setErrors((current) => ({
+              ...current,
+              price: undefined,
+              form: undefined,
+            }));
+          }}
           onChange={(event) => {
-            setPrice(event.target.value);
+            // Fallback for mobile keyboards without normal keydown events.
+            setPriceDigits(
+              normalizePriceDigits(event.target.value),
+            );
+
+            setErrors((current) => ({
+              ...current,
+              price: undefined,
+              form: undefined,
+            }));
+          }}
+          onPaste={(event) => {
+            event.preventDefault();
+
+            const digits = pastedPriceDigits(
+              event.clipboardData.getData("text"),
+            );
+
+            if (digits === null) {
+              setErrors((current) => ({
+                ...current,
+                price: "Paste a valid price, such as $10.00.",
+              }));
+              return;
+            }
+
+            setPriceDigits(digits);
 
             setErrors((current) => ({
               ...current,
@@ -393,7 +469,7 @@ export default function MenuItemForm({
           }`}
         >
           {errors.price ??
-            "Use a decimal point, for example 6.50."}
+            "Type digits to enter cents automatically (1000 becomes $10.00)."}
         </p>
       </div>
 
@@ -579,7 +655,9 @@ export default function MenuItemForm({
 
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() =>
+              fileInputRef.current?.click()
+            }
             disabled={isSaving}
             className={`w-full whitespace-normal ${adminButtonStyles.primary}`}
           >
