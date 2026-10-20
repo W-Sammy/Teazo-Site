@@ -11,6 +11,7 @@ import {
 type PasswordEmailAdmin = {
   id: string;
   email_normalized: string;
+  needs_password_setup: 0 | 1;
 };
 
 function applicationUrl(): string {
