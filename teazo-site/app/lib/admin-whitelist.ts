@@ -1,7 +1,9 @@
 import "server-only";
-
 import { prepare } from "./d1";
 
+// Temporarily retain role 3 in the type while older page-level
+// authorization calls are being updated.
+// Database authentication queries now accept only Owner and Admin.
 export type AdminRole = 1 | 2 | 3;
 
 export type Admin = {
@@ -15,7 +17,7 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-// Call to normalize email and prepare query
+// Look up an active, authorized Owner or Admin by normalized email.
 export async function findAuthorizedAdmin(
   email: string,
 ): Promise<Admin | null> {
@@ -29,7 +31,7 @@ export async function findAuthorizedAdmin(
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
       LIMIT 1`,
   )
     .bind(normalizedEmail)

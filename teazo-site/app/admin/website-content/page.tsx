@@ -10,8 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminWebsiteContentPage() {
-  await requireAdminPage(3)
-   
+  await requireAdminPage(2);
+
   const initialContent = await getWebsiteContent();
+
   return <WebsiteContentClient initialContent={initialContent} />;
 }

@@ -8,7 +8,7 @@ function errorResponse(message: string, status: number) {
 }
 
 export async function GET(request: Request) {
-  const access = await requireAdminApi(request, 3);
+  const access = await requireAdminApi(request, 2);
   if (!access.ok) return access.response;
   try {
     return Response.json(await listEvents(), { headers: { "Cache-Control": "no-store" } });

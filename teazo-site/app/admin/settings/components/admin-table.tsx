@@ -5,73 +5,78 @@ import {
   useState,
 } from "react";
 
-import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
+import type {
+  Admin,
+  NewAdminInput,
+} from "@/app/types/admin-perms";
+import { OWNER_ROLE } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 
-// Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
+// Coordinate Owner/Admin sections, creation, deletion, and feedback.
 export default function AdminsTable() {
-  // Mount the Add New User modal only while it is needed.
-  const [showModal, setShowModal] =
-    useState(false);
-  const [modalError, setModalError] =
-    useState("");
-  const [successMessage, setSuccessMessage] =
-    useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [adminToDelete, setAdminToDelete] =
     useState<Admin | null>(null);
 
-  // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
-    canEdit,
+    canManageAdmins,
     errorMessage,
     clearError,
     addAdmin,
     loadAdmins,
     deleteAdmin,
-    changeRole,
-    toggleInvitePermission,
   } = useAdmins();
 
   useEffect(() => {
     void loadAdmins();
   }, [loadAdmins]);
 
-  // Automatically clear a displayed error after 3.5 seconds.
+  // Automatically clear operation errors after 3.5 seconds.
   useEffect(() => {
     if (!errorMessage) {
       return;
     }
 
-    const timeout = window.setTimeout(
-      clearError,
-      3500,
-    );
+    const timeout = window.setTimeout(clearError, 3500);
 
-    // Cancel the previous timer when dependencies change or the component unmounts.
     return () => {
       window.clearTimeout(timeout);
     };
   }, [clearError, errorMessage]);
 
   useEffect(() => {
-    if (!successMessage) return;
+    if (!successMessage) {
+      return;
+    }
 
     const timeout = window.setTimeout(
       () => setSuccessMessage(""),
       3500,
     );
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+    };
   }, [successMessage]);
 
-  // Keep the form open unless the hook reports that adding the admin succeeded.
-  async function handleAddAdmin(
-    input: NewAdminInput,
-  ) {
+  // The database allows only one non-deleted Owner.
+  const owner = admins.find(
+    (admin) => admin.role === OWNER_ROLE,
+  );
+
+  // The migration will convert all remaining role-3 accounts
+  // to Admin. Until then, keep legacy rows visible in Settings.
+  const regularAdmins = admins.filter(
+    (admin) => admin.role !== OWNER_ROLE,
+  );
+
+  async function handleAddAdmin(input: NewAdminInput) {
     const result = await addAdmin(input);
 
     if (result.success) {
@@ -83,23 +88,29 @@ export default function AdminsTable() {
     }
   }
 
-  // Open the shared-style confirmation dialog before forwarding a delete request.
-  function handleDeleteAdmin(
-    admin: Admin,
-  ) {
+  function handleDeleteAdmin(admin: Admin) {
+    if (!canManageAdmins || admin.role === OWNER_ROLE) {
+      return;
+    }
+
     setAdminToDelete(admin);
   }
 
   async function confirmDeleteAdmin() {
-    if (!adminToDelete) return;
+    if (!canManageAdmins || !adminToDelete) {
+      return;
+    }
 
     const deleted = await deleteAdmin(adminToDelete);
-    if (deleted) setAdminToDelete(null);
+
+    if (deleted) {
+      setAdminToDelete(null);
+    }
   }
 
   return (
     <>
-      {/* Surface the shared error message in an alert above the page content. */}
+      {/* Error feedback */}
       {errorMessage && (
         <div
           role="alert"
@@ -109,6 +120,7 @@ export default function AdminsTable() {
         </div>
       )}
 
+      {/* Success feedback */}
       {successMessage && (
         <div
           role="status"
@@ -119,94 +131,117 @@ export default function AdminsTable() {
         </div>
       )}
 
-      <div className="w-full min-w-0 max-w-5xl">
-        {/* Desktop column headings */}
-        {/* Keep these column widths aligned with the desktop grid in AdminRow. */}
-        <div className="hidden grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
-          <div className="text-sm font-semibold text-gray-500">
-            Username
+      {/* Owner section */}
+      <section className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
+        <h2 className="text-xl font-bold text-[#2b211d]">
+          Owner
+        </h2>
+
+        <div className="w-full min-w-0 max-w-5xl">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
+            <div className="text-sm font-semibold text-gray-500">
+              Username
+            </div>
+
+            <div className="text-sm font-semibold text-gray-500">
+              Email (SSO)
+            </div>
           </div>
 
-          <div className="text-sm font-semibold text-gray-500">
-            Email (SSO)
-          </div>
-
-          <div className="text-sm font-semibold text-gray-500">
-            Role
-          </div>
-
-          <div className="text-sm font-semibold text-gray-500">
-            Manage Admins
-          </div>
-
-          {/* Reserve the final column for each row's action menu. */}
-          <div aria-hidden="true" />
-        </div>
-
-        {/* Admin rows become cards on mobile. */}
-        {/* Bind each row's callbacks to the corresponding administrator. */}
-        <div className="space-y-3 md:space-y-0">
-          {admins.map((admin) => (
+          {owner ? (
             <AdminRow
-              key={admin.id}
-              admin={admin}
-              canEdit={canEdit}
-              onRoleChange={(
-                role: AdminRole,
-              ) =>
-                changeRole(
-                  admin.id,
-                  role,
-                )
-              }
-              onToggleInvite={() =>
-                toggleInvitePermission(
-                  admin,
-                )
-              }
-              onDelete={() =>
-                handleDeleteAdmin(admin)
-              }
+              key={owner.id}
+              admin={owner}
             />
-          ))}
+          ) : (
+            <p className="py-4 text-sm text-gray-500">
+              No Owner account was found.
+            </p>
+          )}
         </div>
+      </section>
 
-        {/* Open the creation modal without changing the current admin list. */}
-        {canEdit && <button
-          type="button"
-          onClick={() =>
-            setShowModal(true)
-          }
-          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
-        >
-          New User
-          <span
-            className="ml-2 text-base"
-            aria-hidden="true"
+      {/* Regular administrators section */}
+      <section className="mt-10 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
+        <h2 className="text-xl font-bold text-[#2b211d]">
+          Admins
+        </h2>
+
+        <div className="w-full min-w-0 max-w-5xl">
+          <div
+            className={`hidden items-center gap-4 border-b border-gray-100 pb-4 md:grid ${
+              canManageAdmins
+                ? "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px]"
+                : "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)]"
+            }`}
           >
-            +
-          </span>
-        </button>}
-      </div>
+            <div className="text-sm font-semibold text-gray-500">
+              Username
+            </div>
 
-      {/*
-       * Unmount the modal on close so its local form state resets when reopened.
-       * Route modal errors through the same error state used by the table.
-       */}
-      {showModal && (
+            <div className="text-sm font-semibold text-gray-500">
+              Email (SSO)
+            </div>
+
+            {canManageAdmins && (
+              <div className="text-sm font-semibold text-gray-500">
+                <span className="sr-only">Actions</span>
+              </div>
+            )}
+          </div>
+
+          {/* Administrator rows become cards on mobile. */}
+          <div className="space-y-3 md:space-y-0">
+            {regularAdmins.length > 0 ? (
+              regularAdmins.map((admin) => (
+                <AdminRow
+                  key={admin.id}
+                  admin={admin}
+                  showActions={canManageAdmins}
+                  onDelete={() => handleDeleteAdmin(admin)}
+                />
+              ))
+            ) : (
+              <p className="py-4 text-sm text-gray-500">
+                No administrators have been added.
+              </p>
+            )}
+          </div>
+
+          {/* Only the Owner can create administrator accounts. */}
+          {canManageAdmins && (
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
+            >
+              New User
+              <span
+                className="ml-2 text-base"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Only the Owner can access the Add New User modal. */}
+      {canManageAdmins && showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
           onCancel={() => {
             setModalError("");
             setShowModal(false);
           }}
-          onError={setModalError}
           errorMessage={modalError}
         />
       )}
 
+      {/* Preserve the existing confirmation dialog. */}
       <DeleteAdminDialog
-        admin={adminToDelete}
+        admin={canManageAdmins ? adminToDelete : null}
         onCancel={() => setAdminToDelete(null)}
         onConfirm={confirmDeleteAdmin}
       />

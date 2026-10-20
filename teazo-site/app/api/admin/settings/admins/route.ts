@@ -1,43 +1,111 @@
 import { requireAdminApi } from "@/app/lib/admin";
-import { createSettingsAdmin, listSettingsAdmins } from "@/app/lib/queries/settings";
-import type { NewAdminInput } from "@/app/types/admin-perms";
+import {
+  createSettingsAdmin,
+  listSettingsAdmins,
+} from "@/app/lib/queries/settings";
 
 function errorResponse(message: string, status: number) {
-  return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
+  return Response.json(
+    { error: message },
+    {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }
 
+// Both Owner and Admin may view the administrator list.
 export async function GET(request: Request) {
   try {
-    const access = await requireAdminApi(request, 3);
-    if (!access.ok) return access.response;
-    const viewer = access.admin;
+    const access = await requireAdminApi(request, 2);
+
+    if (!access.ok) {
+      return access.response;
+    }
+
     return Response.json(
       {
         admins: await listSettingsAdmins(),
-        canEdit: viewer?.role_id === 1 ||
-          (viewer?.role_id === 2 && viewer.can_invite_users === 1),
+
+        // Only the Owner can create or remove administrators.
+        canEdit: access.admin.role_id === 1,
       },
-      { headers: { "Cache-Control": "no-store" } },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   } catch (error) {
     console.error("Could not load admins:", error);
-    return errorResponse("The admins could not be loaded.", 503);
+
+    return errorResponse(
+      "The admins could not be loaded.",
+      503,
+    );
   }
 }
 
+// Only the Owner may create administrator accounts.
 export async function POST(request: Request) {
+  const access = await requireAdminApi(request, 1);
+
+  if (!access.ok) {
+    return access.response;
+  }
+
+  let input: unknown;
+
   try {
-    const access = await requireAdminApi(request, 2);
-    if (!access.ok) return access.response;
-    if (access.admin.role_id === 2 && access.admin.can_invite_users !== 1) {
-      return errorResponse("You do not have permission to add admins.", 403);
-    }
-    const input = await request.json() as NewAdminInput;
-    if (!input.username?.trim() || !input.email?.trim()) return errorResponse("Username and email are required.", 400);
-    if (![1, 2, 3].includes(input.role)) return errorResponse("Invalid admin role.", 400);
-    return Response.json({ admin: await createSettingsAdmin(input) }, { status: 201 });
+    input = await request.json();
+  } catch {
+    return errorResponse("Invalid request body.", 400);
+  }
+
+  if (
+    typeof input !== "object" ||
+    input === null ||
+    Array.isArray(input) ||
+    !("username" in input) ||
+    typeof input.username !== "string" ||
+    !("email" in input) ||
+    typeof input.email !== "string"
+  ) {
+    return errorResponse(
+      "Username and email are required.",
+      400,
+    );
+  }
+
+  const username = input.username.trim();
+  const email = input.email.trim();
+
+  if (!username || !email) {
+    return errorResponse(
+      "Username and email are required.",
+      400,
+    );
+  }
+
+  try {
+    // The database query automatically assigns role 2 (Admin).
+    // Client-supplied roles and permission flags are ignored.
+    const admin = await createSettingsAdmin({
+      username,
+      email,
+    });
+
+    return Response.json(
+      { admin },
+      {
+        status: 201,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error) {
     console.error("Could not create admin:", error);
-    return errorResponse("The admin could not be added. The email may already exist.", 400);
+
+    return errorResponse(
+      "The admin could not be added. The email may already exist.",
+      400,
+    );
   }
 }

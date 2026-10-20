@@ -8,7 +8,7 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireAdminPage(3);
+  await requireAdminPage(2);
 
   return <AdminShell>{children}</AdminShell>;
 }

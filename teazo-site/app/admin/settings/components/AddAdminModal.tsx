@@ -5,51 +5,23 @@ import {
   type ChangeEvent,
   type SubmitEvent,
 } from "react";
-import {
-  ADMIN_ROLE_LABELS,
-  READ_ROLE,
-  WRITE_ROLE,
-} from "@/app/types/admin-perms";
-import type {
-  AdminRole,
-  NewAdminInput,
-} from "@/app/types/admin-perms";
-import { InviteSwitch } from "./InviteSwitch";
+import type { NewAdminInput } from "@/app/types/admin-perms";
 
-// The parent handles adding users, canceling the dialog, and displaying permission errors.
 type AddAdminModalProps = {
-  onAdd: (
-    input: NewAdminInput,
-  ) => void;
+  onAdd: (input: NewAdminInput) => void | Promise<void>;
   onCancel: () => void;
-  onError: (
-    message: string,
-  ) => void;
   errorMessage: string;
 };
 
+// New accounts are automatically assigned the Admin role by the server.
 export function AddAdminModal({
   onAdd,
   onCancel,
-  onError,
   errorMessage,
 }: AddAdminModalProps) {
-  // Keep form values local until submission; default to read access without invitations.
-  const [username, setUsername] =
-    useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
 
-  const [email, setEmail] =
-    useState("");
-
-  const [role, setRole] =
-    useState<AdminRole>(READ_ROLE);
-
-  const [
-    canManageAdmins,
-    setCanManageAdmins,
-  ] = useState(false);
-
-  // Pass the entered values to the parent; this component does not create the user itself.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -58,12 +30,9 @@ export function AddAdminModal({
     onAdd({
       username,
       email,
-      role,
-      canManageAdmins,
     });
   }
 
-  // Cancel on a pointer event only when its target is the outer backdrop itself.
   return (
     <div
       className="fixed inset-0 z-[70] overflow-y-auto bg-black/30 p-3 sm:p-4"
@@ -71,10 +40,7 @@ export function AddAdminModal({
       aria-modal="true"
       aria-labelledby="add-admin-title"
       onPointerDown={(event) => {
-        if (
-          event.target ===
-          event.currentTarget
-        ) {
+        if (event.target === event.currentTarget) {
           onCancel();
         }
       }}
@@ -112,8 +78,7 @@ export function AddAdminModal({
             </h2>
 
             <p className="mt-1 text-sm text-gray-400">
-              Add an administrator to
-              your website.
+              Add an administrator to your website.
             </p>
 
             {errorMessage && (
@@ -126,7 +91,7 @@ export function AddAdminModal({
             )}
           </div>
 
-          {/* Controlled identity fields are passed to onAdd as entered. */}
+          {/* Username */}
           <label
             className="mb-4 block text-sm font-medium text-gray-600"
             htmlFor="new-admin-username"
@@ -140,19 +105,16 @@ export function AddAdminModal({
               value={username}
               onChange={(
                 event: ChangeEvent<HTMLInputElement>,
-              ) =>
-                setUsername(
-                  event.target.value,
-                )
-              }
+              ) => setUsername(event.target.value)}
               placeholder="Username"
               autoComplete="username"
               className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
+          {/* Email */}
           <label
-            className="mb-4 block text-sm font-medium text-gray-600"
+            className="mb-6 block text-sm font-medium text-gray-600"
             htmlFor="new-admin-email"
           >
             Email
@@ -164,105 +126,14 @@ export function AddAdminModal({
               value={email}
               onChange={(
                 event: ChangeEvent<HTMLInputElement>,
-              ) =>
-                setEmail(
-                  event.target.value,
-                )
-              }
+              ) => setEmail(event.target.value)}
               placeholder="email@example.com"
               autoComplete="email"
               className="mt-2 w-full min-w-0 rounded-md border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-[#dbb082] sm:text-sm"
             />
           </label>
 
-          <label
-            className="mb-4 block text-sm font-medium text-gray-600"
-            htmlFor="new-admin-role"
-          >
-            Role
-
-            <select
-              id="new-admin-role"
-              name="newAdminRole"
-              value={role}
-              onChange={(
-                event: ChangeEvent<HTMLSelectElement>,
-              ) => {
-                // Native select values are strings; role constants are numeric.
-                const nextRole =
-                  Number(
-                    event.target.value,
-                  ) as AdminRole;
-
-                setRole(nextRole);
-
-                // Removing write access must also clear invitation permission in this form.
-                if (
-                  nextRole !==
-                  WRITE_ROLE
-                ) {
-                  setCanManageAdmins(
-                    false,
-                  );
-                }
-              }}
-              className="mt-2 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-base text-gray-600 outline-none focus:border-[#dbb082] sm:text-sm"
-            >
-              <option value={READ_ROLE}>
-                {
-                  ADMIN_ROLE_LABELS[
-                    READ_ROLE
-                  ]
-                }
-              </option>
-
-              <option value={WRITE_ROLE}>
-                {
-                  ADMIN_ROLE_LABELS[
-                    WRITE_ROLE
-                  ]
-                }
-              </option>
-            </select>
-          </label>
-
-          <div className="mb-6 flex min-w-0 flex-col items-start gap-3 rounded-md border border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="break-words text-sm font-medium text-gray-600">
-                Manage Admins
-              </p>
-
-              <p className="mt-0.5 break-words text-xs text-gray-400">
-                Requires Edit access.
-              </p>
-            </div>
-
-            {/* Guard the invitation toggle here as well as marking it unavailable. */}
-            <InviteSwitch
-              checked={canManageAdmins}
-              unavailable={
-                role !== WRITE_ROLE
-              }
-              onClick={() => {
-                if (
-                  role !== WRITE_ROLE
-                ) {
-                  onError(
-                    "Select Write access before enabling invitations.",
-                  );
-
-                  return;
-                }
-
-                setCanManageAdmins(
-                  (current) =>
-                    !current,
-                );
-              }}
-            />
-          </div>
-
-          {/* Keep the action row reachable when the modal scrolls on small screens. */}
+          {/* Preserve the existing Cancel and Add User controls. */}
           <div className="sticky bottom-0 -mx-1 grid grid-cols-2 gap-3 border-t border-gray-100 bg-white px-1 pb-1 pt-4 sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:px-0 sm:pb-0">
             <button
               type="button"

@@ -1,48 +1,111 @@
 import { requireAdminApi } from "@/app/lib/admin";
-import { removeSettingsAdmin, updateSettingsAdminManagePermission, updateSettingsAdminRole } from "@/app/lib/queries/settings";
-import type { AdminRole } from "@/app/types/admin-perms";
+import {
+  createSettingsAdmin,
+  listSettingsAdmins,
+} from "@/app/lib/queries/settings";
 
 function errorResponse(message: string, status: number) {
-  return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
+  return Response.json(
+    { error: message },
+    {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }
 
-export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+// Both Owner and Admin may view the administrator list.
+export async function GET(request: Request) {
   try {
     const access = await requireAdminApi(request, 2);
-    if (!access.ok) return access.response;
-    if (access.admin.role_id === 2 && access.admin.can_invite_users !== 1) {
-      return errorResponse("You do not have permission to change admin access.", 403);
+
+    if (!access.ok) {
+      return access.response;
     }
-    const { id } = await context.params;
-    const input = await request.json() as { role?: AdminRole; canManageAdmins?: boolean };
-    if (input.role === undefined && input.canManageAdmins === undefined) {
-      return errorResponse("No admin change was provided.", 400);
-    }
-    if (input.role !== undefined && ![1, 2, 3].includes(input.role)) {
-      return errorResponse("Invalid admin role.", 400);
-    }
-    const admin = input.role !== undefined
-      ? await updateSettingsAdminRole(id, input.role)
-      : await updateSettingsAdminManagePermission(id, input.canManageAdmins === true);
-    return Response.json({ admin });
+
+    return Response.json(
+      {
+        admins: await listSettingsAdmins(),
+
+        // Only the Owner can create or remove administrators.
+        canEdit: access.admin.role_id === 1,
+      },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error) {
-    console.error("Could not update admin:", error);
-    return errorResponse("The admin could not be updated.", 400);
+    console.error("Could not load admins:", error);
+
+    return errorResponse(
+      "The admins could not be loaded.",
+      503,
+    );
   }
 }
 
-export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+// Only the Owner may create administrator accounts.
+export async function POST(request: Request) {
+  const access = await requireAdminApi(request, 1);
+
+  if (!access.ok) {
+    return access.response;
+  }
+
+  let input: unknown;
+
   try {
-    const access = await requireAdminApi(request, 2);
-    if (!access.ok) return access.response;
-    if (access.admin.role_id === 2 && access.admin.can_invite_users !== 1) {
-      return errorResponse("You do not have permission to delete admins.", 403);
-    }
-    const { id } = await context.params;
-    await removeSettingsAdmin(id);
-    return new Response(null, { status: 204 });
+    input = await request.json();
+  } catch {
+    return errorResponse("Invalid request body.", 400);
+  }
+
+  if (
+    typeof input !== "object" ||
+    input === null ||
+    Array.isArray(input) ||
+    !("username" in input) ||
+    typeof input.username !== "string" ||
+    !("email" in input) ||
+    typeof input.email !== "string"
+  ) {
+    return errorResponse(
+      "Username and email are required.",
+      400,
+    );
+  }
+
+  const username = input.username.trim();
+  const email = input.email.trim();
+
+  if (!username || !email) {
+    return errorResponse(
+      "Username and email are required.",
+      400,
+    );
+  }
+
+  try {
+    // The database query always assigns role 2 (Admin).
+    // Any submitted role or permission flags are ignored.
+    const admin = await createSettingsAdmin({
+      username,
+      email,
+    });
+
+    return Response.json(
+      { admin },
+      {
+        status: 201,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error) {
-    console.error("Could not delete admin:", error);
-    return errorResponse("The admin could not be deleted.", 400);
+    console.error("Could not create admin:", error);
+
+    return errorResponse(
+      "The admin could not be added. The email may already exist.",
+      400,
+    );
   }
 }

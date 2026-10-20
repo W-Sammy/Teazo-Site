@@ -1,11 +1,7 @@
-
 import "server-only";
-
 import { cache } from "react";
 import { redirect } from "next/navigation";
-
 import { auth } from "@/auth";
-
 import {
   findAuthorizedAdmin,
   type Admin,
@@ -36,6 +32,8 @@ const getAdminAccess = cache(
 
     const admin = await findAuthorizedAdmin(email);
 
+    // Only Owner (1) and Admin (2) are recognized by the whitelist.
+    // A lower numeric role has greater privileges.
     if (!admin || admin.role_id > minRole) {
       return { ok: false, status: 403 };
     }
@@ -53,7 +51,7 @@ export async function getAdmin(
 }
 
 export async function requireAdminPage(
-  minRole: AdminRole = 3,
+  minRole: AdminRole = 2,
 ): Promise<Admin> {
   let access: AdminAccess;
 
@@ -95,7 +93,7 @@ function denyApi(
 
 export async function requireAdminApi(
   request: Request,
-  minRole: AdminRole = 3,
+  minRole: AdminRole = 2,
 ): Promise<ApiAccess> {
   let access: AdminAccess;
 
