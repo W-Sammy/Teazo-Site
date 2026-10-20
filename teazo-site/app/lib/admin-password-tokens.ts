@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { prepare } from "./d1";
+import { hashPassword } from "./password";
 
 export type PasswordTokenPurpose = "setup" | "reset";
 
@@ -112,4 +113,93 @@ export async function findValidPasswordToken(
   )
     .bind(hashToken(token), purpose, now)
     .first<ValidPasswordToken>();
+}
+
+type SavePasswordResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: "invalid-password" | "password-mismatch" | "invalid-token";
+    };
+
+/**
+ * Save a password using a setup/reset token.
+ *
+ * The final UPDATE checks eligibility and token validity again.
+ * The database trigger consumes all outstanding links atomically.
+ */
+export async function savePasswordWithToken(
+  token: string,
+  purpose: PasswordTokenPurpose,
+  password: string,
+  confirmPassword: string,
+): Promise<SavePasswordResult> {
+  // Preserve the exact password: do not trim or lowercase it.
+  const passwordLength = password.length;
+
+  if (passwordLength < 6 || passwordLength > 128) {
+    return { ok: false, reason: "invalid-password" };
+  }
+
+  if (password !== confirmPassword) {
+    return { ok: false, reason: "password-mismatch" };
+  }
+
+  // Reject invalid links before doing the more expensive password hashing.
+  const validToken = await findValidPasswordToken(token, purpose);
+
+  if (!validToken) {
+    return { ok: false, reason: "invalid-token" };
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  // Recalculate time after hashing, since the token may have expired.
+  const now = Math.floor(Date.now() / 1000);
+
+  const updated = await prepare(
+    `UPDATE admin_user
+        SET password_hash = ?1,
+            session_version = session_version + 1,
+            status = CASE
+              WHEN ?2 = 'setup' AND status = 'invited'
+                THEN 'active'
+              ELSE status
+            END
+      WHERE id = ?3
+        AND deleted_at IS NULL
+        AND status IN ('active', 'invited')
+        AND role_id IN (1, 2, 3)
+        AND (
+          (?2 = 'setup' AND password_hash IS NULL)
+          OR
+          (?2 = 'reset' AND password_hash IS NOT NULL)
+        )
+        AND EXISTS (
+          SELECT 1
+            FROM admin_password_token
+           WHERE id = ?4
+             AND admin_user_id = admin_user.id
+             AND token_hash = ?5
+             AND purpose = ?2
+             AND used_at IS NULL
+             AND expires_at > ?6
+        )
+      RETURNING id`,
+  )
+    .bind(
+      passwordHash,
+      purpose,
+      validToken.admin_user_id,
+      validToken.id,
+      hashToken(token),
+      now,
+    )
+    .first<{ id: string }>();
+
+  if (!updated) {
+    return { ok: false, reason: "invalid-token" };
+  }
+
+  return { ok: true };
 }

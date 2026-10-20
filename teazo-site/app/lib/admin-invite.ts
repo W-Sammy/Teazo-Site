@@ -1,5 +1,5 @@
 /**
- * The email someone gets when an admin adds them in Settings (TZ-367).
+ * The email someone gets when an admin adds them in Settings.
  *
  * Sign-in is Google only, so the invite says where to sign in and to use
  * exactly this address. When password login exists, the set-password link
@@ -30,7 +30,11 @@ export type AdminInvite = {
   invitedBy?: string;
 };
 
-const ROLE_LABELS: Record<AdminRole, string> = { 1: "Owner", 2: "Can Edit", 3: "Can View" };
+const ROLE_LABELS: Record<AdminRole, string> = {
+  1: "Owner",
+  2: "Can Edit",
+  3: "Can View",
+};
 
 const escapeHtml = (value: string) =>
   value
@@ -52,9 +56,14 @@ function siteUrl(): string {
 /** The email itself. Pure, so it can be tested without a server. */
 export function buildAdminInvite(invite: AdminInvite, site: string) {
   const loginUrl = `${site}/login`;
-  const who = invite.invitedBy ? `${invite.invitedBy} added you` : "You've been added";
+  const who = invite.invitedBy
+    ? `${invite.invitedBy} added you`
+    : "You've been added";
   const access = ROLE_LABELS[invite.role];
-  const manages = invite.role === 2 && invite.canManageAdmins ? " You can also add and remove other admins." : "";
+  const manages =
+    invite.role === 2 && invite.canManageAdmins
+      ? " You can also add and remove other admins."
+      : "";
 
   const text = [
     `Hi ${invite.username},`,
@@ -84,12 +93,21 @@ export function buildAdminInvite(invite: AdminInvite, site: string) {
     "</div>",
   ].join("");
 
-  return { subject: "You've been added as an admin of the TEAZO website", text, html };
+  return {
+    subject: "You've been added as an admin of the TEAZO website",
+    text,
+    html,
+  };
 }
 
-export async function sendAdminInvite(invite: AdminInvite): Promise<SendOutcome | "failed"> {
+export async function sendAdminInvite(
+  invite: AdminInvite,
+): Promise<SendOutcome | "failed"> {
   try {
-    return await sendEmail({ to: invite.email, ...buildAdminInvite(invite, siteUrl()) });
+    return await sendEmail({
+      to: invite.email,
+      ...buildAdminInvite(invite, siteUrl()),
+    });
   } catch (error) {
     console.error("An admin was added, but the invite email failed:", error);
     return "failed";
