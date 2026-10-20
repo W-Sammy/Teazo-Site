@@ -1,7 +1,7 @@
 "use client";
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
-
+import PasswordFlow from "./password-flow";
 import { BubbleField } from "@/app/components/bubble-field";
 
 import Link from "next/link";
@@ -149,15 +149,10 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             >
               {isSubmitting ? "SIGNING IN…" : "SIGN IN"}
             </button>
-
-            {/* [!] Needs to be update once account administrative workflow has been developed */}
-            <Link
-              href="/404"
-              className="text-center text-[14px] font-semibold tracking-[0.03em] text-black hover:underline"
-            >
-              FORGOT PASSWORD?
-            </Link>
           </form>
+          <Suspense fallback={<p>Loading...</p>}>
+            <PasswordFlow initialEmail={email} disabled={isSubmitting} />
+          </Suspense>
         </div>
 
         {/* Google SSO container */}
