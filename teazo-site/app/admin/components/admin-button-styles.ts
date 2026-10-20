@@ -1,4 +1,3 @@
-
 /**
  * Shared button styles for Teazo admin pages.
  *
