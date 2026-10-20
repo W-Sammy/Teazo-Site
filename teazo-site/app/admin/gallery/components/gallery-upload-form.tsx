@@ -523,7 +523,7 @@ export default function GalleryUploadForm({
             htmlFor="gallery-image-name"
             className="mb-1 block text-sm text-gray-700"
           >
-            Name
+            Name <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <input
@@ -642,6 +642,9 @@ export default function GalleryUploadForm({
 
         {/* Image preview and selector */}
         <div className="mt-6 min-w-0">
+          <label htmlFor="gallery-image-file" className="mb-2 block text-sm text-gray-700">
+            Image{initialImage ? " (optional)" : <> <span className="text-red-600" aria-hidden="true">*</span></>}
+          </label>
           {previewUrl && (
             <div className="mb-3 min-w-0">
               <div className="relative h-52 w-full overflow-hidden rounded-xl border border-[#dbb082] bg-[#f3ece6] md:h-44">

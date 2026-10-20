@@ -330,7 +330,7 @@ export default function MenuItemForm({
           htmlFor="menu-item-name"
           className="mb-1 block text-sm text-gray-700"
         >
-          Name
+          Name <span className="text-red-600" aria-hidden="true">*</span>
         </label>
 
         <input
@@ -374,7 +374,7 @@ export default function MenuItemForm({
           htmlFor="menu-item-price"
           className="mb-1 block text-sm text-gray-700"
         >
-          Price (USD)
+          Price (USD) <span className="text-red-600" aria-hidden="true">*</span>
         </label>
 
         <input

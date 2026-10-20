@@ -394,7 +394,7 @@ export default function EventForm({
             className="mb-1 block text-sm text-gray-700"
             htmlFor="event-name"
           >
-            Name
+            Name <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <input
@@ -418,7 +418,7 @@ export default function EventForm({
             className="mb-1 block text-sm text-gray-700"
             htmlFor="event-description"
           >
-            Description
+            Description <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <textarea
@@ -529,7 +529,7 @@ export default function EventForm({
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-start"
           >
-            Starts
+            Starts <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="event-start"
@@ -552,7 +552,7 @@ export default function EventForm({
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-end"
           >
-            Ends
+            Ends <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="event-end"
