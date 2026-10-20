@@ -47,7 +47,7 @@ function PasswordDialog({
     initialPurpose ? (initialToken ? "complete" : "request") : null,
   );
 
-  const [purpose, setPurpose] = useState<Purpose>(initialPurpose ?? "reset");
+  const purpose: Purpose = initialPurpose ?? "reset";
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -98,8 +98,7 @@ function PasswordDialog({
     cleanLink();
   }
 
-  function openRequest(nextPurpose: Purpose) {
-    setPurpose(nextPurpose);
+  function openRequest() {
     setEmail(initialEmail);
     setPassword("");
     setConfirmPassword("");
@@ -156,7 +155,6 @@ function PasswordDialog({
                 }
               : {
                   email: email.trim().toLowerCase(),
-                  purpose,
                 },
           ),
           cache: "no-store",
@@ -203,9 +201,7 @@ function PasswordDialog({
     view === "success"
       ? "Request complete"
       : view === "request"
-        ? purpose === "setup"
-          ? "Create your password"
-          : "Forgot your password?"
+        ? "Set or reset your password"
         : purpose === "setup"
           ? "Create your password"
           : "Reset your password";
@@ -219,19 +215,10 @@ function PasswordDialog({
         <button
           type="button"
           disabled={disabled}
-          onClick={() => openRequest("reset")}
+          onClick={() => openRequest()}
           className="cursor-pointer text-sm font-semibold hover:underline disabled:opacity-50"
         >
-          FORGOT PASSWORD?
-        </button>
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => openRequest("setup")}
-          className="cursor-pointer text-sm hover:underline disabled:opacity-50"
-        >
-          First time here? Create a password
+          SET OR RESET PASSWORD
         </button>
       </div>
 
@@ -282,9 +269,8 @@ function PasswordDialog({
               {view === "request" ? (
                 <>
                   <p className="text-sm text-gray-600">
-                    {purpose === "setup"
-                      ? "Enter the email registered on your admin account to request a password setup link."
-                      : "Enter your admin email to request a password reset link."}
+                    Enter your admin email. We'll send you a link to create or
+                    reset your password.
                   </p>
 
                   <label className="block text-sm font-medium">

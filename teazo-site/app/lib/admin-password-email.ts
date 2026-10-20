@@ -63,7 +63,6 @@ function escapeHtml(value: string): string {
  */
 export async function sendAdminPasswordEmail(
   email: string,
-  purpose: PasswordTokenPurpose,
 ): Promise<SendOutcome | null> {
   const normalizedEmail = normalizeEmail(email);
 
@@ -73,7 +72,7 @@ export async function sendAdminPasswordEmail(
 
   // Resolve the account and recipient from the database.
   const admin = await prepare(
-    `SELECT id, email_normalized
+    `SELECT id, email_normalized, password_hash IS NULL AS needs_password_setup
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
@@ -85,7 +84,8 @@ export async function sendAdminPasswordEmail(
     .first<PasswordEmailAdmin>();
 
   if (!admin) return null;
-
+  const purpose: PasswordTokenPurpose =
+    admin.needs_password_setup === 1 ? "setup" : "reset";
   // Validate configuration before creating a token.
   const link = new URL("/login", applicationUrl());
 

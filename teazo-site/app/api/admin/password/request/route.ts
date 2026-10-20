@@ -78,16 +78,13 @@ export async function POST(request: Request) {
     typeof body !== "object" ||
     body === null ||
     !("email" in body) ||
-    !("purpose" in body) ||
     typeof body.email !== "string" ||
-    body.email.length > 254 ||
-    (body.purpose !== "setup" && body.purpose !== "reset")
+    body.email.length > 254
   ) {
-    return json({ error: "Enter a valid email and request type." }, 400);
+    return json({ error: "Enter a valid email address." }, 400);
   }
 
   const email = normalizeEmail(body.email);
-  const purpose = body.purpose;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: "Enter a valid email address." }, 400);
@@ -117,7 +114,7 @@ export async function POST(request: Request) {
       // The response does not wait for an eligible account's email.
       after(async () => {
         try {
-          const outcome = await sendAdminPasswordEmail(email, purpose);
+          const outcome = await sendAdminPasswordEmail(email);
 
           if (outcome === "skipped") {
             console.error("Password email delivery is not configured.");
