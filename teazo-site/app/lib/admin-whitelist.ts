@@ -1,16 +1,15 @@
 import "server-only";
 import { prepare } from "./d1";
 
-// Temporarily retain role 3 in the type while older page-level
-// authorization calls are being updated.
-// Database authentication queries now accept only Owner and Admin.
-export type AdminRole = 1 | 2 | 3;
+// The administrator system recognizes only two roles:
+// 1 = Owner
+// 2 = Admin
+export type AdminRole = 1 | 2;
 
 export type Admin = {
   id: string;
   username: string;
   role_id: AdminRole;
-  can_invite_users: number;
 };
 
 export function normalizeEmail(email: string): string {
@@ -26,7 +25,7 @@ export async function findAuthorizedAdmin(
   if (!normalizedEmail) return null;
 
   return prepare(
-    `SELECT id, username, role_id, can_invite_users
+    `SELECT id, username, role_id
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
