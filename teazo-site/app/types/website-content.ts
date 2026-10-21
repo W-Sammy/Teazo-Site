@@ -54,6 +54,13 @@ export type ContactContent = {
   contactFormEnabled: boolean;
 };
 
+export type CarouselImage = {
+  id: string;
+  src: string;
+  alt: string;
+  enabled: boolean;
+};
+
 export type WebsiteContent = {
   logo: string;
   story: string;
@@ -62,6 +69,7 @@ export type WebsiteContent = {
   address: AddressInfo;
   hours: DayHours[];
   holidays: Holiday[];
+  carouselImages?: CarouselImage[];
   contactFormEnabled: boolean;
 };
 
