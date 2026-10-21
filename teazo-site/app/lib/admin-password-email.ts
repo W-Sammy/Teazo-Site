@@ -14,7 +14,7 @@ type PasswordEmailAdmin = {
   needs_password_setup: 0 | 1;
 };
 
-function applicationUrl(): string {
+export function applicationUrl(): string {
   const configured = process.env.NEXT_PUBLIC_BASE_URL;
 
   if (!configured) {
