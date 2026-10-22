@@ -1092,7 +1092,9 @@ export default function AdminMenuClient({
             onClick={() =>
               setFiltersOpen((current) => !current)
             }
-            className="hidden cursor-pointer rounded py-1 text-lg font-bold hover:bg-gray-100 md:inline-flex"
+            className={`hidden cursor-pointer rounded py-1 text-lg font-bold hover:bg-gray-100 md:inline-flex ${
+              filtersOpen ? "md:mr-2" : ""
+            }`}
             aria-label={
               filtersOpen
                 ? "Collapse filters"
