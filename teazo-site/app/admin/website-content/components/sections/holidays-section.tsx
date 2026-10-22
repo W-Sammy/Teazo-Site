@@ -3,16 +3,16 @@
 import { AccordionItem } from "../section-shell";
 import { IconHolidays } from "../icons";
 import type { Holiday } from "@/app/types/website-content";
-import { isValidHolidayDay } from "../validators";
+import { isValidHolidayDate } from "../validators";
 import HolidayCard from "./holiday-card";
 
-// tallies how many holidays land on each valid month-day so HolidayCard can flag
-// duplicates (invalid/incomplete dates are excluded, they get their own error instead)
+// tallies how many holidays use each valid date so HolidayCard can flag duplicates
+// (invalid/incomplete dates are excluded, they get their own error instead). A one-time
+// date and a yearly date on the same day are different dates: the one-time one wins.
 function countValidDates(holidays: Holiday[]) {
   const counts = new Map<string, number>();
   for (const holiday of holidays) {
-    const [m, d] = holiday.date.split("-").map(Number);
-    if (isValidHolidayDay(m || null, d || null)) {
+    if (isValidHolidayDate(holiday.date)) {
       counts.set(holiday.date, (counts.get(holiday.date) ?? 0) + 1);
     }
   }

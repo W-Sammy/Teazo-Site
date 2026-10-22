@@ -6,6 +6,7 @@ import {
   AXIS_LABELS,
   getCurrentWeekLabel,
   getWeekDates,
+  toIsoDate,
   toMonthDay,
 } from "../hours-utils";
 import type { DayHours, Holiday } from "@/app/types/website-content";
@@ -60,9 +61,10 @@ export default function HoursSection({
           // groundwork for Holiday Exceptions overriding Business Hours: flag which row falls
           // on a holiday this week so it can be visually called out (edit still happens on the
           // Holiday Exceptions card; actual override-on-save merge needs the backend to land)
-          const holiday = holidays.find(
-            (h) => h.date === toMonthDay(weekDates[i])
-          );
+          // A one-time holiday on this exact date wins over one that repeats every year.
+          const holiday =
+            holidays.find((h) => h.date === toIsoDate(weekDates[i])) ??
+            holidays.find((h) => h.date === toMonthDay(weekDates[i]));
 
           return (
             <BusinessHoursRow

@@ -1,0 +1,625 @@
+import type { PickupTiming } from "@/app/types/checkout";
+import type {
+  WebsiteContent,
+  Holiday,
+  ContactHour,
+} from "@/app/types/website-content";
+
+export const STORE_TIMEZONE = "America/Los_Angeles";
+export const PREP_LEAD_TIME_MINUTES = 25;
+export const PREP_LEAD_TIME_GRACE_MINUTES = 3;
+export const ORDER_CUTOFF_MINUTES_BEFORE_CLOSE = 30;
+/** Scheduled pickups can be up to this many days after today. ASAP is today only. */
+export const MAX_SCHEDULE_DAYS_AHEAD = 7;
+export const SLOT_MINUTES = 15;
+
+/** Shown in the cart and returned by checkout while the owner has paused online ordering. */
+export const ONLINE_ORDERING_PAUSED_MESSAGE =
+  "Online ordering is paused right now. You can still order at the counter, or check back soon.";
+
+export interface PacificDateParts {
+  date: Date;
+  year: number;
+  month: number; // 1-12
+  day: number; // 1-31
+  dayOfWeekIndex: number; // 0=Sunday .. 6=Saturday
+  hour: number; // 0-23
+  minute: number; // 0-59
+  second: number; // 0-59
+  minuteOfDay: number; // hour * 60 + minute
+  isoDateString: string; // "YYYY-MM-DD"
+  monthDayString: string; // "MM-DD" for holiday matching
+}
+
+export interface DaySchedule {
+  closed: boolean;
+  openMinuteOfDay: number;
+  closeMinuteOfDay: number;
+  cutoffMinuteOfDay: number;
+  openHour: number;
+  closeHour: number;
+  holiday?: Holiday;
+}
+
+export interface TimeValidationResult {
+  valid: boolean;
+  error?: string;
+  pickupTimeIsoUtc?: string;
+}
+
+/**
+ * Formats a minute of the day (0-1439) into a readable 12-hour string (e.g. 660 -> "11:00 AM").
+ */
+export function formatMinuteOfDay(minuteOfDay: number): string {
+  const totalMinutes = ((minuteOfDay % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
+/**
+ * Parses a 12-hour or 24-hour time string into a decimal hour (e.g. "1:00 PM" -> 13, "9:30 AM" -> 9.5).
+ */
+export function parse12HourToDecimal(timeStr: string | null | undefined): number | undefined {
+  if (!timeStr) return undefined;
+  const trimmed = timeStr.trim();
+  if (!trimmed || trimmed.toLowerCase() === "closed") return undefined;
+
+  // 12-hour format: "1:00 AM", "05:30 PM", "1pm"
+  const match12 = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const minute = match12[2] ? parseInt(match12[2], 10) : 0;
+    const period = match12[3].toUpperCase();
+    if (period === "PM" && hour < 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+    return hour + minute / 60;
+  }
+
+  // 24-hour format: "13:00", "09:30"
+  const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    const hour = parseInt(match24[1], 10);
+    const minute = parseInt(match24[2], 10);
+    return hour + minute / 60;
+  }
+
+  return undefined;
+}
+
+/**
+ * Parses a display time range string like "1:00 AM - 5:00 PM" into decimal start/end hours.
+ */
+export function parseDisplayTextRange(displayText: string | null | undefined): {
+  start?: number;
+  end?: number;
+} {
+  if (!displayText) return {};
+  const cleaned = displayText.trim();
+  if (!cleaned || cleaned.toLowerCase() === "closed") return {};
+
+  const parts = cleaned.split(/\s*[-–—]\s*/);
+  if (parts.length !== 2) return {};
+
+  const start = parse12HourToDecimal(parts[0]);
+  const end = parse12HourToDecimal(parts[1]);
+
+  if (start !== undefined && end !== undefined) {
+    return { start, end };
+  }
+  return {};
+}
+
+/**
+ * Extracts date and time components formatted in Pacific Time (America/Los_Angeles).
+ */
+export function getPacificParts(date: Date = new Date()): PacificDateParts {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    weekday: "short",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  const getPart = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const weekdayShort = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
+  const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayOfWeekIndex = Math.max(0, WEEKDAYS.indexOf(weekdayShort));
+
+  const year = getPart("year");
+  const month = getPart("month");
+  const day = getPart("day");
+  const hour = getPart("hour");
+  const minute = getPart("minute");
+  const second = getPart("second");
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const isoDateString = `${year}-${pad(month)}-${pad(day)}`;
+  const monthDayString = `${pad(month)}-${pad(day)}`;
+
+  return {
+    date,
+    year,
+    month,
+    day,
+    dayOfWeekIndex,
+    hour,
+    minute,
+    second,
+    minuteOfDay: hour * 60 + minute,
+    isoDateString,
+    monthDayString,
+  };
+}
+
+/**
+ * Converts a Pacific Time date and time into a precise UTC Date object,
+ * properly accounting for Daylight Saving Time (PDT vs PST).
+ */
+export function pacificToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+): Date {
+  const wallClockAsUtc = Date.UTC(year, month - 1, day, hour, minute);
+
+  // The offset is read at a guess 7-8 hours away from the real moment, which on
+  // a clock-change day can fall on the other side of the 2 AM change. Reading it
+  // again at the first result lands on the right side.
+  const firstTry = wallClockAsUtc - pacificOffsetMs(new Date(wallClockAsUtc));
+  const offsetMs = pacificOffsetMs(new Date(firstTry));
+  return new Date(wallClockAsUtc - offsetMs);
+}
+
+// Built once: listing a week of pickup slots converts a few hundred times.
+const PACIFIC_WALL_CLOCK = new Intl.DateTimeFormat("en-US", {
+  timeZone: STORE_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+/** San Francisco's offset from UTC at `date`, in ms (-7h in summer, -8h in winter). */
+function pacificOffsetMs(date: Date): number {
+  const parts = PACIFIC_WALL_CLOCK.formatToParts(date);
+
+  const getPart = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const localAsUtc = Date.UTC(
+    getPart("year"),
+    getPart("month") - 1,
+    getPart("day"),
+    getPart("hour"),
+    getPart("minute"),
+    getPart("second"),
+  );
+  return localAsUtc - (date.getTime() - date.getMilliseconds());
+}
+
+/** Noon in San Francisco, `days` calendar days after `date`'s San Francisco date. */
+export function addPacificDays(date: Date, days: number): Date {
+  const parts = getPacificParts(date);
+  return pacificToUtc(parts.year, parts.month, parts.day + days, 12, 0);
+}
+
+/** Whole calendar days from `from`'s San Francisco date to `to`'s. */
+export function pacificDaysBetween(from: Date, to: Date): number {
+  const a = getPacificParts(from);
+  const b = getPacificParts(to);
+  return Math.round((Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000);
+}
+
+/**
+ * Resolves the effective operating hours for a given date from website content,
+ * evaluating holiday exceptions first and falling back to weekly day-of-week hours.
+ */
+export function getStoreScheduleForDate(
+  date: Date,
+  content: WebsiteContent,
+): DaySchedule {
+  const parts = getPacificParts(date);
+
+  // 1. Check for a holiday on this exact date (YYYY-MM-DD), then one that repeats every year (MM-DD)
+  const holiday =
+    content.holidays?.find((h) => h.date === parts.isoDateString) ??
+    content.holidays?.find((h) => h.date === parts.monthDayString);
+  if (holiday) {
+    if (holiday.closed) {
+      return {
+        closed: true,
+        openMinuteOfDay: 0,
+        closeMinuteOfDay: 0,
+        cutoffMinuteOfDay: 0,
+        openHour: 0,
+        closeHour: 0,
+        holiday,
+      };
+    }
+
+    let startHour = holiday.start;
+    let endHour = holiday.end;
+
+    // If start or end are missing, parse from displayText if available
+    if ((startHour === undefined || endHour === undefined) && holiday.displayText) {
+      const parsed = parseDisplayTextRange(holiday.displayText);
+      if (parsed.start !== undefined) startHour = parsed.start;
+      if (parsed.end !== undefined) endHour = parsed.end;
+    }
+
+    startHour = startHour ?? 9;
+    endHour = endHour ?? 17;
+
+    const openMinuteOfDay = Math.round(startHour * 60);
+    const closeMinuteOfDay = Math.round(endHour * 60);
+    const cutoffMinuteOfDay = Math.max(
+      openMinuteOfDay,
+      closeMinuteOfDay - ORDER_CUTOFF_MINUTES_BEFORE_CLOSE,
+    );
+    return {
+      closed: false,
+      openMinuteOfDay,
+      closeMinuteOfDay,
+      cutoffMinuteOfDay,
+      openHour: startHour,
+      closeHour: endHour,
+      holiday,
+    };
+  }
+
+  // 2. Weekly hours (0=Sun .. 6=Sat)
+  const dayHours = content.hours[parts.dayOfWeekIndex] ?? content.hours[0];
+  if (!dayHours || dayHours.closed) {
+    return {
+      closed: true,
+      openMinuteOfDay: 0,
+      closeMinuteOfDay: 0,
+      cutoffMinuteOfDay: 0,
+      openHour: 0,
+      closeHour: 0,
+    };
+  }
+
+  const startHour = dayHours.start;
+  const endHour = dayHours.end;
+  const openMinuteOfDay = Math.round(startHour * 60);
+  const closeMinuteOfDay = Math.round(endHour * 60);
+  const cutoffMinuteOfDay = Math.max(
+    openMinuteOfDay,
+    closeMinuteOfDay - ORDER_CUTOFF_MINUTES_BEFORE_CLOSE,
+  );
+
+  return {
+    closed: false,
+    openMinuteOfDay,
+    closeMinuteOfDay,
+    cutoffMinuteOfDay,
+    openHour: startHour,
+    closeHour: endHour,
+  };
+}
+
+/**
+ * Checks whether the physical store is currently accepting online pickup orders
+ * based on the database schedule and order cutoff time.
+ */
+export function isStoreOpenForOrders(
+  content: WebsiteContent,
+  referenceNow: Date = new Date(),
+): boolean {
+  const parts = getPacificParts(referenceNow);
+  const schedule = getStoreScheduleForDate(referenceNow, content);
+  if (schedule.closed) return false;
+  return (
+    parts.minuteOfDay >= schedule.openMinuteOfDay &&
+    parts.minuteOfDay <= schedule.cutoffMinuteOfDay
+  );
+}
+
+/**
+ * Validates requested pickup timing (ASAP or SCHEDULED) against database store hours
+ * and holiday exceptions. Automatically queries `getWebsiteContent()` if not provided.
+ */
+export async function validatePickupTiming(
+  timing: PickupTiming,
+  options?: {
+    content?: WebsiteContent;
+    referenceNow?: Date;
+  },
+): Promise<TimeValidationResult> {
+  const referenceNow = options?.referenceNow ?? new Date();
+  let content = options?.content;
+  if (!content) {
+    const { getWebsiteContent } = await import("@/app/lib/website-content");
+    content = await getWebsiteContent();
+  }
+  const nowParts = getPacificParts(referenceNow);
+  const todaySchedule = getStoreScheduleForDate(referenceNow, content);
+
+  if (timing.type === "ASAP") {
+    if (todaySchedule.closed) {
+      const holidayMsg = todaySchedule.holiday ? ` for ${todaySchedule.holiday.name}` : "";
+      return {
+        valid: false,
+        error: `Store is currently closed${holidayMsg}. Online ordering is unavailable today.`,
+      };
+    }
+
+    if (nowParts.minuteOfDay < todaySchedule.openMinuteOfDay) {
+      return {
+        valid: false,
+        error: `Store is currently closed for online ordering. Orders open at ${formatMinuteOfDay(todaySchedule.openMinuteOfDay)} PT.`,
+      };
+    }
+
+    if (nowParts.minuteOfDay > todaySchedule.cutoffMinuteOfDay) {
+      return {
+        valid: false,
+        error: `Store is closed for new orders. Same-day online ordering cutoff is ${formatMinuteOfDay(todaySchedule.cutoffMinuteOfDay)} PT (closing at ${formatMinuteOfDay(todaySchedule.closeMinuteOfDay)} PT).`,
+      };
+    }
+
+    const asapTimeUtc = new Date(referenceNow.getTime() + PREP_LEAD_TIME_MINUTES * 60 * 1000);
+    return {
+      valid: true,
+      pickupTimeIsoUtc: asapTimeUtc.toISOString(),
+    };
+  }
+
+  if (timing.type === "SCHEDULED") {
+    if (!timing.pickupAt || typeof timing.pickupAt !== "string" || !timing.pickupAt.trim()) {
+      return {
+        valid: false,
+        error: "Scheduled pickup time (pickupAt) is required.",
+      };
+    }
+
+    const pickupDate = new Date(timing.pickupAt);
+    if (Number.isNaN(pickupDate.getTime())) {
+      return {
+        valid: false,
+        error: "Scheduled pickup time must be a valid ISO-8601 date timestamp.",
+      };
+    }
+
+    const pickupParts = getPacificParts(pickupDate);
+
+    // Scheduled pickups run from today through MAX_SCHEDULE_DAYS_AHEAD days from now
+    const daysAhead = pacificDaysBetween(referenceNow, pickupDate);
+    if (daysAhead < 0 || daysAhead > MAX_SCHEDULE_DAYS_AHEAD) {
+      return {
+        valid: false,
+        error: `Scheduled pickup must be within the next ${MAX_SCHEDULE_DAYS_AHEAD} days.`,
+      };
+    }
+
+    // Only the 15-minute marks the cart offers (2:00, 2:15, ...), to the second
+    if (pickupParts.minuteOfDay % SLOT_MINUTES !== 0 || pickupDate.getTime() % 60_000 !== 0) {
+      return {
+        valid: false,
+        error: `Scheduled pickup must be on a ${SLOT_MINUTES}-minute mark, such as 2:00, 2:15, 2:30 or 2:45. Please select a pickup time from the list.`,
+      };
+    }
+
+    const pickupSchedule = getStoreScheduleForDate(pickupDate, content);
+    // "today", "tomorrow", or e.g. "on Fri, Oct 16", to fit "Store is closed ..." and "... PT today"
+    const dayLabel =
+      daysAhead === 0
+        ? "today"
+        : daysAhead === 1
+          ? "tomorrow"
+          : `on ${formatPickupDay(pickupDate, referenceNow)}`;
+    if (pickupSchedule.closed) {
+      const holidayMsg = pickupSchedule.holiday ? ` for ${pickupSchedule.holiday.name}` : "";
+      return {
+        valid: false,
+        error: `Store is closed ${dayLabel}${holidayMsg}. Please choose another day.`,
+      };
+    }
+
+    // Enforce prep lead time with a grace buffer for form submission delay.
+    // Allows slots selected within the session (~22-25m) without false 400 rejection,
+    // while strictly ensuring the pickup time is in the future.
+    const effectiveLeadTimeMinutes = Math.max(1, PREP_LEAD_TIME_MINUTES - PREP_LEAD_TIME_GRACE_MINUTES);
+    const minPickupTimeMs = referenceNow.getTime() + effectiveLeadTimeMinutes * 60 * 1000;
+    if (pickupDate.getTime() < minPickupTimeMs) {
+      return {
+        valid: false,
+        error: `Scheduled pickup must be at least ${PREP_LEAD_TIME_MINUTES} minutes from now. Please select an updated pickup time.`,
+      };
+    }
+
+    // Enforce that day's operating window [openMinuteOfDay, cutoffMinuteOfDay]
+    if (pickupParts.minuteOfDay < pickupSchedule.openMinuteOfDay) {
+      return {
+        valid: false,
+        error: `Scheduled pickup cannot be earlier than store opening (${formatMinuteOfDay(pickupSchedule.openMinuteOfDay)} PT ${dayLabel}).`,
+      };
+    }
+
+    if (pickupParts.minuteOfDay > pickupSchedule.cutoffMinuteOfDay) {
+      return {
+        valid: false,
+        error: `Scheduled pickup cannot be later than ${formatMinuteOfDay(pickupSchedule.cutoffMinuteOfDay)} PT ${dayLabel} (store closes at ${formatMinuteOfDay(pickupSchedule.closeMinuteOfDay)} PT).`,
+      };
+    }
+
+    return {
+      valid: true,
+      pickupTimeIsoUtc: pickupDate.toISOString(),
+    };
+  }
+
+  return {
+    valid: false,
+    error: 'Invalid pickup timing type. Expected "ASAP" or "SCHEDULED".',
+  };
+}
+
+/**
+ * Returns the 15-minute pickup slots, in ISO-8601 UTC, on the San Francisco
+ * date `daysAhead` days after today, based on that day's hours and holidays.
+ * Today's slots also leave the 25-minute prep time.
+ */
+export function getAvailablePickupSlots(
+  content: WebsiteContent,
+  referenceNow: Date = new Date(),
+  daysAhead = 0,
+): string[] {
+  if (daysAhead < 0 || daysAhead > MAX_SCHEDULE_DAYS_AHEAD) return [];
+
+  const day = addPacificDays(referenceNow, daysAhead);
+  const dayParts = getPacificParts(day);
+  const schedule = getStoreScheduleForDate(day, content);
+  if (schedule.closed) return [];
+
+  let earliestMinute = schedule.openMinuteOfDay;
+  if (daysAhead === 0) {
+    // Earliest pickup today is at least now + 25m prep time
+    const minLeadParts = getPacificParts(
+      new Date(referenceNow.getTime() + PREP_LEAD_TIME_MINUTES * 60 * 1000),
+    );
+    if (minLeadParts.isoDateString !== dayParts.isoDateString) return [];
+    earliestMinute = Math.max(earliestMinute, minLeadParts.minuteOfDay);
+  }
+
+  const slots: string[] = [];
+  const firstSlot = Math.ceil(earliestMinute / SLOT_MINUTES) * SLOT_MINUTES;
+  for (let m = firstSlot; m <= schedule.cutoffMinuteOfDay; m += SLOT_MINUTES) {
+    const slotUtc = pacificToUtc(
+      dayParts.year,
+      dayParts.month,
+      dayParts.day,
+      Math.floor(m / 60),
+      m % 60,
+    );
+    slots.push(slotUtc.toISOString());
+  }
+
+  return slots;
+}
+
+export interface PickupDay {
+  /** San Francisco date, "YYYY-MM-DD" */
+  date: string;
+  /** "Today", "Tomorrow", or e.g. "Fri, Oct 16" */
+  label: string;
+  slots: string[];
+}
+
+/** "Today", "Tomorrow", or e.g. "Fri, Oct 16", for a pickup time seen from referenceNow. */
+export function formatPickupDay(pickup: Date, referenceNow: Date = new Date()): string {
+  const daysAhead = pacificDaysBetween(referenceNow, pickup);
+  if (daysAhead === 0) return "Today";
+  if (daysAhead === 1) return "Tomorrow";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: STORE_TIMEZONE,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(pickup);
+}
+
+/**
+ * The days from today through MAX_SCHEDULE_DAYS_AHEAD that still have at
+ * least one pickup slot, each with its slots. Closed days are left out.
+ */
+export function getPickupDays(
+  content: WebsiteContent,
+  referenceNow: Date = new Date(),
+): PickupDay[] {
+  const days: PickupDay[] = [];
+  for (let daysAhead = 0; daysAhead <= MAX_SCHEDULE_DAYS_AHEAD; daysAhead++) {
+    const slots = getAvailablePickupSlots(content, referenceNow, daysAhead);
+    if (slots.length === 0) continue;
+    const day = addPacificDays(referenceNow, daysAhead);
+    days.push({
+      date: getPacificParts(day).isoDateString,
+      label: formatPickupDay(day, referenceNow),
+      slots,
+    });
+  }
+  return days;
+}
+
+export const WEEKDAY_NAMES_FROM_MONDAY = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+/**
+ * Returns formatted weekly customer hours for Monday through Sunday.
+ * Automatically checks for any holiday exceptions falling in the current week (or reference week)
+ * and adjusts the operating hours and holiday tags accordingly.
+ */
+export function getWeeklyCustomerHours(
+  content: WebsiteContent,
+  referenceDate: Date = new Date(),
+): ContactHour[] {
+  const nowParts = getPacificParts(referenceDate);
+  // dayOfWeekIndex: 0=Sunday, 1=Monday, ..., 6=Saturday
+  // In Monday-first week: Monday is offset 0, Sunday is offset 6
+  const daysSinceMonday = (nowParts.dayOfWeekIndex + 6) % 7;
+
+  return WEEKDAY_NAMES_FROM_MONDAY.map((dayName, monIdx) => {
+    const dayOffset = monIdx - daysSinceMonday;
+
+    // Midday in Pacific Time on referenceDate
+    const basePacificMidday = pacificToUtc(
+      nowParts.year,
+      nowParts.month,
+      nowParts.day,
+      12,
+      0,
+    );
+
+    const dayDate = new Date(
+      basePacificMidday.getTime() + dayOffset * 24 * 60 * 60 * 1000,
+    );
+    const schedule = getStoreScheduleForDate(dayDate, content);
+
+    const isHoliday = Boolean(schedule.holiday);
+    const holidayName = schedule.holiday?.name;
+
+    let hoursText: string;
+    if (schedule.closed) {
+      hoursText = "Closed";
+    } else {
+      hoursText = `${formatMinuteOfDay(schedule.openMinuteOfDay)} - ${formatMinuteOfDay(schedule.closeMinuteOfDay)}`;
+    }
+
+    return {
+      day: dayName,
+      hours: hoursText,
+      isHoliday,
+      holidayName,
+    };
+  });
+}
+
+/**
+ * Returns the effective schedule for today in Pacific Time,
+ * taking into account holiday exceptions and regular weekly hours.
+ */
+export function getTodayStoreSchedule(
+  content: WebsiteContent,
+  referenceNow: Date = new Date(),
+): DaySchedule {
+  return getStoreScheduleForDate(referenceNow, content);
+}

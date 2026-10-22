@@ -1,60 +1,40 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { AdminEvent, EventFormValues } from "@/app/types/admin-event";
 
-const fallbackEventImage = "/admin_icons/admin_svg/teazo_dash_icon.svg";
-
-function createTemporaryEventId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `event-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+function eventFormData(values: EventFormValues) {
+  const form = new FormData();
+  form.set("name", values.name);
+  form.set("description", values.description);
+  form.set("startAt", values.startAt);
+  form.set("endAt", values.endAt);
+  form.set("appliesToAll", String(values.appliesToAll));
+  form.set("categoryIds", JSON.stringify(values.categoryIds));
+  form.set("itemIds", JSON.stringify(values.itemIds));
+  if (values.imageFile) form.set("imageFile", values.imageFile);
+  return form;
 }
 
 /**
  * Owns event data and the create, update, and delete operations.
- * Replace the marked temporary blocks with API calls when persistence is ready.
+ * Persists event records through the admin API.
  */
 export function useEvents(initialEvents: AdminEvent[]) {
   const [events, setEvents] = useState(initialEvents);
   const [errorMessage, setErrorMessage] = useState("");
-  const managedObjectUrls = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    const urls = managedObjectUrls.current;
-    return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
-      urls.clear();
-    };
-  }, []);
-
-  function createManagedObjectUrl(file: File) {
-    const url = URL.createObjectURL(file);
-    managedObjectUrls.current.add(url);
-    return url;
-  }
-
-  function revokeManagedObjectUrl(url: string) {
-    if (!managedObjectUrls.current.has(url)) return;
-    URL.revokeObjectURL(url);
-    managedObjectUrls.current.delete(url);
-  }
-
   async function createEvent(values: EventFormValues) {
     setErrorMessage("");
 
     try {
-      /* TODO: Replace this temporary block with POST /api/events. */
-      const { imageFile, ...eventValues } = values;
-      const newEvent: AdminEvent = {
-        id: createTemporaryEventId(),
-        ...eventValues,
-        imageUrl: imageFile
-          ? createManagedObjectUrl(imageFile)
-          : fallbackEventImage,
-      };
-
-      setEvents((current) => [newEvent, ...current]);
+      const response = await fetch("/api/admin/events", {
+        method: "POST",
+        body: eventFormData(values),
+      });
+      if (!response.ok) throw new Error("The event could not be created.");
+      const created = await fetch("/api/admin/events", { cache: "no-store" });
+      if (!created.ok) throw new Error("The event was created but could not be loaded.");
+      setEvents(await created.json());
       return true;
     } catch {
       setErrorMessage("Failed to create the event.");
@@ -69,24 +49,14 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      /* replace this temporary block with PATCH /api/events/:id. */
-      const { imageFile, ...eventValues } = values;
-      const imageUrl = imageFile
-        ? createManagedObjectUrl(imageFile)
-        : currentEvent.imageUrl;
-      const updatedEvent: AdminEvent = {
-        ...currentEvent,
-        ...eventValues,
-        imageUrl,
-      };
-
-      setEvents((current) =>
-        current.map((event) =>
-          event.id === currentEvent.id ? updatedEvent : event,
-        ),
-      );
-
-      if (imageFile) revokeManagedObjectUrl(currentEvent.imageUrl);
+      const response = await fetch(`/api/admin/events/${currentEvent.id}`, {
+        method: "PATCH",
+        body: eventFormData(values),
+      });
+      if (!response.ok) throw new Error("The event could not be updated.");
+      const refreshed = await fetch("/api/admin/events", { cache: "no-store" });
+      if (!refreshed.ok) throw new Error("The event was updated but could not be loaded.");
+      setEvents(await refreshed.json());
       return true;
     } catch {
       setErrorMessage("Failed to update the event.");
@@ -98,11 +68,9 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      /* TODO: Replace this temporary block with DELETE /api/events/:id. */
-      setEvents((current) =>
-        current.filter((event) => event.id !== eventToDelete.id),
-      );
-      revokeManagedObjectUrl(eventToDelete.imageUrl);
+      const response = await fetch(`/api/admin/events/${eventToDelete.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("The event could not be deleted.");
+      setEvents((current) => current.filter((event) => event.id !== eventToDelete.id));
       return true;
     } catch {
       setErrorMessage("Failed to delete the event.");
@@ -114,16 +82,13 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      /* TODO: Replace this temporary block with the bulk-delete API request. */
-      const endedEvents = events.filter(
-        (event) => Date.parse(event.endAt) < Date.now(),
-      );
-      const endedEventIds = new Set(endedEvents.map((event) => event.id));
-
-      setEvents((current) =>
-        current.filter((event) => !endedEventIds.has(event.id)),
-      );
-      endedEvents.forEach((event) => revokeManagedObjectUrl(event.imageUrl));
+      const response = await fetch("/api/admin/events", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ endedOnly: true }),
+      });
+      if (!response.ok) throw new Error("Ended events could not be deleted.");
+      setEvents((current) => current.filter((event) => Date.parse(event.endAt) >= Date.now()));
       return true;
     } catch {
       setErrorMessage("Failed to delete ended events.");

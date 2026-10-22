@@ -1,3 +1,4 @@
+
 import "server-only";
 
 import { cache } from "react";
@@ -10,6 +11,7 @@ import {
   type Admin,
   type AdminRole,
 } from "./admin-whitelist";
+import { isAllowedAdminWriteOrigin } from "./admin-origin";
 
 export type { Admin } from "./admin-whitelist";
 
@@ -17,7 +19,9 @@ type AdminAccess =
   | { ok: true; admin: Admin }
   | { ok: false; status: 401 | 403 };
 
-type ApiAccess = { ok: true; admin: Admin } | { ok: false; response: Response };
+type ApiAccess =
+  | { ok: true; admin: Admin }
+  | { ok: false; response: Response };
 
 // React cache deduplicates checks during one server render.
 // It does not persist authorization results across requests.
@@ -40,13 +44,17 @@ const getAdminAccess = cache(
   },
 );
 
-export async function getAdmin(minRole: AdminRole): Promise<Admin | null> {
+export async function getAdmin(
+  minRole: AdminRole,
+): Promise<Admin | null> {
   const access = await getAdminAccess(minRole);
 
   return access.ok ? access.admin : null;
 }
 
-export async function requireAdminPage(minRole: AdminRole = 3): Promise<Admin> {
+export async function requireAdminPage(
+  minRole: AdminRole = 3,
+): Promise<Admin> {
   let access: AdminAccess;
 
   try {
@@ -58,20 +66,29 @@ export async function requireAdminPage(minRole: AdminRole = 3): Promise<Admin> {
   }
 
   if (!access.ok) {
-    redirect(access.status === 401 ? "/login" : "/login?error=AccessDenied");
+    redirect(
+      access.status === 401
+        ? "/login"
+        : "/login?error=AccessDenied",
+    );
   }
 
   return access.admin;
 }
 
-function denyApi(status: number, message: string): ApiAccess {
+function denyApi(
+  status: number,
+  message: string,
+): ApiAccess {
   return {
     ok: false,
     response: Response.json(
       { error: message },
       {
         status,
-        headers: { "Cache-Control": "no-store" },
+        headers: {
+          "Cache-Control": "no-store",
+        },
       },
     ),
   };
@@ -89,7 +106,10 @@ export async function requireAdminApi(
     unstable_rethrow(error);
     console.error("Admin API authorization lookup failed.");
 
-    return denyApi(503, "Authorization is temporarily unavailable.");
+    return denyApi(
+      503,
+      "Authorization is temporarily unavailable.",
+    );
   }
 
   if (!access.ok) {
@@ -102,11 +122,21 @@ export async function requireAdminApi(
   }
 
   // Cookie-authenticated writes must originate from this site.
+  // The LAN development exception is validated separately.
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
-    const origin = request.headers.get("origin");
+    if (!isAllowedAdminWriteOrigin(request)) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Admin API origin rejected:", {
+          origin: request.headers.get("origin"),
+          requestOrigin: new URL(request.url).origin,
+          host: request.headers.get("host"),
+        });
+      }
 
-    if (!origin || origin !== new URL(request.url).origin) {
-      return denyApi(403, "Request origin is not allowed.");
+      return denyApi(
+        403,
+        "Request origin is not allowed.",
+      );
     }
   }
 

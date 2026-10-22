@@ -71,16 +71,18 @@ machine:
 - Website content: the address, phone, email, hours, holidays, social links,
   story, logo and contact form switch, edited on `/admin/website-content` and
   shown on the public pages.
+- Gallery images: storing, listing and removing them in D1 and R2 (§4.1), and
+  showing the published ones on `/gallery`.
 
-**Still sample data or hardcoded:** the dashboard's numbers, the events and
-gallery admin pages, and the menu and gallery on the public pages. Those are
-waiting for their features.
+**Still sample data or hardcoded:** the dashboard's numbers, the events admin
+page, the gallery admin page (the gallery functions its routes need are ready,
+§4.1), and the public menu. Those are waiting for their features.
 
 ---
 
 ## 2. Set up your machine
 
-You need **Node.js 22 or newer** and **Git**. Wrangler refuses to start on
+You need **Node.js 22.13 or newer** and **Git**. Wrangler refuses to start on
 anything older, and it says which version it wants.
 
 > **Windows: keep the repo at a short path**, such as `C:\dev\Teazo-Site`. The
@@ -453,12 +455,24 @@ to `.env.local`, restart the app, and submit the form:
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY=3x00000000000000000000FF` | The widget asks for a click before it passes. After the click, Submit sends the message as usual, and the widget asks for a click again after each message |
 
 In the first two rows Cloudflare refuses the widget's answer, and the app's
-terminal logs `Turnstile rejected a contact form submission:` with Cloudflare's
+terminal logs `Turnstile rejected a submission:` with Cloudflare's
 error code (`invalid-input-response` or `timeout-or-duplicate`). The third row
 logs no refusal: the widget never gives the form an answer, so the server turns
 it away without asking Cloudflare. Instead the terminal repeats `[browser]
 [Cloudflare Turnstile] Error: 600010.` while the page is open. That is the
 widget's own error, copied from the browser, not a problem with the server.
+
+**Checkout.** The cart uses the same bot check and keys. Its widget sits above
+**Proceed to Checkout** while the bag has items, and the button stays grey until
+the check passes. The rows above work there too, except that a failed check
+answers "The security check didn't pass. Please try it again." or "Please wait
+for the security check above the checkout button to finish, then try again."
+Checkout also allows each visitor 10 attempts every 10 minutes, then answers
+"Too many checkout attempts from your connection" with a `429`. Only attempts
+that pass the bot check count. Locally every attempt counts against one shared
+key. To start over, empty the counters from
+`teazo-d1-proxy` with
+`npx wrangler d1 execute teazo-db --local --command "DELETE FROM analytics_rate_limit WHERE identifier LIKE 'checkout:%'"`.
 
 **The hidden field.** The form also has a `company` field that people never
 see and bots fill in. A submission with it filled in gets the usual thank-you
@@ -573,9 +587,11 @@ npm run db:seed:local -- you@gmail.com --role 1    # Owner again
 ```
 
 - **Can View** opens every admin page, and the server refuses every admin
-  write with `403`. Today two pages write to the server: the menu PDF upload on
-  `/admin/menu`, whose button is disabled for Can View, and the admins list in
-  Settings, which shows Can View no edit controls. The Square product routes
+  write with `403`. Today three pages write to the server: the menu PDF upload on
+  `/admin/menu`, whose button is disabled for Can View, the admins list in
+  Settings, which shows Can View no edit controls, and `/admin/website-content`,
+  whose saves (hours, holidays, contact details, the logo and the Online
+  Ordering switch) show "Save failed" for Can View. The Square product routes
   also refuse Can View. The other admin pages only change the page in your
   browser for now, so their buttons seem to work at any role and the changes
   are gone when you reload. Use the terminal check below to see the `403`.
@@ -676,8 +692,7 @@ the Worker removes them once they are 24 hours old (§4.2). `npm run dev` never
 runs that job on its own; that is the yellow warning wrangler prints when it
 starts. To run it by hand, with the Worker running:
 
-1. Queue a file that is already due. No page deletes files yet, so queue one
-   yourself, for example the test upload from
+1. Queue a file that is already due, for example the test upload from
    [Storage limits and usage](#storage-limits-and-usage). From
    `teazo-d1-proxy`:
 
@@ -694,8 +709,8 @@ Use `teazo-media` as the bucket: the local Worker only removes files from its
 own bucket. The older address, `/__scheduled`, only works under
 `npm run dev:cron`; on plain `npm run dev` it returns `405`.
 
-To sweep files that your own delete code queued (§4.2), make them due instead
-of inserting a row, then run step 2:
+To sweep files that a delete queued (§4.2), such as a removed gallery image,
+make them due instead of inserting a row, then run step 2:
 
 ```bash
 npx wrangler d1 execute teazo-db --local --command "UPDATE pending_r2_deletion SET queued_at = strftime('%Y-%m-%dT%H:%M:%fZ','now','-25 hours') WHERE deleted_at IS NULL"
@@ -750,6 +765,7 @@ The values for Vercel are in §8.1.
 | | `npm run tail`, `npm run db:backup` | Read the real Worker and database | No: they need the team Cloudflare account |
 | `teazo-site` | `npm run dev` | Starts the app | Yes |
 | | `npm run lint` | Lints the app | Yes, before a pull request. It fails on a clean checkout today (the pdf.js copies in `public/` and four older errors), so check the files you changed with `npx eslint "<file>"` and add no new errors. Keep the quotes: bash rejects paths such as `app/(site)/contact/actions.ts` without them |
+| | `npm test` | Runs the automated tests (Vitest). Each `*.test.ts` file sits next to the code it tests, under `app/`. They need no database, Worker or network | Yes, before a pull request, and add tests when you change checkout, pickup-time or order logic |
 | | `npm run build`, `npm start` | A production build | Only as in §2.8 |
 
 ### 2.8 Checking a production build locally
@@ -837,34 +853,11 @@ one file per feature, with one function for each thing a page needs, named for
 what it does. Pages call those functions and never contain SQL themselves.
 Whoever builds a feature writes its query file, in the same pull request.
 
-Two real ones to copy from: `queries/contact.ts` (reads, an insert and a
-count) and `queries/menu-documents.ts` (several writes in one `batch()`).
-
-For example, whoever builds the gallery would write something like:
-
-```ts
-// teazo-site/app/lib/queries/gallery.ts
-import { prepare } from "@/app/lib/d1";
-
-type Image = { id: string; name: string; media_id: string };
-
-export function listGalleryImages() {
-  return prepare(
-    `SELECT id, name, media_id FROM gallery_image
-     WHERE deleted_at IS NULL ORDER BY name_sort_key, id`
-  ).all<Image>();
-}
-
-export function renameGalleryImage(id: string, name: string) {
-  return prepare("UPDATE gallery_image SET name = ?1, name_sort_key = ?2 WHERE id = ?3")
-    .bind(name, sortKey(name), id)
-    .run();
-}
-
-export function sortKey(name: string) {
-  return name.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-}
-```
+Three real ones to copy from: `queries/contact.ts` (reads, an insert and a
+count), `queries/menu-documents.ts` (several writes in one `batch()`), and
+`queries/gallery.ts` (a list with each image's tags in one query, an image
+and its tags recorded in one `batch()`, and a delete that queues the file,
+§4.2).
 
 Rules for query files:
 
@@ -967,120 +960,48 @@ record the rows.
 and the server), `app/lib/queries/menu-documents.ts` (the rows) and
 `app/api/menu/pdf/route.ts` (serving it). PDFs skip the resize. Its failure
 handling is the one part not to copy: it leaves the stored file behind when
-the database refuses the rows. Follow the template below for that step.
+the database refuses the rows. Follow the gallery's instead, step 4 below.
 
-For images, a new upload would look like this. It is a template; no gallery
-route exists yet. As in §3.1, the SQL goes in the feature's query file:
+**The working example for images is the gallery:** `app/lib/gallery.ts`
+checks, resizes and stores the upload, and `app/lib/queries/gallery.ts`
+records the rows. Its steps:
 
-```ts
-// teazo-site/app/lib/queries/gallery.ts, the file from §3.1. Replace its
-// import line with these two, and add the function after sortKey.
-import { batch, prepare } from "@/app/lib/d1";
-import type { StoredMedia } from "@/app/lib/media";
+1. Check the input: a name of up to 120 characters, at most 12 tags of up to
+   30 characters each, and a JPEG, PNG or WebP file of 10 MB or less.
+2. Resize with `sharp` to WebP, at most 2000px on the longest side. A 1.6 MB
+   phone photo comes out at a few hundred KB, and photo size is what fills the
+   free storage. `sharp` is pinned in `teazo-site/package.json`.
+3. Store the bytes with `putMedia()` first, so a failure never leaves rows
+   pointing at nothing.
+4. Record `media_asset`, `gallery_image` and the tags in one `batch()`. If the
+   database definitely refused the rows (a `D1Error` with a `status` below
+   500), remove the stored file with `deleteMediaNow()`. A file left behind
+   keeps counting toward the storage cap, because nothing cleans it up later.
 
-/** Both rows or neither. Call only after requireAdminApi(request, 2) and putMedia. */
-export function recordGalleryUpload(input: {
-  mediaId: string;
-  stored: StoredMedia;
-  width: number;
-  height: number;
-  originalFilename: string;
-  name: string;
-  adminId: string;
-}) {
-  const { mediaId, stored, width, height, originalFilename, name, adminId } = input;
-  return batch([
-    prepare(
-      `INSERT INTO media_asset (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
-                                original_filename, purpose, uploaded_by)
-       VALUES (?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8)`
-    ).bind(mediaId, stored.bucket, stored.key, stored.size, width, height, originalFilename, adminId),
-    prepare(`INSERT INTO gallery_image (id, media_id, name, name_sort_key) VALUES (?1, ?2, ?3, ?4)`)
-      .bind(crypto.randomUUID(), mediaId, name, sortKey(name)),
-  ]);
-}
-```
+**The gallery functions**, in `app/lib/gallery.ts`, for the admin gallery's
+routes to call. They are server only, and the routes check the admin first
+(§5).
 
-And the route:
+| Function | What it does | Returns |
+|---|---|---|
+| `getAdminGalleryImages()` | Lists every image, newest first | `AdminGalleryImage[]`, each `{ id, name, url, tags, createdAt }` |
+| `saveGalleryImage({ file, name, tags, adminId })` | The four steps above. `file` is the uploaded `File`, `tags` a list of names, and `adminId` the signed-in admin's id | The saved `AdminGalleryImage`, with its tags as stored |
+| `removeGalleryImage(id)` | Takes the image off the gallery at once. Its file is removed a day later (§4.2) | `false` when there is no such image |
 
-```ts
-// teazo-site/app/api/admin/gallery/route.ts
-import sharp from "sharp";
-import { D1Error } from "@/app/lib/d1";
-import { putMedia, mintKey, deleteMediaNow, MediaError } from "@/app/lib/media";
-import { requireAdminApi } from "@/app/lib/admin";
-import { recordGalleryUpload } from "@/app/lib/queries/gallery";
+`saveGalleryImage()` throws a `GalleryInputError` for input the admin should
+fix, with a message to show as it is and the HTTP `status` to answer with:
+`400`, `413` over 10 MB, or `415` not a JPEG, PNG or WebP image, or not
+readable. It throws a `MediaError` when storing fails: `507`, `429` and `503`
+are the refusals listed under **An upload can be refused** above, worth
+explaining to the admin, and any other `status`, or none (the Worker can't be
+reached or isn't configured), means storage failed. A `D1Error` means the
+database failed. `getAdminGalleryImages()` throws `D1Error`, or `MediaError`
+when `R2_PUBLIC_BASE` isn't set, and `removeGalleryImage()` throws only
+`D1Error`.
 
-export async function POST(request: Request) {
-  const access = await requireAdminApi(request, 2); // Can Edit or above, see §5
-  if (!access.ok) return access.response;
-  const admin = access.admin;
-
-  const form = await request.formData();
-  const file = form.get("file");
-  const name = String(form.get("name") ?? "").trim();
-  if (!(file instanceof File) || !name) {
-    return Response.json({ error: "file and name are required" }, { status: 400 });
-  }
-
-  // 1. Resize. Re-encoding to webp at most 2000px wide turns a 1.6 MB phone
-  //    photo into a few hundred KB. Photo size is what fills the free storage.
-  const { data, info } = await sharp(Buffer.from(await file.arrayBuffer()))
-    .rotate()
-    .resize({ width: 2000, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer({ resolveWithObject: true });
-
-  // 2. Store the bytes first, so a failure never leaves rows pointing at nothing.
-  let stored;
-  try {
-    stored = await putMedia(mintKey("gallery", "webp"), data, "image/webp");
-  } catch (error) {
-    if (error instanceof MediaError && error.status === 507) {
-      return Response.json({ error: "Storage is full. Delete some photos first." }, { status: 507 });
-    }
-    if (error instanceof MediaError && error.status === 429) {
-      return Response.json({ error: "Too many uploads today. Try again tomorrow." }, { status: 429 });
-    }
-    if (error instanceof MediaError && error.status === 503) {
-      return Response.json({ error: "Uploads are paused right now. Try again later." }, { status: 503 });
-    }
-    throw error;
-  }
-
-  // 3. Record it: both rows or neither.
-  const mediaId = crypto.randomUUID();
-  try {
-    await recordGalleryUpload({
-      mediaId,
-      stored,
-      width: info.width,
-      height: info.height,
-      originalFilename: file.name,
-      name,
-      adminId: admin.id,
-    });
-  } catch (error) {
-    // The database refused the rows, so nothing points at the file: remove it.
-    // With no status the outcome is unknown, so leave it rather than risk a
-    // row that points at nothing.
-    if (error instanceof D1Error && error.status !== undefined && error.status < 500) {
-      await deleteMediaNow(stored.key);
-    }
-    throw error;
-  }
-
-  return Response.json({ mediaId, key: stored.key }, { status: 201 });
-}
-```
-
-A file left behind by a failed save keeps counting toward the storage cap,
-because nothing cleans it up later. That is why the template removes it when
-the database definitely refused the rows.
-
-The resize needs `sharp`. It already imports, because Next.js ships it as an
-optional dependency, but add it to `teazo-site/package.json`
-(`npm install sharp`) so its version is pinned.
+The public `/gallery` page shows published images through
+`getPublicGalleryImages()`, and its placeholder images whenever no image is
+published or the database can't be read.
 
 > **Vercel rejects request bodies over 4.5 MB**, before your route even runs,
 > and phone photos are often bigger. Shrink them in the browser first:
@@ -1110,6 +1031,9 @@ await batch([
   prepare("INSERT INTO pending_r2_deletion (r2_bucket, r2_key) SELECT r2_bucket, r2_key FROM media_asset WHERE id = ?1").bind(mediaId),
 ]);
 ```
+
+The gallery's `deleteGalleryImage()` in `queries/gallery.ts` does exactly
+this.
 
 The order matters. The database refuses to retire a `media_asset` while
 anything still uses it, so whatever uses it goes first:
@@ -1275,13 +1199,16 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
 | `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form's action, which reads the switch |
 | `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `hours_exception` | holidays. `/admin/website-content` stores each date as `MM-DD`, repeating every year, not the `YYYY-MM-DD` the schema comment describes | `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `hours_exception` | holidays. `/admin/website-content` stores a holiday that repeats every year as `MM-DD`, and a one-time holiday as `YYYY-MM-DD`. When both fall on the same day, the one-time holiday wins | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
-| `content_block` | editable text on the site, including the story and the logo | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
+| `content_block` | editable text on the site, including the story and the logo, plus the Online Ordering switch (`site.online_ordering`, `off` while paused) | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `contact_message` | contact form messages | the public contact form, after the bot check | the contact form's action, which counts recent rows for the email limits (§2.5). Messages past those limits are not emailed, and there is no inbox page yet, so they can be read only from the database |
-| `media_asset` | one row per stored file | the PDF menu upload | `/api/menu/pdf` |
+| `media_asset` | one row per stored file | the PDF menu upload and `saveGalleryImage()` | `/api/menu/pdf` and the gallery functions (§4.1) |
 | `menu_document` | the PDF menu, versioned | the PDF menu upload on `/admin/menu` | `/api/menu/pdf`, used by `/static-menu` and `/admin/menu` |
-| `pending_r2_deletion` | files waiting to be removed | delete handlers (none yet, §4.2) | the Worker's hourly sweeper, which marks rows done |
+| `pending_r2_deletion` | files waiting to be removed | `removeGalleryImage()` (§4.2) | the Worker's hourly sweeper, which marks rows done |
+| `gallery_image` | gallery entries | the gallery functions (§4.1, SQL in `app/lib/queries/gallery.ts`) | `/gallery` and `getAdminGalleryImages()` |
+| `gallery_tag` | tag names | the seed, then `saveGalleryImage()` | the gallery functions |
+| `gallery_image_tag` | image ↔ tag | `saveGalleryImage()` | the gallery functions |
 | `r2_object`, `r2_class_a_day` | what is stored in R2, and uploads per day | **the Worker only**, never app code | the Worker's billing limits and `GET /usage` |
 | `role` | Owner / Can Edit / Can View | the seed | the `admin_user.role_id` foreign key. The app uses the ids 1 to 3 directly |
 
@@ -1290,9 +1217,6 @@ in `0001_init.sql`). Open them when you need exact columns.
 | Table | Holds | Will be written by | Will be read by |
 |---|---|---|---|
 | `carousel_slide` | home page carousel | no admin page yet | `/` |
-| `gallery_image` | gallery entries | `/admin/gallery` | `/gallery` |
-| `gallery_tag` | tag names | the seed, then uploads | gallery filter |
-| `gallery_image_tag` | image ↔ tag | uploads | gallery filter |
 | `event` | events: name, image, start and end | `/admin/events` | public pages |
 | `event_item`, `event_category` | which Square items or categories an event covers | `/admin/events` | public pages |
 | `square_sync_state` | where the Square sync is up to | the sync | the sync |
@@ -1430,8 +1354,10 @@ Two D1 databases exist on the team Cloudflare account, `teazo-db` and
 buckets are waiting on the account's payment setup. When they go live, the
 order is: apply the missing migrations (without `0004` every upload is
 refused, and without `0003` the contact form refuses every message), then
-deploy the Worker, then the app. Build as though that is already true and nothing you write now will
-need reworking.
+deploy the Worker (production and preview) and add both `workers.dev`
+hostnames to `app/lib/imageHosts.ts` so `/gallery` can show stored images,
+then the app. Build as though that is already true and nothing you write now
+will need reworking.
 
 While that is pending:
 
@@ -1576,11 +1502,13 @@ of the same 300 a day.
   terminal prints `Blocked cross-origin request to Next.js dev resource
   /_next/hmr`. Your sign-in cookie also belongs to `localhost` only.
 - **Renaming a gallery image means recomputing `name_sort_key`.**
+  `sortKey()` in `app/lib/queries/gallery.ts` computes it.
 - **Tag names are unique ignoring case** only because `name_normalized` is
   written lowercased (§3.1). Add a tag with
   `INSERT … ON CONFLICT(name_normalized) DO NOTHING`, then read its id with
   `SELECT id FROM gallery_tag WHERE name_normalized = ?1`, because
   `DO NOTHING` returns no row when the tag already exists.
+  `queries/gallery.ts` does both.
 - **Building the Square sync?** The Square routes will corrupt the cache if the
   sync copies them. `PUT /api/square/products/[id]` sends Square only the first
   size, so every other size is dropped, and it leaves out the item's photo ids,
@@ -1605,6 +1533,7 @@ of the same 300 a day.
 | Database, storage, usage, email and bot-check helpers | `teazo-site/app/lib/` (`d1.ts`, `media.ts`, `usage.ts`, `email.ts`, `turnstile.ts`) |
 | The emails the site sends | `teazo-site/app/lib/contact-notification.ts`, `teazo-site/app/lib/admin-invite.ts`, and the "alerts paused" email and the email limits in `teazo-site/app/(site)/contact/actions.ts` |
 | Feature SQL | `teazo-site/app/lib/queries/` |
+| Gallery images: checks, resizing, storing, removing and the public list | `teazo-site/app/lib/gallery.ts`, `teazo-site/app/lib/queries/gallery.ts` |
 | Sign-in and admin checks | `teazo-site/auth.ts`, `teazo-site/app/lib/admin.ts`, `teazo-site/app/lib/admin-whitelist.ts` |
 
 **The migrations are the source of truth** for columns, constraints and

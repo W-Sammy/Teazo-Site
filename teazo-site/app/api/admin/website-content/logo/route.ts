@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { mintKey, putMedia, toPublicUrl, type MediaType, MAX_MEDIA_BYTES } from "@/app/lib/media";
 import { updateWebsiteContent } from "@/app/lib/website-content";
 import { revalidatePath } from "next/cache";
+import { requireAdminApi } from "@/app/lib/admin";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,11 @@ const ALLOWED_MIME_TYPES: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
+  const access = await requireAdminApi(request, 2);
+  if (!access.ok) {
+    return access.response;
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");

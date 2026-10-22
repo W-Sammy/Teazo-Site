@@ -1,31 +1,12 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { StorageUsage } from "@/app/types/storage-usage";
+import { getStorageUsage as getLiveStorageUsage } from "@/app/lib/usage";
 
-const D1_MAX_BYTES = 500 * 1024 * 1024;
-const R2_MAX_BYTES = 10 * 1024 * 1024 * 1024;
-
-type StorageUsageFixture = {
-  d1Bytes: number;
-  r2Bytes: number;
-};
-
-/**
- * Loads storage usage from a temporary byte-based fixture.
- * Replace this file read with the D1/R2 usage API calls later.
- */
+/** Load the current D1 and R2 usage from the proxy Worker. */
 export async function getStorageUsage(): Promise<StorageUsage[]> {
-  const fixturePath = path.join(
-    process.cwd(),
-    "app",
-    "admin",
-    "storage-usage-sample.txt",
-  );
-  const contents = await readFile(fixturePath, "utf8");
-  const fixture = JSON.parse(contents) as StorageUsageFixture;
+  const usage = await getLiveStorageUsage();
 
   return [
-    { service: "D1", currentBytes: fixture.d1Bytes, maxBytes: D1_MAX_BYTES },
-    { service: "R2", currentBytes: fixture.r2Bytes, maxBytes: R2_MAX_BYTES },
+    { service: "D1", currentBytes: usage.d1.bytes, maxBytes: usage.d1.limitBytes },
+    { service: "R2", currentBytes: usage.r2.bytes, maxBytes: usage.r2.limitBytes },
   ];
 }
