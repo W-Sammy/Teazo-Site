@@ -935,7 +935,7 @@ export default function AdminGalleryClient({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2
-            className={`font-semibold ${
+            className={`text-base font-semibold ${
               filtersOpen
                 ? "lg:block"
                 : "lg:hidden"
@@ -1010,7 +1010,7 @@ export default function AdminGalleryClient({
                       .value as GallerySortOption,
                   )
                 }
-                className="w-full cursor-pointer appearance-none rounded bg-gray-200 px-3 py-2 pr-10 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#FFBDC7]/50 "
+                className="w-full min-w-0 cursor-pointer appearance-none rounded bg-gray-200 px-3 py-2 pr-10 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-[#FFBDC7]/50 "
               >
                 <option value="name-asc">
                   Name A to Z
