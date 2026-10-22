@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 import type {
   DayHours,
   SocialLink,
@@ -165,7 +167,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         map_query: string;
         contact_form_enabled: number;
       }>();
-    } catch {
+    } catch (error) {
+      unstable_rethrow(error);
       // Fallback query if contact_form_enabled column does not exist yet in database
       profile = await prepare(
         `SELECT business_name, street_address, locality, phone, email, map_query
@@ -298,6 +301,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     inMemoryContent = { ...content };
     return content;
   } catch (error) {
+    // Let Next.js switch to request-time rendering before handling real failures.
+    unstable_rethrow(error);
     console.error("Failed to fetch website content from D1:", error);
     return inMemoryContent;
   }
