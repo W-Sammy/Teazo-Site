@@ -124,7 +124,6 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-<<<<<<< HEAD
 function normalizeHolidayDate(date: string): string {
   // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
   // values from the database as well.
@@ -141,8 +140,6 @@ function isSavedCarouselImage(value: unknown): value is CarouselImage {
     (image.src.startsWith("carousel/") || /^\/carousel_images\/[a-z0-9_.-]+\.(png|jpe?g|webp)$/i.test(image.src)) &&
     typeof image.alt === "string" && typeof image.enabled === "boolean";
 }
-=======
->>>>>>> origin/dev
 
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
@@ -218,13 +215,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     }>();
 
     const d1Copy = await prepare(
-<<<<<<< HEAD
-      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', 'home.carousel')`
-    ).all<{ key: string; value: string | null }>();
-=======
-      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', ?1)`
+      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', 'home.carousel', ?1)`
     ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>();
->>>>>>> origin/dev
 
     const d1Holidays = await prepare(
       `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`

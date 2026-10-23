@@ -581,7 +581,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     if (!image) 
       return;
     
-    // an empty item has no saved file: remove it from page without server request
+    // an empty item has no saved file, remove it from page without server request
     if (!image.src) {
       removeCarouselImage(id);
       return;
@@ -725,7 +725,6 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
-<<<<<<< HEAD
   // handle save status for carousel --shows an error even when other sections are successful
   let sharedSaveStatus: SaveStatus = "idle";
   if (saveStatus === "error" || carouselSaveStatus === "error") 
@@ -734,7 +733,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     sharedSaveStatus = "saving";
   else if (saveStatus === "saved" || carouselSaveStatus === "saved") 
     sharedSaveStatus = "saved";
-=======
+
   function updateOnlineOrderingEnabled(enabled: boolean) {
     setErrorMessage("");
     try {
@@ -746,7 +745,6 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       return false;
     }
   }
->>>>>>> origin/dev
 
   return {
     content: { ...content, carouselImages },
