@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import {  requireAdminPage } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
+import CatalogChangeNotice from "@/app/components/catalog-change-notice";
+import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 export const metadata: Metadata = {
   title: {
     absolute: "Teazo Menu Admin",
@@ -48,6 +50,7 @@ export default async function AdminMenuPage(){
   // Can View may open the page. The upload endpoint separately requires Can Edit.
   const admin = await requireAdminPage(3);
 
+  const revision = await getMenuRevision();
   const menuItems = await getMenuItems();
   const displayedMenuItems = filterMenuItems(menuItems);
   //what will be used for the filters
@@ -56,6 +59,7 @@ export default async function AdminMenuPage(){
 
   return (
     <div>
+      <CatalogChangeNotice initialRevision={revision} />
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
