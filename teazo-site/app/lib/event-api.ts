@@ -55,14 +55,14 @@ export async function saveEvent(request: Request, id: string | null) {
     const media = uploaded ? { ...uploaded, adminId: access.admin.id } : undefined;
 
     if (id) {
-      const updated = await updateEvent(id, input, media, "sandbox");
+      const updated = await updateEvent(id, input, media);
       if (!updated) {
         throw new Error("Event not found.");
       }
       return Response.json({ id });
     }
 
-    const newId = await createEvent(input, access.admin.id, media, "sandbox");
+    const newId = await createEvent(input, access.admin.id, media);
     return Response.json({ id: newId }, { status: 201 });
   } catch (error) {
     console.error("Could not save event:", error);

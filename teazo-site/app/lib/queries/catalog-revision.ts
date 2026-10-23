@@ -1,14 +1,12 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
 import { prepare } from "@/app/lib/d1";
-
-// Keep aligned with the Square client in app/lib/square.ts.
-const squareEnv = "sandbox";
+import { getSquareEnvironment } from "@/app/lib/square-config";
 
 export async function getCatalogRevision(): Promise<string> {
   const row = await prepare(
     "SELECT revision FROM square_catalog_revision WHERE square_env = ?1",
-  ).bind(squareEnv).first<{ revision: string }>();
+  ).bind(getSquareEnvironment()).first<{ revision: string }>();
   return row?.revision ?? "";
 }
 
@@ -19,7 +17,7 @@ export async function recordCatalogRevision(createdAt: string, eventId: string) 
     INSERT INTO square_catalog_revision (square_env, revision) VALUES (?1, ?2)
     ON CONFLICT (square_env) DO UPDATE SET revision = excluded.revision
     WHERE excluded.revision > square_catalog_revision.revision
-  `).bind(squareEnv, revision).run();
+  `).bind(getSquareEnvironment(), revision).run();
 }
 
 export async function getMenuRevision(): Promise<string | null> {

@@ -1,6 +1,7 @@
 import { batch, prepare } from "@/app/lib/d1";
 import { toPublicUrl, type StoredMedia } from "@/app/lib/media";
 import type { AdminEvent } from "@/app/types/admin-event";
+import { getSquareEnvironment } from "@/app/lib/square-config";
 
 type EventRow = {
   id: string;
@@ -72,11 +73,12 @@ export async function listEvents(): Promise<AdminEvent[]> {
     prepare(
       `SELECT event_id, square_catalog_object_id AS target_id, 'item' AS target_type
          FROM event_item
-        WHERE square_env = 'sandbox'
+        WHERE square_env = ?1
         UNION ALL
        SELECT event_id, square_category_id AS target_id, 'category' AS target_type
-         FROM event_category`,
-    ).all<TargetRow>(),
+         FROM event_category
+        WHERE square_env = ?1`,
+    ).bind(getSquareEnvironment()).all<TargetRow>(),
   ]);
 
   return eventResult.results.map((row) => mapEvent(row, targetResult.results));
@@ -129,7 +131,7 @@ export async function createEvent(
   input: EventInput,
   adminId: string,
   media?: { id: string; stored: StoredMedia; mimeType: string; originalFilename: string; adminId: string },
-  squareEnv: "sandbox" | "production" = "sandbox",
+  squareEnv: "sandbox" | "production" = getSquareEnvironment(),
 ) {
   const id = crypto.randomUUID();
   const statements = [
@@ -174,7 +176,7 @@ export async function updateEvent(
   id: string,
   input: EventInput,
   media?: { id: string; stored: StoredMedia; mimeType: string; originalFilename: string; adminId: string },
-  squareEnv: "sandbox" | "production" = "sandbox",
+  squareEnv: "sandbox" | "production" = getSquareEnvironment(),
 ) {
   const previous = await prepare(
     "SELECT image_media_id FROM event WHERE id = ?1 AND deleted_at IS NULL",
