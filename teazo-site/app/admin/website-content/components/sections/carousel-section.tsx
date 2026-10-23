@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { fieldClass, ErrorText } from "../field-controls";
 export type { CarouselImage } from "@/app/types/website-content";
@@ -34,6 +35,81 @@ export default function CarouselSection({
         deleting,
         imageErrors,
     } = carousel;
+
+    // heic support --convert into jpegs before using existing jpeg upload handler
+    const [converting, setConverting] = useState<Record<string, boolean>>({});
+    const [conversionErrors, setConversionErrors] = useState<Record<string, string>>({});
+    const conversionsInProgress = useRef(new Set<string>());
+    const conversionGeneration = useRef(0);
+
+    // ignore unfinished conversions if user leaves page
+    useEffect(() => () => {
+        conversionGeneration.current += 1;
+        conversionsInProgress.current.clear();
+    }, []);
+
+    // show conversion errors as upload errors
+    function getImageError(id: string) {
+        return conversionErrors[id] || (converting[id] ? "" : imageErrors[id]);
+    }
+
+    async function handleSelectedImage(id: string, file: File | undefined) {
+        if (!file || !carouselReady || uploading[id] || deleting[id] || conversionsInProgress.current.has(id)) 
+            return;
+        setConversionErrors((previous) => ({ ...previous, [id]: "" }));
+
+        // checks file's extension
+        const needsConversion = ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"].includes(file.type.toLowerCase()) || /\.(heic|heif)$/i.test(file.name);
+        if (!needsConversion) {
+            await handleImageFile(id, file);
+            return;
+        }
+
+        // lock item immediately so another selection/removal can't interrupt conversion
+        const generation = conversionGeneration.current;
+        conversionsInProgress.current.add(id);
+        setConverting((previous) => ({ ...previous, [id]: true }));
+        try {
+            const maxImageBytes = 5 * 1024 * 1024;
+            if (file.size === 0) 
+                throw new Error("The image file is empty.");
+            if (file.size > maxImageBytes) 
+                throw new Error("The selected image must be 5 MB or smaller.");
+
+            // use gallery's converter; only load it when someone selects HEIC/HEIF
+            const { default: heic2any } = await import("heic2any");
+            const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+            // if photo contains several frames, use the first still img
+            const jpeg = Array.isArray(result) ? result[0] : result;
+
+            if (!jpeg || jpeg.size === 0) 
+                throw new Error("The converted image is empty.");
+            if (jpeg.size > maxImageBytes) 
+                throw new Error("The converted image exceeds 5 MB. Try a smaller photo.");
+
+            // keep original name but give converted file a jpeg extension
+            const convertedFile = new File([jpeg], file.name.replace(/\.(heic|heif)$/i, "") + ".jpg", {
+                type: "image/jpeg",
+                lastModified: file.lastModified,
+            });
+
+            if (conversionGeneration.current !== generation) 
+                return;
+            setConverting((previous) => ({ ...previous, [id]: false }));
+
+            // existing upload handler now receives a normal jpeg & handles saving as normal
+            await handleImageFile(id, convertedFile);
+        } catch (error) {
+            if (conversionGeneration.current === generation)
+                setConversionErrors((previous) => ({ ...previous, [id]: error instanceof Error ? error.message : "This HEIC/HEIF image couldn't be converted. Try a JPG instead." }));
+            
+        } finally {
+            if (conversionGeneration.current === generation) {
+                conversionsInProgress.current.delete(id);
+                setConverting((previous) => ({ ...previous, [id]: false }));
+            }
+        }
+    }
 
     // carousel section.
     return (
@@ -102,17 +178,17 @@ export default function CarouselSection({
                                 Image {index + 1}
                             </span>
 
-                            {/* disable visibility & removal during upload/removal */}
+                            {/* disable item while its photo is converting */}
                             <div className="flex shrink-0 items-center gap-2 lg:gap-4">
                                 {/* handles visibility (aka hiding an item from img carousel on landing pg) */}
                                 <button
                                     type="button"
                                     role="switch"
-                                    disabled={!carouselReady || uploading[image.id] || deleting[image.id]}
+                                    disabled={!carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]}
                                     aria-checked={image.enabled}
                                     aria-label={`Show image ${index + 1} in the carousel`}
                                     onClick={() =>
-                                        updateCarouselImage(image.id, { enabled: !image.enabled })
+                                        !conversionsInProgress.current.has(image.id) && updateCarouselImage(image.id, { enabled: !image.enabled })
                                     }
                                     className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg lg:h-[18px] lg:w-8"
                                 >
@@ -133,8 +209,8 @@ export default function CarouselSection({
                                 <button
                                     type="button"
                                     aria-label={`Remove carousel image ${index + 1}`}
-                                    disabled={!carouselReady || uploading[image.id] || deleting[image.id]}
-                                    onClick={() => { void handleRemoveImage(image.id); }}
+                                    disabled={!carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]}
+                                    onClick={() => { if (!conversionsInProgress.current.has(image.id)) void handleRemoveImage(image.id); }}
                                     className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2] lg:h-5 lg:w-5"
                                 >
                                     <svg
@@ -178,16 +254,16 @@ export default function CarouselSection({
                                         {image.src ? "Upload another image" : "Upload image"}
                                     </label>
 
-                                    {/* only accept png, jpg, webp */}
+                                    {/* heic support --convert them into jpegs before uploading */}
                                     <input
                                         id={`carousel-file-${image.id}`}
                                         type="file"
-                                        accept="image/png,image/jpeg,image/webp"
-                                        disabled={!carouselReady || uploading[image.id] || deleting[image.id]}
-                                        aria-invalid={Boolean(imageErrors[image.id])}
-                                        aria-describedby={imageErrors[image.id] ? `carousel-error-${image.id}` : undefined}
+                                        accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
+                                        disabled={!carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]}
+                                        aria-invalid={Boolean(getImageError(image.id))}
+                                        aria-describedby={getImageError(image.id) ? `carousel-error-${image.id}` : undefined}
                                         onChange={(event) => {
-                                            void handleImageFile(image.id, event.target.files?.[0]);
+                                            void handleSelectedImage(image.id, event.target.files?.[0]);
                                             event.target.value = "";
                                         }}
                                         className="hidden"
@@ -196,12 +272,12 @@ export default function CarouselSection({
                                     <label
                                         htmlFor={`carousel-file-${image.id}`}
                                         className={`inline-flex min-h-11 w-fit max-w-full items-center justify-center rounded-full border border-[#dbb082] px-4 py-1.5 text-center text-xs font-semibold text-[#a5652b] transition-colors sm:min-h-0 ${
-                                            !carouselReady || uploading[image.id] || deleting[image.id]
+                                            !carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]
                                                 ? "cursor-not-allowed opacity-50"
                                                 : "cursor-pointer hover:bg-[#fbf3ea]"
                                         }`}
                                     >
-                                        Choose file
+                                        {converting[image.id] ? "Converting..." : "Choose file"}
                                     </label>
                                 </div>
 
@@ -217,7 +293,7 @@ export default function CarouselSection({
                                     <input
                                         id={`carousel-alt-${image.id}`}
                                         type="text"
-                                        disabled={!carouselReady || uploading[image.id] || deleting[image.id]}
+                                        disabled={!carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]}
                                         value={image.alt}
                                         onChange={(event) => updateCarouselImage(image.id, { alt: event.target.value })}
                                         onBlur={flushAllCarouselSettings}
@@ -226,11 +302,11 @@ export default function CarouselSection({
                                     />
                                 </div>
 
-                                {/* details next to item when error occurs */}
-                                {imageErrors[image.id] && (
+                                {/* heic conversion errors use existing error display */}
+                                {getImageError(image.id) && (
                                     <div id={`carousel-error-${image.id}`} role="alert">
                                         <ErrorText>
-                                            {imageErrors[image.id]}
+                                            {getImageError(image.id)}
                                         </ErrorText>
                                     </div>
                                 )}

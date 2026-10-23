@@ -20,9 +20,12 @@ const MAX_IMAGE_BYTES = Math.min(MAX_MEDIA_BYTES, 5 * 1024 * 1024);
 
 // returns file extension for accepted file formats
 function getImageExtension(type: string): string | undefined {
-    if (type === "image/png") return "png";
-    if (type === "image/jpeg") return "jpg";
-    if (type === "image/webp") return "webp";
+    if (type === "image/png") 
+        return "png";
+    if (type === "image/jpeg") 
+        return "jpg";
+    if (type === "image/webp") 
+        return "webp";
     return undefined;
 }
 
