@@ -67,7 +67,11 @@ function PhoneIcon() {
 }
 
 export default async function Home() {
-  const [content, liveEvents] = await Promise.all([getWebsiteContent(), getLiveEvents()]);
+  const [content, liveEvents] = await Promise.all([
+    getWebsiteContent(),
+    // Events are optional: keep the homepage available if D1 cannot load them.
+    getLiveEvents().catch(() => []),
+  ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const contactData = await getContactContent();
   const {
