@@ -87,12 +87,15 @@ export default async function Home() {
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
-    <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
+    <main className="relative z-0 min-h-screen overflow-hidden bg-[#FFF8F9] pb-20">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
             </div>
     
+            <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
+            </div>
+            
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
