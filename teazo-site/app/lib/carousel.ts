@@ -84,8 +84,7 @@ async function readCarouselImages(errorMessage: string): Promise<CarouselImage[]
     return images;
 }
 
-// update one img while keeping the list order & other settings
-// expectedSrc is used for replacements so a stale upload cannot overwrite a newer file
+// update one img while keeping the list order & other settings --expectedSrc used for replacements so a stale upload can't overwrite newer files
 function createImageUpdate(id: unknown, patch: object, expectedSrc: string | null = null) {
     return prepare(
         `UPDATE content_block SET value = (
@@ -104,7 +103,7 @@ function createImageUpdate(id: unknown, patch: object, expectedSrc: string | nul
     ).bind(id, JSON.stringify(patch), expectedSrc);
 }
 
-// refresh the landing/admin pages without treating saved changes as failure if refreshing throws an error
+// refresh landing/admin pages without treating saved changes as failure if refresh throws an error
 function refreshCarouselPages(errorMessage: string) {
     try {
         revalidatePath("/");
@@ -114,7 +113,7 @@ function refreshCarouselPages(errorMessage: string) {
     }
 }
 
-// get the file key for uploaded carousel imgs-- original imgs are in public so they don't have R2 key
+// get the file key for uploaded carousel imgs-- original imgs are in public so they don't have R2 keys
 function getUploadedImageKey(src: unknown): string | null {
     if (typeof src !== "string") 
         return null;
@@ -239,7 +238,7 @@ export async function uploadCarouselImage(formData: FormData) {
         if (typeof alt !== "string")
             throw new CarouselError("Image description must be text.", 400);
 
-        // check the file format & reject unsupported, empty or oversized imgs
+        // check file format & reject unsupported, empty, oversized imgs
         const ext = getImageExtension(file.type);
         if (!ext)
             throw new CarouselError("Unsupported image format. Upload PNG, JPG, or WebP.", 415);
@@ -269,7 +268,7 @@ export async function uploadCarouselImage(formData: FormData) {
         if (oldKey)
             oldBucket = await readUploadedImageBucket(oldKey);
         
-        // generate new storage key so the existing file isn't overwritten during upload
+        // generate new storage key so existing file isn't overwritten during upload
         const key = mintKey("carousel", ext);
         // confirm public url settings work before sending file to storage
         toPublicUrl(key);
@@ -347,12 +346,12 @@ export async function removeCarouselImage(body: unknown) {
         if (!body || typeof body !== "object" || Array.isArray(body) || !("id" in body) || typeof body.id !== "string" || !body.id.trim() || body.id.length > 100)
             throw new CarouselError("A valid image ID is required.", 400);
         
-        // use the validated img ID & check the database connection settings
+        // use the validated img id & check the database connection settings
         const id = body.id;
         if (!isDatabaseConfigured())
             throw new CarouselError("The database connection isn't configured.", 503);
 
-        // load the list; unreadable JSON must not be overwritten
+        // load the list; unreadable json shouldn't be overwritten
         let images: CarouselImage[] | null;
         try {
             images = await readCarouselImages("Saved carousel settings are invalid; nothing was removed.");
