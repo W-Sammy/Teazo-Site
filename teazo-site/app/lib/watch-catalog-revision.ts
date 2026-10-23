@@ -2,11 +2,19 @@
 export function watchCatalogRevision(initialRevision: string | null, onChange: () => void): () => void {
   let baseline = initialRevision;
   let stopped = false;
-  let changed = false;
   let activeRequest: AbortController | null = null;
 
+  function stop() {
+    if (stopped) return;
+    stopped = true;
+    activeRequest?.abort();
+    window.clearInterval(interval);
+    window.removeEventListener("focus", check);
+    document.removeEventListener("visibilitychange", check);
+  }
+
   async function check() {
-    if (stopped || changed || activeRequest || document.visibilityState === "hidden") return;
+    if (stopped || activeRequest || document.visibilityState === "hidden") return;
     const controller = new AbortController();
     activeRequest = controller;
     const timeout = window.setTimeout(() => controller.abort(), 10_000);
@@ -20,7 +28,7 @@ export function watchCatalogRevision(initialRevision: string | null, onChange: (
       // Recover quietly if the page's original DB lookup failed.
       if (baseline === null) baseline = data.revision;
       else if (data.revision !== baseline) {
-        changed = true;
+        stop();
         onChange();
       }
     } catch {
@@ -31,15 +39,9 @@ export function watchCatalogRevision(initialRevision: string | null, onChange: (
     }
   }
 
-  void check();
   const interval = window.setInterval(check, 20_000);
   window.addEventListener("focus", check);
   document.addEventListener("visibilitychange", check);
-  return () => {
-    stopped = true;
-    activeRequest?.abort();
-    window.clearInterval(interval);
-    window.removeEventListener("focus", check);
-    document.removeEventListener("visibilitychange", check);
-  };
+  void check();
+  return stop;
 }
