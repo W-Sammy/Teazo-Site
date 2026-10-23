@@ -90,8 +90,9 @@ export default async function Home() {
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
-            <LiveEventsSidebar events={liveEvents} />
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
@@ -262,5 +263,6 @@ export default async function Home() {
                 </section>
 
     </main>
+    </>
   )
 }

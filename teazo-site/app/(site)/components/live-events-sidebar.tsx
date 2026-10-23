@@ -53,7 +53,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         id="live-events-sidebar"
         aria-label="Live events"
         aria-hidden={!isOpen}
-        className={`fixed bottom-24 right-4 z-40 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 ${
+        className={`fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 ${
           isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-3 scale-95 opacity-0"
         }`}
       >
