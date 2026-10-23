@@ -418,7 +418,7 @@ export default async function MenuPage({
           </div>
 
           <div className="relative mt-16 inline-flex items-center justify-center sm:mt-12">
-            <Subtitle text={"Boba • Snacks • Desserts"} />
+            <Subtitle text={"Boba • Snack • Dessert"} />
           </div>
 
           <p
