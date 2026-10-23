@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { recordCatalogRevision } from "@/app/lib/queries/catalog-revision";
 
 export const runtime = "nodejs";
 
@@ -56,7 +57,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing event ID." }, { status: 400 });
   }
 
+  if (!("created_at" in event) || typeof event.created_at !== "string" || !Number.isFinite(Date.parse(event.created_at))) {
+    return Response.json({ error: "Missing or invalid event timestamp." }, { status: 400 });
+  }
+
   try {
+    await recordCatalogRevision(event.created_at, event.event_id);
     // The menu loaders use no-store: the next render fetches Square again.
     // Repeating these invalidations is safe for retries or out-of-order events.
     revalidatePath("/menu");
