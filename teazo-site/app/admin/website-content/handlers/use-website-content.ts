@@ -725,6 +725,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
+<<<<<<< HEAD
   // handle save status for carousel --shows an error even when other sections are successful
   let sharedSaveStatus: SaveStatus = "idle";
   if (saveStatus === "error" || carouselSaveStatus === "error") 
@@ -733,6 +734,19 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     sharedSaveStatus = "saving";
   else if (saveStatus === "saved" || carouselSaveStatus === "saved") 
     sharedSaveStatus = "saved";
+=======
+  function updateOnlineOrderingEnabled(enabled: boolean) {
+    setErrorMessage("");
+    try {
+      setContent((prev) => ({ ...prev, onlineOrderingEnabled: enabled }));
+      flushPatch({ onlineOrderingEnabled: enabled });
+      return true;
+    } catch {
+      setErrorMessage("Failed to update the online ordering setting.");
+      return false;
+    }
+  }
+>>>>>>> origin/dev
 
   return {
     content: { ...content, carouselImages },
@@ -770,5 +784,6 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       imageErrors,
     },
     updateContactFormEnabled,
+    updateOnlineOrderingEnabled,
   };
 }

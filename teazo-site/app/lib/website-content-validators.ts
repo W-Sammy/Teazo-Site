@@ -80,21 +80,54 @@ export function isValidImageFile(
   return { valid: true };
 }
 
-// month is 1-12, no year attached (holidays repeat annually) so Feb allows day 29
+// month is 1-12. Without a year (a holiday that repeats every year) Feb allows day 29.
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-export function daysInMonth(month: number | null): number {
+export function daysInMonth(month: number | null, year?: number | null): number {
   if (!month || month < 1 || month > 12) return 31;
+  if (month === 2 && year) {
+    const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    return isLeap ? 29 : 28;
+  }
   return DAYS_IN_MONTH[month - 1];
 }
 
 export function isValidHolidayDay(
   month: number | null,
   day: number | null,
+  year?: number | null,
 ): boolean {
   if (!month || !day) return false;
   if (month < 1 || month > 12) return false;
-  return day >= 1 && day <= daysInMonth(month);
+  return day >= 1 && day <= daysInMonth(month, year);
+}
+
+export type HolidayDateParts = {
+  /** null for a holiday that repeats every year */
+  year: number | null;
+  month: number | null;
+  day: number | null;
+};
+
+/**
+ * Holiday.date is "MM-DD" for a holiday that repeats every year, or
+ * "YYYY-MM-DD" for one that applies to that single day. The editor also
+ * passes half-filled values such as "12-" while a date is being picked.
+ */
+export function parseHolidayDate(date: string): HolidayDateParts {
+  const parts = (date || "").split("-");
+  const toNumber = (value: string | undefined) => (value ? Number(value) || null : null);
+  if (parts.length === 3) {
+    return { year: toNumber(parts[0]), month: toNumber(parts[1]), day: toNumber(parts[2]) };
+  }
+  return { year: null, month: toNumber(parts[0]), day: toNumber(parts[1]) };
+}
+
+export function isValidHolidayDate(date: string): boolean {
+  if (!/^(\d{4}-)?\d{2}-\d{2}$/.test(date || "")) return false;
+  const { year, month, day } = parseHolidayDate(date);
+  if (year !== null && (year < 2000 || year > 2100)) return false;
+  return isValidHolidayDay(month, day, year);
 }
 
 export function validateAddressField(
@@ -213,9 +246,8 @@ export function validateHolidays(holidays: Holiday[]): {
     if (!isNonEmpty(holiday.name)) {
       errors.push("Holiday name is required");
     }
-    const [m, d] = (holiday.date || "").split("-").map(Number);
-    if (!isValidHolidayDay(m, d)) {
-      errors.push(`Select a valid month and day for holiday "${holiday.name || 'unnamed'}"`);
+    if (!isValidHolidayDate(holiday.date)) {
+      errors.push(`Select a valid date for holiday "${holiday.name || 'unnamed'}"`);
     } else if (seenDates.has(holiday.date)) {
       errors.push(`Duplicate holiday date: ${holiday.date}`);
     } else {
@@ -253,6 +285,12 @@ export function validateWebsiteContentPatch(
   if (patch.holidays !== undefined) {
     const { valid, errors: holidayErrors } = validateHolidays(patch.holidays);
     if (!valid) errors.push(...holidayErrors);
+  }
+
+  for (const key of ["contactFormEnabled", "onlineOrderingEnabled"] as const) {
+    if (patch[key] !== undefined && typeof patch[key] !== "boolean") {
+      errors.push(`${key} must be true or false`);
+    }
   }
 
   return { valid: errors.length === 0, errors };

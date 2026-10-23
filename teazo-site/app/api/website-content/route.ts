@@ -4,6 +4,7 @@ import {
   updateWebsiteContent,
 } from "@/app/lib/website-content";
 import { validateWebsiteContentPatch } from "@/app/lib/website-content-validators";
+import { requireAdminApi } from "@/app/lib/admin";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,12 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  // Store hours, contact details and the online ordering switch are admin-only.
+  const access = await requireAdminApi(request, 2);
+  if (!access.ok) {
+    return access.response;
+  }
+
   try {
     const body = await request.json();
 

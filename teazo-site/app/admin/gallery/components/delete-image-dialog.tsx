@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -89,8 +90,8 @@ export default function DeleteImageDialog({
 
             <p className="mt-2 text-sm leading-6 text-gray-600">
               Are you sure you want to delete{" "}
-              <strong>{image.name}</strong>? This
-              removes it from the current gallery session.
+              <strong>{image.name}</strong>? This permanently
+              removes the image from the Gallery page.
             </p>
           </div>
         </div>

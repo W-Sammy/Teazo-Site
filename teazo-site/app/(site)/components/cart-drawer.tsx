@@ -19,12 +19,22 @@ import {
 } from "@/app/context/cart-context";
 import PaymentBadges from "@/app/(site)/components/payment-badges";
 import {
-  getAvailablePickupSlots,
+  getPickupDays,
   getPacificParts,
   formatMinuteOfDay,
   type DaySchedule,
   getStoreScheduleForDate,
+  MAX_SCHEDULE_DAYS_AHEAD,
+  ONLINE_ORDERING_PAUSED_MESSAGE,
 } from "@/app/lib/store-hours";
+import { toE164Phone } from "@/app/lib/checkout-validators";
+import {
+  cartIssueMessage,
+  cartItemsWithIssue,
+  readCartIssue,
+  type CartIssue,
+} from "@/app/lib/cart-issues";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/app/components/turnstile-widget";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItem } from "@/app/(site)/components/menu-item-card";
 import type {
@@ -38,12 +48,14 @@ import ItemCustomizerModal from "@/app/(site)/components/item-customizer-modal";
 
 const SAVED_CONTACT_STORAGE_KEY = "teazo_saved_contact";
 
-// Fallback schedule guarantees no false "Store Closed" flash on initial load
+// Shows the pickup address before the real content loads. Its hours are never
+// used: pickup times wait for the real schedule.
 const FALLBACK_WEBSITE_CONTENT: WebsiteContent = {
   logo: "/TEAZO_logo.svg",
   story: "",
   socialLinks: [],
   contactFormEnabled: true,
+  onlineOrderingEnabled: true,
   hours: [
     { day: "Sun", start: 11.5, end: 20, closed: false },
     { day: "Mon", start: 11.5, end: 20, closed: false },
@@ -81,13 +93,12 @@ function formatPrice(cents: number): string {
 function formatSlotDisplay(isoString: string): string {
   try {
     const date = new Date(isoString);
-    const timeStr = new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
     }).format(date);
-    return `Today at ${timeStr}`;
   } catch {
     return isoString;
   }
@@ -120,7 +131,6 @@ export default function CartDrawer() {
     isHydrated,
     openCart,
     closeCart,
-    addItem,
     updateQuantity,
     removeItem,
     clearCart,
@@ -151,15 +161,35 @@ export default function CartDrawer() {
 
   // Timing state
   const [userSelectedPickupType, setUserSelectedPickupType] = useState<PickupScheduleType | null>(null);
+  const [userSelectedDay, setUserSelectedDay] = useState<string>("");
   const [userSelectedSlot, setUserSelectedSlot] = useState<string>("");
 
-  // Store hours / schedule initialized with fallback to avoid false "Closed" flash
+  // The fallback only fills in the pickup address. Pickup times wait for the
+  // real hours and holidays instead of guessing from it.
   const [websiteContent, setWebsiteContent] = useState<WebsiteContent>(FALLBACK_WEBSITE_CONTENT);
+  const [scheduleStatus, setScheduleStatus] = useState<"loading" | "ready" | "error">("loading");
+  // Time slots follow the server's clock, since the customer's device clock may be wrong.
+  const clockOffsetMsRef = useRef(0);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  // Bot check. A token works once, so each failed attempt bumps the reset key for a new one.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [botCheckFailed, setBotCheckFailed] = useState(!TURNSTILE_SITE_KEY);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Cart lines the last checkout attempt refused (sold out, or options that no longer fit)
+  const [cartIssue, setCartIssue] = useState<CartIssue | null>(null);
+  const flaggedItems = useMemo(() => cartItemsWithIssue(items, cartIssue), [items, cartIssue]);
+  const flaggedItemIds = useMemo(() => new Set(flaggedItems.map((it) => it.cartItemId)), [flaggedItems]);
+
+  const removeFlaggedItems = () => {
+    for (const it of flaggedItems) removeItem(it.cartItemId);
+    setCartIssue(null);
+    setErrorMessage(null);
+  };
   const [formErrors, setFormErrors] = useState<{
     name?: string;
     phone?: string;
@@ -216,6 +246,7 @@ export default function CartDrawer() {
   const nameInputId = useId();
   const phoneInputId = useId();
   const emailInputId = useId();
+  const daySelectId = useId();
   const slotSelectId = useId();
 
   const saveContactToStorage = (name: string, phone: string, email: string) => {
@@ -231,20 +262,27 @@ export default function CartDrawer() {
     }
   };
 
-  // Fetch live website content for database-backed schedule & holiday exceptions
+  // Fetch live website content for database-backed schedule & holiday exceptions.
+  // Runs again each time the bag opens, which also brings the clock up to date.
   // Defer fetching until cart is opened or has items to avoid redundant background queries on all landing pages
   useEffect(() => {
     if (!isCartOpen && totalCount === 0) return;
     let isMounted = true;
     async function loadContent() {
       try {
-        const res = await fetch("/api/website-content");
-        if (res.ok) {
-          const data: WebsiteContent = await res.json();
-          if (isMounted) setWebsiteContent(data);
-        }
+        const res = await fetch("/api/website-content", { cache: "no-store" });
+        if (!res.ok) throw new Error(`Store hours request failed with status ${res.status}`);
+        const data: WebsiteContent = await res.json();
+        const serverNow = Date.parse(res.headers.get("date") ?? "");
+        if (!Number.isNaN(serverNow)) clockOffsetMsRef.current = serverNow - Date.now();
+        if (!isMounted) return;
+        setWebsiteContent(data);
+        setCurrentTime(new Date(Date.now() + clockOffsetMsRef.current));
+        setScheduleStatus("ready");
       } catch (err) {
         console.error("Failed to fetch store schedule in CartDrawer:", err);
+        // Keep hours that already loaded; otherwise say so instead of guessing.
+        if (isMounted) setScheduleStatus((status) => (status === "ready" ? status : "error"));
       }
     }
 
@@ -259,19 +297,26 @@ export default function CartDrawer() {
   useEffect(() => {
     if (!isCartOpen) return;
     const interval = setInterval(() => {
-      setCurrentTime(new Date());
+      setCurrentTime(new Date(Date.now() + clockOffsetMsRef.current));
     }, 30000);
     return () => clearInterval(interval);
   }, [isCartOpen]);
 
-  // Compute available 15-minute pickup slots using latest currentTime
-  const availableSlots = useMemo(() => {
+  // Days from today through MAX_SCHEDULE_DAYS_AHEAD that still have 15-minute pickup slots
+  const pickupDays = useMemo(() => {
+    if (scheduleStatus !== "ready") return [];
     try {
-      return getAvailablePickupSlots(websiteContent, currentTime);
+      return getPickupDays(websiteContent, currentTime);
     } catch {
       return [];
     }
-  }, [websiteContent, currentTime]);
+  }, [scheduleStatus, websiteContent, currentTime]);
+
+  // The owner can pause online ordering from the admin. Checkout refuses orders then too.
+  const isOrderingPaused = scheduleStatus === "ready" && !websiteContent.onlineOrderingEnabled;
+
+  const activeDay = pickupDays.find((day) => day.date === userSelectedDay) ?? pickupDays[0];
+  const availableSlots = useMemo(() => activeDay?.slots ?? [], [activeDay]);
 
   // Today's schedule status
   const todaySchedule: DaySchedule | null = useMemo(() => {
@@ -284,21 +329,21 @@ export default function CartDrawer() {
 
   // Evaluate whether ASAP ordering is currently open
   const isAsapAvailable = useMemo(() => {
-    if (!todaySchedule || todaySchedule.closed) return false;
+    if (scheduleStatus !== "ready" || !todaySchedule || todaySchedule.closed) return false;
     const nowParts = getPacificParts(currentTime);
     return (
       nowParts.minuteOfDay >= todaySchedule.openMinuteOfDay &&
       nowParts.minuteOfDay <= todaySchedule.cutoffMinuteOfDay
     );
-  }, [todaySchedule, currentTime]);
+  }, [scheduleStatus, todaySchedule, currentTime]);
 
   // Derive effective pickup type gracefully: if ASAP is closed but scheduled slots exist, default to SCHEDULED
   const effectivePickupType: PickupScheduleType = useMemo(() => {
     if (userSelectedPickupType === "SCHEDULED") return "SCHEDULED";
     if (userSelectedPickupType === "ASAP" && isAsapAvailable) return "ASAP";
-    if (!isAsapAvailable && availableSlots.length > 0) return "SCHEDULED";
+    if (!isAsapAvailable && pickupDays.length > 0) return "SCHEDULED";
     return "ASAP";
-  }, [userSelectedPickupType, isAsapAvailable, availableSlots.length]);
+  }, [userSelectedPickupType, isAsapAvailable, pickupDays.length]);
 
   // Derive active scheduled slot without cascading render effect
   const activeSlot = useMemo(() => {
@@ -390,11 +435,10 @@ export default function CartDrawer() {
       errors.name = "Name must be at least 2 characters";
     }
 
-    const cleanPhone = customerPhone.replace(/\D/g, "");
-    if (!cleanPhone) {
+    if (!customerPhone.trim()) {
       errors.phone = "Phone number is required for SMS order alerts";
-    } else if (cleanPhone.length < 10) {
-      errors.phone = "Please enter a valid 10-digit phone number";
+    } else if (!toE164Phone(customerPhone)) {
+      errors.phone = "Please enter a valid phone number, such as (415) 555-0199";
     }
 
     const cleanEmail = customerEmail.trim();
@@ -405,19 +449,23 @@ export default function CartDrawer() {
       errors.email = "Please enter a valid email address";
     }
 
-    if (effectivePickupType === "ASAP" && !isAsapAvailable) {
+    if (scheduleStatus !== "ready") {
+      errors.timing = "Pickup times haven't loaded yet.";
+    } else if (isOrderingPaused) {
+      errors.timing = ONLINE_ORDERING_PAUSED_MESSAGE;
+    } else if (effectivePickupType === "ASAP" && !isAsapAvailable) {
       errors.timing = "Store is currently closed for ASAP orders.";
     }
 
-    if (effectivePickupType === "SCHEDULED") {
+    if (scheduleStatus === "ready" && effectivePickupType === "SCHEDULED") {
       if (availableSlots.length === 0) {
-        errors.timing = "No scheduled slots available for today.";
+        errors.timing = `No pickup times are available in the next ${MAX_SCHEDULE_DAYS_AHEAD} days.`;
       } else if (!activeSlot) {
         errors.timing = "Please select a pickup time.";
       } else {
         const slotTimeMs = new Date(activeSlot).getTime();
         // Ensure slot has not slipped past minimum 22-minute buffer (25m lead time - 3m grace)
-        if (slotTimeMs < Date.now() + 22 * 60 * 1000) {
+        if (slotTimeMs < Date.now() + clockOffsetMsRef.current + 22 * 60 * 1000) {
           errors.timing = "Selected pickup time has expired. Please select an updated slot.";
         }
       }
@@ -431,6 +479,7 @@ export default function CartDrawer() {
   const handleProceedToCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setCartIssue(null);
 
     if (items.length === 0) {
       setErrorMessage("Your cart is empty. Add drinks to proceed.");
@@ -456,19 +505,12 @@ export default function CartDrawer() {
     setIsSubmitting(true);
 
     try {
-      // Normalize phone to E.164 (+1XXXXXXXXXX) format for Square Orders API compliance
-      const digits = customerPhone.replace(/\D/g, "");
-      const e164Phone = digits.length === 10
-        ? `+1${digits}`
-        : digits.startsWith("1") && digits.length === 11
-        ? `+${digits}`
-        : `+1${digits}`;
-
+      // The server turns the phone number into E.164 for Square.
       const body: CheckoutRequestBody = {
         customer: {
           displayName: customerName.trim(),
           email: customerEmail.trim(),
-          phone: e164Phone,
+          phone: customerPhone.trim(),
         },
         pickupTiming:
           effectivePickupType === "SCHEDULED" && activeSlot
@@ -480,6 +522,7 @@ export default function CartDrawer() {
           notes: it.notes?.trim() || undefined,
           modifierOptionIds: it.selectedModifiers.map((m) => m.optionId),
         })),
+        turnstileToken: turnstileToken ?? undefined,
       };
 
       const res = await fetch("/api/checkout", {
@@ -492,6 +535,8 @@ export default function CartDrawer() {
         const errorData: CheckoutErrorResponse = await res.json().catch(() => ({
           error: "Checkout service returned an error. Please try again.",
         }));
+        // Items that are sold out or whose options no longer fit get marked in the bag.
+        setCartIssue(readCartIssue(errorData));
         throw new Error(errorData.error || "Failed to create checkout session.");
       }
 
@@ -512,6 +557,9 @@ export default function CartDrawer() {
       setErrorMessage(
         err instanceof Error ? err.message : "An unexpected error occurred during checkout."
       );
+      // The server may have used up the token, so get a fresh one for the next try.
+      setTurnstileToken(null);
+      setTurnstileResetKey((key) => key + 1);
       setIsSubmitting(false);
     }
   };
@@ -519,6 +567,9 @@ export default function CartDrawer() {
   const isCheckoutDisabled =
     isSubmitting ||
     items.length === 0 ||
+    scheduleStatus !== "ready" ||
+    isOrderingPaused ||
+    !turnstileToken ||
     (effectivePickupType === "ASAP" && !isAsapAvailable) ||
     (effectivePickupType === "SCHEDULED" && (availableSlots.length === 0 || !activeSlot));
 
@@ -603,44 +654,6 @@ export default function CartDrawer() {
                   >
                     EXPLORE MENU
                   </Link>
-                  {process.env.NODE_ENV === "development" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addItem({
-                          cartItemId: `test-item-${Date.now()}`,
-                          catalogObjectId: "ITEM_TARO",
-                          variationId: "VAR_REGULAR",
-                          variationName: "Regular",
-                          name: "Taro Milk Tea",
-                          basePriceCents: 575,
-                          imageUrl: null,
-                          selectedModifiers: [
-                            {
-                              modifierListId: "M_SWEET",
-                              modifierListName: "Sweetness",
-                              optionId: "SWEET_50",
-                              optionName: "50% Sweet",
-                              priceCents: 0,
-                            },
-                            {
-                              modifierListId: "M_TOPPINGS",
-                              modifierListName: "Toppings",
-                              optionId: "TOPPING_BOBA",
-                              optionName: "Honey Boba",
-                              priceCents: 50,
-                            },
-                          ],
-                          quantity: 1,
-                          notes: "Less ice please",
-                          itemTotalCents: 625,
-                        });
-                      }}
-                      className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-dashed border-[#DBAF82] text-[#DBAF82] hover:bg-[#FAF7F2] text-[11px] font-semibold transition"
-                    >
-                      + Add Sample Drink (Dev Test)
-                    </button>
-                  )}
                 </div>
               </div>
             ) : (
@@ -661,7 +674,19 @@ export default function CartDrawer() {
 
                   <div className="divide-y divide-gray-100">
                     {items.map((item) => (
-                      <div key={item.cartItemId} className="py-4 first:pt-0 last:pb-0 flex flex-col gap-2">
+                      <div
+                        key={item.cartItemId}
+                        className={`py-4 first:pt-0 last:pb-0 flex flex-col gap-2 ${
+                          flaggedItemIds.has(item.cartItemId)
+                            ? "-mx-2 px-2 rounded-lg bg-red-50/60 ring-1 ring-red-300 first:pt-2 last:pb-2"
+                            : ""
+                        }`}
+                      >
+                        {cartIssue && flaggedItemIds.has(item.cartItemId) && (
+                          <p role="alert" className="text-[11px] font-semibold text-red-600">
+                            {cartIssueMessage(cartIssue.code)}
+                          </p>
+                        )}
                         {/* Title, Thumbnail & Price */}
                         <div className="flex items-start gap-3">
                           {/* Drink Thumbnail */}
@@ -820,6 +845,30 @@ export default function CartDrawer() {
                     Pickup Timing
                   </label>
 
+                  {scheduleStatus === "loading" && (
+                    <p className="text-xs text-gray-500">Loading pickup times...</p>
+                  )}
+
+                  {scheduleStatus === "error" && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
+                      We couldn&apos;t load pickup times. Close the bag and open it again to retry.
+                    </div>
+                  )}
+
+                  {isOrderingPaused && (
+                    <div
+                      role="status"
+                      className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-1"
+                    >
+                      <div className="font-bold">Online Ordering Paused</div>
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        {ONLINE_ORDERING_PAUSED_MESSAGE}
+                      </p>
+                    </div>
+                  )}
+
+                  {scheduleStatus === "ready" && !isOrderingPaused && (
+                  <>
                   {/* ASAP vs Scheduled Segmented Buttons */}
                   <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
                     <button
@@ -863,47 +912,73 @@ export default function CartDrawer() {
                       </div>
                       <p className="text-[11px] text-amber-700 leading-relaxed">
                         {todaySchedule?.closed
-                          ? "Online ordering is unavailable today."
+                          ? "The store is closed today."
                           : todaySchedule
-                          ? `Orders are accepted daily ${formatMinuteOfDay(todaySchedule.openMinuteOfDay)} – ${formatMinuteOfDay(todaySchedule.cutoffMinuteOfDay)} PT.`
+                          ? `ASAP orders are accepted ${formatMinuteOfDay(todaySchedule.openMinuteOfDay)} – ${formatMinuteOfDay(todaySchedule.cutoffMinuteOfDay)} PT today.`
                           : "Store is currently closed."}
+                        {pickupDays.length > 0 && " You can schedule a pickup for later instead."}
                       </p>
                     </div>
                   )}
 
-                  {/* Scheduled Slot Dropdown */}
+                  {/* Scheduled Day and Time Dropdowns */}
                   {effectivePickupType === "SCHEDULED" && (
                     <div className="space-y-1.5 animate-fadeIn">
-                      <label htmlFor={slotSelectId} className="text-[11px] font-semibold text-gray-600 block">
-                        Select Pickup Time (Pacific Time)
-                      </label>
-                      {availableSlots.length > 0 ? (
-                        <select
-                          id={slotSelectId}
-                          value={activeSlot}
-                          onChange={(e) => {
-                            setUserSelectedSlot(e.target.value);
-                            setFormErrors((prev) => ({ ...prev, timing: undefined }));
-                          }}
-                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] focus:border-[#DBAF82] bg-white font-medium text-stone-900"
-                        >
-                          {availableSlots.map((slot) => (
-                            <option key={slot} value={slot}>
-                              {formatSlotDisplay(slot)}
-                            </option>
-                          ))}
-                        </select>
+                      {pickupDays.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label htmlFor={daySelectId} className="text-[11px] font-semibold text-gray-600 block">
+                              Pickup Day
+                            </label>
+                            <select
+                              id={daySelectId}
+                              value={activeDay?.date ?? ""}
+                              onChange={(e) => {
+                                setUserSelectedDay(e.target.value);
+                                setUserSelectedSlot("");
+                                setFormErrors((prev) => ({ ...prev, timing: undefined }));
+                              }}
+                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] focus:border-[#DBAF82] bg-white font-medium text-stone-900"
+                            >
+                              {pickupDays.map((day) => (
+                                <option key={day.date} value={day.date}>
+                                  {day.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label htmlFor={slotSelectId} className="text-[11px] font-semibold text-gray-600 block">
+                              Pickup Time (PT)
+                            </label>
+                            <select
+                              id={slotSelectId}
+                              value={activeSlot}
+                              onChange={(e) => {
+                                setUserSelectedSlot(e.target.value);
+                                setFormErrors((prev) => ({ ...prev, timing: undefined }));
+                              }}
+                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] focus:border-[#DBAF82] bg-white font-medium text-stone-900"
+                            >
+                              {availableSlots.map((slot) => (
+                                <option key={slot} value={slot}>
+                                  {formatSlotDisplay(slot)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                       ) : (
                         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
-                          {todaySchedule?.closed
-                            ? "Store is closed today. Scheduled orders are currently unavailable."
-                            : "Same-day ordering cutoff has passed for today. Last pickup orders are accepted 30 minutes before closing."}
+                          No pickup times are available in the next {MAX_SCHEDULE_DAYS_AHEAD} days.
                         </div>
                       )}
                       {formErrors.timing && (
                         <p className="text-[11px] text-red-500 font-medium">{formErrors.timing}</p>
                       )}
                     </div>
+                  )}
+                  </>
                   )}
                 </div>
 
@@ -1008,13 +1083,42 @@ export default function CartDrawer() {
           {/* Footer & Checkout CTA */}
           {items.length > 0 && (
             <div className="p-6 border-t border-gray-100 bg-white space-y-3">
+              {/* Bot check. Stays mounted while the bag has items so its token never goes stale unseen. */}
+              {!isOrderingPaused && (
+                <TurnstileWidget
+                  action="checkout"
+                  resetKey={turnstileResetKey}
+                  onToken={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onFailedChange={setBotCheckFailed}
+                  className="flex justify-center min-h-[65px]"
+                />
+              )}
+              {!isOrderingPaused && botCheckFailed && (
+                <p className="text-[11px] text-amber-700 leading-relaxed">
+                  The security check couldn&apos;t load, so checkout is unavailable right now. Please
+                  try again later, or call us at {websiteContent.address.phone} to order.
+                </p>
+              )}
+
               {/* Error Banner */}
               {errorMessage && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-start gap-2">
                   <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>{errorMessage}</span>
+                  <div className="space-y-2">
+                    <span className="block">{errorMessage}</span>
+                    {flaggedItems.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={removeFlaggedItems}
+                        className="inline-flex items-center px-3 py-1 rounded-full border border-red-300 bg-white text-red-700 font-semibold hover:bg-red-100 transition"
+                      >
+                        Remove {flaggedItems.length === 1 ? "this item" : `these ${flaggedItems.length} items`}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -1,5 +1,5 @@
 /**
- * Cloudflare Turnstile, the bot check on the public contact form.
+ * Cloudflare Turnstile, the bot check on the public contact form and checkout.
  *
  * The widget in the browser only produces a token. This server-side check is
  * what makes it mean anything. A token lasts 300 seconds and can be checked
@@ -45,7 +45,7 @@ function secretKey(): string | undefined {
     return configured;
   }
   if (process.env.NODE_ENV === "development") return DEV_TEST_SECRET;
-  console.error("TURNSTILE_SECRET_KEY is not set, so the contact form cannot check for bots.");
+  console.error("TURNSTILE_SECRET_KEY is not set, so the contact form and checkout cannot check for bots.");
   return undefined;
 }
 
@@ -93,6 +93,6 @@ export async function verifyTurnstile(token: string, remoteIp?: string): Promise
     return { ok: false, reason: "unavailable" };
   }
   // Rare for real visitors, so worth a log line: a run of these points to setup, not bots.
-  console.warn("Turnstile rejected a contact form submission:", codes);
+  console.warn("Turnstile rejected a submission:", codes);
   return { ok: false, reason: "rejected" };
 }

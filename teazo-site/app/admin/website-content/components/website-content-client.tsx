@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { TocItem } from "./section-shell";
 import {
+  IconOrdering,
   IconLogo,
   IconStory,
   IconSocial,
@@ -12,6 +13,7 @@ import {
   IconHolidays,
   IconCarousel,
 } from "./icons";
+import OrderingSection from "./sections/ordering-section";
 import LogoSection from "./sections/logo-section";
 import StorySection from "./sections/story-section";
 import SocialSection from "./sections/social-section";
@@ -25,6 +27,7 @@ import type { SectionId } from "./types";
 
 // single source of order/labels for both the sidebar TocItems and the mobile dropdown
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
+  { id: "ordering", label: "Online Ordering", icon: <IconOrdering /> },
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
   { id: "story", label: "Our Story", icon: <IconStory /> },
   { id: "social", label: "Social Media", icon: <IconSocial /> },
@@ -57,6 +60,7 @@ export default function WebsiteContentClient({
     updateHoliday,
     removeHoliday,
     updateContactFormEnabled,
+    updateOnlineOrderingEnabled,
   } = useWebsiteContent(initialContent);
 
   const [openSection, setOpenSection] = useState<SectionId | null>(null);
@@ -89,6 +93,8 @@ export default function WebsiteContentClient({
   // without each section needing to know about the shared ref map
   function setSectionRef(id: SectionId) {
     return (el: HTMLDivElement | null) => {
+      // React calls this ref callback after rendering, so the ref is not read during render.
+      // eslint-disable-next-line react-hooks/refs
       sectionRefs.current[id] = el;
     };
   }
@@ -206,6 +212,14 @@ export default function WebsiteContentClient({
         </nav>
 
         <div className="flex w-full min-w-0 flex-col gap-3">
+          <OrderingSection
+            onlineOrderingEnabled={content.onlineOrderingEnabled}
+            isOpen={openSection === "ordering"}
+            onToggle={() => selectSection("ordering")}
+            setRef={setSectionRef("ordering")}
+            onUpdateOnlineOrderingEnabled={updateOnlineOrderingEnabled}
+          />
+
           <LogoSection
             logo={content.logo}
             isOpen={openSection === "logo"}
