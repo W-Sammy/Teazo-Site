@@ -38,7 +38,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
           <button type="button" onClick={onClose} aria-label="Close event details" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3c2924] text-2xl leading-none text-white transition hover:bg-[#D9AE81] focus:outline-none focus:ring-4 focus:ring-[#D9AE81]/40">×</button>
         </div>
         <div className="relative aspect-[2/1] max-h-[40dvh] w-full bg-[#f4e9e4]">
-          <Image src={event.imageUrl} alt={event.name} fill sizes="(max-width: 704px) calc(100vw - 2rem), 672px" className="object-contain" unoptimized={event.imageUrl.startsWith("http") || event.imageUrl.startsWith("data:")} />
+          <Image src={event.imageUrl} alt={event.name} fill sizes="(max-width: 704px) calc(100vw - 2rem), 672px" className="object-contain" unoptimized={event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("data:")} />
         </div>
         <div className="px-6 py-7 sm:px-9 sm:py-8">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#cd8f84]">Happening now</p>

@@ -81,7 +81,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                     fill
                     sizes="(max-width: 640px) calc(100vw - 4rem), 320px"
                     className="object-cover transition duration-300 group-enabled:group-hover:scale-105"
-                    unoptimized={event.imageUrl.startsWith("http") || event.imageUrl.startsWith("data:")}
+                    unoptimized={event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("data:")}
                   />
                 </div>
                 <div className="px-4 py-3">
