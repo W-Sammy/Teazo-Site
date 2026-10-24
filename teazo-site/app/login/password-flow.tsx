@@ -269,7 +269,7 @@ function PasswordDialog({
               {view === "request" ? (
                 <>
                   <p className="text-sm text-gray-600">
-                    Enter your admin email. We'll send you a link to create or
+                    Enter your admin email. We&apos;ll send you a link to create or
                     reset your password.
                   </p>
 

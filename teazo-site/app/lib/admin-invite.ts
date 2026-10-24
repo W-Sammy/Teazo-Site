@@ -132,7 +132,7 @@ export async function sendAdminInvite(
   } catch (error) {
     // // Do not log tokens, email contents, or provider payloads.
     // console.error("An admin was added, but the invite email failed.");
-    
+
     if (process.env.NODE_ENV === "development") {
     console.error(
       "Admin invitation failed:",

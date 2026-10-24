@@ -1,7 +1,6 @@
 import { requireAdminApi } from "@/app/lib/admin";
 import { createSettingsAdmin, listSettingsAdmins } from "@/app/lib/queries/settings";
 import type { NewAdminInput } from "@/app/types/admin-perms";
-import { after } from "next/server";
 import { sendAdminInvite } from "@/app/lib/admin-invite";
 
 export const runtime = "nodejs";
@@ -37,7 +36,7 @@ export async function POST(request: Request) {
       return errorResponse("You do not have permission to add admins.", 403);
     }
     const input = await request.json() as NewAdminInput;
-    
+
     if (!input.username?.trim() || !input.email?.trim()) return errorResponse("Username and email are required.", 400);
     if (![1, 2, 3].includes(input.role)) return errorResponse("Invalid admin role.", 400);
 
@@ -92,7 +91,7 @@ export async function POST(request: Request) {
       },
     },
   );
-    
+
   } catch (error) {
     console.error("Could not create admin:", error);
     return errorResponse("The admin could not be added. The email may already exist.", 400);
