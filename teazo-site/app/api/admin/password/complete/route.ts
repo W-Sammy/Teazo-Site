@@ -129,7 +129,7 @@ export async function POST(request: Request) {
   ) {
     return json(
       {
-        error: "Use a password between 15 and 128 characters.",
+        error: "Use a password between 6 and 128 characters.",
         code: "INVALID_PASSWORD",
       },
       400,
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         case "invalid-password":
           return json(
             {
-              error: "Use a password between 15 and 128 characters.",
+              error: "Use a password between 6 and 128 characters.",
               code: "INVALID_PASSWORD",
             },
             400,
