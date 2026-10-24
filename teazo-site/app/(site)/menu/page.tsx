@@ -11,6 +11,7 @@ import Subtitle from "../components/sub-title";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
+import { orderableMenuItem } from "@/app/lib/storefront-catalog";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -52,6 +53,7 @@ type CatalogMenuItem = Pick<
   | "categories"
   | "modifiers"
   | "variations"
+  | "availability"
 >;
 
 type MenuLoadResult =
@@ -167,6 +169,7 @@ function toCardItem(
     description: item.description?.trim() || undefined,
     modifiers: item.modifiers || [],
     variations: item.variations,
+    availability: item.availability,
   };
 }
 
@@ -334,7 +337,10 @@ async function loadMenu(): Promise<MenuLoadResult> {
 
     return {
       ok: true,
-      sections: buildMenuSections(data),
+      sections: buildMenuSections(data.flatMap((item) => {
+        const orderable = orderableMenuItem(item);
+        return orderable ? [orderable] : [];
+      })),
     };
   } catch (error) {
     console.error("Public menu catalog loading failed:", error);

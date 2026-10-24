@@ -1,13 +1,16 @@
 import type { GetCatalogObjectResponse } from 'square';
 import type { MenuItem, ModifierList, ModifierOption, ItemCategory, ItemVariation } from "@/app/types/menu-item";
 import type { CatalogObject } from 'square';
+import type { CatalogItemModifierListInfo } from 'square';
+import { itemAvailability, modifierAvailability, variationAvailability } from './catalog-availability';
+import { resolveModifierListRules, resolveModifierOptionRules } from './square-option-rules';
 
 // Builds a full MenuItem from a Square GetCatalogObjectResponse
-export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse): MenuItem | null {
+export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse, locationId: string, now = Date.now()): MenuItem | null {
     const catalogItem = result.object as CatalogObject.Item;
     const relatedObjects = result.relatedObjects ?? [];
 
-    if (!catalogItem?.id) return null;
+    if (!catalogItem?.id || catalogItem.type !== "ITEM") return null;
 
     const imageId = catalogItem.itemData?.imageIds?.[0];
     const imageObj = relatedObjects.find((o) => o.id === imageId) as CatalogObject.Image | undefined;
@@ -31,15 +34,20 @@ export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse): 
             id: v.id ?? "",
             name: v.itemVariationData?.name ?? null,
             priceCents: p ? Number(p.amount) : 0,
+            availability: variationAvailability(v, locationId, now),
         };
     });
 
     const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
-        .flatMap((info) => {
-            const listObj = relatedObjects.find(
+        .map((info) => {
+            const listObj = (relatedObjects.find(
                 (o) => o.id === info.modifierListId && o.type === "MODIFIER_LIST"
-            ) as CatalogObject.ModifierList | undefined;
-            return listObj ? [buildModifierList(listObj)] : [];
+            ) as CatalogObject.ModifierList | undefined) ?? {
+                id: info.modifierListId,
+                type: "MODIFIER_LIST",
+                isDeleted: true,
+            };
+            return buildModifierList(listObj, locationId, info);
         });
 
     return {
@@ -53,39 +61,34 @@ export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse): 
         categories,
         modifiers,
         variations,
+        availability: itemAvailability(catalogItem, variations, modifiers, locationId),
     };
 }
 
 // builds a ModifierList object from a CatalogObject.ModifierList
-export function buildModifierList(obj: CatalogObject.ModifierList): ModifierList {
+export function buildModifierList(obj: CatalogObject.ModifierList, locationId: string, info?: CatalogItemModifierListInfo): ModifierList {
     const options: ModifierOption[] = (obj.modifierListData?.modifiers ?? []).map((mod) => {
         const modifier = mod as CatalogObject.Modifier;
         const priceMoney = modifier.modifierData?.priceMoney;
+        const rules = resolveModifierOptionRules(modifier.modifierData ?? {}, info?.modifierOverrides?.find((override) => override.modifierId === modifier.id));
         return {
             id: modifier.id,
             name: modifier.modifierData?.name ?? undefined,
             priceCents: priceMoney ? Number(priceMoney.amount) : 0,
+            ...rules,
+            availability: modifierAvailability(modifier, locationId, rules.hiddenOnline),
         };
     });
 
-    const parseConstraint = (val: bigint | number | null | undefined): number | undefined => {
-        if (val === null || val === undefined) return undefined;
-        const num = Number(val);
-        return num >= 0 ? num : undefined;
-    };
-
-    const rawSelectionType = obj.modifierListData?.selectionType;
-    const selectionType =
-        rawSelectionType === "SINGLE" || rawSelectionType === "MULTIPLE"
-            ? rawSelectionType
-            : undefined;
+    const rules = resolveModifierListRules(obj.modifierListData ?? {}, info);
+    if (obj.isDeleted || !obj.modifierListData) rules.configurationIssues.push({
+        code: "MISSING_MODIFIER_LIST", message: "An option group is missing or deleted in Square.",
+    });
 
     return {
         id: obj.id,
         name: obj.modifierListData?.name ?? undefined,
-        selectionType,
-        minSelectedModifiers: parseConstraint(obj.modifierListData?.minSelectedModifiers),
-        maxSelectedModifiers: parseConstraint(obj.modifierListData?.maxSelectedModifiers),
+        ...rules,
         options,
     };
 }

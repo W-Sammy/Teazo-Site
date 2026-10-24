@@ -176,6 +176,12 @@ export function validateCheckoutItem(
     };
   }
 
+  const catalogObjectId =
+    typeof value.catalogObjectId === "string" ? value.catalogObjectId.trim() : "";
+  if (!catalogObjectId) {
+    return { ok: false, error: `${itemLabel}: catalogObjectId is required.` };
+  }
+
   const variationId =
     typeof value.variationId === "string" ? value.variationId.trim() : "";
   if (!variationId) {
@@ -233,6 +239,7 @@ export function validateCheckoutItem(
   return {
     ok: true,
     data: {
+      catalogObjectId,
       variationId,
       quantity,
       notes,

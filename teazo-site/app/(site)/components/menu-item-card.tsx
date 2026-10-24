@@ -11,10 +11,11 @@ const montserrat = Montserrat({
 
 const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
-import type { ModifierList, ItemVariation } from "@/app/types/menu-item";
+import type { ModifierList, ItemVariation, CatalogAvailability } from "@/app/types/menu-item";
 
 /* Core menu item shape for the UI. */
 export type MenuItem = {
+  availability?: CatalogAvailability;
   catalogObjectId: string;
   name: string;
   variationId: string | null;

@@ -1,16 +1,27 @@
+export interface CatalogAvailability {
+    available: boolean;
+    locationId: string;
+    reasons: { code: string; message: string }[];
+}
+
 export interface ModifierOption {
     id: string;
     name: string | undefined;
     priceCents: number;
+    onByDefault?: boolean;
+    hiddenOnline?: boolean;
+    availability?: CatalogAvailability;
 }
 
 export interface ModifierList {
     id: string;
     name: string | undefined;
-    selectionType?: "SINGLE" | "MULTIPLE";
     minSelectedModifiers?: number;
     maxSelectedModifiers?: number;
     options: ModifierOption[];
+    enabled?: boolean;
+    allowQuantities?: boolean;
+    configurationIssues?: CatalogAvailability["reasons"];
 }
 
 export interface ItemCategory {
@@ -22,9 +33,11 @@ export interface ItemVariation {
     id: string;
     name: string | null | undefined;
     priceCents: number;
+    availability?: CatalogAvailability;
 }
 
 export interface MenuItem {
+    availability?: CatalogAvailability;
     catalogObjectId: string;
     name: string | null | undefined;
     description: string | undefined;
