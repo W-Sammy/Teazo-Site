@@ -1,5 +1,7 @@
 "use client";
 
+import { availabilityDescription } from "@/app/lib/storefront-catalog";
+
 import {
   useEffect,
   useMemo,
@@ -33,6 +35,7 @@ type DisplayedMenuItem = {
   price: number;
   description: string;
   categories: ItemCategory[];
+  availability: string;
 };
 
 type Category = {
@@ -65,6 +68,7 @@ const fallbackImage = "/TEAZO_logo.svg";
 // Validate only the response fields this page uses before displaying a saved item.
 type SavedMenuItem = Pick<
   MenuItem,
+  | "availability"
   | "catalogObjectId"
   | "name"
   | "description"
@@ -886,6 +890,7 @@ export default function AdminMenuClient({
           name: result.name?.trim() || "Unnamed item",
           price: result.priceCents / 100,
           description: result.description ?? "",
+          availability: availabilityDescription(result),
 
           // Use returned membership, even if Square returns an empty category list.
           categories: result.categories.map((category) => ({
@@ -998,6 +1003,7 @@ export default function AdminMenuClient({
         name: result.name?.trim() || "Unnamed item",
         price: result.priceCents / 100,
         description: result.description ?? "",
+          availability: availabilityDescription(result),
 
         // Keep returned category membership; only fill in missing display labels.
         categories: result.categories.map((category) => ({

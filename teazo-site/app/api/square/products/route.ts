@@ -11,25 +11,31 @@ import {
   buildMenuItemFromGetResponse,
 } from "@/app/lib/square-helpers";
 import { requireAdminApi } from "@/app/lib/admin";
+import { resolveSquareLocationId } from "@/app/lib/square-location";
+import { readCatalogItems, readCatalogModifierLists } from "@/app/lib/square-catalog";
+import { itemAvailability, variationAvailability } from "@/app/lib/catalog-availability";
 import { validateCreateMenuItemBody } from "@/app/lib/menu-item-validators";
 
 /**
  * GET /api/products
  *
- * Fetches all active products from the Square catalog.
+ * Fetches all products, including archived and unavailable items, from the Square catalog.
  *
  * @returns 200 - Array of MenuItem objects
  * @returns 500 - Square API failure or unexpected catalog data
  */
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
+    const locationId = await resolveSquareLocationId();
     // Fetch all catalog objects in parallel
     const [itemResult, imageResult, categoryResult, modifierListResult] =
       await Promise.all([
-        squareClient.catalog.list({ types: "ITEM" }),
+        readCatalogItems(),
         squareClient.catalog.list({ types: "IMAGE" }),
         squareClient.catalog.list({ types: "CATEGORY" }),
-        squareClient.catalog.list({ types: "MODIFIER_LIST" }),
+        readCatalogModifierLists(),
       ]);
 
     // Create a map of the image data
@@ -61,18 +67,14 @@ export async function GET() {
     }
 
     // Create a map of the modified data
-    const modifierListMap = new Map<string, ModifierList>();
+    const modifierListMap = new Map<string, CatalogObject.ModifierList>();
     for await (const obj of modifierListResult) {
-      const modifierList = buildModifierList(
-        obj as CatalogObject.ModifierList,
-      );
-
       if (!obj.id) {
         console.warn("Skipping unexpected modifier object:", obj);
         continue;
       }
 
-      modifierListMap.set(obj.id, modifierList);
+      modifierListMap.set(obj.id, obj);
     }
 
     const products: MenuItem[] = [];
@@ -98,19 +100,15 @@ export async function GET() {
       if (!item.id) {
         return Response.json(
           { error: "Catalog item missing id" },
-          { status: 500 },
+          { status: 500, headers: { "Cache-Control": "no-store" } },
         );
       }
 
-      const modifiers: ModifierList[] = (
-        catalogItem.itemData?.modifierListInfo ?? []
-      )
-        .map((info) =>
-          modifierListMap.get(info.modifierListId ?? ""),
-        )
-        .filter(
-          (ml): ml is ModifierList => ml !== undefined,
-        );
+      const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
+        .flatMap((info) => {
+          const list = modifierListMap.get(info.modifierListId);
+          return list ? [buildModifierList(list, locationId, info)] : [];
+        });
 
       const variations: ItemVariation[] = (
         (catalogItem.itemData?.variations ?? []) as CatalogObject.ItemVariation[]
@@ -120,11 +118,13 @@ export async function GET() {
           id: v.id ?? "",
           name: v.itemVariationData?.name ?? null,
           priceCents: p ? Number(p.amount) : 0,
+          availability: variationAvailability(v, locationId),
         };
       });
 
       products.push({
         catalogObjectId: item.id,
+        availability: itemAvailability(catalogItem, variations, modifiers, locationId),
         name: catalogItem.itemData?.name,
         description:
           catalogItem.itemData?.description ?? undefined,
@@ -142,13 +142,13 @@ export async function GET() {
       });
     }
 
-    return Response.json(products);
+    return Response.json(products, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Square catalog fetch failed:", error);
 
     return Response.json(
       { error: "Failed to fetch products" },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }
@@ -194,6 +194,7 @@ export async function POST(request: Request) {
     }
 
     const body = validation.data;
+    const locationId = await resolveSquareLocationId();
 
     // Defines structure of Square catalogItem then sends it to Square
     const upsertResult =
@@ -242,7 +243,7 @@ export async function POST(request: Request) {
         {
           error: "Failed to retrieve created item id",
         },
-        { status: 500 },
+        { status: 500, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -253,14 +254,14 @@ export async function POST(request: Request) {
       });
 
     const menuItem =
-      buildMenuItemFromGetResponse(getResult);
+      buildMenuItemFromGetResponse(getResult, locationId);
 
     if (!menuItem) {
       return Response.json(
         {
           error: "Failed to build created item",
         },
-        { status: 500 },
+        { status: 500, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -275,7 +276,7 @@ export async function POST(request: Request) {
 
     return Response.json(
       { error: "Failed to create product" },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

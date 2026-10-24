@@ -57,6 +57,7 @@ describe("Square environment", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, `${baseUrl}/v2/online-checkout/payment-links`, expect.objectContaining({
       method: "POST",
     }));
+    expect(fetchMock.mock.calls[0][1].cache).toBe("no-store");
     const options = fetchMock.mock.calls[1][1];
     expect(new Headers(options.headers).get("authorization")).toBe("Bearer test-square-token");
     expect(JSON.parse(options.body).order.location_id).toBe("LOCATION_1");

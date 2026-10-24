@@ -10,6 +10,8 @@ export const squareClient = new SquareClient({
         ? SquareEnvironment.Production
         : SquareEnvironment.Sandbox,
     token: process.env.SQUARE_ACCESS_TOKEN,
+    // Availability reads must bypass Next.js and HTTP caches, including SDK GETs.
+    fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
 });
 
 // Fixes "TypeError: BigInt value can't be serialized in JSON"
