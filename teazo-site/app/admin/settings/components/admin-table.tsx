@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useRef,
 } from "react";
 
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
@@ -10,6 +11,7 @@ import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
+import { resendAdminInvitation } from "@/app/api/admin/settings/admins-api";
 
 // Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
@@ -22,13 +24,17 @@ export default function AdminsTable() {
     useState("");
   const [adminToDelete, setAdminToDelete] =
     useState<Admin | null>(null);
+  const [resendingAdminId, setResendingAdminId] =
+    useState<string | null>(null);
 
+const resendInFlight = useRef(false);
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
     canEdit,
     errorMessage,
     clearError,
+    setError,
     addAdmin,
     loadAdmins,
     deleteAdmin,
@@ -96,6 +102,39 @@ export default function AdminsTable() {
     const deleted = await deleteAdmin(adminToDelete);
     if (deleted) setAdminToDelete(null);
   }
+
+  async function handleResendInvitation(admin: Admin) {
+  if (
+    resendInFlight.current ||
+    !canEdit ||
+    !admin.canResendInvitation
+  ) {
+    return;
+  }
+
+  resendInFlight.current = true;
+  setResendingAdminId(admin.id);
+  clearError();
+  setSuccessMessage("");
+
+  try {
+    const result = await resendAdminInvitation(admin.id);
+    setSuccessMessage(result.message);
+    await loadAdmins();
+  } catch (error) {
+    setError(
+      error instanceof Error
+        ? error.message
+        : "The invitation could not be resent.",
+    );
+
+    // Refresh eligibility if the account changed in another session.
+    await loadAdmins();
+  } finally {
+    resendInFlight.current = false;
+    setResendingAdminId(null);
+  }
+}
 
   return (
     <>
@@ -167,6 +206,10 @@ export default function AdminsTable() {
               onDelete={() =>
                 handleDeleteAdmin(admin)
               }
+              onResendInvitation={() => {
+                void handleResendInvitation(admin);
+              }}
+              isResending={resendingAdminId === admin.id}
             />
           ))}
         </div>

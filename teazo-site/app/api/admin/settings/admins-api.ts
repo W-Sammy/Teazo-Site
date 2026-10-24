@@ -47,3 +47,12 @@ export function updateManageAdminsPermission(id: string, canManageAdmins: boolea
 export async function removeAdmin(id: string): Promise<void> {
   await request<unknown>(`/api/admin/settings/admins/${id}`, { method: "DELETE" });
 }
+
+export function resendAdminInvitation(
+  id: string,
+): Promise<{ message: string }> {
+  return request<{ message: string }>(
+    `/api/admin/settings/admins/${encodeURIComponent(id)}/resend-invitation`,
+    { method: "POST" },
+  );
+}

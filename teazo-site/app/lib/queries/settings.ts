@@ -8,19 +8,35 @@ export type SettingsAdmin = {
   email: string;
   role: AdminRole;
   canManageAdmins: boolean;
+  canResendInvitation: boolean;
 };
 
-type SettingsAdminRow = Omit<SettingsAdmin, "canManageAdmins"> & {
+type SettingsAdminRow = Omit<
+  SettingsAdmin,
+  "canManageAdmins" | "canResendInvitation"
+> & {
   canManageAdmins: number;
+  canResendInvitation: number;
 };
 
 function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
-  return { ...admin, canManageAdmins: admin.canManageAdmins === 1 };
+  return {
+    ...admin,
+    canManageAdmins: admin.canManageAdmins === 1,
+    canResendInvitation: admin.canResendInvitation === 1,
+  };
 }
 
 const adminSelect = `
   SELECT id, username, email, role_id AS role,
-         can_invite_users AS canManageAdmins
+         can_invite_users AS canManageAdmins,
+         CASE
+          WHEN password_hash IS NULL
+            AND status IN ('active', 'invited')
+            AND role_id IN (1, 2, 3)
+          THEN 1
+          ELSE 0 
+        END AS canResendInvitation
     FROM admin_user
    WHERE deleted_at IS NULL`;
 
@@ -85,4 +101,20 @@ async function requireSettingsAdmin(id: string): Promise<SettingsAdmin> {
     .first<SettingsAdminRow>();
   if (!admin) throw new Error("Admin not found or cannot be changed.");
   return mapAdmin(admin);
+}
+
+export async function findSettingsAdminForInvitation(
+  id: string,
+): Promise<SettingsAdmin | null> {
+  const admin = await prepare(
+    `${adminSelect}
+       AND id = ?1
+       AND password_hash IS NULL
+       AND status IN ('active', 'invited')
+       AND role_id IN (1, 2, 3)`,
+  )
+    .bind(id)
+    .first<SettingsAdminRow>();
+
+  return admin ? mapAdmin(admin) : null;
 }
