@@ -49,12 +49,12 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         aria-label="Live events"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 ${
+        className={`fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 sm:max-w-[calc(100vw-3rem)] ${
           isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-3 scale-95 opacity-0"
         }`}
       >
-        <div className="overflow-hidden rounded-2xl border border-[#eadbd6] bg-[#fffafa] shadow-[0_18px_50px_rgba(62,35,30,0.2)]">
-          <div className="flex items-center justify-between bg-[#3c2924] px-5 py-4 text-white">
+        <div className="max-h-[min(40rem,calc(100dvh-12rem))] overflow-y-auto overscroll-contain rounded-2xl border border-[#eadbd6] bg-[#fffafa] shadow-[0_18px_50px_rgba(62,35,30,0.2)]">
+          <div className="flex items-center justify-between bg-[#3c2924] px-5 py-3 text-white">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em]">Happening now</p>
               <h2 className="mt-1 text-xl font-bold">Live events</h2>
@@ -64,7 +64,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
             </span>
           </div>
 
-          <div className="max-h-[min(65vh,34rem)] space-y-4 overflow-y-auto p-4">
+          <div className="space-y-4 p-4">
             {events.map((event) => (
               <button
                 key={event.id}
