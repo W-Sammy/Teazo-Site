@@ -43,30 +43,55 @@ export async function POST(request: Request) {
 
     const admin = await createSettingsAdmin(input);
 
-    after(async () => {
-      const outcome = await sendAdminInvite({
-        adminId: admin.id,
-        email: admin.email,
-        username: admin.username,
-        role: admin.role,
-        canManageAdmins: admin.canManageAdmins,
-        invitedBy: access.admin.username,
-      });
+  const outcome = await sendAdminInvite({
+    adminId: admin.id,
+    email: admin.email,
+    username: admin.username,
+    role: admin.role,
+    canManageAdmins: admin.canManageAdmins,
+    invitedBy: access.admin.username,
+  });
 
-      if (outcome === "skipped") {
-        console.warn("Admin invitation was not sent.");
-      }
-    });
+  const submitted =
+    outcome === "sent" && process.env.BREVO_SANDBOX !== "1";
 
-    return Response.json(
-      { admin },
-      {
-        status: 201,
-        headers: {
-          "Cache-Control": "no-store",
-        },
+  let message: string;
+
+  if (submitted) {
+    message =
+      "Admin account created. Invitation submitted for delivery.";
+  } else if (outcome === "printed") {
+    message =
+      "Admin account created. The invitation was printed in the server terminal; no email was sent.";
+  } else if (outcome === "captured") {
+    message =
+      "Admin account created. The invitation is available in the local Mailpit inbox.";
+  } else if (
+    outcome === "sent" &&
+    process.env.BREVO_SANDBOX === "1"
+  ) {
+    message =
+      "Admin account created. Brevo sandbox mode is enabled, so no email was delivered.";
+  } else {
+    message =
+      "Admin account created, but the invitation could not be sent. Open this admin's three-dot menu and choose Resend Invitation to retry.";
+  }
+
+  return Response.json(
+    {
+      admin,
+      invitation: {
+        submitted,
+        message,
       },
-    );
+    },
+    {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
     
   } catch (error) {
     console.error("Could not create admin:", error);

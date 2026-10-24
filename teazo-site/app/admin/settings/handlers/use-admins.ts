@@ -78,9 +78,21 @@ export function useAdmins(initialAdmins: Admin[] = []) {
       return { success: false as const, error: "Please enter both a username and email." };
     }
     try {
-      const newAdmin = await createAdmin({ ...input, username, email });
-      setAdmins((currentAdmins) => [...currentAdmins, newAdmin]);
-      return { success: true as const };
+      const result = await createAdmin({
+        ...input,
+        username,
+        email,
+      });
+
+      setAdmins((currentAdmins) => [
+        ...currentAdmins,
+        result.admin,
+      ]);
+
+      return {
+        success: true as const,
+        invitation: result.invitation,
+      };
     } catch (error) {
       return {
         success: false as const,

@@ -26,6 +26,8 @@ export default function AdminsTable() {
     useState<Admin | null>(null);
   const [resendingAdminId, setResendingAdminId] =
     useState<string | null>(null);
+  const [invitationNotice, setInvitationNotice] = 
+    useState("");
 
 const resendInFlight = useRef(false);
   // Delegate admin data, error state, and update operations to the shared hook.
@@ -75,17 +77,25 @@ const resendInFlight = useRef(false);
   }, [successMessage]);
 
   // Keep the form open unless the hook reports that adding the admin succeeded.
-  async function handleAddAdmin(
-    input: NewAdminInput,
-  ) {
+  async function handleAddAdmin(input: NewAdminInput) {
+    clearError();
+    setSuccessMessage("");
+    setInvitationNotice("");
+
     const result = await addAdmin(input);
 
-    if (result.success) {
-      setModalError("");
-      setShowModal(false);
-      setSuccessMessage("Invitation added successfully.");
-    } else {
+    if (!result.success) {
       setModalError(result.error);
+      return;
+    }
+
+    setModalError("");
+    setShowModal(false);
+
+    if (result.invitation.submitted) {
+      setSuccessMessage(result.invitation.message);
+    } else {
+      setInvitationNotice(result.invitation.message);
     }
   }
 
@@ -104,37 +114,39 @@ const resendInFlight = useRef(false);
   }
 
   async function handleResendInvitation(admin: Admin) {
-  if (
-    resendInFlight.current ||
-    !canEdit ||
-    !admin.canResendInvitation
-  ) {
-    return;
+    if (
+      resendInFlight.current ||
+      !canEdit ||
+      !admin.canResendInvitation
+    ) {
+      return;
+    }
+
+    resendInFlight.current = true;
+    setResendingAdminId(admin.id);
+    clearError();
+    setSuccessMessage("");
+
+    try {
+      const result = await resendAdminInvitation(admin.id);
+
+      setInvitationNotice("");
+      setSuccessMessage(result.message);
+      await loadAdmins();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The invitation could not be resent.",
+      );
+
+      await loadAdmins();
+    } finally {
+      resendInFlight.current = false;
+      setResendingAdminId(null);
+    }
   }
-
-  resendInFlight.current = true;
-  setResendingAdminId(admin.id);
-  clearError();
-  setSuccessMessage("");
-
-  try {
-    const result = await resendAdminInvitation(admin.id);
-    setSuccessMessage(result.message);
-    await loadAdmins();
-  } catch (error) {
-    setError(
-      error instanceof Error
-        ? error.message
-        : "The invitation could not be resent.",
-    );
-
-    // Refresh eligibility if the account changed in another session.
-    await loadAdmins();
-  } finally {
-    resendInFlight.current = false;
-    setResendingAdminId(null);
-  }
-}
+
 
   return (
     <>
@@ -159,6 +171,22 @@ const resendInFlight = useRef(false);
       )}
 
       <div className="w-full min-w-0 max-w-5xl">
+        {invitationNotice && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
+            <p>{invitationNotice}</p>
+
+            <button
+              type="button"
+              onClick={() => setInvitationNotice("")}
+              className="mt-2 cursor-pointer font-semibold underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {/* Desktop column headings */}
         {/* Keep these column widths aligned with the desktop grid in AdminRow. */}
         <div className="hidden grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4 md:grid">

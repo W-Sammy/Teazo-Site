@@ -1,4 +1,3 @@
-import { unstable_rethrow } from "next/navigation";
 import type {
   DayHours,
   SocialLink,
