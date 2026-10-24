@@ -55,7 +55,7 @@ export default function AdminShell({
           onClick={() =>
             setMobileNavOpen(false)
           }
-          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
           aria-label="Close admin navigation"
         />
       )}

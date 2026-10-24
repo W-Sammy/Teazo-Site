@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import CatalogChangeNotice from "@/app/components/catalog-change-notice";
+import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
@@ -347,6 +349,8 @@ export default async function MenuPage({
 }: {
   searchParams?: Promise<{ item?: string }>;
 }) {
+  // Capture before fetching items so a change during rendering is detected too.
+  const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult] = await Promise.all([
     searchParams ? searchParams : Promise.resolve(undefined),
     getWebsiteContent(),
@@ -373,6 +377,7 @@ export default async function MenuPage({
 
   return (
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
+      <CatalogChangeNotice initialRevision={revision} />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <BubbleField />
       </div>

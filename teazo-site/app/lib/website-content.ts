@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type {
   DayHours,
   SocialLink,
@@ -150,7 +151,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         contact_form_enabled: number;
       }>();
     } catch (error) {
-      unstable_rethrow(error)
+      unstable_rethrow(error);
       // Fallback query if contact_form_enabled column does not exist yet in database
       profile = await prepare(
         `SELECT business_name, street_address, locality, phone, email, map_query
@@ -452,6 +453,7 @@ export async function updateWebsiteContent(
       try {
         await batch(stmts);
       } catch (err: unknown) {
+        unstable_rethrow(err);
         const errMsg = String(err);
         // If contact_form_enabled column does not exist yet, retry updating business_profile without it
         if (errMsg.includes("contact_form_enabled") && (hasAddressUpdate || hasFormToggleUpdate)) {
@@ -483,6 +485,7 @@ export async function updateWebsiteContent(
       }
     }
   } catch (err) {
+    unstable_rethrow(err);
     console.error("Failed to update website content in D1:", err);
     throw err;
   }
