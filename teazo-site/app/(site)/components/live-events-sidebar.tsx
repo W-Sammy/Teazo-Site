@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { AdminEvent } from "@/app/types/admin-event";
 import EventModal from "@/app/(site)/components/event-modal";
@@ -31,14 +31,9 @@ function CloseIcon() {
 }
 
 export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setIsOpen(false), 5000);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   if (events.length === 0) return null;
 
@@ -53,6 +48,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         id="live-events-sidebar"
         aria-label="Live events"
         aria-hidden={!isOpen}
+        inert={!isOpen}
         className={`fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 ${
           isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-3 scale-95 opacity-0"
         }`}
@@ -73,7 +69,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
               <button
                 key={event.id}
                 type="button"
-                disabled={!hasBeenOpenedByUser}
+                disabled={!isOpen}
                 onClick={() => setSelectedEvent(event)}
                 aria-label={`${event.name}. ${formatEventDuration(event)}. View event details`}
                 className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
@@ -105,7 +101,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         onClick={toggleEvents}
         aria-expanded={isOpen}
         aria-controls="live-events-sidebar"
-        aria-label={isOpen ? "Close live events" : "Show live events"}
+        aria-label={isOpen ? "Close live events" : `Show live events${!hasBeenOpenedByUser ? `, ${events.length} live events` : ""}`}
         className="fixed bottom-5 right-4 z-50 flex h-14 items-center gap-2 rounded-full bg-[#3c2924] px-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_8px_25px_rgba(62,35,30,0.28)] transition hover:bg-[#D9AE81] focus:outline-none focus:ring-4 focus:ring-[#D9AE81]/40 sm:right-6"
       >
         {isOpen ? (
@@ -121,6 +117,11 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
           />
         )}
         <span className="hidden sm:inline">{isOpen ? "Close" : "Events"}</span>
+        {!hasBeenOpenedByUser && (
+          <span aria-hidden="true" className="absolute -right-2 -top-2 flex h-7 min-w-7 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold leading-none tracking-normal text-white shadow-md">
+            {events.length}
+          </span>
+        )}
       </button>
     </>
   );
