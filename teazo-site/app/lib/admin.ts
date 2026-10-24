@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 
 import { auth } from "@/auth";
 
@@ -19,20 +19,37 @@ type AdminAccess =
 
 type ApiAccess = { ok: true; admin: Admin } | { ok: false; response: Response };
 
-// React cache deduplicates checks during one server render.
-// It does not persist authorization results across requests.
+// Deduplicate checks during a server render.
+// Authorization results are not persisted across requests.
 const getAdminAccess = cache(
   async (minRole: AdminRole): Promise<AdminAccess> => {
     const session = await auth();
     const email = session?.user?.email;
 
-    if (!email) {
+    if (
+      !email ||
+      typeof session?.adminId !== "string" ||
+      typeof session.sessionVersion !== "number"
+    ) {
       return { ok: false, status: 401 };
     }
 
     const admin = await findAuthorizedAdmin(email);
 
-    if (!admin || admin.role_id > minRole) {
+    if (!admin) {
+      return { ok: false, status: 403 };
+    }
+
+    // A password reset increments the database version.
+    // Previously issued sessions must authenticate again.
+    if (
+      session.adminId !== admin.id ||
+      session.sessionVersion !== admin.session_version
+    ) {
+      return { ok: false, status: 401 };
+    }
+
+    if (admin.role_id > minRole) {
       return { ok: false, status: 403 };
     }
 
@@ -51,7 +68,9 @@ export async function requireAdminPage(minRole: AdminRole = 3): Promise<Admin> {
 
   try {
     access = await getAdminAccess(minRole);
-  } catch {
+  } catch(error) {
+    unstable_rethrow(error)
+    
     console.error("Admin page authorization lookup failed.");
     redirect("/login?error=ServiceUnavailable");
   }
@@ -84,9 +103,10 @@ export async function requireAdminApi(
 
   try {
     access = await getAdminAccess(minRole);
-  } catch {
-    console.error("Admin API authorization lookup failed.");
+  } catch(error) {
+    unstable_rethrow(error)
 
+    console.error("Admin API authorization lookup failed.");
     return denyApi(503, "Authorization is temporarily unavailable.");
   }
 

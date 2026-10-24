@@ -116,7 +116,7 @@ export async function findValidPasswordToken(
 }
 
 type SavePasswordResult =
-  | { ok: true }
+  | { ok: true; adminEmail: string }
   | {
       ok: false;
       reason: "invalid-password" | "password-mismatch" | "invalid-token";
@@ -185,7 +185,7 @@ export async function savePasswordWithToken(
              AND used_at IS NULL
              AND expires_at > ?6
         )
-      RETURNING id`,
+      RETURNING id, email_normalized`,
   )
     .bind(
       passwordHash,
@@ -195,11 +195,11 @@ export async function savePasswordWithToken(
       hashToken(token),
       now,
     )
-    .first<{ id: string }>();
+    .first<{ id: string, email_normalized: string }>();
 
   if (!updated) {
     return { ok: false, reason: "invalid-token" };
   }
 
-  return { ok: true };
+  return { ok: true, adminEmail: updated.email_normalized, };
 }

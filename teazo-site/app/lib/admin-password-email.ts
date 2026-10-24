@@ -134,3 +134,36 @@ export async function sendAdminPasswordEmail(
     html,
   });
 }
+
+/**
+ * Notify the registered admin after a successful password change.
+ *
+ * Contains no password, password hash, or setup/reset token.
+ * Delivery errors propagate to the caller.
+ */
+export async function sendAdminPasswordChangedEmail(
+  email: string,
+): Promise<SendOutcome> {
+  const text = [
+    "Your TEAZO admin password has been changed.",
+    "",
+    "If you made this change, no further action is needed.",
+    "",
+    "If you did not make this change, contact the website owner immediately.",
+  ].join("\n");
+
+  const html = [
+    '<div style="font-family:Arial,sans-serif;line-height:1.5">',
+    "<p>Your TEAZO admin password has been changed.</p>",
+    "<p>If you made this change, no further action is needed.</p>",
+    "<p>If you did not make this change, contact the website owner immediately.</p>",
+    "</div>",
+  ].join("");
+
+  return sendEmail({
+    to: email,
+    subject: "Your TEAZO admin password has changed",
+    text,
+    html,
+  });
+}

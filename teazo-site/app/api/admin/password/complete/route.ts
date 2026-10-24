@@ -2,6 +2,8 @@ import { isIP } from "node:net";
 
 import { savePasswordWithToken } from "@/app/lib/admin-password-tokens";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
+import { after } from "next/server";
+import { sendAdminPasswordChangedEmail } from "@/app/lib/admin-password-email";
 
 export const runtime = "nodejs";
 
@@ -172,6 +174,26 @@ export async function POST(request: Request) {
           );
       }
     }
+
+    const recipient = result.adminEmail;
+
+    after(async () => {
+      try {
+        const outcome = await sendAdminPasswordChangedEmail(recipient);
+
+        if (outcome === "skipped") {
+          console.error(
+            "Password changed, but confirmation email delivery is not configured.",
+          );
+        }
+      } catch {
+        // The password change already succeeded.
+        // Do not log passwords, tokens, or provider error payloads.
+        console.error(
+          "Password changed, but the confirmation email could not be sent.",
+        );
+      }
+    });
 
     return json({
       message: "Your password has been saved. Sign in to continue.",
