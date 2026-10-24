@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { AdminEvent } from "@/app/types/admin-event";
-import EventModal from "@/app/(site)/components/event-modal";
+import EventModal from "@/app/components/event-modal";
 import { formatEventDate } from "./dashboard-utils";
 
 export default function LiveEvents({ events }: { events: AdminEvent[] }) {

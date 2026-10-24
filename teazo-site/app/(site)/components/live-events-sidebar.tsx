@@ -1,25 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { AdminEvent } from "@/app/types/admin-event";
-import EventModal from "@/app/(site)/components/event-modal";
+import EventModal from "@/app/components/event-modal";
+import { formatEventDate } from "@/app/lib/event-date";
 
 type LiveEventsSidebarProps = {
   events: AdminEvent[];
 };
 
-const eventDateFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/Los_Angeles",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 function formatEventDuration(event: AdminEvent) {
-  return `${eventDateFormatter.format(new Date(event.startAt))} – ${eventDateFormatter.format(new Date(event.endAt))}`;
+  return `${formatEventDate(event.startAt)} – ${formatEventDate(event.endAt)}`;
 }
 
 function CloseIcon() {
@@ -34,6 +27,39 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen) sidebarRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || selectedEvent) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node) || sidebarRef.current?.contains(target) || toggleRef.current?.contains(target)) return;
+      if (sidebarRef.current?.contains(document.activeElement)) {
+        toggleRef.current?.focus({ preventScroll: true });
+      }
+      setIsOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsOpen(false);
+      toggleRef.current?.focus({ preventScroll: true });
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, selectedEvent]);
 
   if (events.length === 0) return null;
 
@@ -45,6 +71,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
   return (
     <>
       <aside
+        ref={sidebarRef}
         id="live-events-sidebar"
         aria-label="Live events"
         aria-hidden={!isOpen}
@@ -97,6 +124,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
       {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
 
       <button
+        ref={toggleRef}
         type="button"
         onClick={toggleEvents}
         aria-expanded={isOpen}

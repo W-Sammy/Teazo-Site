@@ -12,7 +12,7 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
-import { getLiveEvents } from "@/app/admin/events/handlers/get-events";
+import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
@@ -70,7 +70,7 @@ export default async function Home() {
   const [content, liveEvents] = await Promise.all([
     getWebsiteContent(),
     // Events are optional: keep the homepage available if D1 cannot load them.
-    getLiveEvents().catch(() => []),
+    listActiveEvents().catch(() => []),
   ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const contactData = await getContactContent();
