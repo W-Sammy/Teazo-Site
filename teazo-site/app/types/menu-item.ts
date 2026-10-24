@@ -8,17 +8,20 @@ export interface ModifierOption {
     id: string;
     name: string | undefined;
     priceCents: number;
+    onByDefault?: boolean;
+    hiddenOnline?: boolean;
     availability?: CatalogAvailability;
 }
 
 export interface ModifierList {
     id: string;
     name: string | undefined;
-    selectionType?: "SINGLE" | "MULTIPLE";
     minSelectedModifiers?: number;
     maxSelectedModifiers?: number;
     options: ModifierOption[];
     enabled?: boolean;
+    allowQuantities?: boolean;
+    configurationIssues?: CatalogAvailability["reasons"];
 }
 
 export interface ItemCategory {

@@ -1,4 +1,4 @@
-import type { CatalogObject, CatalogItemModifierListInfo } from "square";
+import type { CatalogObject } from "square";
 import type { CatalogAvailability, ItemVariation, ModifierList } from "@/app/types/menu-item";
 
 type Reasons = CatalogAvailability["reasons"];
@@ -41,16 +41,14 @@ export function variationAvailability(
 }
 
 export function modifierAvailability(
-  modifier: CatalogObject.Modifier, locationId: string, info?: CatalogItemModifierListInfo,
+  modifier: CatalogObject.Modifier, locationId: string, hiddenOnline = false,
 ): CatalogAvailability {
   const reasons = objectReasons(modifier, locationId);
   const data = modifier.modifierData;
   if (data?.locationOverrides?.some((entry) => entry.locationId === locationId && entry.soldOut)) {
     reasons.push({ code: "SOLD_OUT", message: "Option sold out at this location." });
   }
-  const override = info?.modifierOverrides?.find((entry) => entry.modifierId === modifier.id)?.hiddenOnlineOverride;
-  const hidden = override === "YES" || (override !== "NO" && data?.hiddenOnline === true);
-  if (hidden) reasons.push({ code: "HIDDEN_ONLINE", message: "Option hidden from online ordering." });
+  if (hiddenOnline) reasons.push({ code: "HIDDEN_ONLINE", message: "Option hidden from online ordering." });
   return availability(locationId, reasons);
 }
 
@@ -64,6 +62,7 @@ export function itemAvailability(
   }
   for (const group of modifiers) {
     if (group.enabled === false) continue;
+    reasons.push(...(group.configurationIssues ?? []));
     const count = group.options.filter((option) => option.availability?.available).length;
     if (count < (group.minSelectedModifiers ?? 0)) {
       reasons.push({

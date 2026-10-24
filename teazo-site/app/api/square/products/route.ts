@@ -105,9 +105,13 @@ export async function GET() {
       }
 
       const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
-        .flatMap((info) => {
-          const list = modifierListMap.get(info.modifierListId);
-          return list ? [buildModifierList(list, locationId, info)] : [];
+        .map((info) => {
+          const list = modifierListMap.get(info.modifierListId) ?? {
+            id: info.modifierListId,
+            type: "MODIFIER_LIST",
+            isDeleted: true,
+          };
+          return buildModifierList(list, locationId, info);
         });
 
       const variations: ItemVariation[] = (

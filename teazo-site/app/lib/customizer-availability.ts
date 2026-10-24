@@ -1,4 +1,5 @@
 import type { CatalogAvailability, ItemVariation, ModifierList } from "@/app/types/menu-item";
+import { validateModifierSelections } from "./square-option-rules";
 
 interface CustomizerCatalog {
   availability?: CatalogAvailability;
@@ -14,9 +15,14 @@ export function checkCustomizerAvailability(
   error?: string,
 ) {
   if (!checked || error) return { canAdd: false, message: error, unavailableModifiers: false };
+  const configurationProblem = item.availability?.reasons.some((reason) =>
+    reason.code.startsWith("UNSUPPORTED_") || reason.code === "INVALID_MODIFIER_LIMITS" || reason.code === "MISSING_MODIFIER_LIST",
+  );
   if (!item.availability?.available) return {
     canAdd: false,
-    message: item.availability?.reasons.map((reason) => reason.message).join(" ") || "This drink is currently unavailable.",
+    message: configurationProblem
+      ? "This drink is currently unavailable for online ordering."
+      : item.availability?.reasons.map((reason) => reason.message).join(" ") || "This drink is currently unavailable.",
     unavailableModifiers: false,
   };
 
@@ -30,5 +36,7 @@ export function checkCustomizerAvailability(
   const messages = [];
   if (missingSize) messages.push("Your selected size is no longer available. Please choose an available size.");
   if (unavailableModifiers) messages.push("Some selected options are no longer available. Choose alternatives or remove the unavailable options.");
-  return { canAdd: !missingSize && !unavailableModifiers, message: messages.join(" ") || undefined, unavailableModifiers };
+  const optionError = validateModifierSelections(item.modifiers ?? [], Object.values(selectedModifiers).flat());
+  if (optionError && !unavailableModifiers) messages.push(optionError.message);
+  return { canAdd: !missingSize && !unavailableModifiers && !optionError, message: messages.join(" ") || undefined, unavailableModifiers };
 }

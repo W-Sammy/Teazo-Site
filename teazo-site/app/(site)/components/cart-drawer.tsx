@@ -496,6 +496,7 @@ export default function CartDrawer() {
           variationId: it.variationId,
           quantity: it.quantity,
           notes: it.notes?.trim() || undefined,
+          catalogObjectId: it.catalogObjectId,
           modifierOptionIds: it.selectedModifiers.map((m) => m.optionId),
         })),
         turnstileToken: turnstileToken ?? undefined,

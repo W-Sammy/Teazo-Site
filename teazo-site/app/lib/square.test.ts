@@ -22,6 +22,26 @@ afterEach(() => {
 });
 
 describe("Square environment", () => {
+  it("requests an API version that exposes nesting and preserves nested relationships through the SDK", async () => {
+    vi.stubEnv("SQUARE_ENVIRONMENT", "sandbox");
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({
+      object: { type: "ITEM", id: "ITEM1", item_data: { variations: [], modifier_list_info: [{ modifier_list_id: "LIST1" }] } },
+      related_objects: [{ type: "MODIFIER_LIST", id: "LIST1", modifier_list_data: {
+        name: "Toppings", modifiers: [{ type: "MODIFIER", id: "MOD1", modifier_data: { child_modifier_list_ids: ["CHILD"] } }],
+      } }],
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { squareClient } = await import("./square");
+    const { buildMenuItemFromGetResponse } = await import("./square-helpers");
+    const response = await squareClient.catalog.object.get({ objectId: "ITEM1", includeRelatedObjects: true });
+    const options = fetchMock.mock.calls[0][1];
+    expect(new Headers(options.headers).get("square-version")).toBe("2026-08-19");
+    expect(options.cache).toBe("no-store");
+    const item = buildMenuItemFromGetResponse(response, "LOCATION_1");
+    expect(item?.modifiers[0].configurationIssues).toContainEqual(expect.objectContaining({ code: "UNSUPPORTED_NESTED_MODIFIERS" }));
+    expect(item?.availability?.available).toBe(false);
+  });
+
   it("allows catalog images from both Square environments", () => {
     expect(allowedHosts).toEqual(expect.arrayContaining([
       "items-images-sandbox.s3.us-west-2.amazonaws.com",

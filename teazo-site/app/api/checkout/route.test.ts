@@ -51,7 +51,7 @@ function content(overrides: Partial<WebsiteContent> = {}): WebsiteContent {
 }
 
 const customer = { displayName: "Test Customer", email: "test@example.com", phone: "(415) 555-0100" };
-const items = [{ variationId: "VAR1", quantity: 2, modifierOptionIds: ["MOD1"] }];
+const items = [{ catalogObjectId: "ITEM1", variationId: "VAR1", quantity: 2, modifierOptionIds: ["MOD1"] }];
 
 function checkout(body: Record<string, unknown>) {
   return POST(
@@ -84,6 +84,27 @@ afterEach(() => {
 });
 
 describe("POST /api/checkout", () => {
+  it.each(["other drink", "duplicate", "too few", "too many", "unrelated", "disabled", "hidden", "quantities", "text", "nested"])("prevents Payment Link creation for %s options", async (state) => {
+    const fixture = catalogFixture();
+    const line = { ...items[0], modifierOptionIds: ["MOD1"] };
+    if (state === "other drink") line.catalogObjectId = "OTHER_DRINK";
+    if (state === "duplicate") line.modifierOptionIds = ["MOD1", "MOD1"];
+    if (state === "too few") line.modifierOptionIds = [];
+    if (state === "too many") line.modifierOptionIds = ["MOD1", "MOD2"];
+    if (state === "unrelated") line.modifierOptionIds = ["UNRELATED"];
+    if (state === "disabled") fixture.item.itemData!.modifierListInfo![0].enabled = false;
+    if (state === "hidden") fixture.option.modifierData!.hiddenOnline = true;
+    if (state === "quantities") fixture.list.modifierListData!.allowQuantities = true;
+    if (state === "text") fixture.list.modifierListData!.modifierType = "TEXT";
+    if (state === "nested") fixture.option.modifierData!.childModifierListIds = ["CHILD"];
+    mocks.readCatalogItems.mockResolvedValue([fixture.item]);
+    mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
+    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items: [line] });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ code: "INVALID_OPTIONS", variationIds: ["VAR1"] });
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
   it("creates a Square pickup order and returns the payment link", async () => {
     const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
     expect(res.status).toBe(200);

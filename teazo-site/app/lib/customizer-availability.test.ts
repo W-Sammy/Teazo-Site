@@ -3,6 +3,7 @@ import { catalogFixture, locationId } from "../../test/catalog-fixtures";
 import { buildMenuItemFromGetResponse } from "./square-helpers";
 import { availableMenuChoices } from "./storefront-catalog";
 import { checkCustomizerAvailability } from "./customizer-availability";
+import { defaultModifierSelections } from "./square-option-rules";
 
 function choices(fixture = catalogFixture()) {
   return availableMenuChoices(buildMenuItemFromGetResponse({ object: fixture.item, relatedObjects: [fixture.list] }, locationId)!);
@@ -11,6 +12,40 @@ function choices(fixture = catalogFixture()) {
 const selected = { LIST1: ["MOD1"] };
 
 describe("background customizer availability", () => {
+  it("blocks unsupported groups with a customer-facing message while retaining admin details", () => {
+    const fixture = catalogFixture();
+    fixture.option.modifierData!.childModifierListIds = ["CHILD"];
+    const item = choices(fixture);
+    expect(item.availability?.reasons[0].message).toContain("Square");
+    expect(checkCustomizerAvailability(item, true, "VAR1", selected)).toMatchObject({
+      canAdd: false, message: "This drink is currently unavailable for online ordering.",
+    });
+  });
+
+  it("checks effective minimum and maximum before enabling Add to Bag", () => {
+    const item = choices();
+    expect(checkCustomizerAvailability(item, true, "VAR1", { LIST1: [] })).toMatchObject({ canAdd: false, message: expect.stringContaining("at least 1") });
+    expect(checkCustomizerAvailability(item, true, "VAR1", { LIST1: ["MOD1", "MOD2"] })).toMatchObject({ canAdd: false, message: expect.stringContaining("no more than 1") });
+    expect(checkCustomizerAvailability(item, true, "VAR1", { LIST1: ["MOD1", "MOD1"] })).toMatchObject({ canAdd: false });
+  });
+
+  it("applies fresh defaults and item limits after a Dashboard change", () => {
+    const fixture = catalogFixture();
+    fixture.option.modifierData!.onByDefault = true;
+    expect(defaultModifierSelections(choices(fixture).modifiers)).toEqual({ LIST1: ["MOD1"] });
+    fixture.item.itemData!.modifierListInfo![0] = {
+      modifierListId: "LIST1", minSelectedModifiers: 0, maxSelectedModifiers: 1,
+      modifierOverrides: [
+        { modifierId: "MOD1", onByDefaultOverride: "NO", hiddenOnlineOverride: "YES" },
+        { modifierId: "MOD2", onByDefaultOverride: "YES" },
+      ],
+    };
+    const fresh = choices(fixture);
+    expect(defaultModifierSelections(fresh.modifiers)).toEqual({ LIST1: ["MOD2"] });
+    expect(checkCustomizerAvailability(fresh, true, "VAR1", { LIST1: [] })).toMatchObject({ canAdd: true });
+    expect(checkCustomizerAvailability(fresh, true, "VAR1", selected)).toMatchObject({ canAdd: false });
+  });
+
   it("keeps the drink and its choices visible but blocks adding until the fresh check completes", () => {
     const item = choices();
     expect(item.name).toBe("Milk tea");

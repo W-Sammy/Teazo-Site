@@ -20,6 +20,23 @@ beforeEach(() => {
 });
 
 describe("products availability responses", () => {
+  it("uses the same effective rules on list and fresh single-item reads after Dashboard changes", async () => {
+    const readOne = async () => (await getOne(new Request("http://localhost/api/square/products/ITEM1"), { params: Promise.resolve({ id: "ITEM1" }) })).json();
+    expect((await readOne()).modifiers[0]).toMatchObject({ minSelectedModifiers: 1, maxSelectedModifiers: 1 });
+    fixture.item.itemData!.modifierListInfo![0] = {
+      modifierListId: "LIST1", minSelectedModifiers: 0, maxSelectedModifiers: 0,
+      modifierOverrides: [{ modifierId: "MOD2", onByDefaultOverride: "YES" }],
+    };
+    const fresh = await readOne();
+    const listItem = (await (await GET()).json())[0];
+    expect(fresh.modifiers).toEqual(listItem.modifiers);
+    expect(fresh.modifiers[0]).toMatchObject({ minSelectedModifiers: 0, maxSelectedModifiers: 0, options: [{ onByDefault: false }, { onByDefault: true }] });
+    fixture.option.modifierData!.childModifierListIds = ["CHILD"];
+    const unsupported = await readOne();
+    expect(unsupported.availability).toMatchObject({ available: false, reasons: [{ code: "UNSUPPORTED_NESTED_MODIFIERS" }] });
+    expect(mocks.get).toHaveBeenCalledTimes(3);
+  });
+
   it("queries all archived states and preserves archived items with reasons", async () => {
     fixture.item.itemData!.isArchived = true;
     const response = await GET();

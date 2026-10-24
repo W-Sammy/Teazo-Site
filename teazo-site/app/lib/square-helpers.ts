@@ -3,6 +3,7 @@ import type { MenuItem, ModifierList, ModifierOption, ItemCategory, ItemVariatio
 import type { CatalogObject } from 'square';
 import type { CatalogItemModifierListInfo } from 'square';
 import { itemAvailability, modifierAvailability, variationAvailability } from './catalog-availability';
+import { resolveModifierListRules, resolveModifierOptionRules } from './square-option-rules';
 
 // Builds a full MenuItem from a Square GetCatalogObjectResponse
 export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse, locationId: string, now = Date.now()): MenuItem | null {
@@ -38,11 +39,15 @@ export function buildMenuItemFromGetResponse(result: GetCatalogObjectResponse, l
     });
 
     const modifiers: ModifierList[] = (catalogItem.itemData?.modifierListInfo ?? [])
-        .flatMap((info) => {
-            const listObj = relatedObjects.find(
+        .map((info) => {
+            const listObj = (relatedObjects.find(
                 (o) => o.id === info.modifierListId && o.type === "MODIFIER_LIST"
-            ) as CatalogObject.ModifierList | undefined;
-            return listObj ? [buildModifierList(listObj, locationId, info)] : [];
+            ) as CatalogObject.ModifierList | undefined) ?? {
+                id: info.modifierListId,
+                type: "MODIFIER_LIST",
+                isDeleted: true,
+            };
+            return buildModifierList(listObj, locationId, info);
         });
 
     return {
@@ -65,39 +70,25 @@ export function buildModifierList(obj: CatalogObject.ModifierList, locationId: s
     const options: ModifierOption[] = (obj.modifierListData?.modifiers ?? []).map((mod) => {
         const modifier = mod as CatalogObject.Modifier;
         const priceMoney = modifier.modifierData?.priceMoney;
+        const rules = resolveModifierOptionRules(modifier.modifierData ?? {}, info?.modifierOverrides?.find((override) => override.modifierId === modifier.id));
         return {
             id: modifier.id,
             name: modifier.modifierData?.name ?? undefined,
             priceCents: priceMoney ? Number(priceMoney.amount) : 0,
-            availability: modifierAvailability(modifier, locationId, info),
+            ...rules,
+            availability: modifierAvailability(modifier, locationId, rules.hiddenOnline),
         };
     });
 
-    const parseConstraint = (val: bigint | number | null | undefined): number | undefined => {
-        if (val === null || val === undefined) return undefined;
-        const num = Number(val);
-        return num >= 0 ? num : undefined;
-    };
-
-    const rawSelectionType = obj.modifierListData?.selectionType;
-    const selectionType =
-        rawSelectionType === "SINGLE" || rawSelectionType === "MULTIPLE"
-            ? rawSelectionType
-            : undefined;
-
-    // Both unset/-1 means inherit the list defaults. Otherwise Square treats
-    // negative/unset bounds as zero (optional / no maximum).
-    const inherits = (info?.minSelectedModifiers ?? -1) === -1 && (info?.maxSelectedModifiers ?? -1) === -1;
-    const min = parseConstraint(inherits ? obj.modifierListData?.minSelectedModifiers : info?.minSelectedModifiers) ?? 0;
-    const max = parseConstraint(inherits ? obj.modifierListData?.maxSelectedModifiers : info?.maxSelectedModifiers) ?? 0;
+    const rules = resolveModifierListRules(obj.modifierListData ?? {}, info);
+    if (obj.isDeleted || !obj.modifierListData) rules.configurationIssues.push({
+        code: "MISSING_MODIFIER_LIST", message: "An option group is missing or deleted in Square.",
+    });
 
     return {
         id: obj.id,
         name: obj.modifierListData?.name ?? undefined,
-        selectionType,
-        minSelectedModifiers: min,
-        maxSelectedModifiers: max,
-        enabled: info?.enabled !== false && !obj.isDeleted,
+        ...rules,
         options,
     };
 }

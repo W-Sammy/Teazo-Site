@@ -12,6 +12,7 @@ import Image from "next/image";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { availableMenuChoices } from "@/app/lib/storefront-catalog";
 import { checkCustomizerAvailability } from "@/app/lib/customizer-availability";
+import { defaultModifierSelections } from "@/app/lib/square-option-rules";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import type { ModifierList, ModifierOption } from "@/app/types/menu-item";
 import type { MenuItem } from "./menu-item-card";
@@ -84,38 +85,24 @@ function ItemCustomizerModalContent({
   const basePriceCents = selectedVariation?.priceCents ?? item.priceCents;
 
   // Selected modifier options: listId -> optionId[]
-  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, string[]>>(() => {
+  const [modifierChoices, setModifierChoices] = useState<Record<string, string[]>>(() => {
     const initial: Record<string, string[]> = {};
-    if (initialCartItem && initialCartItem.selectedModifiers.length > 0) {
+    if (initialCartItem) {
       for (const mod of initialCartItem.selectedModifiers) {
         if (!initial[mod.modifierListId]) {
           initial[mod.modifierListId] = [];
         }
         initial[mod.modifierListId].push(mod.optionId);
       }
-      for (const ml of item.modifiers || []) {
-        if (!initial[ml.id]) {
-          initial[ml.id] = [];
-        }
-      }
-      return initial;
-    }
-
-    for (const ml of item.modifiers || []) {
-      const minRequired = ml.minSelectedModifiers ?? 0;
-      if (minRequired >= 1 && ml.options.length > 0) {
-        // Sensible default: prefer regular/standard or zero-cost included option
-        const defaultOption =
-          ml.options.find((o) => /regular|100%|normal|standard/i.test(o.name || "")) ||
-          ml.options.find((o) => (o.priceCents ?? 0) === 0) ||
-          ml.options[0];
-        initial[ml.id] = [defaultOption.id];
-      } else {
-        initial[ml.id] = [];
-      }
     }
     return initial;
   });
+  // Recompute untouched defaults when the fresh catalog arrives. Explicit choices
+  // (including an empty selection in an edited cart line) are never overwritten.
+  const selectedModifiers = {
+    ...(initialCartItem ? {} : defaultModifierSelections(item.modifiers ?? [])),
+    ...modifierChoices,
+  };
 
   // Special instructions (max 150 characters)
   const [notes, setNotes] = useState<string>(() => initialCartItem?.notes ?? "");
@@ -127,9 +114,9 @@ function ItemCustomizerModalContent({
   );
 
   const removeUnavailableOptions = () => {
-    setSelectedModifiers((current) => Object.fromEntries(Object.entries(current).map(([listId, ids]) => [
+    setModifierChoices(Object.fromEntries(Object.entries(selectedModifiers).map(([listId, ids]) => [
       listId,
-      ids.filter((id) => item.modifiers?.some((group) => group.id === listId && group.options.some((option) => option.id === id))),
+      ids.filter((id) => item.modifiers?.some((group) => group.enabled !== false && group.id === listId && group.options.some((option) => option.id === id && option.availability?.available))),
     ])));
     setValidationError(null);
   };
@@ -137,7 +124,7 @@ function ItemCustomizerModalContent({
   // Compute live price
   let modifiersAddOnCents = 0;
   for (const [listId, optionIds] of Object.entries(selectedModifiers)) {
-    const ml = item.modifiers?.find((m) => m.id === listId);
+    const ml = item.modifiers?.find((m) => m.id === listId && m.enabled !== false);
     if (!ml) continue;
     for (const optId of optionIds) {
       const opt = ml.options.find((o) => o.id === optId);
@@ -152,7 +139,7 @@ function ItemCustomizerModalContent({
 
   // Modifier selection handlers
   const handleSingleSelect = (listId: string, optionId: string) => {
-    setSelectedModifiers((prev) => ({
+    setModifierChoices((prev) => ({
       ...prev,
       [listId]: [optionId],
     }));
@@ -160,26 +147,17 @@ function ItemCustomizerModalContent({
   };
 
   const handleMultiToggle = (listId: string, optionId: string, max?: number) => {
-    setSelectedModifiers((prev) => {
-      const current = prev[listId] || [];
-      const exists = current.includes(optionId);
-      if (exists) {
-        setValidationError(null);
-        return {
-          ...prev,
-          [listId]: current.filter((id) => id !== optionId),
-        };
-      }
-      if (max && max > 0 && current.length >= max) {
-        setValidationError(`You can select up to ${max} option${max === 1 ? "" : "s"} for this customization.`);
-        return prev;
-      }
-      setValidationError(null);
-      return {
-        ...prev,
-        [listId]: [...current, optionId],
-      };
-    });
+    const current = selectedModifiers[listId] || [];
+    const exists = current.includes(optionId);
+    if (!exists && max && max > 0 && current.length >= max) {
+      setValidationError(`You can select up to ${max} option${max === 1 ? "" : "s"} for this customization.`);
+      return;
+    }
+    setValidationError(null);
+    setModifierChoices((prev) => ({
+      ...prev,
+      [listId]: exists ? current.filter((id) => id !== optionId) : [...current, optionId],
+    }));
   };
 
   // Quantity stepper
@@ -200,31 +178,12 @@ function ItemCustomizerModalContent({
       return;
     }
 
-    // Validate required modifier lists
-    for (const ml of item.modifiers || []) {
-      const selected = selectedModifiers[ml.id] || [];
-      const min = ml.minSelectedModifiers ?? 0;
-      const max = ml.maxSelectedModifiers ?? 0;
-
-      if (max > 0 && selected.length > max) {
-        setValidationError(`Please select no more than ${max} options for "${ml.name || "Customization"}".`);
-        return;
-      }
-
-      if (min > 0 && selected.length < min) {
-        setValidationError(
-          `Please select ${min === 1 ? "an option" : `at least ${min} options`} for "${ml.name || "Customization"}".`
-        );
-        return;
-      }
-    }
-
     // Build flattened CartModifierChoice array
     const chosenModifiers: CartModifierChoice[] = [];
     let detectedSizeName: string | undefined;
 
     for (const [listId, optionIds] of Object.entries(selectedModifiers)) {
-      const ml = item.modifiers?.find((m) => m.id === listId);
+      const ml = item.modifiers?.find((m) => m.id === listId && m.enabled !== false);
       if (!ml) continue;
       const isSizeList = /size|cup\s*size/i.test(ml.name || "");
 
@@ -460,14 +419,14 @@ function ItemCustomizerModalContent({
             {/* Modifier Lists (Sweetness, Ice Level, Toppings, etc.) */}
             {item.modifiers && item.modifiers.length > 0 && (
               <div className="space-y-6">
-                {item.modifiers.map((modifierList: ModifierList) => {
+                {item.modifiers.filter((group) => group.enabled !== false).map((modifierList: ModifierList) => {
                   const isSingle =
                     modifierList.maxSelectedModifiers === 1;
                   const minRequired =
                     modifierList.minSelectedModifiers ?? 0;
                   const maxAllowed = modifierList.maxSelectedModifiers;
                   const currentSelected = selectedModifiers[modifierList.id] || [];
-                  const isSatisfied = currentSelected.length >= minRequired;
+                  const isSatisfied = currentSelected.length >= minRequired && (!maxAllowed || currentSelected.length <= maxAllowed);
 
                   return (
                     <fieldset key={modifierList.id} className="space-y-3">
@@ -485,15 +444,18 @@ function ItemCustomizerModalContent({
                                   : "bg-rose-50 text-rose-700"
                               }`}
                             >
-                              Required {minRequired === 1 ? "(1)" : `(min ${minRequired})`}
+                              Required (min {minRequired})
                             </span>
                           ) : (
                             <span className="text-[11px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                              Optional {maxAllowed && maxAllowed > 0 ? `(up to ${maxAllowed})` : ""}
+                              Optional
                             </span>
                           )}
                         </div>
                       </div>
+                      <p className="text-xs text-stone-500">
+                        {maxAllowed && maxAllowed > 0 ? `Choose up to ${maxAllowed}.` : "No selection limit."}
+                      </p>
 
                       {/* Options Grid */}
                       <div
@@ -501,7 +463,7 @@ function ItemCustomizerModalContent({
                         aria-label={modifierList.name || "Customization options"}
                         className="grid grid-cols-1 sm:grid-cols-2 gap-2"
                       >
-                        {modifierList.options.map((option: ModifierOption) => {
+                        {modifierList.options.filter((option) => option.availability?.available).map((option: ModifierOption) => {
                           const isOptionSelected = currentSelected.includes(option.id);
 
                           return (
@@ -510,10 +472,12 @@ function ItemCustomizerModalContent({
                               type="button"
                               role={isSingle ? "radio" : "checkbox"}
                               aria-checked={isOptionSelected}
+                              disabled={!availabilityChecked || (!isSingle && !isOptionSelected && !!maxAllowed && currentSelected.length >= maxAllowed)}
                               onClick={() => {
                                 if (isSingle) {
                                   if (minRequired === 0 && isOptionSelected) {
-                                    setSelectedModifiers((prev) => ({ ...prev, [modifierList.id]: [] }));
+                                    setModifierChoices((prev) => ({ ...prev, [modifierList.id]: [] }));
+                                    setValidationError(null);
                                   } else {
                                     handleSingleSelect(modifierList.id, option.id);
                                   }
@@ -521,7 +485,7 @@ function ItemCustomizerModalContent({
                                   handleMultiToggle(modifierList.id, option.id, maxAllowed);
                                 }
                               }}
-                              className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                              className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                 isOptionSelected
                                   ? "border-stone-900 bg-stone-900 text-white shadow-sm"
                                   : "border-stone-200 bg-white text-stone-800 hover:border-stone-400"
