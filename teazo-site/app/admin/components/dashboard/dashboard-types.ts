@@ -13,7 +13,7 @@ export const periodOptions: DashboardPeriodOption[] = [
   { value: "30-days", label: "30 days" },
 ];
 export const visitTypeOptions: DashboardVisitTypeOption[] = [
-  { value: "pages", label: "User pages" },
+  { value: "pages", label: "Website Pages" },
   { value: "menu-items", label: "Menu items" },
 ];
 export type DashboardSummary = { totalVisits: number; topItem: MenuItemMetric | undefined };
