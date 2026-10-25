@@ -4,9 +4,12 @@ import type {
   WebsiteContent,
   ContactHour,
   ContactContent,
+  CarouselImage,
 } from "@/app/types/website-content";
 import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
+import { toPublicUrl } from "@/app/lib/media";
+
 import { unstable_rethrow } from "next/navigation";
 import {
   isValidPhone,
@@ -53,6 +56,14 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "christmas", name: "Christmas", date: "12-25", closed: true },
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
+  carouselImages: [
+    { id: "default-drying-leaves", src: "/carousel_images/drying-leaves.jpg", alt: "Tea image 1", enabled: true },
+    { id: "default-picking-leaves", src: "/carousel_images/picking-leaves.jpg", alt: "Tea image 2", enabled: true },
+    { id: "default-spilled-tea", src: "/carousel_images/spilled-tea.jpg", alt: "Tea image 3", enabled: true },
+    { id: "default-tea-sort", src: "/carousel_images/tea-sort.jpg", alt: "Tea image 4", enabled: true },
+    { id: "default-tea-spoons", src: "/carousel_images/tea-spoons.jpg", alt: "Tea image 5", enabled: true },
+    { id: "default-rose-tea", src: "/carousel_images/rose-tea.jpg", alt: "Tea image 6", enabled: true },
+  ],
   contactFormEnabled: true,
   onlineOrderingEnabled: true,
 };
@@ -70,6 +81,7 @@ function cloneDefaultWebsiteContent(): WebsiteContent {
     address: { ...DEFAULT_WEBSITE_CONTENT.address },
     hours: DEFAULT_WEBSITE_CONTENT.hours.map((h) => ({ ...h })),
     holidays: DEFAULT_WEBSITE_CONTENT.holidays.map((h) => ({ ...h })),
+    carouselImages: (DEFAULT_WEBSITE_CONTENT.carouselImages ?? []).map((image) => ({ ...image })),
     contactFormEnabled: DEFAULT_WEBSITE_CONTENT.contactFormEnabled,
     onlineOrderingEnabled: DEFAULT_WEBSITE_CONTENT.onlineOrderingEnabled,
   };
@@ -114,6 +126,22 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+function normalizeHolidayDate(date: string): string {
+  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
+  // values from the database as well.
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
+}
+
+function isSavedCarouselImage(value: unknown): value is CarouselImage {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const image = value as Record<string, unknown>;
+
+  return typeof image.id === "string" && image.id.trim().length > 0 &&
+    typeof image.src === "string" &&
+    (image.src.startsWith("carousel/") || /^\/carousel_images\/[a-z0-9_.-]+\.(png|jpe?g|webp)$/i.test(image.src)) &&
+    typeof image.alt === "string" && typeof image.enabled === "boolean";
+}
 
 /**
  * Loads current website content from D1 if configured, otherwise falls back to memory.
@@ -190,7 +218,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     }>();
 
     const d1Copy = await prepare(
-      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', ?1)`
+      `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', 'home.carousel', ?1)`
     ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>();
 
     const d1Holidays = await prepare(
@@ -263,6 +291,27 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 
     if (d1Copy.results.length > 0) {
       for (const block of d1Copy.results) {
+        if (block.key === "home.carousel") {
+          try {
+            const savedImages: unknown = block.value === null ? [] : JSON.parse(block.value);
+            if (!Array.isArray(savedImages)) {
+              throw new Error("Saved carousel settings must be an array.");
+            }
+
+            const validImages = savedImages.filter(isSavedCarouselImage);
+            if (validImages.length !== savedImages.length) {
+              console.error("Skipped invalid entries in saved carousel settings.");
+            }
+            content.carouselImages = validImages.map((image) => ({
+              ...image,
+              src: image.src.startsWith("/carousel_images/") ? image.src : toPublicUrl(image.src),
+            }));
+
+          } catch (error) {
+            console.error("Could not load saved carousel images:", error);
+          }
+        }
+
         if (block.key === "home.story" && block.value) {
           content.story = block.value;
         } else if (block.key === "site.logo" && block.value) {

@@ -1,3 +1,4 @@
+import { resolveSquareLocationId } from "@/app/lib/square-location";
 import { squareClient } from "@/app/lib/square";
 import type { CatalogObject, Currency } from "square";
 import { buildMenuItemFromGetResponse } from "@/app/lib/square-helpers";
@@ -13,6 +14,8 @@ import { validateUpdateMenuItemBody } from "@/app/lib/menu-item-validators";
  * @returns 404 - Item not found
  * @returns 500 - Square API failure
  */
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: Request,
   ctx: RouteContext<"/api/square/products/[id]">,
@@ -25,21 +28,21 @@ export async function GET(
       includeRelatedObjects: true,
     });
 
-    const menuItem = buildMenuItemFromGetResponse(result);
+    const menuItem = buildMenuItemFromGetResponse(result, await resolveSquareLocationId());
 
     if (!menuItem) {
       return Response.json(
         { error: "Catalog item missing id" },
-        { status: 500 },
+        { status: 500, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    return Response.json(menuItem);
+    return Response.json(menuItem, { headers: { "Cache-Control": "no-store" } });
   } catch (error: unknown) {
     if (isSquare404(error)) {
       return Response.json(
         { error: "Product not found" },
-        { status: 404 },
+        { status: 404, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -47,7 +50,7 @@ export async function GET(
 
     return Response.json(
       { error: "Failed to fetch product" },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }
@@ -98,6 +101,7 @@ export async function PUT(
     }
 
     const body = validation.data;
+    const locationId = await resolveSquareLocationId();
 
     const existing = await squareClient.catalog.object.get({
       objectId: id,
@@ -236,7 +240,7 @@ export async function PUT(
       includeRelatedObjects: true,
     });
 
-    const menuItem = buildMenuItemFromGetResponse(getResult);
+    const menuItem = buildMenuItemFromGetResponse(getResult, locationId);
 
     if (!menuItem) {
       return updateError(
@@ -311,7 +315,7 @@ export async function DELETE(
     if (isSquare404(error)) {
       return Response.json(
         { error: "Product not found" },
-        { status: 404 },
+        { status: 404, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -319,7 +323,7 @@ export async function DELETE(
 
     return Response.json(
       { error: "Failed to delete product" },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

@@ -35,7 +35,7 @@ describe("toE164Phone", () => {
 });
 
 const customer = { displayName: "Test Customer", email: "test@example.com", phone: "(415) 555-0100" };
-const items = [{ variationId: "VAR1", quantity: 1 }];
+const items = [{ catalogObjectId: "ITEM1", variationId: "VAR1", quantity: 1 }];
 
 describe("validateCheckoutRequestBody", () => {
   it("accepts a valid ASAP order and returns the phone in E.164", () => {
@@ -45,12 +45,15 @@ describe("validateCheckoutRequestBody", () => {
       data: {
         customer: { ...customer, phone: "+14155550100" },
         pickupTiming: { type: "ASAP" },
-        items: [{ variationId: "VAR1", quantity: 1, notes: undefined, modifierOptionIds: undefined }],
+        items: [{ catalogObjectId: "ITEM1", variationId: "VAR1", quantity: 1, notes: undefined, modifierOptionIds: undefined }],
       },
     });
   });
 
   it.each([
+    ["missing parent item", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "VAR1", quantity: 1 }] }, "catalogObjectId"],
+    ["blank parent item", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: " ", variationId: "VAR1", quantity: 1 }] }, "catalogObjectId"],
+    ["missing size", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", quantity: 1 }] }, "variationId"],
     ["no customer", { pickupTiming: { type: "ASAP" }, items }, "Customer details are required."],
     ["a bad email", { customer: { ...customer, email: "nope" }, pickupTiming: { type: "ASAP" }, items }, "email"],
     ["a bad phone", { customer: { ...customer, phone: "555" }, pickupTiming: { type: "ASAP" }, items }, "phone"],
@@ -59,11 +62,11 @@ describe("validateCheckoutRequestBody", () => {
     ["a scheduled order with no time", { customer, pickupTiming: { type: "SCHEDULED" }, items }, "pickupAt"],
     ["a scheduled order with a bad time", { customer, pickupTiming: { type: "SCHEDULED", pickupAt: "soon" }, items }, "ISO-8601"],
     ["an empty cart", { customer, pickupTiming: { type: "ASAP" }, items: [] }, "at least one item"],
-    ["quantity 0", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "V", quantity: 0 }] }, "quantity"],
-    ["quantity 51", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "V", quantity: 51 }] }, "quantity"],
-    ["a fractional quantity", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "V", quantity: 1.5 }] }, "quantity"],
-    ["a note over 150 characters", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "V", quantity: 1, notes: "x".repeat(151) }] }, "notes"],
-    ["blank option IDs", { customer, pickupTiming: { type: "ASAP" }, items: [{ variationId: "V", quantity: 1, modifierOptionIds: [" "] }] }, "modifierOptionIds"],
+    ["quantity 0", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", variationId: "V", quantity: 0 }] }, "quantity"],
+    ["quantity 51", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", variationId: "V", quantity: 51 }] }, "quantity"],
+    ["a fractional quantity", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", variationId: "V", quantity: 1.5 }] }, "quantity"],
+    ["a note over 150 characters", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", variationId: "V", quantity: 1, notes: "x".repeat(151) }] }, "notes"],
+    ["blank option IDs", { customer, pickupTiming: { type: "ASAP" }, items: [{ catalogObjectId: "ITEM1", variationId: "V", quantity: 1, modifierOptionIds: [" "] }] }, "modifierOptionIds"],
     ["more than 50 lines", { customer, pickupTiming: { type: "ASAP" }, items: Array(51).fill(items[0]) }, "more than 50"],
     ["a body that is not an object", [], "JSON object"],
   ])("refuses %s", (_label, body, message) => {

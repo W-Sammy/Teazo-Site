@@ -199,44 +199,20 @@ export default function CartDrawer() {
   // Editing state for line items
   const [editingCartItem, setEditingCartItem] = useState<CartItem | null>(null);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
-  const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
-  const menuItemCacheRef = useRef<Record<string, MenuItem>>({});
-
-  const handleEditCartItem = async (cartItem: CartItem) => {
-    setEditingLoadingId(cartItem.cartItemId);
-    setErrorMessage(null);
-    try {
-      let menuItem = menuItemCacheRef.current[cartItem.catalogObjectId];
-      if (!menuItem) {
-        const res = await fetch(`/api/square/products/${cartItem.catalogObjectId}`);
-        if (!res.ok) {
-          throw new Error("Unable to load drink options from Square.");
-        }
-        const apiItem = await res.json();
-        menuItem = {
-          catalogObjectId: apiItem.catalogObjectId,
-          name: apiItem.name?.trim() || cartItem.name,
-          variationId: apiItem.variationId || null,
-          priceCents: apiItem.priceCents,
-          currency: apiItem.currency || "USD",
-          imageUrl: apiItem.imageUrl || cartItem.imageUrl || null,
-          categoryId: apiItem.categories?.[0]?.id || null,
-          categoryName: apiItem.categories?.[0]?.name || null,
-          description: apiItem.description,
-          modifiers: apiItem.modifiers || [],
-          variations: apiItem.variations || [],
-        };
-        menuItemCacheRef.current[cartItem.catalogObjectId] = menuItem;
-      }
-      setEditingCartItem(cartItem);
-      setEditingMenuItem(menuItem);
-      closeCart();
-    } catch (err) {
-      console.error("Failed to load item for editing:", err);
-      setErrorMessage("Could not load customization options for this drink.");
-    } finally {
-      setEditingLoadingId(null);
-    }
+  const handleEditCartItem = (cartItem: CartItem) => {
+    // The modal fetches the current item on every opening, including cart edits.
+    setEditingCartItem(cartItem);
+    setEditingMenuItem({
+      catalogObjectId: cartItem.catalogObjectId,
+      name: cartItem.name,
+      variationId: cartItem.variationId,
+      priceCents: cartItem.basePriceCents,
+      currency: "USD",
+      imageUrl: cartItem.imageUrl,
+      categoryId: null,
+      categoryName: null,
+    });
+    closeCart();
   };
 
   const asideRef = useRef<HTMLElement | null>(null);
@@ -520,6 +496,7 @@ export default function CartDrawer() {
           variationId: it.variationId,
           quantity: it.quantity,
           notes: it.notes?.trim() || undefined,
+          catalogObjectId: it.catalogObjectId,
           modifierOptionIds: it.selectedModifiers.map((m) => m.optionId),
         })),
         turnstileToken: turnstileToken ?? undefined,
@@ -803,10 +780,9 @@ export default function CartDrawer() {
                             <button
                               type="button"
                               onClick={() => handleEditCartItem(item)}
-                              disabled={editingLoadingId === item.cartItemId}
                               className="text-[11px] font-semibold text-[#c68f5d] hover:text-[#a06b3a] transition underline disabled:opacity-50"
                             >
-                              {editingLoadingId === item.cartItemId ? "Loading..." : "Edit"}
+                              Edit
                             </button>
 
                             <button

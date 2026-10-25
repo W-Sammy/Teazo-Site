@@ -144,7 +144,7 @@ export default async function Home() {
 
             {/*import image carousel*/}
                 <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
-                <ImageCarousel />
+                <ImageCarousel images={content.carouselImages ?? []} />
             </div> 
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">

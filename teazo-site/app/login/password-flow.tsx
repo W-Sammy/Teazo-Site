@@ -3,6 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Montserrat } from "next/font/google";
+
+// extra bold montserrat
+const boldMontserrat = Montserrat({
+    subsets: ['latin'],
+    weight: ['700'] // extra bold
+});
 
 type Purpose = "setup" | "reset";
 type View = "request" | "complete" | "success" | null;
@@ -216,7 +223,7 @@ function PasswordDialog({
           type="button"
           disabled={disabled}
           onClick={() => openRequest()}
-          className="cursor-pointer text-sm font-semibold hover:underline disabled:opacity-50"
+          className={`${boldMontserrat.className} cursor-pointer text-sm font-semibold hover:underline disabled:opacity-50`}
         >
           SET OR RESET PASSWORD
         </button>
