@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useRef,
 } from "react";
 
 import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
@@ -11,6 +12,7 @@ import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
+import { resendAdminInvitation } from "@/app/api/admin/settings/admins-api";
 
 // Coordinate the admin rows, add-user modal, deletion confirmation, and error alert.
 export default function AdminsTable() {
@@ -23,13 +25,19 @@ export default function AdminsTable() {
     useState("");
   const [adminToDelete, setAdminToDelete] =
     useState<Admin | null>(null);
+  const [resendingAdminId, setResendingAdminId] =
+    useState<string | null>(null);
+  const [invitationNotice, setInvitationNotice] =
+    useState("");
 
+const resendInFlight = useRef(false);
   // Delegate admin data, error state, and update operations to the shared hook.
   const {
     admins,
     canEdit,
     errorMessage,
     clearError,
+    setError,
     addAdmin,
     loadAdmins,
     deleteAdmin,
@@ -70,17 +78,25 @@ export default function AdminsTable() {
   }, [successMessage]);
 
   // Keep the form open unless the hook reports that adding the admin succeeded.
-  async function handleAddAdmin(
-    input: NewAdminInput,
-  ) {
+  async function handleAddAdmin(input: NewAdminInput) {
+    clearError();
+    setSuccessMessage("");
+    setInvitationNotice("");
+
     const result = await addAdmin(input);
 
-    if (result.success) {
-      setModalError("");
-      setShowModal(false);
-      setSuccessMessage("Invitation added successfully.");
-    } else {
+    if (!result.success) {
       setModalError(result.error);
+      return;
+    }
+
+    setModalError("");
+    setShowModal(false);
+
+    if (result.invitation.submitted) {
+      setSuccessMessage(result.invitation.message);
+    } else {
+      setInvitationNotice(result.invitation.message);
     }
   }
 
@@ -97,6 +113,41 @@ export default function AdminsTable() {
     const deleted = await deleteAdmin(adminToDelete);
     if (deleted) setAdminToDelete(null);
   }
+
+  async function handleResendInvitation(admin: Admin) {
+    if (
+      resendInFlight.current ||
+      !canEdit ||
+      !admin.canResendInvitation
+    ) {
+      return;
+    }
+
+    resendInFlight.current = true;
+    setResendingAdminId(admin.id);
+    clearError();
+    setSuccessMessage("");
+
+    try {
+      const result = await resendAdminInvitation(admin.id);
+
+      setInvitationNotice("");
+      setSuccessMessage(result.message);
+      await loadAdmins();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The invitation could not be resent.",
+      );
+
+      await loadAdmins();
+    } finally {
+      resendInFlight.current = false;
+      setResendingAdminId(null);
+    }
+  }
+
 
   return (
     <>
@@ -121,6 +172,22 @@ export default function AdminsTable() {
       )}
 
       <div className="w-full min-w-0 max-w-5xl">
+        {invitationNotice && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
+            <p>{invitationNotice}</p>
+
+            <button
+              type="button"
+              onClick={() => setInvitationNotice("")}
+              className="mt-2 cursor-pointer font-semibold underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {/* Desktop column headings */}
         {/* Keep these column widths aligned with the desktop grid in AdminRow. */}
         <div className="hidden grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
@@ -168,6 +235,10 @@ export default function AdminsTable() {
               onDelete={() =>
                 handleDeleteAdmin(admin)
               }
+              onResendInvitation={() => {
+                void handleResendInvitation(admin);
+              }}
+              isResending={resendingAdminId === admin.id}
             />
           ))}
         </div>
