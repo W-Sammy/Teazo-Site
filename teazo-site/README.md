@@ -20,6 +20,32 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Square ordering rules
+
+The Square client explicitly uses API version `2026-08-19` (SDK 45.1.0 or later),
+which exposes nested modifier relationships. Keep this version and the behavior
+in `app/lib/square-option-rules.ts` aligned when upgrading Square. Catalog list
+reads, fresh customizer reads, and checkout all resolve the same per-item rules.
+
+The supported catalog uses list modifiers with effective `allow_quantities`
+disabled. Enabled groups with repeated quantities, text modifiers, or nested
+modifiers block online ordering and display an actionable reason in the admin
+menu's Availability column. Disable the group on that drink or correct its
+configuration in Square Dashboard to restore ordering.
+
+Omitted per-item limits default to `-1`; both limits must be `-1` to inherit the
+group's bounds. Otherwise nonpositive bounds normalize to zero (optional for the
+minimum, unlimited for the maximum). Deprecated `selection_type` never makes a
+group required. Defaults and online visibility use Square's per-option overrides.
+See Square's [item modifier rules](https://developer.squareup.com/reference/square/objects/CatalogItemModifierListInfo)
+and [nested modifier guide](https://developer.squareup.com/docs/catalog-api/manage-nested-modifiers).
+
+Checkout lines must include the parent `catalogObjectId`, selected `variationId`,
+and `modifierOptionIds`. The server checks current membership and limits before
+creating a Payment Link; the resulting Square Order still uses the variation ID
+as its line item's catalog object ID. Run `npm test` for the rule, availability,
+catalog-response, and checkout regression tests.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

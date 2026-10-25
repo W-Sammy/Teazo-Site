@@ -224,9 +224,15 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000/
 The trailing `/` matters: `/admin/menu` and `/admin/events` build the request
 as `${NEXT_PUBLIC_BASE_URL}api/square/products`. Without these two the public
 pages still run, but `/api/square/*`, `/admin/menu` (and with it the PDF menu
-upload) and `/admin/events` fail. The Square client is fixed to Square's
-**sandbox**, and the sandbox catalog is shared by the whole team, so only
-create or delete test items, never other people's.
+upload) and `/admin/events` fail. Square defaults to **sandbox** when
+`SQUARE_ENVIRONMENT` is unset; no new settings are needed for sandbox checkout.
+The sandbox catalog is shared by the whole team, so only create or delete
+test items, never other people's. `SQUARE_ENVIRONMENT` accepts only `sandbox`
+or `production`; any other value (including an empty string) stops startup
+and the build. In sandbox, setting `SQUARE_LOCATION_ID` is optional: when unset,
+checkout discovers the first active location (or the first returned location if
+none is active) and caches its ID for the process. Production checkout requires an
+explicit `SQUARE_LOCATION_ID`. See §8.1 for going live.
 
 **The contact form, email and the bot check need no setup.** §2.5 shows how to
 try each of them, and how to see emails in a local inbox.
@@ -728,7 +734,11 @@ npx wrangler d1 execute teazo-db --local --command "UPDATE pending_r2_deletion S
 | `AUTH_SECRET` | your own random string | Sign-in and `/admin` (§2.3) |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | from Sammy | Sign-in and `/admin` (§2.3) |
 | `SQUARE_ACCESS_TOKEN` | the team's sandbox token | `/api/square/*`, `/admin/menu`, `/admin/events` |
-| `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000/` | `/admin/menu`, `/admin/events`, and the sign-in link in invite emails |
+| `SQUARE_ENVIRONMENT` | optional; defaults to `sandbox` | Selects Square's API environment. Only `sandbox` or `production`; any other value fails startup and the build |
+| `SQUARE_LOCATION_ID` | optional; a sandbox location ID | Checkout's store location. In sandbox, unset means discover a location from the configured Square account and cache its ID in memory. Production requires an explicit location ID |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | optional; the sandbox webhook subscription's signature key | Required for automatic menu refreshes from Square webhooks; secret |
+| `SQUARE_WEBHOOK_NOTIFICATION_URL` | optional; the exact HTTPS notification URL registered with that subscription | For example, your tunnel URL + `/api/square/webhooks`. Must match exactly for signature verification |
+| `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000/` | `/admin/menu`, `/admin/events`, checkout's post-payment redirect, and the sign-in link in invite emails |
 | `MAILPIT_URL` | `http://127.0.0.1:8025` (optional) | Sending email to Mailpit instead of the terminal |
 | `CONTACT_NOTIFY_TO` | optional | Where contact emails go. Under `npm run dev` it defaults to `owner@teazo.test`; a production build has no default |
 | `EMAIL_FROM`, `EMAIL_FROM_NAME` | optional | The sender. Defaults to `website@teazo.test` and "TEAZO website" |
@@ -1258,9 +1268,9 @@ will be a copy of Square, filled by a sync that doesn't exist yet. Whoever
 writes it:
 
 - Key every row by the Square id **and** `square_env` (`sandbox` or
-  `production`), because the two catalogs share no ids. The Square client in
-  `app/lib/square.ts` is fixed to the sandbox, so set `square_env` from
-  configuration, not from the client.
+  `production`), because the two catalogs share no ids. Use
+  `getSquareEnvironment()` from `app/lib/square-config.ts` so database records
+  match the Square client's configured environment.
 - Store `square_version`, so a stale price can be detected.
 - One `catalog_variation_cache` row per size, never just the first.
 - Never delete a `catalog_item_cache` or `catalog_category_cache` row: set
@@ -1385,14 +1395,38 @@ pages.
 | `R2_PUBLIC_BASE` | the production Worker URL + `/media` | the preview Worker URL + `/media` | |
 | `AUTH_SECRET` | a long random string | its own string | Secret |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | the same | Secret. The OAuth client must list `https://teazo-site.vercel.app/api/auth/callback/google`. Google allows no wildcards, and each commit's preview gets a new address, so a preview can sign in only at its branch URL (shown on the deployment's page in Vercel, like `https://teazo-site-git-<branch>-<team>.vercel.app`), and only after Sammy adds that URL's `/api/auth/callback/google` |
-| `SQUARE_ACCESS_TOKEN` | the sandbox token, for now | the same | Secret. The Square client is fixed to the sandbox |
-| `NEXT_PUBLIC_BASE_URL` | `https://teazo-site.vercel.app/` | the same | Trailing `/`. Also the sign-in link in invite emails. Each preview commit gets a new address, so previews use production's, and their `/admin/menu` and `/admin/events` read the product list through production |
+| `SQUARE_ENVIRONMENT` | `production` when going live | `sandbox` (or leave unset) | Defaults to `sandbox` regardless of Vercel's environment. Any other value fails startup and the build |
+| `SQUARE_ACCESS_TOKEN` | the shop's production Square access token | the team's sandbox token | Secret. Must match `SQUARE_ENVIRONMENT` |
+| `SQUARE_LOCATION_ID` | the shop's production Square location ID | a sandbox location ID, or leave unset to discover one | Required in production. Must belong to the account and environment selected above |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | the production webhook subscription's signature key | the sandbox webhook subscription's signature key | Secret. Use the subscription for the selected Square environment |
+| `SQUARE_WEBHOOK_NOTIFICATION_URL` | the live site's HTTPS URL + `/api/square/webhooks` | the preview's stable HTTPS branch URL + `/api/square/webhooks` | Must exactly match that subscription's notification URL, including any trailing slash |
+| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazo-site.vercel.app/` | the preview's stable branch URL with a trailing `/` | Used for catalog reads, checkout's post-payment redirect and invite links. Keep Preview pointed at its own deployment so its catalog matches its sandbox checkout |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | `1x00000000000000000000AA` | Public |
 | `TURNSTILE_SECRET_KEY` | the production widget's secret | `1x0000000000000000000000000000000AA` | Secret |
 | `BREVO_API_KEY` | the Brevo API key | leave unset | Secret. Unset means the deployment sends no email |
 | `EMAIL_FROM` | a sender address verified in Brevo | | Required whenever `BREVO_API_KEY` is set, or every email fails |
 | `EMAIL_FROM_NAME` | optional | | Defaults to "TEAZO website" |
 | `CONTACT_NOTIFY_TO` | the owner's inbox | | Required. Without it, contact messages are saved but nobody is emailed, and the logs say `CONTACT_NOTIFY_TO is not set` |
+
+**Going live with Square:** in the Square Developer Console, select the
+production environment and copy the production access token and the shop's
+location ID. In Vercel's Production settings, set `SQUARE_ENVIRONMENT=production`,
+`SQUARE_ACCESS_TOKEN` to that token, `SQUARE_LOCATION_ID` to that location ID,
+and `NEXT_PUBLIC_BASE_URL` to the live site's HTTPS URL with a trailing `/`.
+Under Production → Webhooks → Subscriptions in the Square Developer Console,
+create a subscription for `catalog.version.updated` pointing at the live
+site's `/api/square/webhooks` endpoint. Set `SQUARE_WEBHOOK_SIGNATURE_KEY` to
+that subscription's signature key and `SQUARE_WEBHOOK_NOTIFICATION_URL` to
+its exact notification URL. Sandbox and production use separate subscriptions;
+see Square's [production webhook setup](https://developer.squareup.com/docs/webhooks/movetoprod)
+and [signature verification](https://developer.squareup.com/docs/webhooks/step3validate).
+Redeploy after saving all six settings, then send a test notification from
+Square and confirm the endpoint returns 200. Missing either webhook setting
+returns 503 and prevents automatic menu refreshes; a mismatched signature key
+or notification URL causes signature verification to fail with 403.
+Keep Preview on sandbox with sandbox credentials, its own webhook subscription
+and its own site URL. These are deployment settings; a production Next.js
+build alone does not switch Square out of sandbox.
 
 Vercel sets `NODE_ENV`, `VERCEL`, `VERCEL_ENV` and
 `VERCEL_PROJECT_PRODUCTION_URL` itself; don't add them. `BREVO_SANDBOX=1`,

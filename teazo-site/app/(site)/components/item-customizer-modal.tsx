@@ -10,6 +10,10 @@ import React, {
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { availableMenuChoices } from "@/app/lib/storefront-catalog";
+import { checkCustomizerAvailability } from "@/app/lib/customizer-availability";
+import { defaultModifierSelections } from "@/app/lib/square-option-rules";
+import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import type { ModifierList, ModifierOption } from "@/app/types/menu-item";
 import type { MenuItem } from "./menu-item-card";
 import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
@@ -49,10 +53,16 @@ function ItemCustomizerModalContent({
   item,
   initialCartItem,
   onClose,
+  availabilityChecked,
+  availabilityError,
+  onRetryAvailability,
 }: {
   item: MenuItem;
   initialCartItem?: CartItem | null;
   onClose: () => void;
+  availabilityChecked: boolean;
+  availabilityError?: string;
+  onRetryAvailability: () => void;
 }) {
   const { addItem, updateItem, openCart } = useCart();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -68,57 +78,53 @@ function ItemCustomizerModalContent({
   const hasMultipleVariations = variations.length > 1;
 
   const [selectedVariationId, setSelectedVariationId] = useState<string>(() => {
-    return initialCartItem?.variationId || item.variationId || variations[0]?.id || "";
+    return variations.find((variation) => variation.id === initialCartItem?.variationId)?.id || item.variationId || variations[0]?.id || "";
   });
 
-  const selectedVariation = variations.find((v) => v.id === selectedVariationId) || variations[0];
+  const selectedVariation = variations.find((v) => v.id === selectedVariationId);
   const basePriceCents = selectedVariation?.priceCents ?? item.priceCents;
 
   // Selected modifier options: listId -> optionId[]
-  const [selectedModifiers, setSelectedModifiers] = useState<Record<string, string[]>>(() => {
+  const [modifierChoices, setModifierChoices] = useState<Record<string, string[]>>(() => {
     const initial: Record<string, string[]> = {};
-    if (initialCartItem && initialCartItem.selectedModifiers.length > 0) {
+    if (initialCartItem) {
       for (const mod of initialCartItem.selectedModifiers) {
         if (!initial[mod.modifierListId]) {
           initial[mod.modifierListId] = [];
         }
         initial[mod.modifierListId].push(mod.optionId);
       }
-      for (const ml of item.modifiers || []) {
-        if (!initial[ml.id]) {
-          initial[ml.id] = [];
-        }
-      }
-      return initial;
-    }
-
-    for (const ml of item.modifiers || []) {
-      const isSingle = ml.selectionType === "SINGLE" || ml.maxSelectedModifiers === 1;
-      const minRequired = ml.minSelectedModifiers ?? (isSingle ? 1 : 0);
-      if (minRequired >= 1 && ml.options.length > 0) {
-        // Sensible default: prefer regular/standard or zero-cost included option
-        const defaultOption =
-          ml.options.find((o) => /regular|100%|normal|standard/i.test(o.name || "")) ||
-          ml.options.find((o) => (o.priceCents ?? 0) === 0) ||
-          ml.options[0];
-        initial[ml.id] = [defaultOption.id];
-      } else {
-        initial[ml.id] = [];
-      }
     }
     return initial;
   });
+  // Recompute untouched defaults when the fresh catalog arrives. Explicit choices
+  // (including an empty selection in an edited cart line) are never overwritten.
+  const selectedModifiers = {
+    ...(initialCartItem ? {} : defaultModifierSelections(item.modifiers ?? [])),
+    ...modifierChoices,
+  };
 
   // Special instructions (max 150 characters)
   const [notes, setNotes] = useState<string>(() => initialCartItem?.notes ?? "");
 
   // Validation / Feedback banner
   const [validationError, setValidationError] = useState<string | null>(null);
+  const availability = checkCustomizerAvailability(
+    item, availabilityChecked, selectedVariationId, selectedModifiers, availabilityError,
+  );
+
+  const removeUnavailableOptions = () => {
+    setModifierChoices(Object.fromEntries(Object.entries(selectedModifiers).map(([listId, ids]) => [
+      listId,
+      ids.filter((id) => item.modifiers?.some((group) => group.enabled !== false && group.id === listId && group.options.some((option) => option.id === id && option.availability?.available))),
+    ])));
+    setValidationError(null);
+  };
 
   // Compute live price
   let modifiersAddOnCents = 0;
   for (const [listId, optionIds] of Object.entries(selectedModifiers)) {
-    const ml = item.modifiers?.find((m) => m.id === listId);
+    const ml = item.modifiers?.find((m) => m.id === listId && m.enabled !== false);
     if (!ml) continue;
     for (const optId of optionIds) {
       const opt = ml.options.find((o) => o.id === optId);
@@ -133,7 +139,7 @@ function ItemCustomizerModalContent({
 
   // Modifier selection handlers
   const handleSingleSelect = (listId: string, optionId: string) => {
-    setSelectedModifiers((prev) => ({
+    setModifierChoices((prev) => ({
       ...prev,
       [listId]: [optionId],
     }));
@@ -141,26 +147,17 @@ function ItemCustomizerModalContent({
   };
 
   const handleMultiToggle = (listId: string, optionId: string, max?: number) => {
-    setSelectedModifiers((prev) => {
-      const current = prev[listId] || [];
-      const exists = current.includes(optionId);
-      if (exists) {
-        setValidationError(null);
-        return {
-          ...prev,
-          [listId]: current.filter((id) => id !== optionId),
-        };
-      }
-      if (max && max > 0 && current.length >= max) {
-        setValidationError(`You can select up to ${max} option${max === 1 ? "" : "s"} for this customization.`);
-        return prev;
-      }
-      setValidationError(null);
-      return {
-        ...prev,
-        [listId]: [...current, optionId],
-      };
-    });
+    const current = selectedModifiers[listId] || [];
+    const exists = current.includes(optionId);
+    if (!exists && max && max > 0 && current.length >= max) {
+      setValidationError(`You can select up to ${max} option${max === 1 ? "" : "s"} for this customization.`);
+      return;
+    }
+    setValidationError(null);
+    setModifierChoices((prev) => ({
+      ...prev,
+      [listId]: exists ? current.filter((id) => id !== optionId) : [...current, optionId],
+    }));
   };
 
   // Quantity stepper
@@ -174,24 +171,11 @@ function ItemCustomizerModalContent({
 
   // Add to Cart
   const handleAddToCart = () => {
+    if (!availability.canAdd) return;
     const effectiveVariationId = selectedVariationId || item.variationId;
     if (!effectiveVariationId) {
       setValidationError("Unable to customize this drink: Missing size variation.");
       return;
-    }
-
-    // Validate required modifier lists
-    for (const ml of item.modifiers || []) {
-      const selected = selectedModifiers[ml.id] || [];
-      const isSingle = ml.selectionType === "SINGLE" || ml.maxSelectedModifiers === 1;
-      const min = ml.minSelectedModifiers ?? (isSingle ? 1 : 0);
-
-      if (min > 0 && selected.length < min) {
-        setValidationError(
-          `Please select ${min === 1 ? "an option" : `at least ${min} options`} for "${ml.name || "Customization"}".`
-        );
-        return;
-      }
     }
 
     // Build flattened CartModifierChoice array
@@ -199,7 +183,7 @@ function ItemCustomizerModalContent({
     let detectedSizeName: string | undefined;
 
     for (const [listId, optionIds] of Object.entries(selectedModifiers)) {
-      const ml = item.modifiers?.find((m) => m.id === listId);
+      const ml = item.modifiers?.find((m) => m.id === listId && m.enabled !== false);
       if (!ml) continue;
       const isSizeList = /size|cup\s*size/i.test(ml.name || "");
 
@@ -370,7 +354,7 @@ function ItemCustomizerModalContent({
             </div>
 
             {/* Validation Feedback Banner */}
-            {validationError && (
+            {(availability.message || validationError) && (
               <div
                 role="alert"
                 className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800"
@@ -378,12 +362,20 @@ function ItemCustomizerModalContent({
                 <svg className="h-5 w-5 flex-shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <p className={`${montserrat.className} font-medium`}>{validationError}</p>
+                <div className={`${montserrat.className} font-medium`}>
+                  <p>{availability.message || validationError}</p>
+                  {availabilityError && (
+                    <button type="button" onClick={onRetryAvailability} className="mt-2 underline">Try again</button>
+                  )}
+                  {availability.unavailableModifiers && (
+                    <button type="button" onClick={removeUnavailableOptions} className="mt-2 underline">Remove unavailable options</button>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Square Catalog Variations Selector (e.g. Regular vs Large) */}
-            {hasMultipleVariations && (
+            {(hasMultipleVariations || (variations.length > 0 && !selectedVariation)) && (
               <fieldset className="space-y-3">
                 <legend className={`${montserrat.className} flex items-center justify-between w-full text-sm font-bold uppercase tracking-wider text-stone-900`}>
                   <span>Size / Option</span>
@@ -427,15 +419,14 @@ function ItemCustomizerModalContent({
             {/* Modifier Lists (Sweetness, Ice Level, Toppings, etc.) */}
             {item.modifiers && item.modifiers.length > 0 && (
               <div className="space-y-6">
-                {item.modifiers.map((modifierList: ModifierList) => {
+                {item.modifiers.filter((group) => group.enabled !== false).map((modifierList: ModifierList) => {
                   const isSingle =
-                    modifierList.selectionType === "SINGLE" ||
                     modifierList.maxSelectedModifiers === 1;
                   const minRequired =
-                    modifierList.minSelectedModifiers ?? (isSingle ? 1 : 0);
+                    modifierList.minSelectedModifiers ?? 0;
                   const maxAllowed = modifierList.maxSelectedModifiers;
                   const currentSelected = selectedModifiers[modifierList.id] || [];
-                  const isSatisfied = currentSelected.length >= minRequired;
+                  const isSatisfied = currentSelected.length >= minRequired && (!maxAllowed || currentSelected.length <= maxAllowed);
 
                   return (
                     <fieldset key={modifierList.id} className="space-y-3">
@@ -453,15 +444,18 @@ function ItemCustomizerModalContent({
                                   : "bg-rose-50 text-rose-700"
                               }`}
                             >
-                              Required {minRequired === 1 ? "(1)" : `(min ${minRequired})`}
+                              Required (min {minRequired})
                             </span>
                           ) : (
                             <span className="text-[11px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                              Optional {maxAllowed && maxAllowed > 0 ? `(up to ${maxAllowed})` : ""}
+                              Optional
                             </span>
                           )}
                         </div>
                       </div>
+                      <p className="text-xs text-stone-500">
+                        {maxAllowed && maxAllowed > 0 ? `Choose up to ${maxAllowed}.` : "No selection limit."}
+                      </p>
 
                       {/* Options Grid */}
                       <div
@@ -469,7 +463,7 @@ function ItemCustomizerModalContent({
                         aria-label={modifierList.name || "Customization options"}
                         className="grid grid-cols-1 sm:grid-cols-2 gap-2"
                       >
-                        {modifierList.options.map((option: ModifierOption) => {
+                        {modifierList.options.filter((option) => option.availability?.available).map((option: ModifierOption) => {
                           const isOptionSelected = currentSelected.includes(option.id);
 
                           return (
@@ -478,14 +472,20 @@ function ItemCustomizerModalContent({
                               type="button"
                               role={isSingle ? "radio" : "checkbox"}
                               aria-checked={isOptionSelected}
+                              disabled={!availabilityChecked || (!isSingle && !isOptionSelected && !!maxAllowed && currentSelected.length >= maxAllowed)}
                               onClick={() => {
                                 if (isSingle) {
-                                  handleSingleSelect(modifierList.id, option.id);
+                                  if (minRequired === 0 && isOptionSelected) {
+                                    setModifierChoices((prev) => ({ ...prev, [modifierList.id]: [] }));
+                                    setValidationError(null);
+                                  } else {
+                                    handleSingleSelect(modifierList.id, option.id);
+                                  }
                                 } else {
                                   handleMultiToggle(modifierList.id, option.id, maxAllowed);
                                 }
                               }}
-                              className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                              className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                 isOptionSelected
                                   ? "border-stone-900 bg-stone-900 text-white shadow-sm"
                                   : "border-stone-200 bg-white text-stone-800 hover:border-stone-400"
@@ -600,7 +600,9 @@ function ItemCustomizerModalContent({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className={`${montserrat.className} flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#161616] px-5 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-[#DBAF82] active:scale-[0.99]`}
+                disabled={!availability.canAdd}
+                aria-busy={!availabilityChecked && !availabilityError}
+                className={`${montserrat.className} flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#161616] px-5 py-3.5 text-sm font-bold text-white shadow-md transition enabled:hover:bg-[#DBAF82] enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 <span>{initialCartItem ? "Update Drink" : "Add to Bag"}</span>
                 <span className="text-[#DBAF82] font-semibold">•</span>
@@ -614,10 +616,54 @@ function ItemCustomizerModalContent({
   );
 }
 
-/**
- * Top-level Customizer Modal.
- * Renders null when no item is selected.
- */
+/** Mounted afresh for every opening; preserve the form while availability refreshes. */
+function FreshItemCustomizer({ item, initialCartItem, onClose }: {
+  item: MenuItem;
+  initialCartItem?: CartItem | null;
+  onClose: () => void;
+}) {
+  const [result, setResult] = useState<{ item: ApiMenuItem | null; error?: string } | null>(null);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const response = await fetch(`/api/square/products/${encodeURIComponent(item.catalogObjectId)}`, {
+          cache: "no-store", signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Catalog unavailable");
+        const fresh: ApiMenuItem = await response.json();
+        const choices = availableMenuChoices(fresh);
+        if (!controller.signal.aborted) setResult({ item: choices });
+      } catch {
+        if (!controller.signal.aborted) setResult({ item: null, error: "Could not confirm availability. Please try again." });
+      }
+    })();
+    return () => controller.abort();
+  }, [item.catalogObjectId, retry]);
+
+  const fresh = result?.item;
+  return <ItemCustomizerModalContent
+    item={fresh ? {
+      ...item,
+      ...fresh,
+      name: fresh.name?.trim() || "Unnamed item",
+      variationId: fresh.variationId ?? null,
+      // Keep the page's validated image URL; availability is fetched independently.
+      imageUrl: item.imageUrl,
+    } : item}
+    availabilityChecked={!!fresh}
+    availabilityError={result?.error}
+    onRetryAvailability={() => {
+      setResult(null);
+      setRetry((current) => current + 1);
+    }}
+    initialCartItem={initialCartItem}
+    onClose={onClose}
+  />;
+}
+
+/** Top-level Customizer Modal. Renders null when no item is selected. */
 function emptySubscribe() {
   return () => {};
 }
@@ -638,7 +684,7 @@ export default function ItemCustomizerModal({
   if (!item || !isMounted || typeof document === "undefined") return null;
 
   return createPortal(
-    <ItemCustomizerModalContent
+    <FreshItemCustomizer
       key={initialCartItem ? initialCartItem.cartItemId : item.catalogObjectId}
       item={item}
       initialCartItem={initialCartItem}

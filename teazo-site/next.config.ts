@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 import { allowedHosts } from "@/app/lib/imageHosts";
+import { resolveSquareEnvironment } from "./app/lib/square-environment";
+
+// Fail before accepting requests, even if no Square route has loaded yet.
+resolveSquareEnvironment(process.env.SQUARE_ENVIRONMENT);
 
 // Local storage images are allowed only during development.
 const isDev = process.env.NODE_ENV === "development";

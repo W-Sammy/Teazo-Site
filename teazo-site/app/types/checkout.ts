@@ -38,6 +38,7 @@ export interface CartItem {
 }
 
 export interface CheckoutItemRequest {
+  catalogObjectId: string; // Parent Square Item ID, verified against variationId.
   variationId: string;
   quantity: number;
   notes?: string;
