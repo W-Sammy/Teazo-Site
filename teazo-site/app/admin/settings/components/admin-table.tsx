@@ -26,7 +26,7 @@ export default function AdminsTable() {
     useState<Admin | null>(null);
   const [resendingAdminId, setResendingAdminId] =
     useState<string | null>(null);
-  const [invitationNotice, setInvitationNotice] = 
+  const [invitationNotice, setInvitationNotice] =
     useState("");
 
 const resendInFlight = useRef(false);
@@ -146,7 +146,7 @@ const resendInFlight = useRef(false);
       setResendingAdminId(null);
     }
   }
-
+
 
   return (
     <>

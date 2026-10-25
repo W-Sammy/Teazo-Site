@@ -35,7 +35,7 @@ const adminSelect = `
             AND status IN ('active', 'invited')
             AND role_id IN (1, 2, 3)
           THEN 1
-          ELSE 0 
+          ELSE 0
         END AS canResendInvitation
     FROM admin_user
    WHERE deleted_at IS NULL`;

@@ -78,7 +78,7 @@ export async function requireAdminPage(
     access = await getAdminAccess(minRole);
   } catch(error) {
     unstable_rethrow(error)
-    
+
     console.error("Admin page authorization lookup failed.");
     redirect("/login?error=ServiceUnavailable");
   }

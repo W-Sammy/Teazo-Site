@@ -66,7 +66,7 @@ export function resendAdminInvitation(
   id: string,
 ): Promise<{ message: string }> {
   return request<{ message: string }>(
-    `/api/admin/settings/admins/${encodeURIComponent(id)}/resend-invitation`,
+    `/api/admin/admins/${encodeURIComponent(id)}/resend-invitation`,
     { method: "POST" },
   );
 }
