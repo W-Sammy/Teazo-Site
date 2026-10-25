@@ -21,8 +21,8 @@ function parseInput(form: FormData): EventInput {
   };
   const start = Date.parse(startAt);
   const end = Date.parse(endAt);
-  if (!name || !description || Number.isNaN(start) || Number.isNaN(end) || end < start) {
-    throw new Error("A name, description, and valid start/end dates are required.");
+  if (!name || Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    throw new Error("A name and valid start/end dates are required.");
   }
   return { name, description, startAt, endAt, appliesToAll, categoryIds: parseIds("categoryIds"), itemIds: parseIds("itemIds") };
 }

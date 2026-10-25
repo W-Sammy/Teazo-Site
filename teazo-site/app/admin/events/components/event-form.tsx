@@ -236,7 +236,7 @@ export default function EventForm({
     event.target.value = "";
   }
 
-  // Validate required text and date ordering before handing values to the parent.
+  // Validate required fields and date ordering before handing values to the parent.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -244,12 +244,9 @@ export default function EventForm({
 
     setError(null);
 
-    if (
-      !name.trim() ||
-      !description.trim()
-    ) {
+    if (!name.trim()) {
       setError(
-        "Enter an event name and description.",
+        "Enter an event name.",
       );
       return;
     }
@@ -332,7 +329,7 @@ export default function EventForm({
             className="mb-1 block text-sm text-gray-700"
             htmlFor="event-description"
           >
-            Description
+            Description <span className="text-gray-400">(optional)</span>
           </label>
 
           <textarea
