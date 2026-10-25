@@ -1,19 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, JSX } from "react"; 
+import { useCallback, useEffect, useMemo, useRef, useState, JSX } from "react";
+import type { CarouselImage } from "@/app/types/website-content";
 
-export default function ImageCarousel(): JSX.Element {
-    const images: string[] = [
-        "/carousel_images/drying-leaves.jpg",
-        "/carousel_images/picking-leaves.jpg",
-        "/carousel_images/spilled-tea.jpg",
-        "/carousel_images/tea-sort.jpg",
-        "/carousel_images/tea-spoons.jpg",
-        "/carousel_images/rose-tea.jpg"
-    ];
-    
-    const [index, setIndex] = useState<number>(0);
+type ImageCarouselProps = {
+    images: CarouselImage[];
+};
+
+export default function ImageCarousel({ images: carouselImages }: ImageCarouselProps): JSX.Element | null {
+    const images = useMemo(
+        () => (carouselImages ?? []).filter((image) => image.enabled && image.src.trim().length > 0),
+        [carouselImages],
+    );
+    const [selectedIndex, setIndex] = useState<number>(0);
+    const index = Math.min(selectedIndex, Math.max(0, images.length - 1));
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
     const dragStartX = useRef<number>(0);
@@ -28,15 +29,15 @@ export default function ImageCarousel(): JSX.Element {
         return offset; 
     };
 
-    const changeSlide = (newIndex: number): void => { 
-        if (newIndex === index || isAnimating.current) { 
+    const changeSlide = useCallback((newIndex: number): void => { 
+        if (newIndex < 0 || newIndex >= images.length || newIndex === index || isAnimating.current) { 
             return; 
         } 
         
         isAnimating.current = true; 
         setIndex(newIndex);
         setTimeout(() => { isAnimating.current = false; }, 500); 
-    };
+    }, [index, images.length]);
     
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>): void => {
         if (event.pointerType === "mouse" && event.button !== 0) {
@@ -99,6 +100,8 @@ export default function ImageCarousel(): JSX.Element {
 
     {/* Transition Timer */}    
     useEffect(() => {
+        if (images.length <= 1) 
+            return;
         const timer = setInterval(() => {
             if (!isDragging.current && !isAnimating.current) {
                 changeSlide( index === images.length - 1 ? 0 : index + 1);
@@ -106,7 +109,7 @@ export default function ImageCarousel(): JSX.Element {
         }, 5000);
     
         return () => clearInterval(timer);
-    }, [index]);
+    }, [index, images.length, changeSlide]);
     
 
     const prevSlide = (): void => {
@@ -117,6 +120,8 @@ export default function ImageCarousel(): JSX.Element {
         changeSlide( index === images.length - 1 ? 0 : index + 1);
     };
 
+    if (images.length === 0) 
+        return null;
     {/* Display */}
     return (
         <div
@@ -142,7 +147,7 @@ export default function ImageCarousel(): JSX.Element {
 
                 return ( 
                     <div 
-                        key={image} 
+                        key={image.id}
                         data-carousel-index={imageIndex}
                         className={` absolute ${width} ${height} rounded-xl overflow-hidden transition-all duration-500 ease-in-out `} 
                         style={{ transform: `translateX(${translateX}px)`, opacity: isVisible ? 1 : 0, zIndex, pointerEvents: isVisible ? "auto" : "none", }} 
@@ -151,12 +156,15 @@ export default function ImageCarousel(): JSX.Element {
                         onMouseLeave={() => setIsHovered(false) } 
                     > 
                         <Image 
-                            src={image} 
-                            alt={`Tea image ${ imageIndex + 1 }`} 
+                            src={image.src}
+                            alt={image.alt}
+                            unoptimized={image.src.startsWith("http://") || image.src.startsWith("https://")}
+                            // END carousel content edit 
                             fill 
                             sizes="400px" 
                             draggable={false} 
                             className="object-cover rounded-xl" 
+                            loading={isVisible ? "eager" : "lazy"}
                         /> 
                     </div> 
                 ); 

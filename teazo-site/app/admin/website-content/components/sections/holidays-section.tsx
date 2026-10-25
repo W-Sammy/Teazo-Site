@@ -58,7 +58,7 @@ export default function HolidaysSection({
       <button
         type="button"
         onClick={onAddHoliday}
-        className="cursor-pointer rounded-2xl bg-[#FFBDC7] px-[18px] py-2 text-[13px] font-semibold text-white hover:bg-[#F59AA3]"
+        className="cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7]"
       >
         New Holiday +
       </button>
