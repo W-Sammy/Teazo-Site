@@ -4,6 +4,7 @@ import { getEvents } from "./handlers/get-events";
 import type { EventCatalogItem } from "@/app/types/admin-event";
 import type { MenuItem } from "@/app/types/menu-item";
 import { requireAdminPage } from "@/app/lib/admin";
+import { ADMIN_CACHE_TAGS } from "@/app/lib/admin-cache";
 
 export const metadata: Metadata = {
   title: {

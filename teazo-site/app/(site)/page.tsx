@@ -49,7 +49,7 @@ const mediumMontserrat = Montserrat({
     weight: ['500']
 });
 
-function PhoneIcon() {
+function MailIcon() {
   return (
     <svg
       aria-hidden="true"
@@ -61,7 +61,8 @@ function PhoneIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M4.8 3.7h3.4l1.5 4.4-2 1.7a16 16 0 0 0 6.2 6.2l1.7-2 4.4 1.5v3.4A1.8 1.8 0 0 1 18.2 21C10.9 21 3 13.1 3 5.8A1.8 1.8 0 0 1 4.8 3.7Z" />
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m4 7 8 6 8-6" />
     </svg>
   );
 }
@@ -102,6 +103,8 @@ export default async function Home() {
                 <BubbleField />
             </div>
     
+            <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
+            
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
@@ -257,15 +260,15 @@ export default async function Home() {
                     </div>
         
                     <a
-                      href={phoneHref}
+                      href={emailHref}
                       className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
                     >
-                      <PhoneIcon />
-                      CALL TO ORDER
+                      <MailIcon />
+                      ORDER WITH US
                     </a>
                   </div>
                 </section>
-
+            </div>
     </main>
     </>
   )
