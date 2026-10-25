@@ -7,6 +7,7 @@ type AdminCredentials = {
   username: string;
   email_normalized: string;
   password_hash: string;
+  session_version: number;
 };
 export async function findAdminCredentials(
   email: string,
@@ -16,7 +17,7 @@ export async function findAdminCredentials(
   if (!normalizedEmail) return null;
 
   return prepare(
-    `SELECT id, username, email_normalized, password_hash
+    `SELECT id, username, email_normalized, password_hash, session_version
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL

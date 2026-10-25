@@ -1,4 +1,3 @@
-import { unstable_rethrow } from "next/navigation";
 import type {
   DayHours,
   SocialLink,
@@ -11,6 +10,7 @@ import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-h
 import { prepare, batch } from "@/app/lib/d1";
 import { toPublicUrl } from "@/app/lib/media";
 
+import { unstable_rethrow } from "next/navigation";
 import {
   isValidPhone,
   isValidEmail,
@@ -57,12 +57,12 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
   carouselImages: [
-    { id: "default-drying-leaves", src: "/carousel_images/Tea_Gather.jpg", alt: "Tea image 1", enabled: true },
-    { id: "default-picking-leaves", src: "/carousel_images/fresh_leaf.jpg", alt: "Tea image 2", enabled: true },
-    { id: "default-spilled-tea", src: "/carousel_images/leaf_basket.jpeg", alt: "Tea image 3", enabled: true },
-    { id: "default-tea-sort", src: "/carousel_images/dried_leaves.jpg", alt: "Tea image 4", enabled: true },
-    { id: "default-tea-spoons", src: "/carousel_images/dried_leaves.jpg", alt: "Tea image 5", enabled: true },
-    { id: "default-rose-tea", src: "/carousel_images/Tea_Leaf_Basket.jpeg", alt: "Tea image 6", enabled: true },
+    { id: "default-drying-leaves", src: "/carousel_images/drying-leaves.jpg", alt: "Tea image 1", enabled: true },
+    { id: "default-picking-leaves", src: "/carousel_images/picking-leaves.jpg", alt: "Tea image 2", enabled: true },
+    { id: "default-spilled-tea", src: "/carousel_images/spilled-tea.jpg", alt: "Tea image 3", enabled: true },
+    { id: "default-tea-sort", src: "/carousel_images/tea-sort.jpg", alt: "Tea image 4", enabled: true },
+    { id: "default-tea-spoons", src: "/carousel_images/tea-spoons.jpg", alt: "Tea image 5", enabled: true },
+    { id: "default-rose-tea", src: "/carousel_images/rose-tea.jpg", alt: "Tea image 6", enabled: true },
   ],
   contactFormEnabled: true,
   onlineOrderingEnabled: true,
@@ -341,7 +341,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     inMemoryContent = { ...content };
     return content;
   } catch (error) {
-    unstable_rethrow(error);
+    unstable_rethrow(error)
     console.error("Failed to fetch website content from D1:", error);
     return inMemoryContent;
   }

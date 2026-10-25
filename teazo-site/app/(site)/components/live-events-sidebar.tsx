@@ -1,0 +1,156 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+
+import type { AdminEvent } from "@/app/types/admin-event";
+import EventModal from "@/app/components/event-modal";
+import { formatEventDate } from "@/app/lib/event-date";
+
+type LiveEventsSidebarProps = {
+  events: AdminEvent[];
+};
+
+function formatEventDuration(event: AdminEvent) {
+  return `${formatEventDate(event.startAt)} – ${formatEventDate(event.endAt)}`;
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen) sidebarRef.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || selectedEvent) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node) || sidebarRef.current?.contains(target) || toggleRef.current?.contains(target)) return;
+      if (sidebarRef.current?.contains(document.activeElement)) {
+        toggleRef.current?.focus({ preventScroll: true });
+      }
+      setIsOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsOpen(false);
+      toggleRef.current?.focus({ preventScroll: true });
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, selectedEvent]);
+
+  if (events.length === 0) return null;
+
+  function toggleEvents() {
+    setIsOpen((open) => !open);
+    setHasBeenOpenedByUser(true);
+  }
+
+  return (
+    <>
+      <aside
+        ref={sidebarRef}
+        id="live-events-sidebar"
+        aria-label="Live events"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        className={`fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 sm:right-6 sm:max-w-[calc(100vw-3rem)] ${
+          isOpen ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-3 scale-95 opacity-0"
+        }`}
+      >
+        <div className="max-h-[min(40rem,calc(100dvh-12rem))] overflow-y-auto overscroll-contain rounded-2xl border border-[#eadbd6] bg-[#fffafa] shadow-[0_18px_50px_rgba(62,35,30,0.2)]">
+          <div className="flex items-center justify-between bg-[#3c2924] px-5 py-3 text-white">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em]">Happening now</p>
+              <h2 className="mt-1 text-xl font-bold">Live events</h2>
+            </div>
+            <span className="rounded-full bg-white/25 px-2.5 py-1 text-sm font-bold" aria-label={`${events.length} live events`}>
+              {events.length}
+            </span>
+          </div>
+
+          <div className="space-y-4 p-4">
+            {events.map((event) => (
+              <button
+                key={event.id}
+                type="button"
+                disabled={!isOpen}
+                onClick={() => setSelectedEvent(event)}
+                aria-label={`${event.name}. ${formatEventDuration(event)}. View event details`}
+                className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
+              >
+                <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#f4e9e4]">
+                  <Image
+                    src={event.imageUrl}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) calc(100vw - 4rem), 320px"
+                    className="object-cover transition duration-300 group-enabled:group-hover:scale-105"
+                    unoptimized={event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("data:")}
+                  />
+                </div>
+                <div className="px-4 py-3">
+                  <h3 className="font-bold text-[#3c2924]">{event.name}</h3>
+                  <p className="mt-1 text-xs font-medium text-[#9b7065]">{formatEventDuration(event)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+
+      <button
+        ref={toggleRef}
+        type="button"
+        onClick={toggleEvents}
+        aria-expanded={isOpen}
+        aria-controls="live-events-sidebar"
+        aria-label={isOpen ? "Close live events" : `Show live events${!hasBeenOpenedByUser ? `, ${events.length} live events` : ""}`}
+        className="fixed bottom-5 right-4 z-50 flex h-14 items-center gap-2 rounded-full bg-[#3c2924] px-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_8px_25px_rgba(62,35,30,0.28)] transition hover:bg-[#D9AE81] focus:outline-none focus:ring-4 focus:ring-[#D9AE81]/40 sm:right-6"
+      >
+        {isOpen ? (
+          <CloseIcon />
+        ) : (
+          <Image
+            src="/admin_icons/admin_svg/teazo_event_icon.svg"
+            alt=""
+            aria-hidden="true"
+            width={24}
+            height={24}
+            className="h-6 w-6 object-contain"
+          />
+        )}
+        <span className="hidden sm:inline">{isOpen ? "Close" : "Events"}</span>
+        {!hasBeenOpenedByUser && (
+          <span aria-hidden="true" className="absolute -right-2 -top-2 flex h-7 min-w-7 items-center justify-center rounded-full bg-[#B85F66] px-1 text-xs font-bold leading-none tracking-normal text-white shadow-md">
+            {events.length}
+          </span>
+        )}
+      </button>
+    </>
+  );
+}

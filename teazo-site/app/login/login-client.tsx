@@ -4,9 +4,9 @@ import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 
 // import font & bubbles
 import { Montserrat, Cabin_Sketch } from "next/font/google";
+import PasswordFlow from "./password-flow";
 import { BubbleField } from "@/app/components/bubble-field";
 
-import Link from "next/link";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Suspense, useState } from "react";
@@ -173,15 +173,10 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             >
               {isSubmitting ? "SIGNING IN…" : "SIGN IN"}
             </button>
-
-            {/* [!] Needs to be update once account administrative workflow has been developed */}
-            <Link
-              href="/404"
-              className={`${boldMontserrat.className} text-center text-[14px] tracking-[0.07em] text-black hover:underline`}
-            >
-              FORGOT PASSWORD?
-            </Link>
           </form>
+          <Suspense fallback={<p>Loading...</p>}>
+            <PasswordFlow initialEmail={email} disabled={isSubmitting} />
+          </Suspense>
         </div>
 
         {/* Google SSO container */}
