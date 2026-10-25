@@ -1,6 +1,9 @@
 import { requireAdminApi } from "@/app/lib/admin";
 import { createSettingsAdmin, listSettingsAdmins } from "@/app/lib/queries/settings";
 import type { NewAdminInput } from "@/app/types/admin-perms";
+import { sendAdminInvite } from "@/app/lib/admin-invite";
+
+export const runtime = "nodejs";
 
 function errorResponse(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -33,9 +36,62 @@ export async function POST(request: Request) {
       return errorResponse("You do not have permission to add admins.", 403);
     }
     const input = await request.json() as NewAdminInput;
+
     if (!input.username?.trim() || !input.email?.trim()) return errorResponse("Username and email are required.", 400);
     if (![1, 2, 3].includes(input.role)) return errorResponse("Invalid admin role.", 400);
-    return Response.json({ admin: await createSettingsAdmin(input) }, { status: 201 });
+
+    const admin = await createSettingsAdmin(input);
+
+  const outcome = await sendAdminInvite({
+    adminId: admin.id,
+    email: admin.email,
+    username: admin.username,
+    role: admin.role,
+    canManageAdmins: admin.canManageAdmins,
+    invitedBy: access.admin.username,
+  });
+
+  const submitted =
+    outcome === "sent" && process.env.BREVO_SANDBOX !== "1";
+
+  let message: string;
+
+  if (submitted) {
+    message =
+      "Admin account created. Invitation submitted for delivery.";
+  } else if (outcome === "printed") {
+    message =
+      "Admin account created. The invitation was printed in the server terminal; no email was sent.";
+  } else if (outcome === "captured") {
+    message =
+      "Admin account created. The invitation is available in the local Mailpit inbox.";
+  } else if (
+    outcome === "sent" &&
+    process.env.BREVO_SANDBOX === "1"
+  ) {
+    message =
+      "Admin account created. Brevo sandbox mode is enabled, so no email was delivered.";
+  } else {
+    message =
+      "Admin account created, but the invitation could not be sent. Open this admin's three-dot menu and choose Resend Invitation to retry.";
+  }
+
+  return Response.json(
+    {
+      admin,
+      invitation: {
+        submitted,
+        message,
+      },
+    },
+    {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+
   } catch (error) {
     console.error("Could not create admin:", error);
     return errorResponse("The admin could not be added. The email may already exist.", 400);

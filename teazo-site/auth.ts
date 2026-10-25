@@ -51,6 +51,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: admin.id,
             name: admin.username,
             email: admin.email_normalized,
+            adminId: admin.id,
+            sessionVersion: admin.session_version,
           };
         } catch {
           console.error("Credentials sign-in verification failed.");
@@ -94,6 +96,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Use the verified, normalized Google email in the session.
         user.email = email;
+        user.adminId = admin.id;
+        user.sessionVersion = admin.session_version;
 
         return true;
       } catch {
@@ -106,9 +110,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     jwt({ token, user }) {
-      // user is supplied during initial sign-in.
-      if (user?.email) {
+      // user is supplied during a new sign-in.
+      if (user) {
+        if (
+          typeof user.email !== "string" ||
+          typeof user.adminId !== "string" ||
+          typeof user.sessionVersion !== "number"
+        ) {
+          throw new Error("Admin session information is incomplete.");
+        }
+
         token.email = normalizeEmail(user.email);
+        token.adminId = user.adminId;
+        token.sessionVersion = user.sessionVersion;
       }
 
       return token;
@@ -118,6 +132,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user && typeof token.email === "string") {
         session.user.email = token.email;
       }
+
+      session.adminId =
+        typeof token.adminId === "string"
+          ? token.adminId
+          : undefined;
+
+      session.sessionVersion =
+        typeof token.sessionVersion === "number"
+          ? token.sessionVersion
+          : undefined;
 
       return session;
     },

@@ -5,6 +5,14 @@ export type AdminsResponse = {
   canEdit: boolean;
 };
 
+export type CreateAdminResponse = {
+  admin: Admin;
+  invitation: {
+    submitted: boolean;
+    message: string;
+  };
+};
+
 async function request<T>(input: RequestInfo, init?: RequestInit, unwrap = true): Promise<T> {
   const response = await fetch(input, {
     ...init,
@@ -23,11 +31,17 @@ export function fetchAdmins(): Promise<AdminsResponse> {
   return request<AdminsResponse>("/api/admin/settings/admins", { cache: "no-store" }, false);
 }
 
-export function createAdmin(input: NewAdminInput): Promise<Admin> {
-  return request<Admin>("/api/admin/settings/admins", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+export function createAdmin(
+  input: NewAdminInput,
+): Promise<CreateAdminResponse> {
+  return request<CreateAdminResponse>(
+    "/api/admin/settings/admins",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+    false,
+  );
 }
 
 export function updateAdminRole(id: string, role: AdminRole): Promise<Admin> {
@@ -46,4 +60,13 @@ export function updateManageAdminsPermission(id: string, canManageAdmins: boolea
 
 export async function removeAdmin(id: string): Promise<void> {
   await request<unknown>(`/api/admin/settings/admins/${id}`, { method: "DELETE" });
+}
+
+export function resendAdminInvitation(
+  id: string,
+): Promise<{ message: string }> {
+  return request<{ message: string }>(
+    `/api/admin/${encodeURIComponent(id)}/resend-invitation`,
+    { method: "POST" },
+  );
 }

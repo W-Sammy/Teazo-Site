@@ -1,4 +1,3 @@
-import { unstable_rethrow } from "next/navigation";
 import type {
   DayHours,
   SocialLink,
@@ -8,6 +7,7 @@ import type {
 } from "@/app/types/website-content";
 import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
+import { unstable_rethrow } from "next/navigation";
 import {
   isValidPhone,
   isValidEmail,
@@ -292,7 +292,7 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     inMemoryContent = { ...content };
     return content;
   } catch (error) {
-    unstable_rethrow(error);
+    unstable_rethrow(error)
     console.error("Failed to fetch website content from D1:", error);
     return inMemoryContent;
   }

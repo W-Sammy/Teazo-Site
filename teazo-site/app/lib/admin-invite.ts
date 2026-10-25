@@ -1,25 +1,23 @@
 /**
- * The email someone gets when an admin adds them in Settings (TZ-367).
+ * Invitation email for newly added admins.
  *
- * Sign-in is Google only, so the invite says where to sign in and to use
- * exactly this address. When password login exists, the set-password link
- * belongs in this email.
+ * Includes a single-use password setup link, assigned access,
+ * and Google sign-in as an alternative.
  *
- * Call it once the admin_user row is saved, inside after() so the admin panel
- * doesn't wait on the email provider:
+ * Call only after the admin account has been saved and
+ * the inviting user's permissions have been checked.
  *
- *   after(() => sendAdminInvite({ email, username, role, invitedBy: viewer.username }));
- *
- * It never throws. A failed email is logged, and the new admin can still sign
- * in, so a person can always be told the same thing another way.
- *
- * SERVER ONLY.
+ * Delivery failures preserve the newly created account.
  */
 import "server-only";
 import type { AdminRole } from "./admin-whitelist";
 import { sendEmail, type SendOutcome } from "./email";
+import { applicationUrl } from "./admin-password-email";
+import { createPasswordToken } from "./admin-password-tokens";
 
 export type AdminInvite = {
+  /** ID of the account that was successfully saved. */
+  adminId: string;
   /** The address that was added. It must be the Google account they sign in with. */
   email: string;
   username: string;
@@ -30,7 +28,11 @@ export type AdminInvite = {
   invitedBy?: string;
 };
 
-const ROLE_LABELS: Record<AdminRole, string> = { 1: "Owner", 2: "Can Edit", 3: "Can View" };
+const ROLE_LABELS: Record<AdminRole, string> = {
+  1: "Owner",
+  2: "Can Edit",
+  3: "Can View",
+};
 
 const escapeHtml = (value: string) =>
   value
@@ -40,58 +42,106 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-/** Where the site lives, for the sign-in link. */
-function siteUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_BASE_URL;
-  if (configured) return configured.replace(/\/+$/, "");
-  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  if (production) return `https://${production}`;
-  return "http://localhost:3000";
-}
 
 /** The email itself. Pure, so it can be tested without a server. */
-export function buildAdminInvite(invite: AdminInvite, site: string) {
-  const loginUrl = `${site}/login`;
-  const who = invite.invitedBy ? `${invite.invitedBy} added you` : "You've been added";
+export function buildAdminInvite(invite: AdminInvite, site: string, setupUrl: string,) {
+  const loginUrl = new URL("/login", site).toString();
+
+  const who = invite.invitedBy
+    ? `${invite.invitedBy} added you`
+    : "You've been added";
+
   const access = ROLE_LABELS[invite.role];
-  const manages = invite.role === 2 && invite.canManageAdmins ? " You can also add and remove other admins." : "";
+
+  const manages =
+    invite.role === 2 && invite.canManageAdmins
+      ? " You can also add and remove other admins."
+      : "";
+
+  const introduction =
+    `${who} as an admin of the TEAZO website, ` +
+    `with ${access} access.${manages}`;
 
   const text = [
     `Hi ${invite.username},`,
     "",
-    `${who} as an admin of the TEAZO website, with ${access} access.${manages}`,
+    introduction,
     "",
-    "To sign in:",
-    `1. Go to ${loginUrl}`,
-    `2. Choose "Continue with Google" and use this email address: ${invite.email}`,
+    "Create your password:",
+    setupUrl,
     "",
-    `If ${invite.email} isn't a Google account yet, you can make it one at https://accounts.google.com/signup by choosing to use your existing email address.`,
+    "This link expires in 24 hours and can be used only once.",
     "",
-    "If you weren't expecting this, you can ignore this email.",
+    `After creating your password, sign in at ${loginUrl}`,
+    `using this email address: ${invite.email}`,
+    "",
+    "Alternatively, if this email is associated with a Google account,",
+    'choose "Continue with Google" on the login page.',
+    "",
+    "If the setup link expires, choose Set or reset password",
+    "on the login page to request another link.",
+    "",
+    "If you weren't expecting this invitation, you can ignore it.",
   ].join("\n");
 
   const html = [
     '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#2b211d">',
     `<p>Hi ${escapeHtml(invite.username)},</p>`,
-    `<p>${escapeHtml(who)} as an admin of the TEAZO website, with <strong>${access}</strong> access.${manages}</p>`,
-    "<p>To sign in:</p>",
-    "<ol>",
-    `<li>Go to <a href="${escapeHtml(loginUrl)}">${escapeHtml(loginUrl)}</a></li>`,
-    `<li>Choose <strong>Continue with Google</strong> and use this email address: <strong>${escapeHtml(invite.email)}</strong></li>`,
-    "</ol>",
-    `<p>If ${escapeHtml(invite.email)} isn't a Google account yet, you can make it one at <a href="https://accounts.google.com/signup">accounts.google.com/signup</a> by choosing to use your existing email address.</p>`,
-    '<p style="color:#6b5f58">If you weren\'t expecting this, you can ignore this email.</p>',
+    `<p>${escapeHtml(introduction)}</p>`,
+    `<p><a href="${escapeHtml(setupUrl)}">Create your password</a></p>`,
+    "<p>This link expires in 24 hours and can be used only once.</p>",
+    `<p>After creating your password, <a href="${escapeHtml(loginUrl)}">sign in</a> using <strong>${escapeHtml(invite.email)}</strong>.</p>`,
+    "<p>Alternatively, if this email is associated with a Google account, choose <strong>Continue with Google</strong> on the login page.</p>",
+    "<p>If the setup link expires, choose <strong>Set or reset password</strong> on the login page to request another link.</p>",
+    "<p>If you weren't expecting this invitation, you can ignore it.</p>",
     "</div>",
   ].join("");
 
-  return { subject: "You've been added as an admin of the TEAZO website", text, html };
+  return {
+    subject: "You've been added as an admin of the TEAZO website",
+    text,
+    html,
+  };
 }
 
-export async function sendAdminInvite(invite: AdminInvite): Promise<SendOutcome | "failed"> {
+export async function sendAdminInvite(
+  invite: AdminInvite,
+): Promise<SendOutcome | "failed"> {
   try {
-    return await sendEmail({ to: invite.email, ...buildAdminInvite(invite, siteUrl()) });
+    const site = applicationUrl();
+    const setupLink = new URL("/login", site);
+
+    // This helper verifies that the account is eligible
+    // and does not already have a password.
+    const created = await createPasswordToken(
+      invite.adminId,
+      "setup",
+    );
+
+    if (!created) {
+      return "skipped";
+    }
+
+    setupLink.searchParams.set("passwordAction", "setup");
+    setupLink.searchParams.set("token", created.token);
+
+    return await sendEmail({
+      to: invite.email,
+      ...buildAdminInvite(invite, site, setupLink.toString()),
+    });
   } catch (error) {
-    console.error("An admin was added, but the invite email failed:", error);
+    // // Do not log tokens, email contents, or provider payloads.
+    // console.error("An admin was added, but the invite email failed.");
+
+    if (process.env.NODE_ENV === "development") {
+    console.error(
+      "Admin invitation failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+    } else {
+      console.error("Admin invitation failed.");
+    }
+
     return "failed";
   }
 }

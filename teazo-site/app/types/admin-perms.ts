@@ -6,6 +6,7 @@ export interface Admin {
   email: string;
   role: AdminRole;
   canManageAdmins: boolean;
+  canResendInvitation: boolean;
 }
 
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {

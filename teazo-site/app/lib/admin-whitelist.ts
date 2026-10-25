@@ -9,6 +9,7 @@ export type Admin = {
   username: string;
   role_id: AdminRole;
   can_invite_users: number;
+  session_version: number;
 };
 
 export function normalizeEmail(email: string): string {
@@ -24,7 +25,7 @@ export async function findAuthorizedAdmin(
   if (!normalizedEmail) return null;
 
   return prepare(
-    `SELECT id, username, role_id, can_invite_users
+    `SELECT id, username, role_id, can_invite_users, session_version
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL

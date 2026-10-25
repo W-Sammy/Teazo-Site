@@ -20,6 +20,8 @@ type AdminRowProps = {
   ) => void;
   onToggleInvite: () => void;
   onDelete: () => void;
+  onResendInvitation: () => void;
+  isResending: boolean;
 };
 
 export function AdminRow({
@@ -28,10 +30,15 @@ export function AdminRow({
   onRoleChange,
   onToggleInvite,
   onDelete,
+  onResendInvitation,
+  isResending,
 }: AdminRowProps) {
   // Owners receive a fixed role label and do not get a delete action in this row.
   const isOwner =
     admin.role === OWNER_ROLE;
+
+  const showActions =
+    canEdit && (!isOwner || admin.canResendInvitation);
 
   // Use the listed admin's role to determine the invitation control's availability.
   const canManageAdmins =
@@ -128,15 +135,14 @@ export function AdminRow({
       </div>
 
       {/* Actions */}
-      {/* Preserve an empty action column for owners on desktop, but hide it on mobile. */}
       <div
         className={
-          isOwner
-            ? "hidden md:block"
-            : "flex min-w-0 items-center justify-between gap-3 md:block"
+          showActions
+            ? "flex min-w-0 items-center justify-between gap-3 md:block"
+            : "hidden md:block"
         }
       >
-        {canEdit && !isOwner && (
+        {showActions && (
           <>
             <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
               Actions
@@ -144,7 +150,13 @@ export function AdminRow({
 
             <AdminActions
               username={admin.username}
-              onDelete={onDelete}
+              onDelete={!isOwner ? onDelete : undefined}
+              onResendInvitation={
+                admin.canResendInvitation
+                  ? onResendInvitation
+                  : undefined
+              }
+              isResending={isResending}
             />
           </>
         )}
