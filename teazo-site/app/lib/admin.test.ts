@@ -1,3 +1,11 @@
+/**
+ * Tests server-side authorization for admin pages and APIs.
+ *
+ * Auth.js sessions and D1 admin records are mocked to verify that stale
+ * sessions, removed admins, insufficient permissions, and cross-origin
+ * writes are rejected. No live authentication provider is used.
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { auth } from "@/auth";
@@ -35,6 +43,7 @@ vi.mock("./admin-whitelist", () => ({
   findAuthorizedAdmin: vi.fn(),
 }));
 
+// Matching fixture: the session and D1 record share admin ID and version.
 const databaseAdmin = {
   id: "admin-id",
   username: "test admin",
@@ -83,6 +92,7 @@ describe("Admin session authorization", () => {
     );
   });
 
+  // Revalidate the Auth.js session against the current D1 record.
   it("allows a session matching the database version", async () => {
     const admin = await getAdmin(3);
 
@@ -107,6 +117,7 @@ describe("Admin session authorization", () => {
     expect(await getAdmin(3)).toBeNull();
   });
 
+  // Missing session claims must not grant admin access.
   it("rejects sessions missing sessionVersion", async () => {
     vi.mocked(auth).mockResolvedValueOnce({
       user: { email: "admin@example.com" },
@@ -151,6 +162,7 @@ describe("Admin session authorization", () => {
     }
   });
 
+  // Password changes bump session_version to revoke older JWTs.
   it("rejects stale JWT sessions on protected API routes", async () => {
     vi.mocked(auth).mockResolvedValueOnce(
       session(2) as never,
@@ -175,6 +187,7 @@ describe("Admin session authorization", () => {
     ).rejects.toThrow("REDIRECT:/login");
   });
 
+  // API write guards enforce server-side permissions and origin checks.
   it("rejects insufficient Admin roles", async () => {
     vi.mocked(findAuthorizedAdmin).mockResolvedValueOnce({
       ...databaseAdmin,
@@ -215,6 +228,7 @@ describe("Admin session authorization", () => {
     expect(result.ok).toBe(true);
   });
 
+  // A D1 outage must not be treated as successful authorization.
   it("returns 503 if the authorization database is unavailable", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 

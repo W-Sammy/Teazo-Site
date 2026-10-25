@@ -1,10 +1,22 @@
+/**
+ * Regression tests for the D1 admin password migrations.
+ *
+ * Applies the real migration SQL to an isolated in-memory SQLite database.
+ * Verifies token constraints, token-replacement triggers, password-change
+ * invalidation, session versioning, and admin deletion behavior.
+ *
+ * No application database or external service is contacted.
+ */
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+// Each test receives a fresh, isolated SQLite database.
 let db: DatabaseSync;
 
+// Load the project's actual SQL migrations rather than mocking triggers.
 function migration(filename: string): string {
   return readFileSync(
     join(process.cwd(), "migrations", filename),
@@ -73,6 +85,7 @@ describe("Admin password D1 migrations", () => {
     db.close();
   });
 
+  // Schema creation and database-level safety constraints.
   it("creates the password token table", () => {
     const row = db.prepare(
       `SELECT name FROM sqlite_master
@@ -148,6 +161,7 @@ describe("Admin password D1 migrations", () => {
     }).toThrow();
   });
 
+  // Issuing a replacement setup link must consume the older link.
   it("invalidates an older setup link when a replacement is issued", () => {
     addToken("setup-old", "admin-1", "setup");
     addToken("setup-new", "admin-1", "setup", 1_800_000_100);
@@ -173,6 +187,7 @@ describe("Admin password D1 migrations", () => {
     expect(token("reset-2")?.used_at).toBeNull();
   });
 
+  // A changed password invalidates all outstanding links for that admin.
   it("invalidates all outstanding tokens after a password change", () => {
     addToken("setup-1", "admin-1", "setup");
     addToken("reset-1", "admin-1", "reset");
@@ -209,6 +224,7 @@ describe("Admin password D1 migrations", () => {
     expect(token("reset-3")?.used_at).toBeNull();
   });
 
+  // Invalidation must remain scoped to the affected account.
   it("does not consume another admin's tokens", () => {
     addToken("admin-1-reset", "admin-1", "reset");
     addToken("admin-2-reset", "admin-2", "reset");
@@ -222,6 +238,7 @@ describe("Admin password D1 migrations", () => {
     expect(token("admin-2-reset")?.used_at).toBeNull();
   });
 
+  // Foreign-key cascade removes orphaned tokens when an admin is deleted.
   it("deletes tokens when the owning admin is deleted", () => {
     addToken("delete-test", "admin-1", "reset");
 

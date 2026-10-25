@@ -1,3 +1,11 @@
+/**
+ * Tests admin password setup/reset token generation and consumption.
+ *
+ * D1 queries and password hashing are mocked so tests can verify token
+ * format, hashed storage, expiration, eligibility, and session invalidation
+ * without persisting credentials or accessing a real database.
+ */
+
 import {
   afterEach,
   beforeEach,
@@ -16,6 +24,7 @@ import {
   savePasswordWithToken,
 } from "./admin-password-tokens";
 
+// Keep all credential and database work inside mocks.
 vi.mock("server-only", () => ({}));
 vi.mock("./d1", () => ({ prepare: vi.fn() }));
 vi.mock("./password", () => ({ hashPassword: vi.fn() }));
@@ -23,6 +32,7 @@ vi.mock("./password", () => ({ hashPassword: vi.fn() }));
 const first = vi.fn();
 const bind = vi.fn();
 
+// Capture generated SQL and bound values to verify security conditions.
 const sqlStatements: string[] = [];
 const boundValues: unknown[][] = [];
 
@@ -62,6 +72,7 @@ describe("Admin password token helpers", () => {
     vi.useRealTimers();
   });
 
+  // Token generation and storage: only a SHA-256 hash reaches D1.
   it("generates a 43-character base64url token", async () => {
     first.mockResolvedValueOnce({ id: "row-id" });
 
@@ -96,6 +107,7 @@ describe("Admin password token helpers", () => {
     expect(firstToken?.token).not.toBe(secondToken?.token);
   });
 
+  // Setup links live longer than reset links by design.
   it("sets setup token expiration to 24 hours", async () => {
     first.mockResolvedValueOnce({ id: "row-id" });
 
@@ -116,6 +128,7 @@ describe("Admin password token helpers", () => {
     );
   });
 
+  // Eligibility must be checked before a link can be issued.
   it("does not return a token for an ineligible account", async () => {
     first.mockResolvedValueOnce(null);
 
@@ -134,6 +147,7 @@ describe("Admin password token helpers", () => {
     expect(sqlStatements[0]).toContain("role_id IN (1, 2, 3)");
   });
 
+  // Reject malformed inputs before touching D1.
   it("rejects malformed tokens before querying D1", async () => {
     const result = await findValidPasswordToken(
       "not-a-valid-token",
@@ -165,6 +179,7 @@ describe("Admin password token helpers", () => {
     expect(sqlStatements[0]).toContain("t.expires_at > ?3");
   });
 
+  // Password validation happens before the hashing operation.
   it("rejects passwords shorter than six characters", async () => {
     const result = await savePasswordWithToken(
       VALID_TOKEN,
@@ -231,6 +246,7 @@ describe("Admin password token helpers", () => {
     expect(hashPassword).not.toHaveBeenCalled();
   });
 
+  // A successful update persists a hash and rotates session_version.
   it("hashes valid passwords before saving them", async () => {
     first
       .mockResolvedValueOnce(validTokenRow())
@@ -278,6 +294,7 @@ describe("Admin password token helpers", () => {
     );
   });
 
+  // Recheck eligibility at update time to prevent token-reuse races.
   it("rechecks token eligibility in the final UPDATE", async () => {
     first
       .mockResolvedValueOnce(validTokenRow())
@@ -302,6 +319,7 @@ describe("Admin password token helpers", () => {
     expect(updateSql).toContain("used_at IS NULL");
   });
 
+  // Spaces are meaningful password characters and must not be trimmed.
   it("preserves the exact password when hashing", async () => {
     first
       .mockResolvedValueOnce(validTokenRow())

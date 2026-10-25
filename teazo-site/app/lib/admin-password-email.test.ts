@@ -1,3 +1,11 @@
+/**
+ * Tests admin password setup/reset emails and change confirmations.
+ *
+ * Database lookups, token issuance, and email delivery are mocked. These
+ * assertions verify link content, expiry guidance, recipient handling, and
+ * security notifications without sending real email.
+ */
+
 import {
   afterEach,
   beforeEach,
@@ -16,6 +24,7 @@ import {
   sendAdminPasswordChangedEmail,
 } from "./admin-password-email";
 
+// Mock database access, email delivery, and token generation.
 vi.mock("server-only", () => ({}));
 
 vi.mock("./d1", () => ({
@@ -77,6 +86,7 @@ describe("Admin password emails", () => {
     vi.unstubAllEnvs();
   });
 
+  // Never embed untrusted credentials in generated password links.
   it("uses the configured application URL", () => {
     expect(applicationUrl()).toBe("http://localhost:3000");
   });
@@ -92,6 +102,7 @@ describe("Admin password emails", () => {
     );
   });
 
+  // Unknown or ineligible accounts must not receive password links.
   it("does not send email for unknown accounts", async () => {
     first.mockResolvedValueOnce(null);
 
@@ -104,6 +115,7 @@ describe("Admin password emails", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
+  // Setup and reset use distinct token purposes and email subjects.
   it("uses setup tokens for accounts without passwords", async () => {
     first.mockResolvedValueOnce(admin(1));
 
@@ -139,6 +151,7 @@ describe("Admin password emails", () => {
     );
   });
 
+  // Email guidance must match the actual link expiration policy.
   it("includes correct expiration information for setup", async () => {
     first.mockResolvedValueOnce(admin(1));
 
@@ -161,6 +174,7 @@ describe("Admin password emails", () => {
     expect(email.text).toContain("only once");
   });
 
+  // The link must carry the correct action and issued token.
   it("builds reset links using the correct action and token", async () => {
     first.mockResolvedValueOnce(admin(0));
 
@@ -172,6 +186,7 @@ describe("Admin password emails", () => {
     expect(email.text).toContain(VALID_TOKEN);
   });
 
+  // Failed token generation must never produce a useless link.
   it("does not create email when token generation fails", async () => {
     first.mockResolvedValueOnce(admin(1));
 
@@ -185,6 +200,7 @@ describe("Admin password emails", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
+  // Notify an admin after a password change as a security signal.
   it("sends a password-change security notification", async () => {
     const result = await sendAdminPasswordChangedEmail(
       "admin@example.com",
@@ -200,6 +216,7 @@ describe("Admin password emails", () => {
     );
   });
 
+  // Confirmation mail must not leak the reset secret.
   it("does not include passwords or tokens in confirmation emails", async () => {
     await sendAdminPasswordChangedEmail("admin@example.com");
 

@@ -1,3 +1,13 @@
+/**
+ * Tests POST /api/admin/password/request.
+ *
+ * Email delivery, email normalization, rate limiting, and Next.js after()
+ * are mocked. Tests verify input/origin validation, non-enumerating
+ * responses, throttling, and deferred email scheduling.
+ *
+ * No real password emails are sent.
+ */
+
 import {
   beforeEach,
   afterEach,
@@ -13,6 +23,7 @@ import { sendAdminPasswordEmail } from "@/app/lib/admin-password-email";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
 import { POST } from "./route";
 
+// Capture deferred email work without actually scheduling it.
 vi.mock("next/server", () => ({
   after: vi.fn(),
 }));
@@ -41,6 +52,7 @@ vi.mock("@/app/lib/password-request-rate-limit", () => ({
   },
 }));
 
+// Default to a same-origin JSON request; individual tests override fields.
 function makeRequest(
   body: unknown,
   headers: Record<string, string> = {},
@@ -76,6 +88,7 @@ describe("POST /api/admin/password/request", () => {
     vi.restoreAllMocks();
   });
 
+  // Guard the unauthenticated endpoint against cross-origin submissions.
   it("rejects requests from foreign origins", async () => {
     const response = await POST(
       makeRequest(
@@ -97,6 +110,7 @@ describe("POST /api/admin/password/request", () => {
     expect(response.status).toBe(403);
   });
 
+  // Validate body type, JSON syntax, and the email field before any send.
   it("rejects non-JSON requests", async () => {
     const response = await POST(
       makeRequest(
@@ -172,6 +186,7 @@ describe("POST /api/admin/password/request", () => {
     );
   });
 
+  // Do not reveal whether an email belongs to an admin account.
   it("returns a generic confirmation for eligible requests", async () => {
     const response = await POST(
       makeRequest({ email: "admin@example.com" }),
@@ -185,6 +200,7 @@ describe("POST /api/admin/password/request", () => {
     });
   });
 
+  // Email-specific throttling must not enable account enumeration.
   it("does not reveal email-based rate limiting", async () => {
     vi.mocked(consumePasswordRequestLimit)
       .mockResolvedValueOnce(true)
@@ -198,6 +214,7 @@ describe("POST /api/admin/password/request", () => {
     expect(after).not.toHaveBeenCalled();
   });
 
+  // IP-wide throttling is an explicit HTTP 429 with Retry-After.
   it("rejects requests exceeding the IP rate limit", async () => {
     vi.mocked(consumePasswordRequestLimit).mockResolvedValueOnce(
       false,
@@ -225,6 +242,7 @@ describe("POST /api/admin/password/request", () => {
     expect(response.status).toBe(503);
   });
 
+  // Execute the captured after() callback to verify deferred delivery.
   it("schedules email delivery after returning a response", async () => {
     const response = await POST(
       makeRequest({ email: "admin@example.com" }),
@@ -249,6 +267,7 @@ describe("POST /api/admin/password/request", () => {
     );
   });
 
+  // Use the client address (not the entire proxy chain) for IP limits.
   it("passes a valid forwarded IP to the rate limiter", async () => {
     await POST(
       makeRequest(

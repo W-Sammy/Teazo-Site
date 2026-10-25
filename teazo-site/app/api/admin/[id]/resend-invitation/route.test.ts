@@ -1,3 +1,13 @@
+/**
+ * Tests POST /api/admin/[id]/resend-invitation.
+ *
+ * Admin authorization, invitation eligibility, rate limiting, and sending
+ * are mocked. Checks that only permitted admins can resend invitations,
+ * target accounts remain eligible, and delivery states are reported safely.
+ *
+ * No actual invitations are sent.
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requireAdminApi } from "@/app/lib/admin";
@@ -6,6 +16,7 @@ import { findSettingsAdminForInvitation } from "@/app/lib/queries/settings";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
 import { POST } from "./route";
 
+// All authorization, eligibility, throttling, and delivery are isolated.
 vi.mock("@/app/lib/admin", () => ({
   requireAdminApi: vi.fn(),
 }));
@@ -22,6 +33,7 @@ vi.mock("@/app/lib/password-request-rate-limit", () => ({
   consumePasswordRequestLimit: vi.fn(),
 }));
 
+// Use known authorized sender and eligible recipient fixtures.
 const owner = {
   id: "owner-id",
   username: "owner",
@@ -73,6 +85,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     vi.mocked(sendAdminInvite).mockResolvedValue("sent");
   });
 
+  // Only appropriately privileged admins may resend invitations.
   it("rejects unauthenticated requests", async () => {
     vi.mocked(requireAdminApi).mockResolvedValueOnce({
       ok: false,
@@ -111,6 +124,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(sendAdminInvite).toHaveBeenCalledOnce();
   });
 
+  // Preserve the route's existing permission behavior in this regression test.
   it("allows Can Edit accounts with invitation permission", async () => {
     vi.mocked(requireAdminApi).mockResolvedValueOnce({
       ok: true,
@@ -126,6 +140,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(response.status).toBe(200);
   });
 
+  // The recipient may have completed setup or become ineligible.
   it("rejects accounts that are no longer eligible", async () => {
     vi.mocked(findSettingsAdminForInvitation).mockResolvedValueOnce(
       null,
@@ -137,6 +152,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(sendAdminInvite).not.toHaveBeenCalled();
   });
 
+  // Rate-limit requester and recipient independently.
   it("limits excessive requests from one administrator", async () => {
     vi.mocked(consumePasswordRequestLimit).mockResolvedValueOnce(
       false,
@@ -181,6 +197,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     );
   });
 
+  // Build the invitation from server-approved recipient data, not user input.
   it("uses the server-authorized invitation sender", async () => {
     await POST(makeRequest(), context());
 
@@ -204,6 +221,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     });
   });
 
+  // Distinguish real delivery, failures, skips, and local printed email.
   it("reports failed email delivery", async () => {
     vi.mocked(sendAdminInvite).mockResolvedValueOnce("failed");
 
@@ -236,6 +254,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     });
   });
 
+  // Invitation status responses should not be cached.
   it("returns no-store on successful responses", async () => {
     const response = await POST(makeRequest(), context());
 

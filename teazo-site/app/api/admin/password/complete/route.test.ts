@@ -1,3 +1,11 @@
+/**
+ * Tests POST /api/admin/password/complete.
+ *
+ * Password persistence, rate limiting, email delivery, and Next.js after()
+ * are mocked. Covers request validation, token failures, success responses,
+ * and post-change notifications without modifying a real admin account.
+ */
+
 import {
   afterEach,
   beforeEach,
@@ -13,6 +21,7 @@ import { sendAdminPasswordChangedEmail } from "@/app/lib/admin-password-email";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
 import { POST } from "./route";
 
+// Stub deferred notification scheduling and password storage.
 vi.mock("next/server", () => ({
   after: vi.fn(),
 }));
@@ -31,6 +40,7 @@ vi.mock("@/app/lib/password-request-rate-limit", () => ({
 
 const VALID_TOKEN = "A".repeat(43);
 
+// Reuse a valid request so each negative test changes one condition.
 function validBody() {
   return {
     token: VALID_TOKEN,
@@ -83,6 +93,7 @@ describe("POST /api/admin/password/complete", () => {
     vi.restoreAllMocks();
   });
 
+  // Reject unsafe origins and malformed submissions before storing hashes.
   it("rejects foreign origins", async () => {
     const response = await POST(
       makeRequest(validBody(), {
@@ -141,6 +152,7 @@ describe("POST /api/admin/password/complete", () => {
     expect(response.status).toBe(400);
   });
 
+  // Validate token shape before calling the password persistence helper.
   it("rejects malformed tokens", async () => {
     const response = await POST(
       makeRequest({
@@ -174,6 +186,7 @@ describe("POST /api/admin/password/complete", () => {
     });
   });
 
+  // The API error code and message must match the password rules.
   it("reports password length errors consistently", async () => {
     vi.mocked(savePasswordWithToken).mockResolvedValueOnce({
       ok: false,
@@ -220,6 +233,7 @@ describe("POST /api/admin/password/complete", () => {
     });
   });
 
+  // Throttling applies to password completion as well as requests.
   it("rejects excessive submission attempts", async () => {
     vi.mocked(consumePasswordRequestLimit).mockResolvedValueOnce(
       false,
@@ -245,6 +259,7 @@ describe("POST /api/admin/password/complete", () => {
     expect(response.status).toBe(503);
   });
 
+  // Only a successful token-based save returns a sign-in prompt.
   it("saves valid password submissions", async () => {
     const response = await POST(makeRequest(validBody()));
 
@@ -262,6 +277,7 @@ describe("POST /api/admin/password/complete", () => {
     });
   });
 
+  // Notify after a confirmed change rather than as part of the write.
   it("schedules a password-change confirmation email", async () => {
     const response = await POST(makeRequest(validBody()));
 
@@ -295,6 +311,7 @@ describe("POST /api/admin/password/complete", () => {
     expect(sendAdminPasswordChangedEmail).not.toHaveBeenCalled();
   });
 
+  // Brevo failure must not roll back an already saved password.
   it("does not undo a successful password change if email fails", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 

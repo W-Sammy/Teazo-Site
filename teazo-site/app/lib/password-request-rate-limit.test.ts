@@ -1,3 +1,11 @@
+/**
+ * Tests the rate limits applied to admin password requests.
+ *
+ * D1 counters and rate-limit key generation are mocked. The suite checks
+ * per-email and per-IP limits, the atomic SQL counter, and fail-closed
+ * behavior when D1 cannot confirm whether a request is allowed.
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { prepare } from "./d1";
@@ -8,6 +16,7 @@ import {
   PASSWORD_IP_LIMIT,
 } from "./password-request-rate-limit";
 
+// These mocks capture usage without mutating the real rate-limit table.
 vi.mock("server-only", () => ({}));
 vi.mock("./d1", () => ({ prepare: vi.fn() }));
 vi.mock("./queries/rate-limit", () => ({
@@ -31,6 +40,7 @@ describe("Password request rate limiting", () => {
     } as never);
   });
 
+  // Exercise the exact email limit boundaries: requests 1-3 allowed.
   it("allows the first email request", async () => {
     first.mockResolvedValueOnce({ event_count: 1 });
 
@@ -64,6 +74,7 @@ describe("Password request rate limiting", () => {
     expect(result).toBe(false);
   });
 
+  // The shared IP limit protects against repeated requests across emails.
   it("enforces the IP request limit", async () => {
     first.mockResolvedValueOnce({ event_count: 11 });
 
@@ -89,6 +100,7 @@ describe("Password request rate limiting", () => {
     );
   });
 
+  // An atomic SQL increment avoids lost updates during concurrent requests.
   it("uses an atomic INSERT/UPDATE counter", async () => {
     first.mockResolvedValueOnce({ event_count: 1 });
 
@@ -104,6 +116,7 @@ describe("Password request rate limiting", () => {
     expect(sql).toContain("RETURNING event_count");
   });
 
+  // When the counter cannot be verified, do not assume permission.
   it("fails closed when D1 returns no counter", async () => {
     first.mockResolvedValueOnce(null);
 
