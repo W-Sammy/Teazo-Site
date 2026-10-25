@@ -168,7 +168,7 @@ export default async function ContactPage() {
   )}`;
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#FFF8F9] text-stone-900">
+    <main className="relative isolate min-h-screen scroll-smooth overflow-hidden bg-[#FFF8F9] text-stone-900">
       {/* Shared so other pages can reuse the same motion treatment without
           copying contact-specific files. */}
       <BubbleField count={13} />
@@ -421,11 +421,10 @@ export default async function ContactPage() {
             </div>
 
             <a
-              href={phoneHref}
+              href="#contact-us"
               className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
             >
-              <PhoneIcon />
-              CALL TO ORDER
+              START YOUR ORDER
             </a>
           </div>
         </section>
@@ -433,7 +432,10 @@ export default async function ContactPage() {
         {/* Hidden when business_profile.contact_form_enabled is 0. */}
         {contactFormEnabled && (
           <>
-            <div className="relative mt-14 flex items-center justify-center sm:mt-16">
+            <div 
+              id="contact-us"
+              className="relative mt-14 flex items-center justify-center sm:mt-16"
+            >
               <Subtitle text="CONTACT US" />
             </div>
 

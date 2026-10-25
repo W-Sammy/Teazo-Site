@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {  requireAdminPage } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
+import { ADMIN_CACHE_TAGS } from "@/app/lib/admin-cache";
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 export const metadata: Metadata = {
