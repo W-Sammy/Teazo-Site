@@ -5,7 +5,6 @@ import Subtitle from "@/app/(site)/components/sub-title"
 
 //import carousel
 import ImageCarousel from "@/app/(site)/components/image-carousel";
-import ActiveEvents from "@/app/(site)/components/active-events";
 
 // import font & bubbles
 import { Montserrat, Cabin_Sketch } from "next/font/google";
@@ -13,6 +12,8 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -21,6 +22,9 @@ export const metadata: Metadata = {
     },
     description: "Teazo Home",
 };
+
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
@@ -64,7 +68,11 @@ function MailIcon() {
 }
 
 export default async function Home() {
-  const content = await getWebsiteContent();
+  const [content, liveEvents] = await Promise.all([
+    getWebsiteContent(),
+    // Events are optional: keep the homepage available if D1 cannot load them.
+    listActiveEvents().catch(() => []),
+  ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const contactData = await getContactContent();
   const {
@@ -87,7 +95,9 @@ export default async function Home() {
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
-    <main className="relative z-0 min-h-screen overflow-hidden bg-[#FFF8F9] pb-20">
+    <>
+    <LiveEventsSidebar events={liveEvents} />
+    <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
@@ -137,8 +147,6 @@ export default async function Home() {
                 <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
                 <ImageCarousel />
             </div> 
-
-            <ActiveEvents />
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
@@ -263,5 +271,6 @@ export default async function Home() {
                 </section>
 
     </main>
+    </>
   )
 }
