@@ -2,7 +2,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 
 import { auth } from "@/auth";
 
@@ -59,7 +59,8 @@ export async function requireAdminPage(
 
   try {
     access = await getAdminAccess(minRole);
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     console.error("Admin page authorization lookup failed.");
     redirect("/login?error=ServiceUnavailable");
   }
@@ -101,7 +102,8 @@ export async function requireAdminApi(
 
   try {
     access = await getAdminAccess(minRole);
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     console.error("Admin API authorization lookup failed.");
 
     return denyApi(

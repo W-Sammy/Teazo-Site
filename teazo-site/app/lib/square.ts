@@ -1,11 +1,14 @@
 import { SquareClient, SquareEnvironment } from 'square';
+import { getSquareEnvironment } from "@/app/lib/square-config";
 
 if (!process.env.SQUARE_ACCESS_TOKEN) {
     throw new Error("SQUARE_ACCESS_TOKEN is not set");
 }
 
 export const squareClient = new SquareClient({
-    environment: SquareEnvironment.Sandbox,
+    environment: getSquareEnvironment() === "production"
+        ? SquareEnvironment.Production
+        : SquareEnvironment.Sandbox,
     token: process.env.SQUARE_ACCESS_TOKEN,
 });
 
