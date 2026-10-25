@@ -94,7 +94,6 @@ export default async function Home() {
             </div>
     
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
-            </div>
             
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
@@ -261,7 +260,7 @@ export default async function Home() {
                     </a>
                   </div>
                 </section>
-
+            </div>
     </main>
   )
 }
