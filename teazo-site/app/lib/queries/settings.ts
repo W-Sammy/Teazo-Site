@@ -1,4 +1,4 @@
-// Server code only. Never import this file into a client component.
+ // Server code only. Never import this file into a client component.
 
 import { prepare } from "@/app/lib/d1";
 import type {
@@ -11,19 +11,50 @@ export type SettingsAdmin = {
   username: string;
   email: string;
   role: AdminRole;
+  canManageAdmins: boolean;
+  canResendInvitation: boolean;
 };
 
+type SettingsAdminRow = {
+  id: string;
+  username: string;
+  email: string;
+  role: AdminRole;
+  canResendInvitation: number;
+};
+
+function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
+  return {
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    role: admin.role,
+
+    // Administrator management is determined by role.
+    // The legacy can_invite_users flag no longer grants access.
+    canManageAdmins: admin.role === 1,
+    canResendInvitation: admin.canResendInvitation === 1,
+  };
+}
+
 const adminSelect = `
-  SELECT id, username, email, role_id AS role
+  SELECT id, username, email, role_id AS role,
+         CASE
+           WHEN password_hash IS NULL
+             AND status IN ('active', 'invited')
+             AND role_id IN (1, 2)
+           THEN 1
+           ELSE 0
+         END AS canResendInvitation
     FROM admin_user
    WHERE deleted_at IS NULL`;
 
 export async function listSettingsAdmins(): Promise<SettingsAdmin[]> {
   const { results } = await prepare(
     `${adminSelect} ORDER BY username COLLATE NOCASE, id`,
-  ).all<SettingsAdmin>();
+  ).all<SettingsAdminRow>();
 
-  return results;
+  return results.map(mapAdmin);
 }
 
 export async function createSettingsAdmin(
@@ -33,9 +64,8 @@ export async function createSettingsAdmin(
   const email = input.email.trim();
   const id = crypto.randomUUID();
 
-  // New accounts always receive role 2 (Admin).
-  // Keep can_invite_users at 0 for compatibility with the
-  // existing D1 schema; the field no longer grants privileges.
+  // All new accounts receive role 2 (Admin).
+  // The legacy can_invite_users column remains 0.
   await prepare(
     `INSERT INTO admin_user
        (id, email, email_normalized, username, role_id,
@@ -59,8 +89,8 @@ export async function createSettingsAdmin(
 export async function removeSettingsAdmin(
   id: string,
 ): Promise<void> {
-  // The API requires Owner access before this function runs.
-  // The SQL statement independently protects the Owner row.
+  // The API requires Owner access before calling this function.
+  // The SQL query independently protects the Owner account.
   await prepare(
     `UPDATE admin_user
         SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
@@ -80,7 +110,7 @@ async function requireSettingsAdmin(
     `${adminSelect} AND id = ?1`,
   )
     .bind(id)
-    .first<SettingsAdmin>();
+    .first<SettingsAdminRow>();
 
   if (!admin) {
     throw new Error(
@@ -88,5 +118,21 @@ async function requireSettingsAdmin(
     );
   }
 
-  return admin;
+  return mapAdmin(admin);
+}
+
+export async function findSettingsAdminForInvitation(
+  id: string,
+): Promise<SettingsAdmin | null> {
+  const admin = await prepare(
+    `${adminSelect}
+       AND id = ?1
+       AND password_hash IS NULL
+       AND status IN ('active', 'invited')
+       AND role_id IN (1, 2)`,
+  )
+    .bind(id)
+    .first<SettingsAdminRow>();
+
+  return admin ? mapAdmin(admin) : null;
 }
