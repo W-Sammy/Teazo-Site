@@ -11,6 +11,7 @@ import {
   IconContact,
   IconHours,
   IconHolidays,
+  IconCarousel,
 } from "./icons";
 import OrderingSection from "./sections/ordering-section";
 import LogoSection from "./sections/logo-section";
@@ -19,6 +20,7 @@ import SocialSection from "./sections/social-section";
 import ContactSection from "./sections/contact-section";
 import HoursSection from "./sections/hours-section";
 import HolidaysSection from "./sections/holidays-section";
+import CarouselSection from "./sections/carousel-section";
 import { useWebsiteContent } from "../handlers/use-website-content";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { SectionId } from "./types";
@@ -32,6 +34,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "contact", label: "Contact Info", icon: <IconContact /> },
   { id: "hours", label: "Business Hours", icon: <IconHours /> },
   { id: "holidays", label: "Holiday Exceptions", icon: <IconHolidays /> },
+  { id: "carousel", label: "Image Carousel", icon: <IconCarousel /> },
 ];
 
 export default function WebsiteContentClient({
@@ -42,6 +45,7 @@ export default function WebsiteContentClient({
   const {
     content,
     saveStatus,
+    carousel,
     errorMessage,
     setErrorMessage,
     flushPatch,
@@ -148,7 +152,7 @@ export default function WebsiteContentClient({
                 className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                {errorMessage ? "Formatting error" : "Save failed"}
+                {carousel.carouselHasError ? "Save failed" : errorMessage ? "Formatting error" : "Save failed"}
               </span>
             )}
           </div>
@@ -273,6 +277,13 @@ export default function WebsiteContentClient({
             onRemoveHoliday={removeHoliday}
             onAddHoliday={addHoliday}
             onBlur={() => flushPatch()}
+          />
+
+          <CarouselSection
+            carousel={carousel}
+            isOpen={openSection === "carousel"}
+            onToggle={() => selectSection("carousel")}
+            setRef={setSectionRef("carousel")}
           />
         </div>
       </div>

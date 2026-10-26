@@ -16,7 +16,9 @@ export function useAdmins(initialAdmins: Admin[] = []) {
   const [canManageAdmins, setCanManageAdmins] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const clearError = useCallback(() => setErrorMessage(""), []);
+  const clearError = useCallback(() => {
+    setErrorMessage("");
+  }, []);
 
   const setError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -92,18 +94,21 @@ export function useAdmins(initialAdmins: Admin[] = []) {
     }
 
     try {
-      // The server assigns role 2 and no administrator-management privilege.
-      const newAdmin = await createAdmin({
+      // The server assigns role 2 and no management privilege.
+      const result = await createAdmin({
         username,
         email,
       });
 
       setAdmins((currentAdmins) => [
         ...currentAdmins,
-        newAdmin,
+        result.admin,
       ]);
 
-      return { success: true as const };
+      return {
+        success: true as const,
+        invitation: result.invitation,
+      };
     } catch (error) {
       return {
         success: false as const,

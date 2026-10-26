@@ -1,6 +1,8 @@
 export type AdminRole = 1 | 2;
+
 export const OWNER_ROLE: AdminRole = 1;
 export const ADMIN_ROLE: AdminRole = 2;
+
 export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
   1: "Owner",
   2: "Admin",
@@ -11,10 +13,16 @@ export interface Admin {
   username: string;
   email: string;
   role: AdminRole;
+
+  // Derived from the account's role. Only Owner can manage admins.
+  canManageAdmins: boolean;
+
+  // Whether this account can receive another password setup invitation.
+  // Eligibility does not grant permission to send invitations.
+  canResendInvitation: boolean;
 }
 
-// New users are always assigned the Admin role by the server.
-// The client cannot select a role or grant management privileges.
+// The server always assigns role 2 to newly created accounts.
 export type NewAdminInput = {
   username: string;
   email: string;

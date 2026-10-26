@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import CatalogChangeNotice from "@/app/components/catalog-change-notice";
+import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
@@ -9,6 +11,7 @@ import Subtitle from "../components/sub-title";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
+import { orderableMenuItem } from "@/app/lib/storefront-catalog";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -50,6 +53,7 @@ type CatalogMenuItem = Pick<
   | "categories"
   | "modifiers"
   | "variations"
+  | "availability"
 >;
 
 type MenuLoadResult =
@@ -165,6 +169,7 @@ function toCardItem(
     description: item.description?.trim() || undefined,
     modifiers: item.modifiers || [],
     variations: item.variations,
+    availability: item.availability,
   };
 }
 
@@ -332,7 +337,10 @@ async function loadMenu(): Promise<MenuLoadResult> {
 
     return {
       ok: true,
-      sections: buildMenuSections(data),
+      sections: buildMenuSections(data.flatMap((item) => {
+        const orderable = orderableMenuItem(item);
+        return orderable ? [orderable] : [];
+      })),
     };
   } catch (error) {
     console.error("Public menu catalog loading failed:", error);
@@ -347,6 +355,8 @@ export default async function MenuPage({
 }: {
   searchParams?: Promise<{ item?: string }>;
 }) {
+  // Capture before fetching items so a change during rendering is detected too.
+  const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult] = await Promise.all([
     searchParams ? searchParams : Promise.resolve(undefined),
     getWebsiteContent(),
@@ -373,6 +383,7 @@ export default async function MenuPage({
 
   return (
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
+      <CatalogChangeNotice initialRevision={revision} />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <BubbleField />
       </div>
@@ -418,7 +429,7 @@ export default async function MenuPage({
           </div>
 
           <div className="relative mt-16 inline-flex items-center justify-center sm:mt-12">
-            <Subtitle text={"Boba • Snacks • Desserts"} />
+            <Subtitle text={"Boba • Snack • Dessert"} />
           </div>
 
           <p

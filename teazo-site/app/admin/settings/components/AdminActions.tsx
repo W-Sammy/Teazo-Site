@@ -9,13 +9,17 @@ import {
 // The parent handles deletion; the username identifies the action button.
 type AdminActionsProps = {
   username: string;
-  onDelete: () => void;
+  onDelete?: () => void;
+  onResendInvitation?: () => void;
+  isResending?: boolean;
 };
 
 // Three-dot action menu for an individual administrator.
 export function AdminActions({
   username,
   onDelete,
+  onResendInvitation,
+  isResending = false,
 }: AdminActionsProps) {
   // Track whether this row's action menu is visible.
   const [open, setOpen] =
@@ -81,70 +85,66 @@ export function AdminActions({
   }, [open]);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative"
+  <div ref={containerRef} className="relative">
+    <button
+      type="button"
+      aria-label={`Actions for ${username}`}
+      aria-haspopup="menu"
+      aria-expanded={open}
+      disabled={isResending}
+      aria-busy={isResending}
+      onClick={() => setOpen((current) => !current)}
+      className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:cursor-wait disabled:opacity-50"
     >
-      {/* Identify whose actions are shown and expose the menu's expanded state. */}
-      <button
-        type="button"
-        aria-label={`Actions for ${username}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() =>
-          setOpen(
-            (current) => !current,
-          )
-        }
-        className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="currentColor"
       >
-        {/* Draw the three-dot icon with SVG instead of relying on a text glyph. */}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          className="h-5 w-5"
-          fill="currentColor"
-        >
-          <circle
-            cx="5"
-            cy="12"
-            r="1.75"
-          />
+        <circle cx="5" cy="12" r="1.75" />
+        <circle cx="12" cy="12" r="1.75" />
+        <circle cx="19" cy="12" r="1.75" />
+      </svg>
+    </button>
 
-          <circle
-            cx="12"
-            cy="12"
-            r="1.75"
-          />
-
-          <circle
-            cx="19"
-            cy="12"
-            r="1.75"
-          />
-        </svg>
-      </button>
-
-      {/* Mount the popup only when open and align it below the trigger's right edge. */}
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-40 mt-1 w-32 max-w-[calc(100vw-2rem)] overflow-visible rounded-md border border-gray-100 bg-white shadow-lg"
-        >
+    {open && (
+      <div
+        role="menu"
+        aria-label={`Actions for ${username}`}
+        className="absolute right-0 top-full z-40 mt-1 w-48 max-w-[calc(100vw-2rem)] rounded-md border border-gray-100 bg-white shadow-lg"
+      >
+        {onResendInvitation && (
           <button
             type="button"
             role="menuitem"
+            disabled={isResending}
             onClick={() => {
-              // Close the popup before handing the delete request to the parent.
+              setOpen(false);
+              onResendInvitation();
+            }}
+            className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Resend Invitation
+          </button>
+        )}
+
+        {onDelete && (
+          <button
+            type="button"
+            role="menuitem"
+            disabled={isResending}
+            onClick={() => {
               setOpen(false);
               onDelete();
             }}
-            className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 hover:text-red-700"
+            className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
           >
             Delete
           </button>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    )}
+  </div>
+);
 }

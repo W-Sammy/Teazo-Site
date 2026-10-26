@@ -36,6 +36,7 @@ const columnLabels: Record<string, string> = {
   price: "Price",
   description: "Description",
   categories: "Categories",
+  availability: "Availability",
 };
 
 function checkCell(value: unknown): string {
@@ -246,6 +247,7 @@ export default function ListView<T extends Row = Row>({
         "name",
         "price",
         "description",
+        "availability",
         "categories",
       ].includes(key),
   );
@@ -334,6 +336,12 @@ export default function ListView<T extends Row = Row>({
                       : "No description"}
                   </p>
                 </div>
+
+                {typeof item.availability === "string" && (
+                  <p className="mt-3 whitespace-pre-wrap text-sm text-amber-900 [overflow-wrap:anywhere]">
+                    <strong>Availability: </strong>{item.availability}
+                  </p>
+                )}
 
                 <div className="mt-3 min-w-0">
                   <h3 className="text-xs font-semibold text-gray-500">
@@ -525,6 +533,8 @@ export default function ListView<T extends Row = Row>({
                           />
                         ) : key === "categories" ? (
                           <TableCategories value={item[key]} />
+                        ) : key === "availability" ? (
+                          fullCell(item[key])
                         ) : (
                           checkCell(item[key])
                         )}

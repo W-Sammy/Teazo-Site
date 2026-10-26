@@ -1,4 +1,4 @@
- // Server code only. Never import this file into a client component.
+// Server code only. Never import this file into a client component.
 
 import { prepare } from "@/app/lib/d1";
 import type {
@@ -30,8 +30,7 @@ function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
     email: admin.email,
     role: admin.role,
 
-    // Administrator management is determined by role.
-    // The legacy can_invite_users flag no longer grants access.
+    // The legacy can_invite_users flag does not grant access.
     canManageAdmins: admin.role === 1,
     canResendInvitation: admin.canResendInvitation === 1,
   };
@@ -65,7 +64,7 @@ export async function createSettingsAdmin(
   const id = crypto.randomUUID();
 
   // All new accounts receive role 2 (Admin).
-  // The legacy can_invite_users column remains 0.
+  // Legacy management privileges remain disabled.
   await prepare(
     `INSERT INTO admin_user
        (id, email, email_normalized, username, role_id,
@@ -83,14 +82,13 @@ export async function createSettingsAdmin(
   return requireSettingsAdmin(id);
 }
 
-// Role editing and Manage Admins permission updates
-// are retired from the two-role administration system.
+// Role editing and Manage Admins permission updates are retired.
 
 export async function removeSettingsAdmin(
   id: string,
 ): Promise<void> {
-  // The API requires Owner access before calling this function.
-  // The SQL query independently protects the Owner account.
+  // Owner access is enforced by the API.
+  // SQL independently protects the Owner account.
   await prepare(
     `UPDATE admin_user
         SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),

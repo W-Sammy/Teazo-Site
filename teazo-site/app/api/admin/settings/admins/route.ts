@@ -3,6 +3,9 @@ import {
   createSettingsAdmin,
   listSettingsAdmins,
 } from "@/app/lib/queries/settings";
+import { sendAdminInvite } from "@/app/lib/admin-invite";
+
+export const runtime = "nodejs";
 
 function errorResponse(message: string, status: number) {
   return Response.json(
@@ -83,21 +86,15 @@ export async function POST(request: Request) {
     );
   }
 
+  let admin: Awaited<ReturnType<typeof createSettingsAdmin>>;
+
   try {
-    // The database query automatically assigns role 2 (Admin).
     // Client-supplied roles and permission flags are ignored.
-    const admin = await createSettingsAdmin({
+    // The query always creates a role-2 Admin.
+    admin = await createSettingsAdmin({
       username,
       email,
     });
-
-    return Response.json(
-      { admin },
-      {
-        status: 201,
-        headers: { "Cache-Control": "no-store" },
-      },
-    );
   } catch (error) {
     console.error("Could not create admin:", error);
 
@@ -106,4 +103,61 @@ export async function POST(request: Request) {
       400,
     );
   }
+
+  // The account is already saved. Email failures must not
+  // turn successful account creation into an API failure.
+  let outcome: Awaited<ReturnType<typeof sendAdminInvite>>;
+
+  try {
+    outcome = await sendAdminInvite({
+      adminId: admin.id,
+      email: admin.email,
+      username: admin.username,
+      role: admin.role,
+      invitedBy: access.admin.username,
+    });
+  } catch {
+    outcome = "failed";
+  }
+
+  const submitted =
+    outcome === "sent" && process.env.BREVO_SANDBOX !== "1";
+
+  let message: string;
+
+  if (submitted) {
+    message =
+      "Admin account created. Invitation submitted for delivery.";
+  } else if (outcome === "printed") {
+    message =
+      "Admin account created. The invitation was printed in the server terminal; no email was sent.";
+  } else if (outcome === "captured") {
+    message =
+      "Admin account created. The invitation is available in the local Mailpit inbox.";
+  } else if (
+    outcome === "sent" &&
+    process.env.BREVO_SANDBOX === "1"
+  ) {
+    message =
+      "Admin account created. Brevo sandbox mode is enabled, so no email was delivered.";
+  } else {
+    message =
+      "Admin account created, but the invitation could not be sent. Open this admin's three-dot menu and choose Resend Invitation to retry.";
+  }
+
+  return Response.json(
+    {
+      admin,
+      invitation: {
+        submitted,
+        message,
+      },
+    },
+    {
+      status: 201,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
 }

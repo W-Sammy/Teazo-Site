@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -14,20 +15,28 @@ import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
+import { resendAdminInvitation } from "@/app/api/admin/settings/admins-api";
 
-// Coordinate Owner/Admin sections, creation, deletion, and feedback.
+// Coordinate Owner/Admin sections, account actions, and feedback.
 export default function AdminsTable() {
   const [showModal, setShowModal] = useState(false);
   const [modalError, setModalError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [adminToDelete, setAdminToDelete] =
     useState<Admin | null>(null);
+  const [resendingAdminId, setResendingAdminId] =
+    useState<string | null>(null);
+  const [invitationNotice, setInvitationNotice] =
+    useState("");
+
+  const resendInFlight = useRef(false);
 
   const {
     admins,
     canManageAdmins,
     errorMessage,
     clearError,
+    setError,
     addAdmin,
     loadAdmins,
     deleteAdmin,
@@ -50,6 +59,7 @@ export default function AdminsTable() {
     };
   }, [clearError, errorMessage]);
 
+  // Automatically clear success messages.
   useEffect(() => {
     if (!successMessage) {
       return;
@@ -65,26 +75,34 @@ export default function AdminsTable() {
     };
   }, [successMessage]);
 
-  // The database allows only one non-deleted Owner.
+  // Keep Owner separate from the regular Admin rows.
   const owner = admins.find(
     (admin) => admin.role === OWNER_ROLE,
   );
 
-  // The migration will convert all remaining role-3 accounts
-  // to Admin. Until then, keep legacy rows visible in Settings.
   const regularAdmins = admins.filter(
     (admin) => admin.role !== OWNER_ROLE,
   );
 
   async function handleAddAdmin(input: NewAdminInput) {
+    clearError();
+    setSuccessMessage("");
+    setInvitationNotice("");
+
     const result = await addAdmin(input);
 
-    if (result.success) {
-      setModalError("");
-      setShowModal(false);
-      setSuccessMessage("Invitation added successfully.");
-    } else {
+    if (!result.success) {
       setModalError(result.error);
+      return;
+    }
+
+    setModalError("");
+    setShowModal(false);
+
+    if (result.invitation.submitted) {
+      setSuccessMessage(result.invitation.message);
+    } else {
+      setInvitationNotice(result.invitation.message);
     }
   }
 
@@ -105,6 +123,41 @@ export default function AdminsTable() {
 
     if (deleted) {
       setAdminToDelete(null);
+    }
+  }
+
+  async function handleResendInvitation(admin: Admin) {
+    if (
+      resendInFlight.current ||
+      !canManageAdmins ||
+      !admin.canResendInvitation
+    ) {
+      return;
+    }
+
+    resendInFlight.current = true;
+    setResendingAdminId(admin.id);
+    clearError();
+    setSuccessMessage("");
+    setInvitationNotice("");
+
+    try {
+      const result = await resendAdminInvitation(admin.id);
+
+      setSuccessMessage(result.message);
+      await loadAdmins();
+    } catch (error) {
+      // Refresh eligibility before displaying the operation error.
+      await loadAdmins();
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The invitation could not be resent.",
+      );
+    } finally {
+      resendInFlight.current = false;
+      setResendingAdminId(null);
     }
   }
 
@@ -131,6 +184,24 @@ export default function AdminsTable() {
         </div>
       )}
 
+      {/* Invitation delivery notices */}
+      {invitationNotice && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          <p>{invitationNotice}</p>
+
+          <button
+            type="button"
+            onClick={() => setInvitationNotice("")}
+            className="mt-2 cursor-pointer font-semibold underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Owner section */}
       <section className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
         <h2 className="text-xl font-bold text-[#2b211d]">
@@ -154,6 +225,11 @@ export default function AdminsTable() {
             <AdminRow
               key={owner.id}
               admin={owner}
+              showActions={canManageAdmins}
+              onResendInvitation={() => {
+                void handleResendInvitation(owner);
+              }}
+              isResending={resendingAdminId === owner.id}
             />
           ) : (
             <p className="py-4 text-sm text-gray-500">
@@ -193,6 +269,10 @@ export default function AdminsTable() {
                   admin={admin}
                   showActions={canManageAdmins}
                   onDelete={() => handleDeleteAdmin(admin)}
+                  onResendInvitation={() => {
+                    void handleResendInvitation(admin);
+                  }}
+                  isResending={resendingAdminId === admin.id}
                 />
               ))
             ) : (
@@ -207,7 +287,7 @@ export default function AdminsTable() {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
+              className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 sm:w-auto"
             >
               New User
               <span

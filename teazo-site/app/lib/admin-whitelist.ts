@@ -1,15 +1,21 @@
 import "server-only";
+
 import { prepare } from "./d1";
 
-// The administrator system recognizes only two roles:
-// 1 = Owner
-// 2 = Admin
+// 1 = Owner, 2 = Admin.
 export type AdminRole = 1 | 2;
 
 export type Admin = {
   id: string;
   username: string;
   role_id: AdminRole;
+
+  // Retained for compatibility with database records.
+  // This legacy flag must not grant administrator-management access.
+  can_invite_users: number;
+
+  // Incremented when credentials change to invalidate older sessions.
+  session_version: number;
 };
 
 export function normalizeEmail(email: string): string {
@@ -22,10 +28,16 @@ export async function findAuthorizedAdmin(
 ): Promise<Admin | null> {
   const normalizedEmail = normalizeEmail(email);
 
-  if (!normalizedEmail) return null;
+  if (!normalizedEmail) {
+    return null;
+  }
 
   return prepare(
-    `SELECT id, username, role_id
+    `SELECT id,
+            username,
+            role_id,
+            can_invite_users,
+            session_version
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL

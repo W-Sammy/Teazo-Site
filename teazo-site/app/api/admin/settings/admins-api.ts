@@ -10,6 +10,14 @@ export type AdminsResponse = {
   canEdit: boolean;
 };
 
+export type CreateAdminResponse = {
+  admin: Admin;
+  invitation: {
+    submitted: boolean;
+    message: string;
+  };
+};
+
 async function request<T>(
   input: RequestInfo,
   init?: RequestInit,
@@ -30,13 +38,15 @@ async function request<T>(
   };
 
   if (!response.ok) {
-    throw new Error(body.error || "The settings request failed.");
+    throw new Error(
+      body.error || "The settings request failed.",
+    );
   }
 
   return (unwrap ? (body.admin ?? body.admins ?? body) : body) as T;
 }
 
-// Both Owner and Admin may view the administrator list.
+// The server requires Owner access to read the administrator list.
 export function fetchAdmins(): Promise<AdminsResponse> {
   return request<AdminsResponse>(
     "/api/admin/settings/admins",
@@ -45,12 +55,18 @@ export function fetchAdmins(): Promise<AdminsResponse> {
   );
 }
 
-// The server independently requires Owner access for creation.
-export function createAdmin(input: NewAdminInput): Promise<Admin> {
-  return request<Admin>("/api/admin/settings/admins", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+// The server requires Owner access for creation.
+export function createAdmin(
+  input: NewAdminInput,
+): Promise<CreateAdminResponse> {
+  return request<CreateAdminResponse>(
+    "/api/admin/settings/admins",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+    false,
+  );
 }
 
 // The server independently requires Owner access for deletion.
@@ -58,5 +74,15 @@ export async function removeAdmin(id: string): Promise<void> {
   await request<unknown>(
     `/api/admin/settings/admins/${encodeURIComponent(id)}`,
     { method: "DELETE" },
+  );
+}
+
+// Invitation resending is also restricted to Owner server-side.
+export function resendAdminInvitation(
+  id: string,
+): Promise<{ message: string }> {
+  return request<{ message: string }>(
+    `/api/admin/${encodeURIComponent(id)}/resend-invitation`,
+    { method: "POST" },
   );
 }

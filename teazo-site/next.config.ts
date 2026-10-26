@@ -1,9 +1,18 @@
 import type { NextConfig } from "next";
 
 import { allowedHosts } from "@/app/lib/imageHosts";
+import { resolveSquareEnvironment } from "./app/lib/square-environment";
+
+// Fail before accepting requests, even if no Square route has loaded yet.
+resolveSquareEnvironment(process.env.SQUARE_ENVIRONMENT);
 
 // Local storage images are allowed only during development.
 const isDev = process.env.NODE_ENV === "development";
+// Comma-separated hostnames for local tunnels; no scheme or port.
+const extraDevOrigins = (process.env.DEV_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((hostname) => hostname.trim())
+  .filter(Boolean);
 const r2PublicBase = process.env.R2_PUBLIC_BASE;
 const r2ImagePattern = (() => {
   if (!r2PublicBase) return [];
@@ -22,10 +31,10 @@ const r2ImagePattern = (() => {
 
 const nextConfig: NextConfig = {
   /*
-   * Allows other devices on the local network to access
+   * Allows configured tunnels and other devices on the local network to access
    * Next.js development assets and endpoints.
    */
-  allowedDevOrigins: ["10.0.0.142"],
+  allowedDevOrigins: ["10.0.0.142", ...extraDevOrigins],
 
   images: {
     remotePatterns: [
