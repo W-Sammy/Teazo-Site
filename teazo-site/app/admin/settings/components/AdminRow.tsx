@@ -19,13 +19,7 @@ export function AdminRow({
     showActions && !isOwner && typeof onDelete === "function";
 
   return (
-    <div
-      className={`group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none ${
-        showActions
-          ? "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px]"
-          : "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)]"
-      }`}
-    >
+    <div className="group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px] md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none">
       {/* Username */}
       <div className="min-w-0">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
@@ -43,7 +37,7 @@ export function AdminRow({
       {/* Email */}
       <div className="min-w-0">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
-          Email (SSO)
+          Email
         </span>
 
         <div

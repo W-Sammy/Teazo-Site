@@ -8,7 +8,11 @@ export default async function AdminLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireAdminPage(2);
+  const admin = await requireAdminPage(2);
 
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminShell isOwner={admin.role_id === 1}>
+      {children}
+    </AdminShell>
+  );
 }

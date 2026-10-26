@@ -138,14 +138,16 @@ export default function AdminsTable() {
         </h2>
 
         <div className="w-full min-w-0 max-w-5xl">
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)] items-center gap-4 border-b border-gray-100 pb-4 md:grid">
+          <div className="hidden items-center gap-4 border-b border-gray-100 pb-4 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px]">
             <div className="text-sm font-semibold text-gray-500">
               Username
             </div>
 
             <div className="text-sm font-semibold text-gray-500">
-              Email (SSO)
+              Email
             </div>
+
+            <div aria-hidden="true" />
           </div>
 
           {owner ? (
@@ -168,26 +170,18 @@ export default function AdminsTable() {
         </h2>
 
         <div className="w-full min-w-0 max-w-5xl">
-          <div
-            className={`hidden items-center gap-4 border-b border-gray-100 pb-4 md:grid ${
-              canManageAdmins
-                ? "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px]"
-                : "md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)]"
-            }`}
-          >
+          <div className="hidden items-center gap-4 border-b border-gray-100 pb-4 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px]">
             <div className="text-sm font-semibold text-gray-500">
               Username
             </div>
 
             <div className="text-sm font-semibold text-gray-500">
-              Email (SSO)
+              Email
             </div>
 
-            {canManageAdmins && (
-              <div className="text-sm font-semibold text-gray-500">
-                <span className="sr-only">Actions</span>
-              </div>
-            )}
+            <div className="text-sm font-semibold text-gray-500">
+              <span className="sr-only">Actions</span>
+            </div>
           </div>
 
           {/* Administrator rows become cards on mobile. */}

@@ -7,12 +7,14 @@ import { signOut } from "next-auth/react";
 
 // The layout owns mobile navigation state; callbacks keep this sidebar reusable.
 type SidebarProps = {
+  isOwner: boolean;
   mobileOpen?: boolean;
   onMobileToggle?: () => void;
   onMobileClose?: () => void;
 };
 
 export default function Sidebar({
+  isOwner,
   mobileOpen = false,
   onMobileToggle = () => {},
   onMobileClose = () => {},
@@ -25,6 +27,7 @@ export default function Sidebar({
   const pathname = usePathname();
 
   // Keep labels, destinations, and icon filenames together for each primary link.
+  // Settings is included only for the authenticated Owner.
   const adminPages = [
     {
       id: "dashboard",
@@ -50,15 +53,19 @@ export default function Sidebar({
       img: "teazo_event_icon.svg",
       href: "/admin/events",
     },
-    {
-      id: "settings",
-      label: "Settings",
-      img: "teazo_setting_icon.svg",
-      href: "/admin/settings",
-    },
+    ...(isOwner
+      ? [
+          {
+            id: "settings",
+            label: "Settings",
+            img: "teazo_setting_icon.svg",
+            href: "/admin/settings",
+          },
+        ]
+      : []),
   ];
 
-  // These are links only. Logout currently navigates home; it does not call sign-out.
+  // Secondary navigation controls.
   const controls = [
     {
       id: "website-content",
@@ -163,15 +170,17 @@ export default function Sidebar({
                   }}
                 >
                   <Image
-                    src={iconRoot +  page.img}
+                    src={iconRoot + page.img}
                     alt={`${page.label} icon`}
                     width={24}
                     height={24}
                     className="h-6 w-6 shrink-0 object-contain"
-                    // filter svg black if on page/is active
-                    style={{filter: !isActive
-                      ? "brightness(0)" 
-                      : "none"}}
+                    // Filter SVG black if the page is not active.
+                    style={{
+                      filter: !isActive
+                        ? "brightness(0)"
+                        : "none",
+                    }}
                   />
 
                   <span

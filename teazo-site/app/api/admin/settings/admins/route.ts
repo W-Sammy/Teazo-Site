@@ -14,10 +14,10 @@ function errorResponse(message: string, status: number) {
   );
 }
 
-// Both Owner and Admin may view the administrator list.
+// Only the Owner may view the administrator list.
 export async function GET(request: Request) {
   try {
-    const access = await requireAdminApi(request, 2);
+    const access = await requireAdminApi(request, 1);
 
     if (!access.ok) {
       return access.response;
@@ -26,8 +26,6 @@ export async function GET(request: Request) {
     return Response.json(
       {
         admins: await listSettingsAdmins(),
-
-        // Only the Owner can create or remove administrators.
         canEdit: access.admin.role_id === 1,
       },
       {

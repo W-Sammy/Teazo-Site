@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -22,12 +21,6 @@ const owner = {
   id: "owner-id",
   username: "Test Owner",
   role_id: 1,
-};
-
-const admin = {
-  id: "admin-id",
-  username: "Test Admin",
-  role_id: 2,
 };
 
 const administratorList = [
@@ -79,50 +72,61 @@ function deny(status: 401 | 403) {
 describe("Admin Settings GET authorization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
     mocks.listSettingsAdmins.mockResolvedValue(
       administratorList,
     );
   });
 
-  it.each([
-    { role: 1, viewer: owner, canEdit: true },
-    { role: 2, viewer: admin, canEdit: false },
-  ])(
-    "allows role $role to view administrators",
-    async ({ viewer, canEdit }) => {
-      mocks.requireAdminApi.mockResolvedValue({
-        ok: true,
-        admin: viewer,
-      });
+  it("allows Owner to view administrators", async () => {
+    mocks.requireAdminApi.mockResolvedValue({
+      ok: true,
+      admin: owner,
+    });
 
-      const response = await GET(makeGetRequest());
+    const response = await GET(makeGetRequest());
 
-      expect(mocks.requireAdminApi).toHaveBeenCalledWith(
-        expect.any(Request),
-        2,
-      );
+    expect(mocks.requireAdminApi).toHaveBeenCalledWith(
+      expect.any(Request),
+      1,
+    );
 
-      expect(response.status).toBe(200);
-      expect(mocks.listSettingsAdmins).toHaveBeenCalledOnce();
+    expect(response.status).toBe(200);
+    expect(mocks.listSettingsAdmins).toHaveBeenCalledOnce();
 
-      expect(await response.json()).toEqual({
-        admins: administratorList,
-        canEdit,
-      });
-    },
-  );
+    expect(await response.json()).toEqual({
+      admins: administratorList,
+      canEdit: true,
+    });
+  });
 
-  it.each([401, 403] as const)(
-    "rejects unauthorized GET requests with %i",
-    async (status) => {
-      deny(status);
+  it("rejects unauthenticated requests with 401", async () => {
+    deny(401);
 
-      const response = await GET(makeGetRequest());
+    const response = await GET(makeGetRequest());
 
-      expect(response.status).toBe(status);
-      expect(mocks.listSettingsAdmins).not.toHaveBeenCalled();
-    },
-  );
+    expect(mocks.requireAdminApi).toHaveBeenCalledWith(
+      expect.any(Request),
+      1,
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.listSettingsAdmins).not.toHaveBeenCalled();
+  });
+
+  it("rejects regular Admin requests with 403", async () => {
+    deny(403);
+
+    const response = await GET(makeGetRequest());
+
+    expect(mocks.requireAdminApi).toHaveBeenCalledWith(
+      expect.any(Request),
+      1,
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.listSettingsAdmins).not.toHaveBeenCalled();
+  });
 
   it("returns 503 when listing administrators fails", async () => {
     mocks.requireAdminApi.mockResolvedValue({
@@ -142,6 +146,10 @@ describe("Admin Settings GET authorization", () => {
       const response = await GET(makeGetRequest());
 
       expect(response.status).toBe(503);
+      expect(mocks.requireAdminApi).toHaveBeenCalledWith(
+        expect.any(Request),
+        1,
+      );
     } finally {
       consoleSpy.mockRestore();
     }

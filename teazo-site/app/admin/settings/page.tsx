@@ -9,9 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminSettingsPage() {
-  // Both Owner and Admin may view Settings.
-  // Administrator creation and deletion remain Owner-only.
-  await requireAdminPage(2);
+  // Only the Owner may access Admin Settings.
+  await requireAdminPage(1);
 
   return (
     <div className="w-full min-w-0 overflow-x-hidden px-4 pb-12 pt-6 sm:px-6 md:px-8 md:pt-10">
