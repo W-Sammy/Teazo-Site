@@ -224,19 +224,12 @@ export default function GalleryUploadForm({
 
     try {
       // Dynamically load the converter only for HEIC/HEIF files.
-      const { default: heic2any } =
-        await import("heic2any");
-
-      const result = await heic2any({
+      const { heicTo } = await import("heic-to");
+      const jpegBlob = await heicTo({
         blob: file,
-        toType: "image/jpeg",
+        type: "image/jpeg",
         quality: 0.85,
       });
-
-      // Use the first still image if multiple frames are returned.
-      const jpegBlob = Array.isArray(result)
-        ? result[0]
-        : result;
 
       if (!jpegBlob || jpegBlob.size === 0) {
         throw new Error(
