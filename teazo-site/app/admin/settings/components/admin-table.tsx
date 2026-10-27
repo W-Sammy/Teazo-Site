@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -6,6 +7,7 @@ import {
   useState,
 } from "react";
 
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 import type {
   Admin,
   NewAdminInput,
@@ -287,7 +289,7 @@ export default function AdminsTable() {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800 sm:w-auto"
+              className={`mt-4 inline-flex w-full items-center justify-center ${adminButtonStyles.primary} sm:w-auto`}
             >
               New User
               <span

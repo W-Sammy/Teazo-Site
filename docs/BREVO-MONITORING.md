@@ -271,13 +271,4 @@ Never store production secrets in source code.
 | `teazo-site/app/api/cron/cleanup-analytics/route.ts` | Scheduled analytics cleanup endpoint. |
 | `teazo-site/vercel.json` | Vercel Cron Job schedules. |
 
-## 10. Related Jira Tasks
-
-- TZ-428 — Configure Brevo Transactional Email
-- TZ-429 — Configure Brevo Environment Variables in Vercel
-- TZ-430 — Test Contact Form Email Delivery
-- TZ-431 — Implement Automated Brevo API-Key Activity Checks
-- TZ-432 — Implement Brevo Monitoring and Client Handoff Documentation
-- TZ-433 — Authenticate Teazo Domain for Brevo Email Delivery
-
 This document should be reviewed whenever the email integration, monitoring service, scheduled jobs, or production configuration changes.

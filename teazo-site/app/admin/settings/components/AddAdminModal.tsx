@@ -96,7 +96,7 @@ export function AddAdminModal({
             className="mb-4 block text-sm font-medium text-gray-600"
             htmlFor="new-admin-username"
           >
-            Username
+            Username <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="new-admin-username"
@@ -117,7 +117,7 @@ export function AddAdminModal({
             className="mb-6 block text-sm font-medium text-gray-600"
             htmlFor="new-admin-email"
           >
-            Email
+            Email <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="new-admin-email"
