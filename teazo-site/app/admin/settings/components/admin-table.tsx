@@ -6,6 +6,7 @@ import {
   useRef,
 } from "react";
 
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
@@ -243,21 +244,23 @@ const resendInFlight = useRef(false);
         </div>
 
         {/* Open the creation modal without changing the current admin list. */}
-        {canEdit && <button
-          type="button"
-          onClick={() =>
-            setShowModal(true)
-          }
-          className="mt-4 inline-flex w-full cursor-pointer items-center justify-center rounded-md bg-[#dbb082] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c99a6e] sm:w-auto"
-        >
-          New User
-          <span
-            className="ml-2 text-base"
-            aria-hidden="true"
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() =>
+              setShowModal(true)
+            }
+            className={`mt-4 inline-flex w-full items-center justify-center ${adminButtonStyles.primary} sm:w-auto`}
           >
-            +
-          </span>
-        </button>}
+            New User
+            <span
+              className="ml-2 text-base"
+              aria-hidden="true"
+            >
+              +
+            </span>
+          </button>
+        )}
       </div>
 
       {/*

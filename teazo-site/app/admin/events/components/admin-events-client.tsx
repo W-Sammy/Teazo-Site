@@ -6,6 +6,7 @@ import {
   type ChangeEvent,
 } from "react";
 import AdminForm from "@/app/admin/components/admin-form-page";
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 import AdminViewToggle, {
   GridViewIcon,
   ListViewIcon,
@@ -560,7 +561,7 @@ export default function AdminEventsClient({
               onClick={
                 openNewEventDrawer
               }
-              className="inline-flex w-full justify-center rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-bold text-white hover:bg-[#F59AA3] sm:w-auto"
+              className={`inline-flex w-full justify-center ${adminButtonStyles.primary} sm:w-auto`}
             >
               New Event +
             </button>
@@ -568,7 +569,7 @@ export default function AdminEventsClient({
         </div>
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-3 text-sm text-gray-500">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
             <div className="flex flex-wrap items-center gap-3">
               <span>
                 {filteredEvents.length}{" "}
@@ -577,35 +578,26 @@ export default function AdminEventsClient({
                   : "events"}
               </span>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setDeleteEndedDialogOpen(
-                    true,
-                  )
-                }
-                disabled={
-                  endedEventCount === 0
-                }
-                className="cursor-pointer rounded border border-red-300 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
-              >
-                Delete ended events (
-                {endedEventCount})
-              </button>
+              {(search ||
+                selectedStatuses.length > 0) && (
+                <button
+                  type="button"
+                  onClick={clearSearchAndFilters}
+                  className="cursor-pointer text-blue-500 hover:underline"
+                >
+                  Clear search and filters
+                </button>
+              )}
             </div>
 
-            {(search ||
-              selectedStatuses.length > 0) && (
-              <button
-                type="button"
-                onClick={
-                  clearSearchAndFilters
-                }
-                className="cursor-pointer text-blue-500 hover:underline"
-              >
-                Clear search and filters
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setDeleteEndedDialogOpen(true)}
+              disabled={endedEventCount === 0}
+              className={`ml-auto ${adminButtonStyles.danger}`}
+            >
+              Delete ended events ({endedEventCount})
+            </button>
           </div>
 
           {/* Distinguish an empty collection from a search with no matches. */}
@@ -652,7 +644,7 @@ export default function AdminEventsClient({
                     ? openNewEventDrawer
                     : clearSearchAndFilters
                 }
-                className="mt-4 rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+                className={`mt-4 ${adminButtonStyles.primary}`}
               >
                 {events.length === 0
                   ? "Add an event"

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 import {
   useEffect,
   useMemo,
@@ -31,6 +32,21 @@ const acceptedImageTypes = [
   "image/png",
   "image/webp",
 ];
+
+// Some browsers report HEIC/HEIF files with a missing or generic MIME type.
+const heicImageTypes = new Set([
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
+]);
+
+function isHeicImage(file: File): boolean {
+  return (
+    heicImageTypes.has(file.type.toLowerCase()) ||
+    /\.(heic|heif)$/i.test(file.name)
+  );
+}
 
 // File-size limit in bytes; the interface labels this as 10 MB.
 const maxFileSize = 10 * 1024 * 1024;
@@ -128,6 +144,14 @@ export default function EventForm({
   const [error, setError] =
     useState<string | null>(null);
 
+  // Do not allow saving while a HEIC/HEIF image is being converted.
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Ignore a conversion result if the form has already closed.
+  const isMounted = useRef(true);
+  const selectionSequence = useRef(0);
+  const conversionInProgress = useRef(false);
+
   // The visible Choose File button triggers this hidden native file input.
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
@@ -138,11 +162,17 @@ export default function EventForm({
 
   // Release the remaining temporary preview when the form unmounts.
   useEffect(() => {
+    isMounted.current = true;
+
     return () => {
+      isMounted.current = false;
+      selectionSequence.current += 1;
+
       if (temporaryPreviewUrl.current) {
         URL.revokeObjectURL(
           temporaryPreviewUrl.current,
         );
+        temporaryPreviewUrl.current = null;
       }
     };
   }, []);
@@ -182,57 +212,105 @@ export default function EventForm({
       ? "Current image selected"
       : "No file chosen");
 
-  // Reject invalid files without replacing a previously valid selection or preview.
-  function selectImage(file: File) {
-    setImageError(null);
+  // Update the preview only after the new file is valid and ready.
+  function applySelectedFile(file: File) {
+    const nextPreviewUrl = URL.createObjectURL(file);
+    const previousPreviewUrl = temporaryPreviewUrl.current;
 
-    if (
-      !acceptedImageTypes.includes(file.type)
-    ) {
-      setImageError(
-        "Choose a JPG, PNG, or WEBP image.",
-      );
-      return;
-    }
-
-    if (file.size > maxFileSize) {
-      setImageError(
-        "The selected image must be 10 MB or smaller.",
-      );
-      return;
-    }
-
-    if (temporaryPreviewUrl.current) {
-      URL.revokeObjectURL(
-        temporaryPreviewUrl.current,
-      );
-    }
-
-    // Create a local preview only; this does not upload the file.
-    const nextPreviewUrl =
-      URL.createObjectURL(file);
-
-    temporaryPreviewUrl.current =
-      nextPreviewUrl;
-
+    temporaryPreviewUrl.current = nextPreviewUrl;
     setImageFile(file);
     setPreviewUrl(nextPreviewUrl);
+
+    if (previousPreviewUrl) {
+      URL.revokeObjectURL(previousPreviewUrl);
+    }
   }
 
-  // Use only the first selected file.
-  function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
+  // Validate normal images, or convert HEIC/HEIF to a JPEG before uploading.
+  async function selectImage(file: File) {
+    if (conversionInProgress.current) return;
+
+    setImageError(null);
+
+    const needsConversion = isHeicImage(file);
+
+    if (
+      !needsConversion &&
+      !acceptedImageTypes.includes(file.type.toLowerCase())
+    ) {
+      setImageError(
+        "Choose a JPG, PNG, WebP, HEIC, or HEIF image.",
+      );
+      return;
+    }
+
+    if (file.size === 0 || file.size > maxFileSize) {
+      setImageError(
+        "The selected image must be nonempty and 10 MB or smaller.",
+      );
+      return;
+    }
+
+    if (!needsConversion) {
+      applySelectedFile(file);
+      return;
+    }
+
+    const requestId = ++selectionSequence.current;
+    conversionInProgress.current = true;
+    setIsConverting(true);
+
+    try {
+      // Convert HEIC/HEIF to a JPEG in the browser.
+      const { heicTo } = await import("heic-to");
+      const jpegBlob = await heicTo({
+        blob: file,
+        type: "image/jpeg",
+        quality: 0.85,
+      });
+
+      if (!jpegBlob || jpegBlob.size === 0) {
+        throw new Error("The converted image was empty.");
+      }
+
+      if (jpegBlob.size > maxFileSize) {
+        throw new Error("The converted image exceeds 10 MB.");
+      }
+
+      const jpegName =
+        file.name.replace(/\.(heic|heif)$/i, "") + ".jpg";
+      const jpegFile = new File([jpegBlob], jpegName, {
+        type: "image/jpeg",
+        lastModified: file.lastModified,
+      });
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        applySelectedFile(jpegFile);
+      }
+    } catch (error) {
+      console.error("Event HEIC/HEIF conversion failed:", error);
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        setImageError(
+          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+        );
+      }
+    } finally {
+      conversionInProgress.current = false;
+      if (isMounted.current && selectionSequence.current === requestId) {
+        setIsConverting(false);
+      }
+    }
+  }
+
+  // Use only the first selected file and allow reselecting the same file.
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     if (file) {
-      selectImage(file);
+      void selectImage(file);
     }
 
-    /*
-     * Allows the same file to be selected again
-     * after an invalid or canceled selection.
-     */
     event.target.value = "";
   }
 
@@ -241,6 +319,10 @@ export default function EventForm({
     event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (conversionInProgress.current || isConverting) {
+      return;
+    }
 
     setError(null);
 
@@ -308,7 +390,7 @@ export default function EventForm({
             className="mb-1 block text-sm text-gray-700"
             htmlFor="event-name"
           >
-            Name
+            Name <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <input
@@ -332,7 +414,7 @@ export default function EventForm({
             className="mb-1 block text-sm text-gray-700"
             htmlFor="event-description"
           >
-            Description
+            Description <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <textarea
@@ -389,7 +471,8 @@ export default function EventForm({
             id="event-image"
             name="eventImage"
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+            disabled={isConverting}
             onChange={handleFileChange}
             className="hidden"
             aria-describedby="event-image-help"
@@ -402,9 +485,10 @@ export default function EventForm({
                 onClick={() =>
                   fileInputRef.current?.click()
                 }
-                className="w-full shrink-0 cursor-pointer rounded bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] sm:w-auto"
+                disabled={isConverting}
+                className={`w-full shrink-0 ${adminButtonStyles.primary} sm:w-auto`}
               >
-                Choose File
+                {isConverting ? "Converting HEIC..." : "Choose File"}
               </button>
 
               <span
@@ -425,8 +509,14 @@ export default function EventForm({
             }`}
           >
             {imageError ??
-              "JPG, PNG, or WEBP · 10 MB maximum. A default image is used if omitted."}
+              "JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum. A default image is used if omitted."}
           </p>
+
+          {isConverting && (
+            <p role="status" className="mt-2 text-xs text-gray-500">
+              Converting HEIC/HEIF image for preview and upload...
+            </p>
+          )}
         </div>
 
         {/* Event dates */}
@@ -435,7 +525,7 @@ export default function EventForm({
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-start"
           >
-            Starts
+            Starts <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="event-start"
@@ -458,7 +548,7 @@ export default function EventForm({
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-end"
           >
-            Ends
+            Ends <span className="text-red-600" aria-hidden="true">*</span>
 
             <input
               id="event-end"
@@ -624,14 +714,15 @@ export default function EventForm({
           <button
             type="button"
             onClick={onCancel}
-            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 md:w-auto"
+            className={`w-full ${adminButtonStyles.secondary} md:w-auto`}
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] md:w-auto"
+            disabled={isConverting}
+            className={`w-full ${adminButtonStyles.primary} md:w-auto`}
           >
             {initialEvent
               ? "Save Changes"
