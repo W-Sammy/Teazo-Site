@@ -53,6 +53,7 @@ describe("Admin Settings database queries", () => {
           email: "owner@example.invalid",
           role: 1,
           canResendInvitation: 0,
+          canReceiveOwnership: 0,
         },
       ],
     });
@@ -69,6 +70,7 @@ describe("Admin Settings database queries", () => {
     expect(admins[0].role).toBe(1);
     expect(admins[0].canManageAdmins).toBe(true);
     expect(admins[0].canResendInvitation).toBe(false);
+    expect(admins[0].canReceiveOwnership).toBe(false);
   });
 
   it("assigns management permissions according to role rather than legacy flags", async () => {
@@ -81,6 +83,7 @@ describe("Admin Settings database queries", () => {
           role: 1,
           canManageAdmins: 0,
           canResendInvitation: 0,
+          canReceiveOwnership: 0,
         },
         {
           id: "admin-id",
@@ -89,6 +92,7 @@ describe("Admin Settings database queries", () => {
           role: 2,
           canManageAdmins: 1,
           canResendInvitation: 1,
+          canReceiveOwnership: 1,
         },
       ],
     });
@@ -103,6 +107,7 @@ describe("Admin Settings database queries", () => {
         role: 1,
         canManageAdmins: true,
         canResendInvitation: false,
+        canReceiveOwnership: false,
       },
       {
         id: "admin-id",
@@ -111,6 +116,7 @@ describe("Admin Settings database queries", () => {
         role: 2,
         canManageAdmins: false,
         canResendInvitation: true,
+        canReceiveOwnership: true,
       },
     ]);
   });
@@ -133,6 +139,67 @@ describe("Admin Settings database queries", () => {
     );
   });
 
+  it("requires an active role-2 Admin for ownership-transfer eligibility", async () => {
+    await listSettingsAdmins();
+
+    const sql = mocks.prepare.mock.calls[0][0] as string;
+
+    // Ownership eligibility is derived by SQL rather
+    // than supplied by the browser.
+    expect(sql).toMatch(
+      /WHEN\s+role_id\s*=\s*2\s+AND\s+status\s*=\s*'active'\s+THEN\s+1/i,
+    );
+
+    expect(sql).toMatch(
+      /END\s+AS\s+canReceiveOwnership/i,
+    );
+
+    // Deleted administrators are excluded from the list.
+    expect(sql).toContain("deleted_at IS NULL");
+  });
+
+  it("maps ownership-transfer eligibility from the database flag", async () => {
+    mocks.all.mockResolvedValue({
+      results: [
+        {
+          id: "active-admin-id",
+          username: "Active Admin",
+          email: "active@example.invalid",
+          role: 2,
+          canResendInvitation: 0,
+          canReceiveOwnership: 1,
+        },
+        {
+          id: "invited-admin-id",
+          username: "Invited Admin",
+          email: "invited@example.invalid",
+          role: 2,
+          canResendInvitation: 1,
+          canReceiveOwnership: 0,
+        },
+        {
+          id: "owner-id",
+          username: "Test Owner",
+          email: "owner@example.invalid",
+          role: 1,
+          canResendInvitation: 0,
+          canReceiveOwnership: 0,
+        },
+      ],
+    });
+
+    const admins = await listSettingsAdmins();
+
+    expect(admins[0].canReceiveOwnership).toBe(true);
+    expect(admins[1].canReceiveOwnership).toBe(false);
+    expect(admins[2].canReceiveOwnership).toBe(false);
+
+    // Receiving ownership does not grant the Admin
+    // permission to manage other administrators.
+    expect(admins[0].canManageAdmins).toBe(false);
+    expect(admins[2].canManageAdmins).toBe(true);
+  });
+
   it("always inserts new accounts as Admin without management privileges", async () => {
     mocks.first.mockResolvedValue({
       id: "new-admin-id",
@@ -140,6 +207,7 @@ describe("Admin Settings database queries", () => {
       email: "disposable@example.invalid",
       role: 2,
       canResendInvitation: 1,
+      canReceiveOwnership: 0,
     });
 
     const admin = await createSettingsAdmin({
@@ -174,6 +242,7 @@ describe("Admin Settings database queries", () => {
     expect(admin.role).toBe(2);
     expect(admin.canManageAdmins).toBe(false);
     expect(admin.canResendInvitation).toBe(true);
+    expect(admin.canReceiveOwnership).toBe(false);
   });
 
   it("ignores client-supplied Owner roles and management permissions", async () => {
@@ -183,14 +252,16 @@ describe("Admin Settings database queries", () => {
       email: "disposable@example.invalid",
       role: 2,
       canResendInvitation: 1,
+      canReceiveOwnership: 0,
     });
 
-    // Simulate additional properties supplied by an untrusted client.
+    // Simulate elevated properties supplied by an untrusted client.
     const input = {
       username: "Disposable Admin",
       email: "disposable@example.invalid",
       role: 1,
       canManageAdmins: true,
+      canReceiveOwnership: true,
       can_invite_users: 1,
     };
 
@@ -212,6 +283,7 @@ describe("Admin Settings database queries", () => {
 
     expect(admin.role).toBe(2);
     expect(admin.canManageAdmins).toBe(false);
+    expect(admin.canReceiveOwnership).toBe(false);
     expect(mocks.run).toHaveBeenCalledOnce();
   });
 
@@ -257,6 +329,7 @@ describe("Admin Settings database queries", () => {
       email: "eligible@example.invalid",
       role: 2,
       canResendInvitation: 1,
+      canReceiveOwnership: 0,
     });
 
     const admin = await findSettingsAdminForInvitation(
@@ -276,6 +349,7 @@ describe("Admin Settings database queries", () => {
       role: 2,
       canManageAdmins: false,
       canResendInvitation: true,
+      canReceiveOwnership: false,
     });
   });
 

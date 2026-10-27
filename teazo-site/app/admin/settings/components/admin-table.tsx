@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -19,7 +20,51 @@ import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dial
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 import { resendAdminInvitation } from "@/app/api/admin/settings/admins-api";
 
-// Coordinate Owner/Admin sections, account actions, and feedback.
+type PendingTransfer = {
+  id: string;
+  recipientAdminId: string;
+  recipientUsername: string;
+  recipientEmail: string;
+  createdAt: number;
+  expiresAt: number;
+  status: "pending";
+};
+
+type PendingTransferResponse = {
+  transfer?: PendingTransfer | null;
+  error?: string;
+};
+
+type PendingLookupResult =
+  | { ok: true; transfer: PendingTransfer | null }
+  | { ok: false };
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+// Fetch data without updating component state.
+async function fetchPendingTransfer(): Promise<PendingTransfer | null> {
+  const response = await fetch(
+    "/api/admin/ownership-transfer",
+    {
+      credentials: "same-origin",
+      cache: "no-store",
+    },
+  );
+
+  const result =
+    (await response.json()) as PendingTransferResponse;
+
+  if (!response.ok) {
+    throw new Error(
+      result.error ?? "Unable to load pending transfer.",
+    );
+  }
+
+  return result.transfer ?? null;
+}
+
 export default function AdminsTable() {
   const [showModal, setShowModal] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -33,6 +78,7 @@ export default function AdminsTable() {
 
   const resendInFlight = useRef(false);
   const transferInFlight = useRef(false);
+  const cancelInFlight = useRef(false);
 
   const [transferTarget, setTransferTarget] =
     useState<Admin | null>(null);
@@ -42,10 +88,18 @@ export default function AdminsTable() {
   const [transferNotice, setTransferNotice] =
     useState("");
 
+  const [pendingTransfer, setPendingTransfer] =
+    useState<PendingTransfer | null>(null);
+  const [pendingLoaded, setPendingLoaded] = useState(false);
+  const [pendingError, setPendingError] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [isCancelingTransfer, setIsCancelingTransfer] =
+    useState(false);
+
   const {
     admins,
     canManageAdmins,
-    errorMessage,
+    errorMessage: adminError,
     clearError,
     setError,
     addAdmin,
@@ -57,36 +111,108 @@ export default function AdminsTable() {
     void loadAdmins();
   }, [loadAdmins]);
 
-  // Automatically clear operation errors after 3.5 seconds.
+  // Return the refreshed status so callers can distinguish
+  // no pending transfer from a failed status lookup.
+  const loadPendingTransfer =
+    useCallback(async (): Promise<PendingLookupResult> => {
+      try {
+        const transfer = await fetchPendingTransfer();
+
+        setPendingTransfer(transfer);
+        setPendingLoaded(true);
+        setPendingError("");
+        setConfirmCancel(false);
+
+        return { ok: true, transfer };
+      } catch (error) {
+        setPendingLoaded(false);
+        setPendingTransfer(null);
+        setPendingError(
+          errorMessage(
+            error,
+            "Unable to load pending transfer.",
+          ),
+        );
+
+        return { ok: false };
+      }
+    }, []);
+
+  // Initial lookup. State updates happen asynchronously
+  // after the request completes, not synchronously in effect.
   useEffect(() => {
-    if (!errorMessage) {
-      return;
-    }
+    let active = true;
+
+    void fetchPendingTransfer()
+      .then((transfer) => {
+        if (!active) return;
+
+        setPendingTransfer(transfer);
+        setPendingLoaded(true);
+        setPendingError("");
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+
+        setPendingLoaded(false);
+        setPendingTransfer(null);
+        setPendingError(
+          errorMessage(
+            error,
+            "Unable to load pending transfer.",
+          ),
+        );
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Automatically refresh around the expiration deadline.
+  // A manual Refresh Status button is also available if a
+  // request is accepted, declined, or canceled elsewhere.
+  useEffect(() => {
+    if (!pendingLoaded || !pendingTransfer) return;
+
+    const remaining =
+      pendingTransfer.expiresAt * 1000 - Date.now() + 1000;
+
+    // Avoid repeated immediate requests if the browser clock
+    // differs from the database server's clock.
+    const delay = Math.max(
+      30_000,
+      Math.min(remaining, 2_147_000_000),
+    );
+
+    const timeout = window.setTimeout(() => {
+      void loadPendingTransfer();
+    }, delay);
+
+    return () => window.clearTimeout(timeout);
+  }, [pendingLoaded, pendingTransfer, loadPendingTransfer]);
+
+  // Automatically clear operation errors.
+  useEffect(() => {
+    if (!adminError) return;
 
     const timeout = window.setTimeout(clearError, 3500);
 
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [clearError, errorMessage]);
+    return () => window.clearTimeout(timeout);
+  }, [clearError, adminError]);
 
   // Automatically clear success messages.
   useEffect(() => {
-    if (!successMessage) {
-      return;
-    }
+    if (!successMessage) return;
 
     const timeout = window.setTimeout(
       () => setSuccessMessage(""),
       3500,
     );
 
-    return () => {
-      window.clearTimeout(timeout);
-    };
+    return () => window.clearTimeout(timeout);
   }, [successMessage]);
 
-  // Keep Owner separate from the regular Admin rows.
   const owner = admins.find(
     (admin) => admin.role === OWNER_ROLE,
   );
@@ -132,9 +258,7 @@ export default function AdminsTable() {
 
     const deleted = await deleteAdmin(adminToDelete);
 
-    if (deleted) {
-      setAdminToDelete(null);
-    }
+    if (deleted) setAdminToDelete(null);
   }
 
   async function handleResendInvitation(admin: Admin) {
@@ -158,13 +282,13 @@ export default function AdminsTable() {
       setSuccessMessage(result.message);
       await loadAdmins();
     } catch (error) {
-      // Refresh eligibility before displaying the operation error.
       await loadAdmins();
 
       setError(
-        error instanceof Error
-          ? error.message
-          : "The invitation could not be resent.",
+        errorMessage(
+          error,
+          "The invitation could not be resent.",
+        ),
       );
     } finally {
       resendInFlight.current = false;
@@ -172,24 +296,33 @@ export default function AdminsTable() {
     }
   }
 
+  const canInitiateTransfer =
+    canManageAdmins &&
+    pendingLoaded &&
+    !pendingTransfer &&
+    !isSendingTransfer &&
+    !isCancelingTransfer;
+
   function handleTransferOwnership(admin: Admin) {
     if (
-      !canManageAdmins ||
+      !canInitiateTransfer ||
+      !admin.canReceiveOwnership ||
       admin.role === OWNER_ROLE ||
       transferInFlight.current
     ) {
       return;
     }
 
+    setTransferTarget(admin);
     setTransferError("");
     setTransferNotice("");
-    setTransferTarget(admin);
   }
 
   async function confirmTransferOwnership() {
     if (
-      !canManageAdmins ||
+      !canInitiateTransfer ||
       !transferTarget ||
+      !transferTarget.canReceiveOwnership ||
       transferInFlight.current
     ) {
       return;
@@ -198,6 +331,7 @@ export default function AdminsTable() {
     transferInFlight.current = true;
     setIsSendingTransfer(true);
     setTransferError("");
+    setTransferNotice("");
 
     try {
       const response = await fetch(
@@ -232,31 +366,131 @@ export default function AdminsTable() {
         result.invitation?.message ??
           "Ownership offer created. The Admin must accept before roles change.",
       );
+
+      setPendingLoaded(false);
+      const refreshed = await loadPendingTransfer();
+
+      if (!refreshed.ok) {
+        setTransferNotice(
+          "The ownership offer was created, but its current status could not be refreshed. Use Refresh Status before attempting another offer.",
+        );
+      }
     } catch (error) {
-      setTransferError(
-        error instanceof Error
-          ? error.message
-          : "Unable to initiate ownership transfer.",
+      const failure = errorMessage(
+        error,
+        "Unable to initiate ownership transfer.",
       );
+
+      // A response failure does not prove that no request
+      // was created. Verify status before another attempt.
+      setPendingLoaded(false);
+      const refreshed = await loadPendingTransfer();
+
+      if (refreshed.ok && refreshed.transfer) {
+        setTransferTarget(null);
+        setTransferNotice(
+          `${failure} A transfer remains pending. Review or cancel it below before trying again.`,
+        );
+      } else if (refreshed.ok) {
+        setTransferError(failure);
+      } else {
+        setTransferTarget(null);
+        setTransferNotice(
+          `${failure} Pending status could not be verified. Use Refresh Status before attempting another offer.`,
+        );
+      }
     } finally {
       transferInFlight.current = false;
       setIsSendingTransfer(false);
     }
   }
 
+  async function confirmCancelOwnershipTransfer() {
+    if (
+      !canManageAdmins ||
+      !pendingTransfer ||
+      cancelInFlight.current ||
+      isSendingTransfer
+    ) {
+      return;
+    }
+
+    cancelInFlight.current = true;
+    setIsCancelingTransfer(true);
+    setPendingError("");
+    setTransferNotice("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/ownership-transfer",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "same-origin",
+          cache: "no-store",
+          body: JSON.stringify({
+            transferId: pendingTransfer.id,
+          }),
+        },
+      );
+
+      const result = (await response.json()) as {
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ??
+            "Unable to cancel ownership transfer.",
+        );
+      }
+
+      setConfirmCancel(false);
+      setPendingLoaded(false);
+
+      const refreshed = await loadPendingTransfer();
+
+      setTransferNotice(
+        refreshed.ok
+          ? result.message ?? "Ownership transfer canceled."
+          : "Cancellation succeeded, but the current status could not be refreshed. Use Refresh Status to verify.",
+      );
+    } catch (error) {
+      const failure = errorMessage(
+        error,
+        "Unable to cancel ownership transfer.",
+      );
+
+      const refreshed = await loadPendingTransfer();
+
+      if (refreshed.ok && !refreshed.transfer) {
+        setConfirmCancel(false);
+        setTransferNotice(
+          "No pending ownership transfer remains.",
+        );
+      } else {
+        setPendingError(failure);
+      }
+    } finally {
+      cancelInFlight.current = false;
+      setIsCancelingTransfer(false);
+    }
+  }
+
   return (
     <>
-      {/* Error feedback */}
-      {errorMessage && (
+      {adminError && (
         <div
           role="alert"
           className="fixed left-3 right-3 top-3 z-[70] rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5 sm:max-w-sm"
         >
-          {errorMessage}
+          {adminError}
         </div>
       )}
 
-      {/* Success feedback */}
       {successMessage && (
         <div
           role="status"
@@ -267,7 +501,6 @@ export default function AdminsTable() {
         </div>
       )}
 
-      {/* Invitation delivery notices */}
       {invitationNotice && (
         <div
           role="alert"
@@ -295,6 +528,124 @@ export default function AdminsTable() {
         </div>
       )}
 
+      {/* Owner-only pending ownership-transfer management */}
+      {canManageAdmins && (
+        <section className="mb-8 w-full max-w-3xl rounded-xl border border-[#dbb082] bg-[#fffaf6] p-4 text-sm text-gray-800">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">
+              Pending Ownership Transfer
+            </h2>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPendingLoaded(false);
+                void loadPendingTransfer();
+              }}
+              disabled={isSendingTransfer || isCancelingTransfer}
+              className={adminButtonStyles.secondary}
+            >
+              Refresh Status
+            </button>
+          </div>
+
+          {!pendingLoaded && !pendingError && (
+            <p role="status" className="mt-2 text-gray-600">
+              Checking for pending offers...
+            </p>
+          )}
+
+          {pendingError && (
+            <p role="alert" className="mt-3 text-red-700">
+              {pendingError}
+            </p>
+          )}
+
+          {pendingLoaded && !pendingTransfer && (
+            <p className="mt-2 text-gray-600">
+              No pending ownership transfer.
+            </p>
+          )}
+
+          {pendingLoaded && pendingTransfer && (
+            <div className="mt-3 space-y-3">
+              <p>
+                <span className="font-semibold">
+                  Receiving Admin:
+                </span>{" "}
+                {pendingTransfer.recipientUsername}
+                {" ("}
+                {pendingTransfer.recipientEmail}
+                {")"}
+              </p>
+
+              <p>
+                <span className="font-semibold">
+                  Status:
+                </span>{" "}
+                Pending acceptance
+              </p>
+
+              <p>
+                <span className="font-semibold">
+                  Expires:
+                </span>{" "}
+                {new Date(
+                  pendingTransfer.expiresAt * 1000,
+                ).toLocaleString()}
+              </p>
+
+              <p className="text-gray-600">
+                The receiving Admin must explicitly accept.
+                No roles have changed yet.
+              </p>
+
+              {confirmCancel ? (
+                <div className="rounded-lg border border-red-200 p-3">
+                  <p className="font-medium text-red-700">
+                    Cancel this ownership offer? Its emailed
+                    link will no longer be valid.
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void confirmCancelOwnershipTransfer()
+                      }
+                      disabled={isCancelingTransfer}
+                      className="rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {isCancelingTransfer
+                        ? "Canceling..."
+                        : "Yes, Cancel Transfer"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setConfirmCancel(false)}
+                      disabled={isCancelingTransfer}
+                      className={adminButtonStyles.secondary}
+                    >
+                      Keep Offer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancel(true)}
+                  disabled={isSendingTransfer || isCancelingTransfer}
+                  className="rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  Cancel Transfer
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Owner section */}
       <section className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
         <h2 className="text-xl font-bold text-[#2b211d]">
@@ -306,11 +657,9 @@ export default function AdminsTable() {
             <div className="text-sm font-semibold text-gray-500">
               Username
             </div>
-
             <div className="text-sm font-semibold text-gray-500">
               Email
             </div>
-
             <div aria-hidden="true" />
           </div>
 
@@ -343,17 +692,16 @@ export default function AdminsTable() {
             <div className="text-sm font-semibold text-gray-500">
               Username
             </div>
-
             <div className="text-sm font-semibold text-gray-500">
               Email
             </div>
-
             <div className="text-sm font-semibold text-gray-500">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">
+                Actions
+              </span>
             </div>
           </div>
 
-          {/* Administrator rows become cards on mobile. */}
           <div className="space-y-3 md:space-y-0">
             {regularAdmins.length > 0 ? (
               regularAdmins.map((admin) => (
@@ -362,8 +710,10 @@ export default function AdminsTable() {
                   admin={admin}
                   showActions={canManageAdmins}
                   onDelete={() => handleDeleteAdmin(admin)}
-                  onTransferOwnership={() =>
-                    handleTransferOwnership(admin)
+                  onTransferOwnership={
+                    canInitiateTransfer
+                      ? () => handleTransferOwnership(admin)
+                      : undefined
                   }
                   isTransferring={
                     isSendingTransfer &&
@@ -382,7 +732,6 @@ export default function AdminsTable() {
             )}
           </div>
 
-          {/* Only the Owner can create administrator accounts. */}
           {canManageAdmins && (
             <button
               type="button"
@@ -401,7 +750,6 @@ export default function AdminsTable() {
         </div>
       </section>
 
-      {/* Only the Owner can access the Add New User modal. */}
       {canManageAdmins && showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
@@ -428,7 +776,6 @@ export default function AdminsTable() {
         />
       )}
 
-      {/* Preserve the existing confirmation dialog. */}
       <DeleteAdminDialog
         admin={canManageAdmins ? adminToDelete : null}
         onCancel={() => setAdminToDelete(null)}

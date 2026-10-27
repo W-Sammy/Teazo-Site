@@ -77,7 +77,7 @@ export async function sendAdminPasswordEmail(
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
       LIMIT 1`,
   )
     .bind(normalizedEmail)

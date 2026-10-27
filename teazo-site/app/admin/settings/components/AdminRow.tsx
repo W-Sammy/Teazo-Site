@@ -34,9 +34,13 @@ export function AdminRow({
     admin.canResendInvitation &&
     typeof onResendInvitation === "function";
 
+  // The server determines ownership-transfer eligibility.
+  // Pending invitations and other ineligible accounts
+  // must not display the transfer action.
   const canTransfer =
     showActions &&
     !isOwner &&
+    admin.canReceiveOwnership &&
     typeof onTransferOwnership === "function";
 
   const hasActions = canDelete || canResend || canTransfer;

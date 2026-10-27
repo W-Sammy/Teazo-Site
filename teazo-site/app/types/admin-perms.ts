@@ -14,12 +14,19 @@ export interface Admin {
   email: string;
   role: AdminRole;
 
-  // Derived from the account's role. Only Owner can manage admins.
+  // Derived from the account's role.
+  // Only Owner can manage administrators.
   canManageAdmins: boolean;
 
-  // Whether this account can receive another password setup invitation.
-  // Eligibility does not grant permission to send invitations.
+  // Whether this account can receive another password
+  // setup invitation. Eligibility does not grant
+  // permission to send invitations.
   canResendInvitation: boolean;
+
+  // Calculated by the server from the account's role
+  // and status. Only an active role-2 Admin may be
+  // offered ownership.
+  canReceiveOwnership: boolean;
 }
 
 // The server always assigns role 2 to newly created accounts.

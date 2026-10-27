@@ -3,6 +3,7 @@ import { D1Error } from "@/app/lib/d1";
 import {
   cancelOwnershipTransfer,
   createOwnershipTransfer,
+  findPendingOwnershipTransfer,
 } from "@/app/lib/ownership-transfer";
 import { sendOwnershipTransferOffer } from "@/app/lib/ownership-transfer-email";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
@@ -47,6 +48,36 @@ async function readBody(
   }
 }
 
+// Only the Owner may view a pending transfer.
+// Never return the acceptance token.
+export async function GET(request: Request) {
+  const access = await requireAdminApi(request, 1);
+
+  if (!access.ok) {
+    return access.response;
+  }
+
+  try {
+    const transfer = await findPendingOwnershipTransfer(
+      access.admin.id,
+    );
+
+    return json({ transfer });
+  } catch {
+    console.error(
+      "Could not load pending ownership transfer.",
+    );
+
+    return json(
+      {
+        error:
+          "Unable to load pending ownership transfers.",
+      },
+      503,
+    );
+  }
+}
+
 // Only the current Owner can offer ownership
 // to an existing, active Admin.
 export async function POST(request: Request) {
@@ -64,7 +95,10 @@ export async function POST(request: Request) {
     !recipientId.trim()
   ) {
     return json(
-      { error: "A receiving administrator is required." },
+      {
+        error:
+          "A receiving administrator is required.",
+      },
       400,
     );
   }
@@ -85,10 +119,15 @@ export async function POST(request: Request) {
       );
     }
   } catch {
-    console.error("Ownership transfer rate limit failed.");
+    console.error(
+      "Ownership transfer rate limit failed.",
+    );
 
     return json(
-      { error: "Ownership transfers are temporarily unavailable." },
+      {
+        error:
+          "Ownership transfers are temporarily unavailable.",
+      },
       503,
     );
   }
@@ -114,10 +153,15 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error("Could not create ownership transfer.");
+    console.error(
+      "Could not create ownership transfer.",
+    );
 
     return json(
-      { error: "Ownership transfers are temporarily unavailable." },
+      {
+        error:
+          "Ownership transfers are temporarily unavailable.",
+      },
       503,
     );
   }
@@ -132,32 +176,54 @@ export async function POST(request: Request) {
     );
   }
 
-  // A failed email should not leave an inaccessible pending
-  // request blocking future transfers.
-  let outcome;
+  // Email delivery may fail after the request is saved.
+  // If delivery cannot be confirmed, attempt to invalidate
+  // the offer before reporting the outcome.
+  let outcome: Awaited<
+    ReturnType<typeof sendOwnershipTransferOffer>
+  >;
 
   try {
     outcome = await sendOwnershipTransferOffer(created);
   } catch {
-    outcome = "skipped" as const;
+    console.error(
+      "Ownership transfer email delivery could not be confirmed.",
+    );
+    outcome = "skipped";
   }
 
   if (outcome === "skipped") {
+    let cancellationConfirmed = false;
+
     try {
-      await cancelOwnershipTransfer(
+      cancellationConfirmed = await cancelOwnershipTransfer(
         created.id,
         access.admin.id,
       );
     } catch {
       console.error(
-        "Could not cancel a transfer after email delivery failed.",
+        "Could not cancel ownership transfer after email failure.",
       );
     }
 
+    if (cancellationConfirmed) {
+      return json(
+        {
+          error:
+            "Email delivery could not be confirmed. The ownership offer was canceled, and its link is no longer valid. You may try again.",
+        },
+        503,
+      );
+    }
+
+    // Do not falsely claim cancellation succeeded.
+    // The Owner can recover through the pending-transfer
+    // lookup and cancellation controls in Settings.
     return json(
       {
         error:
-          "The ownership offer could not be delivered. Please try again.",
+          "Email delivery could not be confirmed, and the ownership offer could not be confirmed canceled. A request may still be pending. Refresh the Pending Ownership Transfer status before attempting another offer.",
+        requiresStatusRefresh: true,
       },
       503,
     );
@@ -167,16 +233,15 @@ export async function POST(request: Request) {
     outcome === "sent" &&
     process.env.BREVO_SANDBOX === "1";
 
-  const message =
-    sandbox
-      ? "The transfer was created in Brevo sandbox mode. No email was delivered."
-      : outcome === "printed"
-        ? "The transfer was created. The invitation was printed in the server terminal."
-        : outcome === "captured"
-          ? "The transfer was created. The invitation is available in Mailpit."
-          : "The ownership transfer invitation was submitted for delivery.";
+  const message = sandbox
+    ? "The transfer was created in Brevo sandbox mode. No email was delivered."
+    : outcome === "printed"
+      ? "The transfer was created. The invitation was printed in the server terminal."
+      : outcome === "captured"
+        ? "The transfer was created. The invitation is available in Mailpit."
+        : "The ownership transfer invitation was submitted for delivery.";
 
-  // Never return the secret acceptance token to the Owner.
+  // Do not expose the recipient's secret acceptance token.
   return json(
     {
       transfer: {
@@ -224,7 +289,7 @@ export async function DELETE(request: Request) {
       return json(
         {
           error:
-            "No eligible pending ownership transfer was found.",
+            "No eligible pending ownership transfer was found. Refresh the transfer status.",
         },
         409,
       );
@@ -234,10 +299,15 @@ export async function DELETE(request: Request) {
       message: "Ownership transfer canceled.",
     });
   } catch {
-    console.error("Could not cancel ownership transfer.");
+    console.error(
+      "Could not cancel ownership transfer.",
+    );
 
     return json(
-      { error: "Ownership transfers are temporarily unavailable." },
+      {
+        error:
+          "Cancellation could not be confirmed. Refresh the pending transfer status before retrying.",
+      },
       503,
     );
   }

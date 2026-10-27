@@ -33,6 +33,16 @@ export type CreatedOwnershipTransfer =
     token: string;
   };
 
+export type PendingOwnershipTransfer = {
+  id: string;
+  recipientAdminId: string;
+  recipientUsername: string;
+  recipientEmail: string;
+  createdAt: number;
+  expiresAt: number;
+  status: "pending";
+};
+
 export type TransferDecision = "accepted" | "declined";
 
 function hashToken(token: string): string {
@@ -87,6 +97,61 @@ export async function expireOwnershipTransfers(): Promise<void> {
   )
     .bind(now)
     .run();
+}
+
+// Show the current Owner an existing pending offer without
+// exposing its secret token. Expire old requests first so a
+// new offer can be created after the 24-hour window.
+export async function findPendingOwnershipTransfer(
+  ownerId: string,
+): Promise<PendingOwnershipTransfer | null> {
+  if (!ownerId) {
+    return null;
+  }
+
+  await expireOwnershipTransfers();
+
+  const row = await prepare(
+    `SELECT t.id,
+            t.recipient_admin_id,
+            r.username AS recipient_username,
+            r.email AS recipient_email,
+            t.created_at,
+            t.expires_at
+       FROM ownership_transfer_request AS t
+       JOIN admin_user AS o ON o.id = t.owner_admin_id
+       JOIN admin_user AS r ON r.id = t.recipient_admin_id
+      WHERE t.owner_admin_id = ?1
+        AND t.status = 'pending'
+        AND t.expires_at > ?2
+        AND o.role_id = 1
+        AND o.status = 'active'
+        AND o.deleted_at IS NULL
+      LIMIT 1`,
+  )
+    .bind(ownerId, currentTime())
+    .first<{
+      id: string;
+      recipient_admin_id: string;
+      recipient_username: string;
+      recipient_email: string;
+      created_at: number;
+      expires_at: number;
+    }>();
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    recipientAdminId: row.recipient_admin_id,
+    recipientUsername: row.recipient_username,
+    recipientEmail: row.recipient_email,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+    status: "pending",
+  };
 }
 
 // Only call after authenticating and authorizing the Owner.

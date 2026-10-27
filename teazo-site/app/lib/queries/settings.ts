@@ -13,6 +13,7 @@ export type SettingsAdmin = {
   role: AdminRole;
   canManageAdmins: boolean;
   canResendInvitation: boolean;
+  canReceiveOwnership: boolean;
 };
 
 type SettingsAdminRow = {
@@ -21,6 +22,7 @@ type SettingsAdminRow = {
   email: string;
   role: AdminRole;
   canResendInvitation: number;
+  canReceiveOwnership: number;
 };
 
 function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
@@ -33,6 +35,9 @@ function mapAdmin(admin: SettingsAdminRow): SettingsAdmin {
     // The legacy can_invite_users flag does not grant access.
     canManageAdmins: admin.role === 1,
     canResendInvitation: admin.canResendInvitation === 1,
+
+    // Only active regular Admins are eligible to receive ownership.
+    canReceiveOwnership: admin.canReceiveOwnership === 1,
   };
 }
 
@@ -44,7 +49,13 @@ const adminSelect = `
              AND role_id IN (1, 2)
            THEN 1
            ELSE 0
-         END AS canResendInvitation
+         END AS canResendInvitation,
+         CASE
+           WHEN role_id = 2
+             AND status = 'active'
+           THEN 1
+           ELSE 0
+         END AS canReceiveOwnership
     FROM admin_user
    WHERE deleted_at IS NULL`;
 
