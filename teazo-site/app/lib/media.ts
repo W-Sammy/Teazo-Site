@@ -6,7 +6,7 @@
  *
  * The database stores a file's KEY, never its URL. A key looks like
  * gallery/2026/09/<uuid>.webp. The URL is built at render time from
- * R2_PUBLIC_BASE, so the same row works locally, on preview and in production.
+ * R2_PUBLIC_BASE, so the same row works locally and in production.
  *
  * SERVER ONLY for writes. toPublicUrl is safe anywhere, since it only reads a
  * public base URL.
