@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -15,6 +14,7 @@ import type {
 import { OWNER_ROLE } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
+import TransferOwnershipDialog from "@/app/admin/settings/components/transfer-ownership-dialog";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
 import { useAdmins } from "@/app/admin/settings/handlers/use-admins";
 import { resendAdminInvitation } from "@/app/api/admin/settings/admins-api";
@@ -32,6 +32,15 @@ export default function AdminsTable() {
     useState("");
 
   const resendInFlight = useRef(false);
+  const transferInFlight = useRef(false);
+
+  const [transferTarget, setTransferTarget] =
+    useState<Admin | null>(null);
+  const [transferError, setTransferError] = useState("");
+  const [isSendingTransfer, setIsSendingTransfer] =
+    useState(false);
+  const [transferNotice, setTransferNotice] =
+    useState("");
 
   const {
     admins,
@@ -163,6 +172,78 @@ export default function AdminsTable() {
     }
   }
 
+  function handleTransferOwnership(admin: Admin) {
+    if (
+      !canManageAdmins ||
+      admin.role === OWNER_ROLE ||
+      transferInFlight.current
+    ) {
+      return;
+    }
+
+    setTransferError("");
+    setTransferNotice("");
+    setTransferTarget(admin);
+  }
+
+  async function confirmTransferOwnership() {
+    if (
+      !canManageAdmins ||
+      !transferTarget ||
+      transferInFlight.current
+    ) {
+      return;
+    }
+
+    transferInFlight.current = true;
+    setIsSendingTransfer(true);
+    setTransferError("");
+
+    try {
+      const response = await fetch(
+        "/api/admin/ownership-transfer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "same-origin",
+          cache: "no-store",
+          body: JSON.stringify({
+            recipientAdminId: transferTarget.id,
+          }),
+        },
+      );
+
+      const result = (await response.json()) as {
+        error?: string;
+        invitation?: { message: string };
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ??
+            "Unable to initiate ownership transfer.",
+        );
+      }
+
+      setTransferTarget(null);
+      setTransferNotice(
+        result.invitation?.message ??
+          "Ownership offer created. The Admin must accept before roles change.",
+      );
+    } catch (error) {
+      setTransferError(
+        error instanceof Error
+          ? error.message
+          : "Unable to initiate ownership transfer.",
+      );
+    } finally {
+      transferInFlight.current = false;
+      setIsSendingTransfer(false);
+    }
+  }
+
   return (
     <>
       {/* Error feedback */}
@@ -201,6 +282,16 @@ export default function AdminsTable() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {transferNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          {transferNotice}
         </div>
       )}
 
@@ -271,6 +362,13 @@ export default function AdminsTable() {
                   admin={admin}
                   showActions={canManageAdmins}
                   onDelete={() => handleDeleteAdmin(admin)}
+                  onTransferOwnership={() =>
+                    handleTransferOwnership(admin)
+                  }
+                  isTransferring={
+                    isSendingTransfer &&
+                    transferTarget?.id === admin.id
+                  }
                   onResendInvitation={() => {
                     void handleResendInvitation(admin);
                   }}
@@ -312,6 +410,21 @@ export default function AdminsTable() {
             setShowModal(false);
           }}
           errorMessage={modalError}
+        />
+      )}
+
+      {canManageAdmins && transferTarget && (
+        <TransferOwnershipDialog
+          admin={transferTarget}
+          isSubmitting={isSendingTransfer}
+          errorMessage={transferError}
+          onCancel={() => {
+            if (!isSendingTransfer) {
+              setTransferTarget(null);
+              setTransferError("");
+            }
+          }}
+          onConfirm={confirmTransferOwnership}
         />
       )}
 

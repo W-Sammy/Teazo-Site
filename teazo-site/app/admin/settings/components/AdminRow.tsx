@@ -7,16 +7,20 @@ type AdminRowProps = {
   showActions?: boolean;
   onDelete?: () => void;
   onResendInvitation?: () => void;
+  onTransferOwnership?: () => void;
   isResending?: boolean;
+  isTransferring?: boolean;
 };
 
-// Display one administrator without role or permission selectors.
+// Display an administrator without role or permission selectors.
 export function AdminRow({
   admin,
   showActions = false,
   onDelete,
   onResendInvitation,
+  onTransferOwnership,
   isResending = false,
+  isTransferring = false,
 }: AdminRowProps) {
   const isOwner = admin.role === OWNER_ROLE;
 
@@ -30,7 +34,12 @@ export function AdminRow({
     admin.canResendInvitation &&
     typeof onResendInvitation === "function";
 
-  const hasActions = canDelete || canResend;
+  const canTransfer =
+    showActions &&
+    !isOwner &&
+    typeof onTransferOwnership === "function";
+
+  const hasActions = canDelete || canResend || canTransfer;
 
   return (
     <div className="group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px] md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none">
@@ -84,7 +93,11 @@ export function AdminRow({
               onResendInvitation={
                 canResend ? onResendInvitation : undefined
               }
+              onTransferOwnership={
+                canTransfer ? onTransferOwnership : undefined
+              }
               isResending={isResending}
+              isTransferring={isTransferring}
             />
           </>
         )}
