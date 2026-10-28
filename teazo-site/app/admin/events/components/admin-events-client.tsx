@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useState,
   type ChangeEvent,
@@ -36,6 +37,7 @@ type AdminEventsClientProps = {
   initialEvents: AdminEvent[];
   categories: EventCategory[];
   items: EventCatalogItem[];
+  initialEditEventId: string | null;
 };
 
 // Options consumed by the shared card/list view toggle.
@@ -63,6 +65,7 @@ export default function AdminEventsClient({
   initialEvents,
   categories,
   items,
+  initialEditEventId,
 }: AdminEventsClientProps) {
   // Delegate event operations and their error messages to the events hook.
   const {
@@ -272,6 +275,29 @@ export default function AdminEventsClient({
     setEditingEvent(event);
     setDrawerOpen(true);
   }
+
+  // Open an event requested by the dashboard and remove the one-time URL hint.
+  useEffect(() => {
+    if (!initialEditEventId) {
+      return;
+    }
+
+    const event = events.find(
+      (candidate) => candidate.id === initialEditEventId,
+    );
+
+    if (!event) {
+      return;
+    }
+
+    window.history.replaceState(null, "", "/admin/events");
+
+    const drawerTimer = window.setTimeout(() => {
+      openEditDrawer(event);
+    }, 0);
+
+    return () => window.clearTimeout(drawerTimer);
+  }, [events, initialEditEventId]);
 
   // Close the form only when the events hook reports that saving succeeded.
   async function handleSave(
