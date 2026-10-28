@@ -55,6 +55,20 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
+const heicImageTypes = new Set([
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
+]);
+
+function isHeicImage(file: File): boolean {
+  return (
+    heicImageTypes.has(file.type.toLowerCase()) ||
+    /\.(heic|heif)$/i.test(file.name)
+  );
+}
+
 const maxFileSize = 10 * 1024 * 1024;
 
 // Price entry works like a payment terminal: 1, 0, 0, 0 becomes $10.00.
@@ -144,6 +158,9 @@ export default function MenuItemForm({
   const previewUrlRef = useRef<string | null>(null);
   const dragDepth = useRef(0);
   const submitted = useRef(false);
+  const isMounted = useRef(true);
+  const selectionSequence = useRef(0);
+  const conversionInProgress = useRef(false);
 
   const previewUrl =
     selectedImage?.url ??
@@ -151,14 +168,19 @@ export default function MenuItemForm({
 
   // This form owns only its preview URL, not the parent's saved preview URL.
   useEffect(() => {
+    isMounted.current = true;
+
     return () => {
+      isMounted.current = false;
+      selectionSequence.current += 1;
+
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
       }
     };
   }, []);
 
-  function selectFiles(files: FileList | null) {
+  async function selectFiles(files: FileList | null) {
     if (submitted.current || isSaving) return;
 
     if (!files?.length) {
@@ -171,10 +193,14 @@ export default function MenuItemForm({
     }
 
     const file = files[0];
+    const needsConversion = isHeicImage(file);
 
     // These are browser-side type/size checks, not server-side validation.
-    if (!acceptedImageTypes.includes(file.type)) {
-      setImageError("Choose a JPG, PNG, or WEBP image.");
+    if (
+      !needsConversion &&
+      !acceptedImageTypes.includes(file.type.toLowerCase())
+    ) {
+      setImageError("Choose a JPG, PNG, WEBP, HEIC, or HEIF image.");
       return;
     }
 
@@ -185,6 +211,60 @@ export default function MenuItemForm({
       return;
     }
 
+    if (!needsConversion) {
+      applySelectedFile(file);
+      return;
+    }
+
+    const requestId = ++selectionSequence.current;
+    conversionInProgress.current = true;
+    setCheckingImage(true);
+    setImageError(null);
+
+    try {
+      // Convert HEIC/HEIF to JPEG before the file reaches the menu save flow.
+      const { heicTo } = await import("heic-to");
+      const jpegBlob = await heicTo({
+        blob: file,
+        type: "image/jpeg",
+        quality: 0.85,
+      });
+
+      if (!jpegBlob || jpegBlob.size === 0) {
+        throw new Error("The converted image was empty.");
+      }
+
+      if (jpegBlob.size > maxFileSize) {
+        throw new Error("The converted image exceeds 10 MB.");
+      }
+
+      const jpegFile = new File(
+        [jpegBlob],
+        file.name.replace(/\.(heic|heif)$/i, "") + ".jpg",
+        {
+          type: "image/jpeg",
+          lastModified: file.lastModified,
+        },
+      );
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        applySelectedFile(jpegFile);
+      }
+    } catch (error) {
+      console.error("Menu HEIC/HEIF conversion failed:", error);
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        setCheckingImage(false);
+        setImageError(
+          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+        );
+      }
+    } finally {
+      conversionInProgress.current = false;
+    }
+  }
+
+  function applySelectedFile(file: File) {
     try {
       const url = URL.createObjectURL(file);
 
@@ -234,13 +314,18 @@ export default function MenuItemForm({
     dragDepth.current = 0;
     setIsDragging(false);
 
-    selectFiles(event.dataTransfer.files);
+    void selectFiles(event.dataTransfer.files);
   }
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submitted.current || checkingImage || isSaving) {
+    if (
+      submitted.current ||
+      checkingImage ||
+      conversionInProgress.current ||
+      isSaving
+    ) {
       return;
     }
 
@@ -641,10 +726,10 @@ export default function MenuItemForm({
             name="menuItemImage"
             disabled={isSaving}
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             aria-labelledby="menu-item-image-label"
             onChange={(event) => {
-              selectFiles(event.target.files);
+              void selectFiles(event.target.files);
 
               // Allow the same file to be chosen again.
               event.target.value = "";
@@ -666,7 +751,7 @@ export default function MenuItemForm({
           </button>
 
           <p className="mt-2 text-xs text-gray-500">
-            JPG, PNG, or WEBP · 10 MB maximum
+            JPG, PNG, WEBP, HEIC, or HEIF · 10 MB maximum
           </p>
 
           {(previewUrl || imageError) && (
