@@ -39,8 +39,10 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
 
 export default function WebsiteContentClient({
   initialContent,
+  initialSection = null,
 }: {
   initialContent: WebsiteContent;
+  initialSection?: SectionId | null;
 }) {
   const {
     content,
@@ -63,7 +65,7 @@ export default function WebsiteContentClient({
     updateOnlineOrderingEnabled,
   } = useWebsiteContent(initialContent);
 
-  const [openSection, setOpenSection] = useState<SectionId | null>(null);
+  const [openSection, setOpenSection] = useState<SectionId | null>(initialSection);
   const sectionRefs = useRef<
     Partial<Record<SectionId, HTMLDivElement | null>>
   >({});
