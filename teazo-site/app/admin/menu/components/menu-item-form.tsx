@@ -11,8 +11,10 @@ import {
 import type { CreateMenuItemBody } from "@/app/types/menu-item";
 import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
 import {
-  convertWebpToJpeg,
+  defaultMaxImageSize,
+  isHeicImage,
   isWebpImage,
+  prepareImageForUpload,
 } from "@/app/lib/image-conversion";
 
 // Keep the existing create-item fields; the selected image remains a local File.
@@ -59,21 +61,7 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-const heicImageTypes = new Set([
-  "image/heic",
-  "image/heif",
-  "image/heic-sequence",
-  "image/heif-sequence",
-]);
-
-function isHeicImage(file: File): boolean {
-  return (
-    heicImageTypes.has(file.type.toLowerCase()) ||
-    /\.(heic|heif)$/i.test(file.name)
-  );
-}
-
-const maxFileSize = 10 * 1024 * 1024;
+const maxFileSize = defaultMaxImageSize;
 
 // Price entry works like a payment terminal: 1, 0, 0, 0 becomes $10.00.
 // Keep the amount as integer cents so it can be sent directly to Square.
@@ -197,25 +185,29 @@ export default function MenuItemForm({
     }
 
     const file = files[0];
-    const needsConversion = isHeicImage(file) || isWebpImage(file);
+    const needsPreparation =
+      isHeicImage(file) ||
+      isWebpImage(file) ||
+      file.size > maxFileSize;
 
     // These are browser-side type/size checks, not server-side validation.
     if (
-      !needsConversion &&
+      !isHeicImage(file) &&
+      !isWebpImage(file) &&
       !acceptedImageTypes.includes(file.type.toLowerCase())
     ) {
       setImageError("Choose a JPG, PNG, WEBP, HEIC, or HEIF image.");
       return;
     }
 
-    if (file.size === 0 || file.size > maxFileSize) {
+    if (file.size === 0) {
       setImageError(
-        "Choose a nonempty image that is 10 MB or smaller.",
+        "Choose a nonempty image.",
       );
       return;
     }
 
-    if (!needsConversion) {
+    if (!needsPreparation) {
       applySelectedFile(file);
       return;
     }
@@ -226,39 +218,10 @@ export default function MenuItemForm({
     setImageError(null);
 
     try {
-      let jpegFile: File;
-
-      if (isWebpImage(file)) {
-        jpegFile = await convertWebpToJpeg(file);
-      } else {
-        // Convert HEIC/HEIF to JPEG before the file reaches the menu save flow.
-        const { heicTo } = await import("heic-to");
-        const jpegBlob = await heicTo({
-          blob: file,
-          type: "image/jpeg",
-          quality: 0.85,
-        });
-
-        if (!jpegBlob || jpegBlob.size === 0) {
-          throw new Error("The converted image was empty.");
-        }
-
-        if (jpegBlob.size > maxFileSize) {
-          throw new Error("The converted image exceeds 10 MB.");
-        }
-
-        jpegFile = new File(
-          [jpegBlob],
-          file.name.replace(/\.(heic|heif)$/i, "") + ".jpg",
-          {
-            type: "image/jpeg",
-            lastModified: file.lastModified,
-          },
-        );
-      }
+      const preparedFile = await prepareImageForUpload(file, maxFileSize);
 
       if (isMounted.current && selectionSequence.current === requestId) {
-        applySelectedFile(jpegFile);
+        applySelectedFile(preparedFile);
       }
     } catch (error) {
       console.error("Menu image conversion failed:", error);
@@ -761,7 +724,7 @@ export default function MenuItemForm({
           </button>
 
           <p className="mt-2 text-xs text-gray-500">
-            JPG, PNG, WEBP, HEIC, or HEIF · 10 MB maximum
+            JPG, PNG, WEBP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
           </p>
 
           {(previewUrl || imageError) && (
