@@ -10,6 +10,10 @@ import {
 } from "react";
 import type { CreateMenuItemBody } from "@/app/types/menu-item";
 import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
+import {
+  convertWebpToJpeg,
+  isWebpImage,
+} from "@/app/lib/image-conversion";
 
 // Keep the existing create-item fields; the selected image remains a local File.
 export type MenuItemFormValues = CreateMenuItemBody & {
@@ -193,7 +197,7 @@ export default function MenuItemForm({
     }
 
     const file = files[0];
-    const needsConversion = isHeicImage(file);
+    const needsConversion = isHeicImage(file) || isWebpImage(file);
 
     // These are browser-side type/size checks, not server-side validation.
     if (
@@ -222,41 +226,47 @@ export default function MenuItemForm({
     setImageError(null);
 
     try {
-      // Convert HEIC/HEIF to JPEG before the file reaches the menu save flow.
-      const { heicTo } = await import("heic-to");
-      const jpegBlob = await heicTo({
-        blob: file,
-        type: "image/jpeg",
-        quality: 0.85,
-      });
+      let jpegFile: File;
 
-      if (!jpegBlob || jpegBlob.size === 0) {
-        throw new Error("The converted image was empty.");
-      }
-
-      if (jpegBlob.size > maxFileSize) {
-        throw new Error("The converted image exceeds 10 MB.");
-      }
-
-      const jpegFile = new File(
-        [jpegBlob],
-        file.name.replace(/\.(heic|heif)$/i, "") + ".jpg",
-        {
+      if (isWebpImage(file)) {
+        jpegFile = await convertWebpToJpeg(file);
+      } else {
+        // Convert HEIC/HEIF to JPEG before the file reaches the menu save flow.
+        const { heicTo } = await import("heic-to");
+        const jpegBlob = await heicTo({
+          blob: file,
           type: "image/jpeg",
-          lastModified: file.lastModified,
-        },
-      );
+          quality: 0.85,
+        });
+
+        if (!jpegBlob || jpegBlob.size === 0) {
+          throw new Error("The converted image was empty.");
+        }
+
+        if (jpegBlob.size > maxFileSize) {
+          throw new Error("The converted image exceeds 10 MB.");
+        }
+
+        jpegFile = new File(
+          [jpegBlob],
+          file.name.replace(/\.(heic|heif)$/i, "") + ".jpg",
+          {
+            type: "image/jpeg",
+            lastModified: file.lastModified,
+          },
+        );
+      }
 
       if (isMounted.current && selectionSequence.current === requestId) {
         applySelectedFile(jpegFile);
       }
     } catch (error) {
-      console.error("Menu HEIC/HEIF conversion failed:", error);
+      console.error("Menu image conversion failed:", error);
 
       if (isMounted.current && selectionSequence.current === requestId) {
         setCheckingImage(false);
         setImageError(
-          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+          "This image could not be converted. Try another image or convert it to JPG first.",
         );
       }
     } finally {
