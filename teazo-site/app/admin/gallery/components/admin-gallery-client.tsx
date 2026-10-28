@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
 } from "react";
 import AdminForm from "../../components/admin-form-page";
+import { adminButtonStyles } from "../../components/admin-button-styles";
 import AdminViewToggle, {
   GridViewIcon,
   ListViewIcon,
@@ -1144,7 +1145,7 @@ export default function AdminGalleryClient({
               type="button"
               onClick={openNewImageDrawer}
               disabled={interactionLocked}
-              className="gallery-landscape-new inline-flex w-full shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-bold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-end lg:ml-4 lg:self-auto"
+              className={`gallery-landscape-new inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap ${adminButtonStyles.primary} sm:w-auto sm:self-end lg:ml-4 lg:self-auto`}
             >
               New Image +
             </button>
@@ -1212,7 +1213,7 @@ export default function AdminGalleryClient({
                   ? "Close the image form before deleting selected images."
                   : undefined
               }
-              className="gallery-landscape-delete w-full cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 sm:ml-auto sm:w-auto"
+              className={`gallery-landscape-delete w-full ${adminButtonStyles.danger} sm:ml-auto sm:w-auto`}
             >
               Delete selected ({selectedImages.length})
             </button>
@@ -1287,7 +1288,7 @@ export default function AdminGalleryClient({
                   onClick={
                     openNewImageDrawer
                   }
-                  className="mt-4 cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3]"
+                  className={`mt-4 ${adminButtonStyles.primary}`}
                 >
                   Add an image
                 </button>
