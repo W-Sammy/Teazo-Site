@@ -37,6 +37,7 @@ type DisplayedMenuItem = {
   description: string;
   categories: ItemCategory[];
   availability: string;
+  visits: number;
 };
 
 type Category = {
@@ -77,7 +78,9 @@ type SavedMenuItem = Pick<
   | "currency"
   | "imageUrl"
   | "categories"
->;
+> & {
+  imageUploadWarning?: string;
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return (
@@ -818,21 +821,41 @@ export default function AdminMenuClient({
       setItemDeleteSuccess("");
 
       try {
+        const hasImageChange = Boolean(values.imageFile || values.removeImage);
+        const updateBody = {
+          name: values.name,
+          description: values.description,
+          priceCents: values.priceCents,
+          categoryIds: values.categoryIds,
+        };
+        let requestBody: BodyInit;
+        const requestHeaders: HeadersInit = {};
+
+        if (hasImageChange) {
+          const formData = new FormData();
+          formData.append("name", values.name);
+          formData.append("description", values.description);
+          formData.append("priceCents", String(values.priceCents));
+          formData.append("categoryIds", JSON.stringify(values.categoryIds));
+          formData.append("removeImage", String(values.removeImage));
+
+          if (values.imageFile) {
+            formData.append("imageFile", values.imageFile, values.imageFile.name);
+          }
+
+          requestBody = formData;
+        } else {
+          requestHeaders["Content-Type"] = "application/json";
+          requestBody = JSON.stringify(updateBody);
+        }
+
         const response = await fetch(
           `/api/square/products/${encodeURIComponent(itemId)}`,
           {
             method: "PUT",
             credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: values.name,
-              description: values.description,
-              priceCents: values.priceCents,
-              categoryIds: values.categoryIds,
-              // Omit currency, modifier lists, and images to preserve their saved settings.
-            }),
+            headers: requestHeaders,
+            body: requestBody,
           },
         );
 
@@ -853,37 +876,8 @@ export default function AdminMenuClient({
           return;
         }
 
-        /*
-         * The route preserves Square's image IDs. Replacement/removal controls
-         * affect the local preview only until TZ-171 is connected.
-         */
-        let imageUrl = result.imageUrl?.trim() || fallbackImage;
-        let imageNotice = "";
-
-        if (values.imageFile) {
-          try {
-            imageUrl = URL.createObjectURL(values.imageFile);
-            managedImageUrls.current.add(imageUrl);
-
-            imageNotice =
-              " The selected image is a local preview only; the saved Square image was not changed.";
-          } catch {
-            // An image-preview failure must not turn a confirmed edit into a failed save.
-            imageNotice =
-              " The item was saved, but the replacement image preview could not be displayed. The saved Square image was not changed.";
-          }
-        } else if (values.removeImage) {
-          imageUrl = fallbackImage;
-
-          imageNotice =
-            " The image was removed from this local preview only; the saved Square image was not changed.";
-        } else if (managedImageUrls.current.has(original.img)) {
-          // Retain an existing session-only preview without claiming it was uploaded.
-          imageUrl = original.img;
-
-          imageNotice =
-            " The image shown is still a local preview and will not persist after a reload.";
-        }
+        const imageUrl = result.imageUrl?.trim() || fallbackImage;
+        const imageNotice = "";
 
         const updatedItem: DisplayedMenuItem = {
           id: result.catalogObjectId,
@@ -892,6 +886,7 @@ export default function AdminMenuClient({
           price: result.priceCents / 100,
           description: result.description ?? "",
           availability: availabilityDescription(result),
+          visits: original.visits,
 
           // Use returned membership, even if Square returns an empty category list.
           categories: result.categories.map((category) => ({
@@ -947,20 +942,25 @@ export default function AdminMenuClient({
     setItemDeleteSuccess("");
 
     try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("priceCents", String(values.priceCents));
+      formData.append("currency", "USD");
+      formData.append("categoryIds", JSON.stringify(values.categoryIds));
+      formData.append(
+        "modifierListIds",
+        JSON.stringify(values.modifierListIds ?? []),
+      );
+
+      if (values.imageFile) {
+        formData.append("imageFile", values.imageFile, values.imageFile.name);
+      }
+
       const response = await fetch("/api/square/products", {
         method: "POST",
         credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: values.name,
-          description: values.description,
-          priceCents: values.priceCents,
-          currency: "USD",
-          categoryIds: values.categoryIds,
-          modifierListIds: values.modifierListIds,
-        }),
+        body: formData,
       });
 
       const result: unknown = await response.json().catch(() => null);
@@ -977,26 +977,11 @@ export default function AdminMenuClient({
         return;
       }
 
-      /*
-       * TZ-171 image upload is not connected yet.
-       * A selected image is only a local preview; the returned item data is saved.
-       */
-      let imageUrl = result.imageUrl?.trim() || fallbackImage;
-      let imageNotice = "";
-
-      if (values.imageFile) {
-        try {
-          imageUrl = URL.createObjectURL(values.imageFile);
-          managedImageUrls.current.add(imageUrl);
-
-          imageNotice =
-            " The selected image is a local preview only and will not persist after a reload.";
-        } catch {
-          // Preview failure must not report a successfully created Square item as failed.
-          imageNotice =
-            " The item was saved, but its local image preview could not be displayed.";
-        }
-      }
+      const imageUrl = result.imageUrl?.trim() || fallbackImage;
+      const imageNotice =
+        result.imageUploadWarning
+          ? ` ${result.imageUploadWarning}`
+          : "";
 
       const newItem: DisplayedMenuItem = {
         id: result.catalogObjectId,
@@ -1004,7 +989,8 @@ export default function AdminMenuClient({
         name: result.name?.trim() || "Unnamed item",
         price: result.priceCents / 100,
         description: result.description ?? "",
-          availability: availabilityDescription(result),
+        availability: availabilityDescription(result),
+        visits: 0,
 
         // Keep returned category membership; only fill in missing display labels.
         categories: result.categories.map((category) => ({

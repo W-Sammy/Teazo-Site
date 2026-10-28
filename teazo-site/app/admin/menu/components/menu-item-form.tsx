@@ -10,6 +10,12 @@ import {
 } from "react";
 import type { CreateMenuItemBody } from "@/app/types/menu-item";
 import { adminButtonStyles } from "@/app/admin/components/admin-button-styles";
+import {
+  defaultMaxImageSize,
+  isHeicImage,
+  isWebpImage,
+  prepareImageForUpload,
+} from "@/app/lib/image-conversion";
 
 // Keep the existing create-item fields; the selected image remains a local File.
 export type MenuItemFormValues = CreateMenuItemBody & {
@@ -55,7 +61,7 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-const maxFileSize = 10 * 1024 * 1024;
+const maxFileSize = defaultMaxImageSize;
 
 // Price entry works like a payment terminal: 1, 0, 0, 0 becomes $10.00.
 // Keep the amount as integer cents so it can be sent directly to Square.
@@ -144,6 +150,9 @@ export default function MenuItemForm({
   const previewUrlRef = useRef<string | null>(null);
   const dragDepth = useRef(0);
   const submitted = useRef(false);
+  const isMounted = useRef(true);
+  const selectionSequence = useRef(0);
+  const conversionInProgress = useRef(false);
 
   const previewUrl =
     selectedImage?.url ??
@@ -151,14 +160,19 @@ export default function MenuItemForm({
 
   // This form owns only its preview URL, not the parent's saved preview URL.
   useEffect(() => {
+    isMounted.current = true;
+
     return () => {
+      isMounted.current = false;
+      selectionSequence.current += 1;
+
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
       }
     };
   }, []);
 
-  function selectFiles(files: FileList | null) {
+  async function selectFiles(files: FileList | null) {
     if (submitted.current || isSaving) return;
 
     if (!files?.length) {
@@ -171,20 +185,59 @@ export default function MenuItemForm({
     }
 
     const file = files[0];
+    const needsPreparation =
+      isHeicImage(file) ||
+      isWebpImage(file) ||
+      file.size > maxFileSize;
 
     // These are browser-side type/size checks, not server-side validation.
-    if (!acceptedImageTypes.includes(file.type)) {
-      setImageError("Choose a JPG, PNG, or WEBP image.");
+    if (
+      !isHeicImage(file) &&
+      !isWebpImage(file) &&
+      !acceptedImageTypes.includes(file.type.toLowerCase())
+    ) {
+      setImageError("Choose a JPG, PNG, WEBP, HEIC, or HEIF image.");
       return;
     }
 
-    if (file.size === 0 || file.size > maxFileSize) {
+    if (file.size === 0) {
       setImageError(
-        "Choose a nonempty image that is 10 MB or smaller.",
+        "Choose a nonempty image.",
       );
       return;
     }
 
+    if (!needsPreparation) {
+      applySelectedFile(file);
+      return;
+    }
+
+    const requestId = ++selectionSequence.current;
+    conversionInProgress.current = true;
+    setCheckingImage(true);
+    setImageError(null);
+
+    try {
+      const preparedFile = await prepareImageForUpload(file, maxFileSize);
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        applySelectedFile(preparedFile);
+      }
+    } catch (error) {
+      console.error("Menu image conversion failed:", error);
+
+      if (isMounted.current && selectionSequence.current === requestId) {
+        setCheckingImage(false);
+        setImageError(
+          "This image could not be converted. Try another image or convert it to JPG first.",
+        );
+      }
+    } finally {
+      conversionInProgress.current = false;
+    }
+  }
+
+  function applySelectedFile(file: File) {
     try {
       const url = URL.createObjectURL(file);
 
@@ -234,13 +287,18 @@ export default function MenuItemForm({
     dragDepth.current = 0;
     setIsDragging(false);
 
-    selectFiles(event.dataTransfer.files);
+    void selectFiles(event.dataTransfer.files);
   }
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (submitted.current || checkingImage || isSaving) {
+    if (
+      submitted.current ||
+      checkingImage ||
+      conversionInProgress.current ||
+      isSaving
+    ) {
       return;
     }
 
@@ -641,10 +699,10 @@ export default function MenuItemForm({
             name="menuItemImage"
             disabled={isSaving}
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             aria-labelledby="menu-item-image-label"
             onChange={(event) => {
-              selectFiles(event.target.files);
+              void selectFiles(event.target.files);
 
               // Allow the same file to be chosen again.
               event.target.value = "";
@@ -666,7 +724,7 @@ export default function MenuItemForm({
           </button>
 
           <p className="mt-2 text-xs text-gray-500">
-            JPG, PNG, or WEBP · 10 MB maximum
+            JPG, PNG, WEBP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
           </p>
 
           {(previewUrl || imageError) && (
@@ -728,7 +786,7 @@ export default function MenuItemForm({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSaving}
+          disabled={checkingImage || isSaving}
           className={`min-w-0 ${adminButtonStyles.secondary}`}
         >
           Cancel
@@ -736,7 +794,7 @@ export default function MenuItemForm({
 
         <button
           type="submit"
-          disabled={checkingImage || isSaving}
+          disabled={isSaving}
           className={`min-w-0 ${adminButtonStyles.primary} disabled:cursor-wait`}
         >
           {isSaving

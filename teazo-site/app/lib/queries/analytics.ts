@@ -128,6 +128,24 @@ export async function listAnalyticsMetrics() {
   return Object.fromEntries(results) as Record<keyof typeof periodDays, { menuItems: MenuItemMetric[]; pages: PageMetric[] }>;
 }
 
+/** Return visit totals for every menu item over the requested number of days. */
+export async function listMenuItemVisitCounts(days = 30): Promise<Record<string, number>> {
+  if (!Number.isInteger(days) || days < 1) throw new Error("Invalid analytics period");
+
+  const today = getShopMetricDate();
+  const fromDate = shiftMetricDate(today, -(days - 1));
+  const result = await prepare(
+    `SELECT square_item_id, SUM(event_count) AS event_count
+       FROM menu_item_metrics
+      WHERE metric_date >= ?1 AND metric_date <= ?2
+      GROUP BY square_item_id`,
+  ).bind(fromDate, today).all<{ square_item_id: string; event_count: number }>();
+
+  return Object.fromEntries(
+    result.results.map((item) => [item.square_item_id, Number(item.event_count) || 0]),
+  );
+}
+
 export async function deleteExpiredAnalytics(cutoffDate: string) {
   if (!isDate(cutoffDate)) throw new Error("Invalid cleanup date");
   const [pages, menuItems, rateLimits] = await Promise.all([

@@ -33,7 +33,7 @@ export type EventInput = {
   itemIds: string[];
 };
 
-const fallbackImage = "/admin_icons/admin_svg/teazo_dash_icon.svg";
+const fallbackImage = "/TEAZO_logo.svg";
 
 function normalizeIds(ids: string[]): string[] {
   return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];

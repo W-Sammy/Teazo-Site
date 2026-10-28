@@ -16,6 +16,55 @@ import { validateUpdateMenuItemBody } from "@/app/lib/menu-item-validators";
  */
 export const dynamic = "force-dynamic";
 
+const maxMenuImageSize = 10 * 1024 * 1024;
+
+async function readUpdateRequest(request: Request): Promise<{
+  body: unknown;
+  imageFile: File | null;
+  removeImage: boolean;
+}> {
+  if (!request.headers.get("content-type")?.includes("multipart/form-data")) {
+    return {
+      body: await request.json(),
+      imageFile: null,
+      removeImage: false,
+    };
+  }
+
+  const form = await request.formData();
+  const jsonArray = (key: string) => {
+    const value = form.get(key);
+    if (typeof value !== "string" || value.trim() === "") return undefined;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
+  const imageValue = form.get("imageFile");
+  const imageFile =
+    typeof File !== "undefined" && imageValue instanceof File && imageValue.size > 0
+      ? imageValue
+      : null;
+
+  return {
+    body: {
+      name: form.get("name") ?? undefined,
+      description: form.get("description") ?? undefined,
+      priceCents:
+        form.get("priceCents") === null
+          ? undefined
+          : Number(form.get("priceCents")),
+      currency: form.get("currency") ?? undefined,
+      categoryIds: jsonArray("categoryIds"),
+      modifierListIds: jsonArray("modifierListIds"),
+    },
+    imageFile,
+    removeImage: form.get("removeImage") === "true",
+  };
+}
+
 export async function GET(
   request: Request,
   ctx: RouteContext<"/api/square/products/[id]">,
@@ -63,7 +112,7 @@ export async function GET(
  *
  * The current menu UI displays the first variation's price. A price update
  * changes that variation only; other variations and their settings are retained.
- * Image changes are not handled here. Existing Square image IDs are preserved.
+ * Image replacements and removal are handled through Square's Catalog Images API.
  *
  * @returns 200 - The updated MenuItem
  * @returns 400 - Invalid request data or unsupported price configuration
@@ -86,11 +135,16 @@ export async function PUT(
 
   try {
     let requestBody: unknown;
+    let imageFile: File | null;
+    let removeImage = false;
 
     try {
-      requestBody = await request.json();
+      const parsed = await readUpdateRequest(request);
+      requestBody = parsed.body;
+      imageFile = parsed.imageFile;
+      removeImage = parsed.removeImage;
     } catch {
-      return updateError("Request body must contain valid JSON.", 400);
+      return updateError("Request body must contain valid JSON or form data.", 400);
     }
 
     // Keep the TZ-165 validation before any Square lookup or write.
@@ -101,6 +155,17 @@ export async function PUT(
     }
 
     const body = validation.data;
+
+    if (imageFile) {
+      if (!["image/jpeg", "image/png"].includes(imageFile.type.toLowerCase())) {
+        return updateError("Menu images must be JPEG or PNG files.", 400);
+      }
+
+      if (imageFile.size > maxMenuImageSize) {
+        return updateError("Menu images must be 10 MB or smaller.", 400);
+      }
+    }
+
     const locationId = await resolveSquareLocationId();
 
     const existing = await squareClient.catalog.object.get({
@@ -125,6 +190,10 @@ export async function PUT(
      * variations, and other fields absent from this form are not discarded.
      */
     const itemData = { ...currentItem.itemData };
+
+    if (removeImage) {
+      itemData.imageIds = [];
+    }
 
     if (body.name !== undefined) {
       itemData.name = body.name;
@@ -234,6 +303,37 @@ export async function PUT(
     }
 
     updateConfirmed = true;
+
+    if (imageFile) {
+      const existingImageId = currentItem.itemData.imageIds?.[0];
+
+      if (existingImageId && !removeImage) {
+        await squareClient.catalog.images.update({
+          imageId: existingImageId,
+          request: {
+            idempotencyKey: crypto.randomUUID(),
+          },
+          imageFile,
+        });
+      } else if (!removeImage) {
+        await squareClient.catalog.images.create({
+          request: {
+            idempotencyKey: crypto.randomUUID(),
+            objectId: id,
+            image: {
+              type: "IMAGE",
+              id: "#new-image",
+              imageData: {
+                name: body.name ?? currentItem.itemData.name,
+                caption: body.description ?? currentItem.itemData.description,
+              },
+            },
+            isPrimary: true,
+          },
+          imageFile,
+        });
+      }
+    }
 
     const getResult = await squareClient.catalog.object.get({
       objectId: id,
