@@ -786,7 +786,7 @@ export default function MenuItemForm({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSaving}
+          disabled={checkingImage || isSaving}
           className={`min-w-0 ${adminButtonStyles.secondary}`}
         >
           Cancel
@@ -794,7 +794,7 @@ export default function MenuItemForm({
 
         <button
           type="submit"
-          disabled={checkingImage || isSaving}
+          disabled={isSaving}
           className={`min-w-0 ${adminButtonStyles.primary} disabled:cursor-wait`}
         >
           {isSaving

@@ -26,6 +26,46 @@ import { validateCreateMenuItemBody } from "@/app/lib/menu-item-validators";
  */
 export const dynamic = "force-dynamic";
 
+const maxMenuImageSize = 10 * 1024 * 1024;
+
+async function readCreateRequest(request: Request): Promise<{
+  body: unknown;
+  imageFile: File | null;
+}> {
+  if (!request.headers.get("content-type")?.includes("multipart/form-data")) {
+    return { body: await request.json(), imageFile: null };
+  }
+
+  const form = await request.formData();
+  const jsonArray = (key: string) => {
+    const value = form.get(key);
+    if (typeof value !== "string" || value.trim() === "") return undefined;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
+  const imageValue = form.get("imageFile");
+  const imageFile =
+    typeof File !== "undefined" && imageValue instanceof File && imageValue.size > 0
+      ? imageValue
+      : null;
+
+  return {
+    body: {
+      name: form.get("name"),
+      description: form.get("description") ?? undefined,
+      priceCents: Number(form.get("priceCents")),
+      currency: form.get("currency") ?? undefined,
+      categoryIds: jsonArray("categoryIds"),
+      modifierListIds: jsonArray("modifierListIds"),
+    },
+    imageFile,
+  };
+}
+
 export async function GET() {
   try {
     const locationId = await resolveSquareLocationId();
@@ -175,13 +215,16 @@ export async function POST(request: Request) {
 
   try {
     let requestBody: unknown;
+    let imageFile: File | null;
 
     try {
-      requestBody = await request.json();
+      const parsed = await readCreateRequest(request);
+      requestBody = parsed.body;
+      imageFile = parsed.imageFile;
     } catch {
       return Response.json(
         {
-          error: "Request body must contain valid JSON.",
+          error: "Request body must contain valid JSON or form data.",
         },
         { status: 400 },
       );
@@ -198,6 +241,27 @@ export async function POST(request: Request) {
     }
 
     const body = validation.data;
+
+    if (imageFile) {
+      if (
+        !["image/jpeg", "image/png"].includes(
+          imageFile.type.toLowerCase(),
+        )
+      ) {
+        return Response.json(
+          { error: "Menu images must be JPEG or PNG files." },
+          { status: 400 },
+        );
+      }
+
+      if (imageFile.size > maxMenuImageSize) {
+        return Response.json(
+          { error: "Menu images must be 10 MB or smaller." },
+          { status: 400 },
+        );
+      }
+    }
+
     const locationId = await resolveSquareLocationId();
 
     // Defines structure of Square catalogItem then sends it to Square
@@ -251,6 +315,33 @@ export async function POST(request: Request) {
       );
     }
 
+    let imageUploadWarning: string | undefined;
+
+    if (imageFile) {
+      try {
+        await squareClient.catalog.images.create({
+          request: {
+            idempotencyKey: crypto.randomUUID(),
+            objectId: newId,
+            image: {
+              type: "IMAGE",
+              id: "#new-image",
+              imageData: {
+                name: body.name,
+                caption: body.description,
+              },
+            },
+            isPrimary: true,
+          },
+          imageFile,
+        });
+      } catch (error) {
+        console.error("Square catalog image upload failed:", error);
+        imageUploadWarning =
+          "The item was created, but its image could not be uploaded. You can add the image by editing the item later.";
+      }
+    }
+
     const getResult =
       await squareClient.catalog.object.get({
         objectId: newId,
@@ -269,9 +360,12 @@ export async function POST(request: Request) {
       );
     }
 
-    return Response.json(menuItem, {
+    return Response.json(
+      imageUploadWarning ? { ...menuItem, imageUploadWarning } : menuItem,
+      {
       status: 201,
-    });
+      },
+    );
   } catch (error) {
     console.error(
       "Square catalog create failed:",
