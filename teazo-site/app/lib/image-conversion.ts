@@ -36,12 +36,13 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 }
 
 function fileExtensionForType(type: string): string {
+  if (type === "image/webp") return ".webp";
   return type === "image/png" ? ".png" : ".jpg";
 }
 
 async function canvasToFile(
   image: HTMLImageElement,
-  type: "image/jpeg" | "image/png",
+  type: "image/jpeg" | "image/png" | "image/webp",
   name: string,
   width: number,
   height: number,
@@ -107,11 +108,12 @@ export async function convertHeicToJpeg(file: File, maxFileSize = defaultMaxImag
 export async function resizeImageToMaxFileSize(file: File, maxFileSize = defaultMaxImageSize): Promise<File> {
   if (file.size <= maxFileSize) return file;
 
-  if (file.type !== "image/jpeg" && file.type !== "image/png") {
-    throw new Error("Only JPEG and PNG images can be resized in place.");
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Only JPEG, PNG, and WebP images can be resized in place.");
   }
 
   const image = await loadImage(file);
+  const type = file.type as "image/jpeg" | "image/png" | "image/webp";
   let width = image.naturalWidth;
   let height = image.naturalHeight;
   let resized = file;
@@ -119,12 +121,30 @@ export async function resizeImageToMaxFileSize(file: File, maxFileSize = default
   for (let attempt = 0; attempt < 12; attempt += 1) {
     width *= 0.8;
     height *= 0.8;
-    resized = await canvasToFile(image, file.type, file.name, width, height);
+    resized = await canvasToFile(image, type, file.name, width, height);
 
     if (resized.size <= maxFileSize) return resized;
   }
 
   throw new Error("The image could not be reduced below the file size limit.");
+}
+
+/** Prepare an image for Event/Gallery storage while preserving WebP files. */
+export async function prepareImageForStorage(
+  file: File,
+  maxFileSize = defaultMaxImageSize,
+): Promise<File> {
+  if (isHeicImage(file)) return convertHeicToJpeg(file, maxFileSize);
+
+  if (
+    file.type === "image/jpeg" ||
+    file.type === "image/png" ||
+    file.type === "image/webp"
+  ) {
+    return resizeImageToMaxFileSize(file, maxFileSize);
+  }
+
+  return file;
 }
 
 /** Prepare an upload for Square while preserving JPEG and PNG formats. */

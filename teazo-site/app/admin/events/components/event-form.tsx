@@ -16,6 +16,11 @@ import type {
   EventCategory,
   EventFormValues,
 } from "@/app/types/admin-event";
+import {
+  defaultMaxImageSize,
+  isHeicImage,
+  prepareImageForStorage,
+} from "@/app/lib/image-conversion";
 
 // Collect values locally and pass them to the parent, which handles saving.
 type EventFormProps = {
@@ -33,23 +38,8 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-// Some browsers report HEIC/HEIF files with a missing or generic MIME type.
-const heicImageTypes = new Set([
-  "image/heic",
-  "image/heif",
-  "image/heic-sequence",
-  "image/heif-sequence",
-]);
-
-function isHeicImage(file: File): boolean {
-  return (
-    heicImageTypes.has(file.type.toLowerCase()) ||
-    /\.(heic|heif)$/i.test(file.name)
-  );
-}
-
 // File-size limit in bytes; the interface labels this as 10 MB.
-const maxFileSize = 10 * 1024 * 1024;
+const maxFileSize = defaultMaxImageSize;
 
 const fallbackImageUrl =
   "/TEAZO_logo.svg";
@@ -232,10 +222,11 @@ export default function EventForm({
 
     setImageError(null);
 
-    const needsConversion = isHeicImage(file);
+    const needsPreparation =
+      isHeicImage(file) || file.size > maxFileSize;
 
     if (
-      !needsConversion &&
+      !isHeicImage(file) &&
       !acceptedImageTypes.includes(file.type.toLowerCase())
     ) {
       setImageError(
@@ -244,14 +235,14 @@ export default function EventForm({
       return;
     }
 
-    if (file.size === 0 || file.size > maxFileSize) {
+    if (file.size === 0) {
       setImageError(
-        "The selected image must be nonempty and 10 MB or smaller.",
+        "The selected image must be nonempty.",
       );
       return;
     }
 
-    if (!needsConversion) {
+    if (!needsPreparation) {
       applySelectedFile(file);
       return;
     }
@@ -261,38 +252,17 @@ export default function EventForm({
     setIsConverting(true);
 
     try {
-      // Convert HEIC/HEIF to a JPEG in the browser.
-      const { heicTo } = await import("heic-to");
-      const jpegBlob = await heicTo({
-        blob: file,
-        type: "image/jpeg",
-        quality: 0.85,
-      });
-
-      if (!jpegBlob || jpegBlob.size === 0) {
-        throw new Error("The converted image was empty.");
-      }
-
-      if (jpegBlob.size > maxFileSize) {
-        throw new Error("The converted image exceeds 10 MB.");
-      }
-
-      const jpegName =
-        file.name.replace(/\.(heic|heif)$/i, "") + ".jpg";
-      const jpegFile = new File([jpegBlob], jpegName, {
-        type: "image/jpeg",
-        lastModified: file.lastModified,
-      });
+      const preparedFile = await prepareImageForStorage(file, maxFileSize);
 
       if (isMounted.current && selectionSequence.current === requestId) {
-        applySelectedFile(jpegFile);
+        applySelectedFile(preparedFile);
       }
     } catch (error) {
-      console.error("Event HEIC/HEIF conversion failed:", error);
+      console.error("Event image preparation failed:", error);
 
       if (isMounted.current && selectionSequence.current === requestId) {
         setImageError(
-          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+          "This image could not be prepared. Try another image or convert it to JPG first.",
         );
       }
     } finally {
@@ -485,7 +455,7 @@ export default function EventForm({
                 disabled={isConverting}
                 className={`w-full shrink-0 ${adminButtonStyles.primary} sm:w-auto`}
               >
-                {isConverting ? "Converting HEIC..." : "Choose File"}
+                {isConverting ? "Preparing image..." : "Choose File"}
               </button>
 
               <span
@@ -506,12 +476,12 @@ export default function EventForm({
             }`}
           >
             {imageError ??
-              "JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum. A default image is used if omitted."}
+              "JPG, PNG, WebP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically. A default image is used if omitted."}
           </p>
 
           {isConverting && (
             <p role="status" className="mt-2 text-xs text-gray-500">
-              Converting HEIC/HEIF image for preview and upload...
+              Preparing image for preview and upload...
             </p>
           )}
         </div>
