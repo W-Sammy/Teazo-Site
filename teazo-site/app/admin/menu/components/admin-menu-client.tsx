@@ -37,6 +37,7 @@ type DisplayedMenuItem = {
   description: string;
   categories: ItemCategory[];
   availability: string;
+  visits: number;
 };
 
 type Category = {

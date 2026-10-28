@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import {  requireAdminPage } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
 import { MenuItem } from "@/app/types/menu-item"
-import { ADMIN_CACHE_TAGS } from "@/app/lib/admin-cache";
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
+import { listMenuItemVisitCounts } from "@/app/lib/queries/analytics";
 export const metadata: Metadata = {
   title: {
     absolute: "Teazo Menu Admin",
@@ -23,7 +23,7 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return res.json();
 }
 
-function filterMenuItems(menuItems: MenuItem[]){
+function filterMenuItems(menuItems: MenuItem[], visitCounts: Record<string, number>){
   return menuItems.map((item) => ({
     id: item.catalogObjectId,
     img: item.imageUrl ?? "/TEAZO_logo.svg",
@@ -31,6 +31,7 @@ function filterMenuItems(menuItems: MenuItem[]){
     price: item.priceCents / 100,
     description: item.description ?? "",
     availability: availabilityDescription(item),
+    visits: visitCounts[item.catalogObjectId] ?? 0,
     categories: item.categories
   }));
 }
@@ -54,8 +55,11 @@ export default async function AdminMenuPage(){
   const admin = await requireAdminPage(3);
 
   const revision = await getMenuRevision();
-  const menuItems = await getMenuItems();
-  const displayedMenuItems = filterMenuItems(menuItems);
+  const [menuItems, visitCounts] = await Promise.all([
+    getMenuItems(),
+    listMenuItemVisitCounts().catch(() => ({})),
+  ]);
+  const displayedMenuItems = filterMenuItems(menuItems, visitCounts);
   //what will be used for the filters
   const categories = getUniqueCategories(displayedMenuItems);
 
