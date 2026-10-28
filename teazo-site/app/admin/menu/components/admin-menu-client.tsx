@@ -886,6 +886,7 @@ export default function AdminMenuClient({
           price: result.priceCents / 100,
           description: result.description ?? "",
           availability: availabilityDescription(result),
+          visits: original.visits,
 
           // Use returned membership, even if Square returns an empty category list.
           categories: result.categories.map((category) => ({
@@ -988,7 +989,8 @@ export default function AdminMenuClient({
         name: result.name?.trim() || "Unnamed item",
         price: result.priceCents / 100,
         description: result.description ?? "",
-          availability: availabilityDescription(result),
+        availability: availabilityDescription(result),
+        visits: 0,
 
         // Keep returned category membership; only fill in missing display labels.
         categories: result.categories.map((category) => ({
