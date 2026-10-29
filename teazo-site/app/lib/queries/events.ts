@@ -215,8 +215,8 @@ export async function updateEvent(
       input.appliesToAll ? 1 : 0,
       id,
     ),
-    prepare("DELETE FROM event_category WHERE event_id = ?1").bind(id),
-    prepare("DELETE FROM event_item WHERE event_id = ?1").bind(id),
+    prepare("DELETE FROM event_category WHERE event_id = ?1 AND square_env = ?2").bind(id, squareEnv),
+    prepare("DELETE FROM event_item WHERE event_id = ?1 AND square_env = ?2").bind(id, squareEnv),
     ...(!input.appliesToAll ? targetInsertStatements(id, input, squareEnv) : []),
   ];
   if (media?.id && previous.image_media_id && previous.image_media_id !== media.id) {

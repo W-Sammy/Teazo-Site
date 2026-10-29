@@ -7,6 +7,7 @@ import { resolveSquareLocationId } from "@/app/lib/square-location";
 import { verifyTurnstile } from "@/app/lib/turnstile";
 import { ONLINE_ORDER_METADATA } from "@/app/lib/online-orders";
 import { CHECKOUT_RATE_LIMIT, consumeRateLimit } from "@/app/lib/queries/rate-limit";
+import { validateCartAgainstCatalog } from "@/app/lib/catalog-validation";
 
 export const runtime = "nodejs";
 
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
 
   // 2b. Limit attempts per visitor. Only attempts that passed the bot check
   // count, so junk requests can't use up the limit for everyone sharing an IP.
-  // Every attempt that gets past here creates a Square order.
+  // Availability and pickup validation still run before creating a Square order.
   if (!(await consumeRateLimit(CHECKOUT_RATE_LIMIT, ip))) {
     return Response.json(
       {
@@ -132,6 +133,15 @@ export async function POST(request: Request) {
   const redirectUrl = `${baseUrl}/order/confirmation`;
 
   try {
+    const catalogValidation = await validateCartAgainstCatalog(body.items, locationId);
+    if (!catalogValidation.valid) {
+      return Response.json({
+        error: catalogValidation.error,
+        code: catalogValidation.code,
+        variationIds: catalogValidation.variationIds,
+      }, { status: 400, headers: { "Cache-Control": "no-store" } });
+    }
+
     const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey: crypto.randomUUID(),
       order: {

@@ -578,11 +578,11 @@ describe("Event database queries", () => {
 
     expect(
       statementContaining("DELETE FROM event_category")?.args,
-    ).toEqual(["event-1"]);
+    ).toEqual(["event-1", "sandbox"]);
 
     expect(
       statementContaining("DELETE FROM event_item")?.args,
-    ).toEqual(["event-1"]);
+    ).toEqual(["event-1", "sandbox"]);
 
     expect(
       statementContaining("INSERT INTO event_category")?.args,

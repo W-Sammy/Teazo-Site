@@ -138,7 +138,7 @@ export default function SocialSection({
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
                         alt="Default Icon"
                         className="h-6 w-6 object-contain"
-                      /> 
+                      />
                     </span>
                   )}
 
@@ -253,10 +253,10 @@ export default function SocialSection({
       <button
         type="button"
         onClick={onAddLink}
-        className="mt-4 min-h-11 w-full cursor-pointer rounded-2xl bg-[#FFBDC7] px-[18px] py-2 text-[13px] font-semibold text-white hover:bg-[#F59AA3] sm:min-h-0 sm:w-auto"
+        className="mt-4 min-h-11 w-full cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7] sm:min-h-0 sm:w-auto"
       >
         New Social Media +
       </button>
     </AccordionItem>
   );
-} 
+}

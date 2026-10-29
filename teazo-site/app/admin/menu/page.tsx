@@ -1,3 +1,4 @@
+import { availabilityDescription } from "@/app/lib/storefront-catalog";
 import type { Metadata } from "next";
 import {  requireAdminPage } from "@/app/lib/admin";
 import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
@@ -26,9 +27,10 @@ function filterMenuItems(menuItems: MenuItem[]){
   return menuItems.map((item) => ({
     id: item.catalogObjectId,
     img: item.imageUrl ?? "/TEAZO_logo.svg",
-    name: item.name ?? "Unnamed item", 
+    name: item.name ?? "Unnamed item",
     price: item.priceCents / 100,
     description: item.description ?? "",
+    availability: availabilityDescription(item),
     categories: item.categories
   }));
 }

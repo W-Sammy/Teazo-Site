@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -12,6 +11,7 @@ import {
   type SubmitEvent,
 } from "react";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
+import { adminButtonStyles } from "../../components/admin-button-styles";
 
 // A null file lets edits keep the existing image while updating its name or tags.
 export type GalleryUploadValues = {
@@ -224,19 +224,12 @@ export default function GalleryUploadForm({
 
     try {
       // Dynamically load the converter only for HEIC/HEIF files.
-      const { default: heic2any } =
-        await import("heic2any");
-
-      const result = await heic2any({
+      const { heicTo } = await import("heic-to");
+      const jpegBlob = await heicTo({
         blob: file,
-        toType: "image/jpeg",
+        type: "image/jpeg",
         quality: 0.85,
       });
-
-      // Use the first still image if multiple frames are returned.
-      const jpegBlob = Array.isArray(result)
-        ? result[0]
-        : result;
 
       if (!jpegBlob || jpegBlob.size === 0) {
         throw new Error(
@@ -522,7 +515,7 @@ export default function GalleryUploadForm({
             htmlFor="gallery-image-name"
             className="mb-1 block text-sm text-gray-700"
           >
-            Name
+            Name <span className="text-red-600" aria-hidden="true">*</span>
           </label>
 
           <input
@@ -641,6 +634,9 @@ export default function GalleryUploadForm({
 
         {/* Image preview and selector */}
         <div className="mt-6 min-w-0">
+          <label htmlFor="gallery-image-file" className="mb-2 block text-sm text-gray-700">
+            Image{initialImage ? " (optional)" : <> <span className="text-red-600" aria-hidden="true">*</span></>}
+          </label>
           {previewUrl && (
             <div className="mb-3 min-w-0">
               <div className="relative h-52 w-full overflow-hidden rounded-xl border border-[#dbb082] bg-[#f3ece6] md:h-44">
@@ -728,7 +724,7 @@ export default function GalleryUploadForm({
                   fileInputRef.current?.click()
                 }
                 disabled={isSaving || isConverting}
-                className="w-full max-w-full cursor-pointer whitespace-normal break-words rounded-lg bg-[#FFBDC7] px-3 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4"
+                className={`w-full max-w-full whitespace-normal break-words ${adminButtonStyles.primary} sm:w-auto`}
               >
                 {isConverting
                   ? "Converting HEIC..."
@@ -774,7 +770,7 @@ export default function GalleryUploadForm({
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            className="w-full cursor-pointer rounded-lg bg-gray-400 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+            className={`w-full ${adminButtonStyles.secondary} md:w-auto`}
           >
             Cancel
           </button>
@@ -782,7 +778,7 @@ export default function GalleryUploadForm({
           <button
             type="submit"
             disabled={!canSave || isSaving || isConverting}
-            className="w-full cursor-pointer rounded-lg bg-[#FFBDC7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F59AA3] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+            className={`w-full ${adminButtonStyles.primary} md:w-auto`}
           >
             {isSaving
               ? "Saving..."

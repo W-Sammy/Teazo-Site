@@ -1,6 +1,9 @@
 "use client";
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
+
+// import font & bubbles
+import { Montserrat, Cabin_Sketch } from "next/font/google";
 import PasswordFlow from "./password-flow";
 import { BubbleField } from "@/app/components/bubble-field";
 
@@ -10,6 +13,24 @@ import { Suspense, useState } from "react";
 import type { SubmitEvent } from "react";
 import type { ReactNode } from "react";
 import AuthMessage from "./auth-message";
+
+// setup fonts
+const cabinSketch = Cabin_Sketch({
+    subsets: ['latin'], // import only letters, num
+    weight: ['400'] // normal
+});
+
+// extra bold montserrat
+const boldMontserrat = Montserrat({
+    subsets: ['latin'],
+    weight: ['700'] // extra bold
+});
+
+// medium montserrat
+const mediumMontserrat = Montserrat({
+    subsets: ['latin'],
+    weight: ['500']
+});
 
 export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
   const [email, setEmail] = useState("");
@@ -66,7 +87,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
     }
   }
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#f4efeb] overflow-hidden">
+    <div className="relative min-h-screen flex flex-col bg-[#FFF8F9] overflow-hidden">
       {/* Background effects layer */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <BubbleField />
@@ -79,19 +100,23 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
 
       {/* Page content */}
       <main className="relative z-10 flex-1 flex flex-col gap-6 justify-center items-center px-4 pt-30 pb-12">
-        <div className="w-full max-w-[470px] bg-white px-10 pt-12 pb-10 shadow-sm">
+        <div className="w-full max-w-[470px] bg-white px-10 pt-12 pb-10">
           {/* Teazo Logo */}
           <div className="flex flex-col items-center">
             <Image
-              src="/teazo_logo_text.png"
-              alt="Teazo logo with text"
-              width={180}
-              height={180}
-              className="mb-3 h-auto w-auto"
+              src="/TEAZO_logo.svg"
+              alt="Teazo logo"
+              width={83}
+              height={100}
+              className="mb-1 h-[100px] w-auto"
               priority
             />
+            <h1 className={`${cabinSketch.className} text-[46px] tracking-[0.05em] font-semibold text-[#DBAF82] text-center mb-2`}>
+              TEAZO
+            </h1>
 
-            <h1 className="text-[22px] tracking-[0.25em] font-semibold text-black text-center">
+
+            <h1 className={`${mediumMontserrat.className} text-[25px] tracking-[0.15em] font-semibold text-black text-center`}>
               ADMIN PORTAL
             </h1>
           </div>
@@ -109,7 +134,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
               name="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="EMAIL"
-              className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
+              className={`${mediumMontserrat.className} h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] placeholder:uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]`}
               value={email}
               required
               maxLength={254}
@@ -123,7 +148,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
               name="password"
               onChange={(e) => setPassword(e.target.value)}
               placeholder="PASSWORD"
-              className="h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]"
+              className={`${mediumMontserrat.className} h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] placeholder:uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]`}
               value={password}
               required
               maxLength={1024}
@@ -135,7 +160,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             {loginError && (
               <p
                 role="alert"
-                className="w-full text-center text-sm text-red-600"
+                className={`${mediumMontserrat.className} w-full text-center text-sm text-red-600`}
               >
                 {loginError}
               </p>
@@ -144,7 +169,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             <button
               type="submit"
               disabled={isSubmitting || !email.trim() || !password}
-              className="mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition hover:bg-[#FFBDC7] disabled:cursor-not-allowed cursor-pointer disabled:opacity-50"
+              className={`${boldMontserrat.className} mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition enabled:hover:bg-[#FFBDC7] disabled:cursor-not-allowed cursor-pointer disabled:opacity-50`}
             >
               {isSubmitting ? "SIGNING IN…" : "SIGN IN"}
             </button>
@@ -155,11 +180,11 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
         </div>
 
         {/* Google SSO container */}
-        <div className="relative flex flex-col mb-20 w-full max-w-[470px] bg-white  shadow-sm">
+        <div className="relative flex flex-col mb-20 w-full max-w-[470px] bg-white">
           <button
             type="button"
             onClick={() => signIn("google", { redirectTo: "/admin" })}
-            className="group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 border border-gray-200 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50"
+            className={`${boldMontserrat.className} group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50`}
             disabled={isSubmitting}
           >
             {/* Google Icon official SVG */}
