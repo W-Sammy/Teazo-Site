@@ -24,12 +24,13 @@ async function getMenuItems(): Promise<MenuItem[]> {
 }
 
 export default async function AdminEventsPage() {
-  await requireAdminPage(3)
-  
+  await requireAdminPage(2);
+
   const [menuItems, initialEvents] = await Promise.all([
     getMenuItems(),
     getEvents(),
   ]);
+
   const items: EventCatalogItem[] = menuItems.map((item) => ({
     id: item.catalogObjectId,
     name: item.name ?? "Unnamed item",

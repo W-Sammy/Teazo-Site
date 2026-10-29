@@ -121,7 +121,7 @@ function getCreateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 400) {
@@ -150,7 +150,7 @@ function getUpdateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 404) {
@@ -198,7 +198,7 @@ function getDeleteErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Admin access from the Teazo admin page.";
   }
 
   if (
@@ -556,7 +556,7 @@ export default function AdminMenuClient({
 
     if (!canUploadMenu) {
       setUploadError(
-        "Owner or Can Edit access is required to upload a menu.",
+        "Owner or Admin access is required to upload a menu.",
       );
       return;
     }
@@ -629,7 +629,7 @@ export default function AdminMenuClient({
   }
 
   function openAddItemForm() {
-    // Menu writes and PDF uploads currently use the same Owner/Can Edit roles.
+    // Menu writes and PDF uploads currently use the same Owner/Admin roles.
     if (
       !canUploadMenu ||
       uploadPendingRef.current ||
@@ -700,9 +700,9 @@ export default function AdminMenuClient({
       return "No item is selected. Close this dialog and select an item again.";
     }
 
-    // The server independently enforces the same Owner/Can Edit permission.
+    // The server independently enforces the same Owner/Admin permission.
     if (!canUploadMenu) {
-      return "Owner or Can Edit access is required to delete a menu item.";
+      return "Owner or Admin access is required to delete a menu item.";
     }
 
     // Capture the selected record so an async response cannot target another item.
@@ -793,7 +793,7 @@ export default function AdminMenuClient({
     if (drawer.kind === "edit-item") {
       if (!canUploadMenu) {
         setItemSaveError(
-          "Owner or Can Edit access is required to edit a menu item.",
+          "Owner or Admin access is required to edit a menu item.",
         );
         return;
       }
@@ -935,7 +935,7 @@ export default function AdminMenuClient({
 
     if (!canUploadMenu) {
       setItemSaveError(
-        "Owner or Can Edit access is required to add a menu item.",
+        "Owner or Admin access is required to add a menu item.",
       );
       return;
     }
@@ -1267,7 +1267,7 @@ export default function AdminMenuClient({
                   title={
                     canUploadMenu
                       ? "Add a menu item"
-                      : "Owner or Can Edit access is required"
+                      : "Owner or Admin access is required"
                   }
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
@@ -1286,7 +1286,7 @@ export default function AdminMenuClient({
                   title={
                     canUploadMenu
                       ? "Upload a PDF menu"
-                      : "Owner or Can Edit access is required"
+                      : "Owner or Admin access is required"
                   }
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >

@@ -9,6 +9,8 @@ type AdminCredentials = {
   password_hash: string;
   session_version: number;
 };
+
+// Allow password authentication only for Owner and Admin accounts.
 export async function findAdminCredentials(
   email: string,
 ): Promise<AdminCredentials | null> {
@@ -22,7 +24,7 @@ export async function findAdminCredentials(
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
         AND password_hash IS NOT NULL
       LIMIT 1`,
   )

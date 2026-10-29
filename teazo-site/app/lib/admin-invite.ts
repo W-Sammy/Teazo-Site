@@ -1,37 +1,33 @@
 /**
- * Invitation email for newly added admins.
+ * Invitation email sent when an Owner adds an administrator.
  *
- * Includes a single-use password setup link, assigned access,
- * and Google sign-in as an alternative.
+ * Newly invited accounts receive the Admin role and a
+ * single-use password setup link. Google sign-in remains available.
  *
- * Call only after the admin account has been saved and
- * the inviting user's permissions have been checked.
+ * Only call after the account has been saved and the inviting
+ * user's permissions have been checked.
  *
- * Delivery failures preserve the newly created account.
+ * Delivery failures must not revoke the created account.
  */
+
 import "server-only";
-import type { AdminRole } from "./admin-whitelist";
+
+import type { AdminRole } from "@/app/types/admin-perms";
 import { sendEmail, type SendOutcome } from "./email";
 import { applicationUrl } from "./admin-password-email";
 import { createPasswordToken } from "./admin-password-tokens";
 
 export type AdminInvite = {
-  /** ID of the account that was successfully saved. */
   adminId: string;
-  /** The address that was added. It must be the Google account they sign in with. */
   email: string;
   username: string;
   role: AdminRole;
-  /** Whether a Can Edit admin may also add and remove other admins. */
-  canManageAdmins?: boolean;
-  /** The username of the admin who added them. */
   invitedBy?: string;
 };
 
 const ROLE_LABELS: Record<AdminRole, string> = {
   1: "Owner",
-  2: "Can Edit",
-  3: "Can View",
+  2: "Admin",
 };
 
 const escapeHtml = (value: string) =>
@@ -42,9 +38,12 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-
-/** The email itself. Pure, so it can be tested without a server. */
-export function buildAdminInvite(invite: AdminInvite, site: string, setupUrl: string,) {
+/** Build the invitation text and HTML without sending an email. */
+export function buildAdminInvite(
+  invite: AdminInvite,
+  site: string,
+  setupUrl: string,
+) {
   const loginUrl = new URL("/login", site).toString();
 
   const who = invite.invitedBy
@@ -53,14 +52,9 @@ export function buildAdminInvite(invite: AdminInvite, site: string, setupUrl: st
 
   const access = ROLE_LABELS[invite.role];
 
-  const manages =
-    invite.role === 2 && invite.canManageAdmins
-      ? " You can also add and remove other admins."
-      : "";
-
   const introduction =
     `${who} as an admin of the TEAZO website, ` +
-    `with ${access} access.${manages}`;
+    `with ${access} access.`;
 
   const text = [
     `Hi ${invite.username},`,
@@ -111,7 +105,7 @@ export async function sendAdminInvite(
     const site = applicationUrl();
     const setupLink = new URL("/login", site);
 
-    // This helper verifies that the account is eligible
+    // The token helper verifies that the account is eligible
     // and does not already have a password.
     const created = await createPasswordToken(
       invite.adminId,
@@ -127,17 +121,19 @@ export async function sendAdminInvite(
 
     return await sendEmail({
       to: invite.email,
-      ...buildAdminInvite(invite, site, setupLink.toString()),
+      ...buildAdminInvite(
+        invite,
+        site,
+        setupLink.toString(),
+      ),
     });
   } catch (error) {
-    // // Do not log tokens, email contents, or provider payloads.
-    // console.error("An admin was added, but the invite email failed.");
-
+    // Never log setup tokens, email bodies, or provider payloads.
     if (process.env.NODE_ENV === "development") {
-    console.error(
-      "Admin invitation failed:",
-      error instanceof Error ? error.message : "Unknown error",
-    );
+      console.error(
+        "Admin invitation failed:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
     } else {
       console.error("Admin invitation failed.");
     }

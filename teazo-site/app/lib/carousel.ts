@@ -20,11 +20,11 @@ const MAX_IMAGE_BYTES = Math.min(MAX_MEDIA_BYTES, 5 * 1024 * 1024);
 
 // returns file extension for accepted file formats
 function getImageExtension(type: string): string | undefined {
-    if (type === "image/png") 
+    if (type === "image/png")
         return "png";
-    if (type === "image/jpeg") 
+    if (type === "image/jpeg")
         return "jpg";
-    if (type === "image/webp") 
+    if (type === "image/webp")
         return "webp";
     return undefined;
 }
@@ -37,12 +37,12 @@ function matchesImageHeader(bytes: Uint8Array, type: string): boolean {
         // reject files that're too short
         if (bytes.length < 24)
             return false;
-        
+
         // compare each starting byte with png signature; reject if any do not match
-        for (let index = 0; index < signature.length; index++) 
-            if (bytes[index] !== signature[index]) 
+        for (let index = 0; index < signature.length; index++)
+            if (bytes[index] !== signature[index])
                 return false;
-            
+
         return true;
     }
 
@@ -52,9 +52,9 @@ function matchesImageHeader(bytes: Uint8Array, type: string): boolean {
 
     // check starting bytes expected for webp header
     if (type === "image/webp") {
-        if (bytes.length < 16) 
+        if (bytes.length < 16)
             return false;
-        
+
         const fileHeader = String.fromCharCode(...bytes.slice(0, 4));
         const imageFormat = String.fromCharCode(...bytes.slice(8, 12));
         return fileHeader === "RIFF" && imageFormat === "WEBP";
@@ -115,41 +115,41 @@ function refreshCarouselPages(errorMessage: string) {
 
 // get the file key for uploaded carousel imgs-- original imgs are in public so they don't have R2 keys
 function getUploadedImageKey(src: unknown): string | null {
-    if (typeof src !== "string") 
+    if (typeof src !== "string")
         return null;
-    
+
     // only accept storage keys inside carousel/using the expected characters
-    if (!/^carousel\/[a-z0-9/_.-]+$/i.test(src)) 
+    if (!/^carousel\/[a-z0-9/_.-]+$/i.test(src))
         return null;
-    
+
     // reject parent/directory markers & repeated slashes in the storage key
-    if (src.includes("..") || src.includes("//")) 
+    if (src.includes("..") || src.includes("//"))
         return null;
-    
+
     return src;
 }
 
 // descs & visibility of imgs are changed via metadata request
 function hasValidImageSettings(input: Record<string, unknown>): boolean {
-    if (Array.isArray(input)) 
+    if (Array.isArray(input))
         return false;
-    
+
     // reject extra fields so request can't change img source or other data
     const allowedFields = ["action", "id", "alt", "enabled"];
     for (const field of Object.keys(input))
-        if (!allowedFields.includes(field)) 
+        if (!allowedFields.includes(field))
             return false;
-        
+
     // img id must be text, can't be blank & isn't above 100 chars
-    if (typeof input.id !== "string" || !input.id.trim() || input.id.length > 100) 
+    if (typeof input.id !== "string" || !input.id.trim() || input.id.length > 100)
         return false;
-    
-    if ("alt" in input && typeof input.alt !== "string") 
+
+    if ("alt" in input && typeof input.alt !== "string")
         return false;
-    
+
     if ("enabled" in input && typeof input.enabled !== "boolean")
         return false;
-    
+
     // requires at least one update but empty descs are still allowed
     return "alt" in input || "enabled" in input;
 }
@@ -164,7 +164,7 @@ async function readUploadedImageBucket(key: string): Promise<string> {
     // stop if no location is found or multiple locations match
     if (tracked.results.length !== 1)
         throw new CarouselError("Couldn't identify one storage bucket for this image. Nothing was removed; check its r2_object record.", 409);
-    
+
     // return location name so cleanup knows where to find file
     return tracked.results[0].r2_bucket;
 }
@@ -242,24 +242,24 @@ export async function uploadCarouselImage(formData: FormData) {
         const ext = getImageExtension(file.type);
         if (!ext)
             throw new CarouselError("Unsupported image format. Upload PNG, JPG, or WebP.", 415);
-        if (file.size === 0) 
+        if (file.size === 0)
             throw new CarouselError("Choose a nonempty image that is 5 MB or less.", 400);
-        if (file.size > MAX_IMAGE_BYTES) 
+        if (file.size > MAX_IMAGE_BYTES)
             throw new CarouselError("Choose a nonempty image that is 5 MB or less.", 413);
 
         // read file bytes & check its header before uploading
         const bytes = new Uint8Array(await file.arrayBuffer());
-        if (!matchesImageHeader(bytes, file.type)) 
+        if (!matchesImageHeader(bytes, file.type))
             throw new CarouselError("That file doesn't match its image format.", 415);
         if (!isDatabaseConfigured())
             throw new CarouselError("The database/storage connection isn't configured.", 503);
-        
+
         const savedImages = await readCarouselImages(
             "Existing carousel settings need to be checked before adding images."
         ) ?? [];
 
         const replacedImage = savedImages.find((image) => image && image.id === replacementId);
-        if (replacementId !== null && !replacedImage) 
+        if (replacementId !== null && !replacedImage)
             throw new CarouselError("That image is no longer saved. Refresh the carousel editor.", 404);
 
         // keep original files in public, old uploaded files go into cleanup queue when unused
@@ -267,7 +267,7 @@ export async function uploadCarouselImage(formData: FormData) {
         let oldBucket: string | null = null;
         if (oldKey)
             oldBucket = await readUploadedImageBucket(oldKey);
-        
+
         // generate new storage key so existing file isn't overwritten during upload
         const key = mintKey("carousel", ext);
         // confirm public url settings work before sending file to storage
@@ -291,7 +291,7 @@ export async function uploadCarouselImage(formData: FormData) {
             const statements = [createImageUpdate(replacementId, { src: stored.key }, replacedImage.src)];
             if (oldKey && oldBucket)
                 statements.push(...createCleanupStatements(oldKey, oldBucket));
-            
+
             // save replacement & queue old file cleanup together so database failure rolls both back
             await batch(statements);
 
@@ -299,9 +299,9 @@ export async function uploadCarouselImage(formData: FormData) {
             const currentRow = await readCarouselRow();
             const currentImages = JSON.parse(currentRow?.value ?? "[]") as CarouselImage[];
 
-            if (!currentImages.some((current) => current.id === replacementId && current.src === stored.key)) 
+            if (!currentImages.some((current) => current.id === replacementId && current.src === stored.key))
                 throw new CarouselError("The image changed during the upload. Refresh the carousel editor before trying again.", 409);
-            
+
         } else { // add the new img without overwriting other uploads happening at the same time
             await batch([
                 prepare(
@@ -327,14 +327,14 @@ export async function uploadCarouselImage(formData: FormData) {
     } catch (error) {
         if (error instanceof CarouselError)
             throw error;
-        
+
         console.error("Carousel upload/save failed:", error);
 
         // don't delete uploaded file if can't tell whether database save went through
         let message = "Couldn't upload the image. Check the database/storage connection and try again.";
         if (uploadedKey)
             message = "The image uploaded, but its database save could not be confirmed. Check the saved carousel before retrying.";
-        
+
         throw new CarouselError(message, 500);
     }
 }
@@ -345,7 +345,7 @@ export async function removeCarouselImage(body: unknown) {
         // requires requested object with a nonblank text id (must be 100 char or less)
         if (!body || typeof body !== "object" || Array.isArray(body) || !("id" in body) || typeof body.id !== "string" || !body.id.trim() || body.id.length > 100)
             throw new CarouselError("A valid image ID is required.", 400);
-        
+
         // use the validated img id & check the database connection settings
         const id = body.id;
         if (!isDatabaseConfigured())
@@ -369,7 +369,7 @@ export async function removeCarouselImage(body: unknown) {
             let bucket: string | null = null;
             if (key)
                 bucket = await readUploadedImageBucket(key);
-            
+
 
             // saves an empty list when all imgs are removed so loading the page doesn't bring back original imgs
             const statements: ReturnType<typeof prepare>[] = [
@@ -398,9 +398,9 @@ export async function removeCarouselImage(body: unknown) {
         return { success: true, id };
 
     } catch (error) {
-        if (error instanceof CarouselError) 
+        if (error instanceof CarouselError)
             throw error;
-        
+
         console.error("Carousel removal failed:", error);
         throw new CarouselError("Couldn't confirm image removal. Please try again.", 500);
     }
@@ -413,13 +413,13 @@ export async function saveCarouselSettings(body: unknown) {
         // if request says "update-image", save changes to existing img's desc/visibility
         if (body && typeof body === "object" && "action" in body && body.action === "update-image")
             return await updateCarouselSettings(body);
-        
+
         if (!body || typeof body !== "object" || !("action" in body) || body.action !== "initialize-defaults")
             throw new CarouselError("Unknown carousel action.", 400);
-        
-        if (!isDatabaseConfigured()) 
+
+        if (!isDatabaseConfigured())
             throw new CarouselError("The database connection isn't configured.", 503);
-        
+
         await readCarouselImages("Saved carousel settings must be checked before adding originals.");
 
         // adds back missing originals once, prevents removed originals from being added again
@@ -462,7 +462,7 @@ export async function saveCarouselSettings(body: unknown) {
             let src = image.src;
             if (!src.startsWith("/carousel_images/"))
                 src = toPublicUrl(src);
-            
+
             return { ...image, src };
         });
         refreshCarouselPages("Carousel originals saved, but page revalidation failed:");
@@ -470,9 +470,9 @@ export async function saveCarouselSettings(body: unknown) {
         return { success: true, images };
 
     } catch (error) {
-        if (error instanceof CarouselError) 
+        if (error instanceof CarouselError)
             throw error;
-        
+
         console.error("Carousel settings request failed:", error);
         throw new CarouselError("Couldn't save or load carousel settings. Please retry.", 500);
     }
@@ -500,19 +500,19 @@ async function updateCarouselSettings(body: object) {
     }
 
     // confirm the saved data is a list & requested img still exists before updating it
-    if (!Array.isArray(saved)) 
+    if (!Array.isArray(saved))
         throw new CarouselError("Saved carousel settings are invalid; nothing was changed.", 409);
-    
-    if (!saved.some((image) => image && image.id === input.id)) 
+
+    if (!saved.some((image) => image && image.id === input.id))
         throw new CarouselError("That image is no longer saved. Refresh the carousel editor.", 404);
-    
+
 
     // include only settings by this request, leave others items' settings as is
     const patch: { alt?: string; enabled?: boolean } = {};
-    if (typeof input.alt === "string") 
+    if (typeof input.alt === "string")
         patch.alt = input.alt;
-    
-    if (typeof input.enabled === "boolean") 
+
+    if (typeof input.enabled === "boolean")
         patch.enabled = input.enabled;
 
     // update the img's settings in current saved list so removed imgs aren't added again

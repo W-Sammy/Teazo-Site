@@ -2,7 +2,7 @@
 
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 
-// import font & bubbles
+// Import font and bubbles.
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import PasswordFlow from "./password-flow";
 import { BubbleField } from "@/app/components/bubble-field";
@@ -10,36 +10,67 @@ import { BubbleField } from "@/app/components/bubble-field";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { Suspense, useState } from "react";
-import type { SubmitEvent } from "react";
-import type { ReactNode } from "react";
+import type { SubmitEvent, ReactNode } from "react";
 import AuthMessage from "./auth-message";
 
-// setup fonts
+// Setup fonts.
 const cabinSketch = Cabin_Sketch({
-    subsets: ['latin'], // import only letters, num
-    weight: ['400'] // normal
+  subsets: ["latin"],
+  weight: ["400"],
 });
 
-// extra bold montserrat
 const boldMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['700'] // extra bold
+  subsets: ["latin"],
+  weight: ["700"],
 });
 
-// medium montserrat
 const mediumMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['500']
+  subsets: ["latin"],
+  weight: ["500"],
 });
 
-export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
+// Only permit a destination for the ownership-transfer
+// workflow. Never redirect to arbitrary URLs supplied
+// through the login page.
+function postLoginDestination(): string {
+  const params = new URLSearchParams(
+    window.location.search,
+  );
+
+  const next = params.get("next");
+
+  if (!next) {
+    return "/admin";
+  }
+
+  // The transfer token is 32 random bytes encoded as
+  // a 43-character base64url string.
+  const match = /^\/ownership-transfer\?token=([A-Za-z0-9_-]{43})$/.exec(
+    next,
+  );
+
+  if (!match) {
+    return "/admin";
+  }
+
+  return `/ownership-transfer?token=${match[1]}`;
+}
+
+export default function AdminLoginPage({
+  footer,
+}: {
+  footer: ReactNode;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginError, setLoginError] =
+    useState<string | null>(null);
 
-  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: SubmitEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     if (isSubmitting) return;
@@ -53,6 +84,8 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
       return;
     }
 
+    const destination = postLoginDestination();
+
     setIsSubmitting(true);
 
     try {
@@ -60,7 +93,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
         email: normalizedEmail,
         password,
         redirect: false,
-        redirectTo: "/admin",
+        redirectTo: destination,
       });
 
       if (result.error) {
@@ -73,12 +106,15 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
       }
 
       if (!result.ok) {
-        setLoginError("Sign-in could not be completed. Please try again.");
+        setLoginError(
+          "Sign-in could not be completed. Please try again.",
+        );
         return;
       }
 
-      // Make a fresh request so /admin reads the new session cookie.
-      window.location.assign("/admin");
+      // Make a fresh request so the destination reads
+      // the newly established session cookie.
+      window.location.assign(destination);
     } catch {
       setLoginError("Unable to connect. Please try again.");
     } finally {
@@ -86,6 +122,7 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
       setIsSubmitting(false);
     }
   }
+
   return (
     <div className="relative min-h-screen flex flex-col bg-[#FFF8F9] overflow-hidden">
       {/* Background effects layer */}
@@ -111,18 +148,24 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
               className="mb-1 h-[100px] w-auto"
               priority
             />
-            <h1 className={`${cabinSketch.className} text-[46px] tracking-[0.05em] font-semibold text-[#DBAF82] text-center mb-2`}>
+
+            <h1
+              className={`${cabinSketch.className} text-[46px] tracking-[0.05em] font-semibold text-[#DBAF82] text-center mb-2`}
+            >
               TEAZO
             </h1>
 
-
-            <h1 className={`${mediumMontserrat.className} text-[25px] tracking-[0.15em] font-semibold text-black text-center`}>
+            <h1
+              className={`${mediumMontserrat.className} text-[25px] tracking-[0.15em] font-semibold text-black text-center`}
+            >
               ADMIN PORTAL
             </h1>
           </div>
+
           <Suspense fallback={null}>
             <AuthMessage />
           </Suspense>
+
           {/* Login Form */}
           <form
             onSubmit={handleSubmit}
@@ -132,7 +175,9 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             <input
               type="email"
               name="email"
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
               placeholder="EMAIL"
               className={`${mediumMontserrat.className} h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] placeholder:uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]`}
               value={email}
@@ -146,7 +191,9 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
             <input
               type="password"
               name="password"
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
               placeholder="PASSWORD"
               className={`${mediumMontserrat.className} h-[42px] w-full rounded-md border-2 border-gray-400 px-3 text-[12px] text-black tracking-[0.08em] placeholder:uppercase outline-none placeholder:text-gray-500 focus:border-[#D9AB79]`}
               value={password}
@@ -168,14 +215,24 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
 
             <button
               type="submit"
-              disabled={isSubmitting || !email.trim() || !password}
+              disabled={
+                isSubmitting ||
+                !email.trim() ||
+                !password
+              }
               className={`${boldMontserrat.className} mx-auto mt-3 h-[40px] w-[135px] bg-black text-white text-[14px] font-semibold tracking-[0.12em] transition enabled:hover:bg-[#FFBDC7] disabled:cursor-not-allowed cursor-pointer disabled:opacity-50`}
             >
-              {isSubmitting ? "SIGNING IN…" : "SIGN IN"}
+              {isSubmitting
+                ? "SIGNING IN…"
+                : "SIGN IN"}
             </button>
           </form>
+
           <Suspense fallback={<p>Loading...</p>}>
-            <PasswordFlow initialEmail={email} disabled={isSubmitting} />
+            <PasswordFlow
+              initialEmail={email}
+              disabled={isSubmitting}
+            />
           </Suspense>
         </div>
 
@@ -183,24 +240,33 @@ export default function AdminLoginPage({ footer }: { footer: ReactNode }) {
         <div className="relative flex flex-col mb-20 w-full max-w-[470px] bg-white">
           <button
             type="button"
-            onClick={() => signIn("google", { redirectTo: "/admin" })}
+            onClick={() => {
+              void signIn("google", {
+                redirectTo: postLoginDestination(),
+              });
+            }}
             className={`${boldMontserrat.className} group flex h-[60px] w-full cursor-pointer items-center justify-center gap-4 bg-white text-[14px] font-semibold tracking-[0.04em] text-black transition hover:bg-gray-50`}
             disabled={isSubmitting}
           >
-            {/* Google Icon official SVG */}
+            {/* Google Icon */}
             <Image
               src="/google-color.svg"
               alt="Google icon"
               width={22}
               height={22}
             />
-            <span className="group-hover:underline">CONTINUE WITH GOOGLE</span>
+
+            <span className="group-hover:underline">
+              CONTINUE WITH GOOGLE
+            </span>
           </button>
         </div>
       </main>
 
       {/* End of page footer */}
-      <div className="relative z-10">{footer}</div>
+      <div className="relative z-10">
+        {footer}
+      </div>
     </div>
   );
 }

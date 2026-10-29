@@ -1,11 +1,9 @@
-
 import "server-only";
 
 import { cache } from "react";
 import { redirect, unstable_rethrow } from "next/navigation";
 
 import { auth } from "@/auth";
-
 import {
   findAuthorizedAdmin,
   type Admin,
@@ -23,8 +21,8 @@ type ApiAccess =
   | { ok: true; admin: Admin }
   | { ok: false; response: Response };
 
-// Deduplicate checks during a server render.
-// Authorization results are not persisted across requests.
+// Deduplicate authorization checks during a server render.
+// Results are not persisted across requests.
 const getAdminAccess = cache(
   async (minRole: AdminRole): Promise<AdminAccess> => {
     const session = await auth();
@@ -44,8 +42,8 @@ const getAdminAccess = cache(
       return { ok: false, status: 403 };
     }
 
-    // A password reset increments the database version.
-    // Previously issued sessions must authenticate again.
+    // Password changes increment the database session version.
+    // Older sessions must authenticate again.
     if (
       session.adminId !== admin.id ||
       session.sessionVersion !== admin.session_version
@@ -53,6 +51,8 @@ const getAdminAccess = cache(
       return { ok: false, status: 401 };
     }
 
+    // Smaller role numbers represent greater privileges.
+    // Only Owner (1) and Admin (2) are authorized.
     if (admin.role_id > minRole) {
       return { ok: false, status: 403 };
     }
@@ -70,14 +70,14 @@ export async function getAdmin(
 }
 
 export async function requireAdminPage(
-  minRole: AdminRole = 3,
+  minRole: AdminRole = 2,
 ): Promise<Admin> {
   let access: AdminAccess;
 
   try {
     access = await getAdminAccess(minRole);
-  } catch(error) {
-    unstable_rethrow(error)
+  } catch (error) {
+    unstable_rethrow(error);
 
     console.error("Admin page authorization lookup failed.");
     redirect("/login?error=ServiceUnavailable");
@@ -114,17 +114,20 @@ function denyApi(
 
 export async function requireAdminApi(
   request: Request,
-  minRole: AdminRole = 3,
+  minRole: AdminRole = 2,
 ): Promise<ApiAccess> {
   let access: AdminAccess;
 
   try {
     access = await getAdminAccess(minRole);
-  } catch(error) {
-    unstable_rethrow(error)
+  } catch (error) {
+    unstable_rethrow(error);
 
     console.error("Admin API authorization lookup failed.");
-    return denyApi(503, "Authorization is temporarily unavailable.");
+    return denyApi(
+      503,
+      "Authorization is temporarily unavailable.",
+    );
   }
 
   if (!access.ok) {

@@ -4,82 +4,101 @@ import {
   createAdmin,
   fetchAdmins,
   removeAdmin,
-  updateAdminRole,
-  updateManageAdminsPermission,
+  updateAdminUsername,
 } from "@/app/api/admin/settings/admins-api";
-import type { Admin, AdminRole, NewAdminInput } from "@/app/types/admin-perms";
-import { OWNER_ROLE, WRITE_ROLE } from "@/app/types/admin-perms";
+import type {
+  Admin,
+  NewAdminInput,
+} from "@/app/types/admin-perms";
+import { OWNER_ROLE } from "@/app/types/admin-perms";
+
+const MAX_USERNAME_LENGTH = 40;
 
 export function useAdmins(initialAdmins: Admin[] = []) {
   const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
-  const [canEdit, setCanEdit] = useState(false);
+  const [canManageAdmins, setCanManageAdmins] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const clearError = useCallback(() => setErrorMessage(""), []);
-  const setError = useCallback((message: string) => setErrorMessage(message), []);
+
+  const clearError = useCallback(() => {
+    setErrorMessage("");
+  }, []);
+
+  const setError = useCallback((message: string) => {
+    setErrorMessage(message);
+  }, []);
 
   const loadAdmins = useCallback(async () => {
     try {
       const response = await fetchAdmins();
+
       setAdmins(response.admins);
-      setCanEdit(response.canEdit);
+      setCanManageAdmins(response.canEdit);
+      clearError();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "The admins could not be loaded.");
-    }
-  }, [setError]);
+      // Fail closed if permissions cannot be confirmed.
+      setCanManageAdmins(false);
 
-  const changeRole = async (id: string, role: AdminRole) => {
-    const admin = admins.find((currentAdmin) => currentAdmin.id === id);
-    if (!admin || admin.role === OWNER_ROLE) return;
-    try {
-      const updatedAdmin = await updateAdminRole(id, role);
-      setAdmins((currentAdmins) => currentAdmins.map((currentAdmin) =>
-        currentAdmin.id === id ? updatedAdmin : currentAdmin,
-      ));
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "The role could not be updated.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The admins could not be loaded.",
+      );
     }
-  };
+  }, [clearError, setError]);
 
-  const toggleInvitePermission = async (admin: Admin) => {
-    if (admin.role === OWNER_ROLE) return;
-    if (admin.role !== WRITE_ROLE) {
-      setError(`${admin.username} needs Edit access before they can manage admins.`);
-      return;
-    }
-    try {
-      const updatedAdmin = await updateManageAdminsPermission(admin.id, !admin.canManageAdmins);
-      setAdmins((currentAdmins) => currentAdmins.map((currentAdmin) =>
-        currentAdmin.id === admin.id ? updatedAdmin : currentAdmin,
-      ));
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "The Manage Admins permission could not be updated.");
-    }
-  };
-
-  const deleteAdmin = async (admin: Admin) => {
-    if (admin.role === OWNER_ROLE) {
-      setError("The owner cannot be deleted.");
+  const deleteAdmin = async (admin: Admin): Promise<boolean> => {
+    if (!canManageAdmins) {
+      setError("Only the Owner can remove administrators.");
       return false;
     }
+
+    if (admin.role === OWNER_ROLE) {
+      setError("The Owner cannot be deleted.");
+      return false;
+    }
+
     try {
       await removeAdmin(admin.id);
-      setAdmins((currentAdmins) => currentAdmins.filter((currentAdmin) => currentAdmin.id !== admin.id));
+
+      setAdmins((currentAdmins) =>
+        currentAdmins.filter(
+          (currentAdmin) => currentAdmin.id !== admin.id,
+        ),
+      );
+
       return true;
     } catch (error) {
-      setError(error instanceof Error ? error.message : "The admin could not be deleted.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "The admin could not be deleted.",
+      );
+
       return false;
     }
   };
 
   const addAdmin = async (input: NewAdminInput) => {
+    if (!canManageAdmins) {
+      return {
+        success: false as const,
+        error: "Only the Owner can add administrators.",
+      };
+    }
+
     const username = input.username.trim();
     const email = input.email.trim();
+
     if (!username || !email) {
-      return { success: false as const, error: "Please enter both a username and email." };
+      return {
+        success: false as const,
+        error: "Please enter both a username and email.",
+      };
     }
+
     try {
+      // The server assigns role 2 and no management privilege.
       const result = await createAdmin({
-        ...input,
         username,
         email,
       });
@@ -96,10 +115,104 @@ export function useAdmins(initialAdmins: Admin[] = []) {
     } catch (error) {
       return {
         success: false as const,
-        error: error instanceof Error ? error.message : "The admin could not be added.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "The admin could not be added.",
       };
     }
   };
 
-  return { admins, canEdit, errorMessage, clearError, setError, loadAdmins, addAdmin, deleteAdmin, changeRole, toggleInvitePermission };
+  // Only the Owner may edit existing administrator usernames.
+  // The API independently enforces Owner-only authorization.
+  const editAdminUsername = async (
+    admin: Admin,
+    username: string,
+  ) => {
+    if (!canManageAdmins) {
+      return {
+        success: false as const,
+        error: "Only the Owner can edit administrator accounts.",
+      };
+    }
+
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername) {
+      return {
+        success: false as const,
+        error: "Username is required.",
+      };
+    }
+
+    if (normalizedUsername.length > MAX_USERNAME_LENGTH) {
+      return {
+        success: false as const,
+        error: `Username must be ${MAX_USERNAME_LENGTH} characters or fewer.`,
+      };
+    }
+
+    if (normalizedUsername === admin.username) {
+      return {
+        success: false as const,
+        error: "The username has not changed.",
+      };
+    }
+
+    try {
+      // Send the update only after client-side validation.
+      // The server revalidates both authorization and input.
+      const updatedAdmin = await updateAdminUsername(
+        admin.id,
+        normalizedUsername,
+      );
+
+      if (
+        updatedAdmin.id !== admin.id ||
+        updatedAdmin.username !== normalizedUsername
+      ) {
+        throw new Error(
+          "The administrator update could not be verified.",
+        );
+      }
+
+      // Preserve all existing account properties.
+      // Update the displayed username only after the API succeeds.
+      setAdmins((currentAdmins) =>
+        currentAdmins.map((currentAdmin) =>
+          currentAdmin.id === admin.id
+            ? {
+                ...currentAdmin,
+                username: updatedAdmin.username,
+              }
+            : currentAdmin,
+        ),
+      );
+
+      return {
+        success: true as const,
+        admin: updatedAdmin,
+      };
+    } catch (error) {
+      return {
+        success: false as const,
+        error:
+          error instanceof Error
+            ? error.message
+            : "The administrator username could not be updated.",
+      };
+    }
+  };
+
+  return {
+    admins,
+    canManageAdmins,
+    errorMessage,
+    clearError,
+    setError,
+    loadAdmins,
+    addAdmin,
+    deleteAdmin,
+    editAdminUsername,
+  };
 }
