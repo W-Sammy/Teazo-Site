@@ -1,8 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeD1 } from "@/test/fake-d1";
-import { getWebsiteContent, updateWebsiteContent } from "@/app/lib/website-content";
+import {
+  getWebsiteContent,
+  updateWebsiteContent,
+  WEBSITE_CONTENT_TAG,
+} from "@/app/lib/website-content";
 
 vi.mock("@/app/lib/d1", async () => (await import("@/test/fake-d1")).fakeD1.module);
+
+// Next's cache only exists inside a Next server. Here unstable_cache passes
+// straight through, unless a test sets `staleCopy` to stand in for a cached
+// value from before a save.
+const cacheMocks = vi.hoisted(() => ({
+  revalidateTag: vi.fn(),
+  staleCopy: null as unknown,
+}));
+vi.mock("next/cache", () => ({
+  revalidateTag: cacheMocks.revalidateTag,
+  revalidatePath: vi.fn(),
+  unstable_cache:
+    (fn: (...args: unknown[]) => Promise<unknown>) =>
+    (...args: unknown[]) =>
+      cacheMocks.staleCopy !== null ? Promise.resolve(cacheMocks.staleCopy) : fn(...args),
+}));
 
 const db = () => fakeD1;
 
@@ -10,6 +30,45 @@ beforeEach(() => {
   process.env.D1_PROXY_URL = "http://d1.test";
   process.env.PROXY_TOKEN = "test-token";
   db().reset();
+  cacheMocks.revalidateTag.mockClear();
+  cacheMocks.staleCopy = null;
+});
+
+describe("caching (TZ-515)", () => {
+  it("clears the cached content right after a save, with no stale window", async () => {
+    await updateWebsiteContent({ onlineOrderingEnabled: false });
+    expect(cacheMocks.revalidateTag).toHaveBeenCalledWith(WEBSITE_CONTENT_TAG, { expire: 0 });
+  });
+
+  it("keeps the cache when a save fails", async () => {
+    db().state.batchError = new Error("D1 refused the write");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(updateWebsiteContent({ onlineOrderingEnabled: false })).rejects.toThrow("refused");
+    expect(cacheMocks.revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it("builds a save on what is in D1 now, not on a cached copy", async () => {
+    db().tables.content_block = [{ key: "home.story", value: "Story saved in D1" }];
+    cacheMocks.staleCopy = { ...(await getWebsiteContent()), story: "Stale cached story" };
+    const saved = await updateWebsiteContent({ onlineOrderingEnabled: false });
+    expect(saved.story).toBe("Story saved in D1");
+  });
+
+  it("serves the fallback when D1 fails, then the real content once D1 is back", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    db().tables.content_block = [{ key: "home.story", value: "From D1" }];
+    db().state.failReads = true;
+    const duringOutage = await getWebsiteContent();
+    expect(duringOutage.story).not.toBe("From D1");
+
+    db().state.failReads = false;
+    expect((await getWebsiteContent()).story).toBe("From D1");
+  });
+
+  it("reads all five tables for one load", async () => {
+    await getWebsiteContent();
+    expect(db().state.reads).toBe(5);
+  });
 });
 
 describe("online ordering switch (TZ-446)", () => {

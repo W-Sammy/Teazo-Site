@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { prepare, batch } from "@/app/lib/d1";
-import { DEFAULT_WEBSITE_CONTENT } from "@/app/lib/website-content";
+import { DEFAULT_WEBSITE_CONTENT, revalidateWebsiteContent } from "@/app/lib/website-content";
 import type { CarouselImage } from "@/app/types/website-content";
 import { mintKey, putMedia, toPublicUrl, MAX_MEDIA_BYTES, type MediaType } from "@/app/lib/media";
 
@@ -106,6 +106,7 @@ function createImageUpdate(id: unknown, patch: object, expectedSrc: string | nul
 // refresh landing/admin pages without treating saved changes as failure if refresh throws an error
 function refreshCarouselPages(errorMessage: string) {
     try {
+        revalidateWebsiteContent();
         revalidatePath("/");
         revalidatePath("/admin/website-content");
     } catch (error) {
