@@ -39,29 +39,29 @@ export async function sendOwnershipTransferOffer(
   link.searchParams.set("token", transfer.token);
 
   const text = [
-    `Hi ${transfer.recipient.username},`,
+    "Hello,",
     "",
-    `${transfer.owner.username} has offered to transfer ownership of the TEAZO website to your administrator account.`,
+    "The TEAZO Owner has offered to transfer ownership of the website to your administrator account.",
     "",
     "Review the ownership transfer:",
     link.toString(),
     "",
-    "You must sign in and explicitly accept or decline.",
+    "You must sign in and explicitly accept or decline the offer.",
     "Opening this link will not transfer ownership.",
     "",
     "This link expires in 24 hours and can be used only once.",
     "",
-    "If you did not expect this request, you can ignore it.",
+    "If you did not expect this offer, you can ignore this email.",
   ].join("\n");
 
   const html = [
     '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#2b211d">',
-    `<p>Hi ${escapeHtml(transfer.recipient.username)},</p>`,
-    `<p>${escapeHtml(transfer.owner.username)} has offered to transfer ownership of the TEAZO website to your administrator account.</p>`,
+    "<p>Hello,</p>",
+    "<p>The TEAZO Owner has offered to transfer ownership of the website to your administrator account.</p>",
     `<p><a href="${escapeHtml(link.toString())}">Review ownership transfer</a></p>`,
-    "<p>You must sign in and explicitly accept or decline. Opening this link will not transfer ownership.</p>",
+    "<p>You must sign in and explicitly accept or decline the offer. Opening this link will not transfer ownership.</p>",
     "<p>This link expires in 24 hours and can be used only once.</p>",
-    "<p>If you did not expect this request, you can ignore it.</p>",
+    "<p>If you did not expect this offer, you can ignore this email.</p>",
     "</div>",
   ].join("");
 
@@ -79,15 +79,15 @@ export async function sendOwnershipTransferDeclined(
   transfer: OwnershipTransferDetails,
 ): Promise<SendOutcome> {
   const lines = [
-    `Hi ${transfer.owner.username},`,
+    "Hello,",
     "",
-    `${transfer.recipient.username} declined the TEAZO ownership transfer.`,
+    "The receiving Admin has declined the TEAZO website ownership offer.",
     "",
-    "Your Owner access is unchanged.",
+    "Your account remains the Owner.",
     "The receiving administrator remains an Admin.",
     "",
-    "The previous offer is no longer valid.",
-    "You may initiate a new transfer later if needed.",
+    "The declined offer is no longer valid.",
+    "You may initiate a new ownership transfer later if needed.",
   ];
 
   return sendEmail({
@@ -104,26 +104,27 @@ export async function sendOwnershipTransferCompleted(
   transfer: OwnershipTransferDetails,
 ): Promise<PromiseSettledResult<SendOutcome>[]> {
   const previousOwnerLines = [
-    `Hi ${transfer.owner.username},`,
+    "Hello,",
     "",
-    `The TEAZO ownership transfer to ${transfer.recipient.username} has been completed.`,
+    "The TEAZO website ownership transfer has been completed.",
     "",
     "Your account now has Admin access.",
-    "You no longer have access to Owner-only Settings.",
+    "You no longer have Owner privileges or access to the Owner-only Admin page.",
     "",
     "Your previous session has been invalidated.",
-    "Please sign in again to continue.",
+    "Please sign in again to continue with your Admin access.",
   ];
 
   const newOwnerLines = [
-    `Hi ${transfer.recipient.username},`,
+    "Hello,",
     "",
-    "You are now the Owner of the TEAZO website.",
+    "The TEAZO website ownership transfer has been completed.",
     "",
-    "You can manage administrator accounts from Settings.",
+    "Your account is now the Owner of the TEAZO website.",
+    "You can manage administrator accounts through the Owner-only Admin page.",
     "",
     "Your previous session has been invalidated.",
-    "Please sign in again to continue.",
+    "Please sign in again to continue with your Owner access.",
   ];
 
   // Attempt both emails, even if either delivery fails.

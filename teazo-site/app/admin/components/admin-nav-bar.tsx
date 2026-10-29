@@ -20,14 +20,13 @@ export default function Sidebar({
   onMobileClose = () => {},
 }: SidebarProps) {
   // Active pages use colored icons; inactive pages use the black variants.
-  const iconRoot =
-    "/admin_icons/admin_svg/";
+  const iconRoot = "/admin_icons/admin_svg/";
 
   // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
 
   // Keep labels, destinations, and icon filenames together for each primary link.
-  // Settings is included only for the authenticated Owner.
+  // Admin management is included only for the authenticated Owner.
   const adminPages = [
     {
       id: "dashboard",
@@ -57,7 +56,7 @@ export default function Sidebar({
       ? [
           {
             id: "settings",
-            label: "Settings",
+            label: "Admin",
             img: "teazo_setting_icon.svg",
             href: "/admin/settings",
           },

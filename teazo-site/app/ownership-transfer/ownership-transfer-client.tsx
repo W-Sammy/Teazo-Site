@@ -214,20 +214,25 @@ export default function OwnershipTransferClient({
         {stage === "ready" && transfer && (
           <div className="space-y-4">
             <p className="text-sm text-gray-300">
-              <strong className="text-white">
-                {transfer.ownerUsername}
-              </strong>{" "}
-              has offered to transfer ownership of the
-              TEAZO website to your administrator account.
+              The TEAZO Owner has offered to transfer ownership
+              of the website to your administrator account.
             </p>
 
             <div className="rounded-lg border border-[#dbb082]/40 p-4 text-sm">
-              <p>
+              <p className="break-words">
+                Current Owner:{" "}
+                <strong>
+                  {transfer.ownerUsername}
+                </strong>
+              </p>
+
+              <p className="mt-2 break-words">
                 Receiving account:{" "}
                 <strong>
                   {transfer.recipientUsername}
                 </strong>
               </p>
+
               <p className="mt-2">
                 Expires:{" "}
                 {new Date(
@@ -237,9 +242,10 @@ export default function OwnershipTransferClient({
             </div>
 
             <p className="text-sm text-gray-300">
-              If you accept, you will become the sole
-              Owner. The current Owner will become an
-              Admin and lose Owner-only Settings access.
+              If you accept, you will become the sole Owner.
+              The current Owner will become an Admin and lose
+              Owner privileges, including access to the
+              Owner-only Admin page.
             </p>
 
             <p className="text-sm font-semibold text-[#dbb082]">

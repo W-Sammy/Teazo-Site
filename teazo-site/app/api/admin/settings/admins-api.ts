@@ -39,7 +39,7 @@ async function request<T>(
 
   if (!response.ok) {
     throw new Error(
-      body.error || "The settings request failed.",
+      body.error || "The administrator-management request failed.",
     );
   }
 
@@ -66,6 +66,22 @@ export function createAdmin(
       body: JSON.stringify(input),
     },
     false,
+  );
+}
+
+// The server independently requires Owner access for username editing.
+// Only the username field is sent. Roles, permissions, email addresses,
+// and other account details cannot be modified through this request.
+export function updateAdminUsername(
+  id: string,
+  username: string,
+): Promise<Admin> {
+  return request<Admin>(
+    `/api/admin/settings/admins/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ username }),
+    },
   );
 }
 

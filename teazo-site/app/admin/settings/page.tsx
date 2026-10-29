@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -7,7 +6,7 @@ import { requireAdminPage } from "@/app/lib/admin";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Teazo Admin Settings",
+    absolute: "Teazo Admin",
   },
 };
 
@@ -15,7 +14,7 @@ export default async function AdminSettingsPage() {
   // Require a valid Owner or Admin session before rendering this page.
   const admin = await requireAdminPage(2);
 
-  // Only the Owner may view administrator settings.
+  // Only the Owner may view administrator management.
   // Show authenticated Admins an access-denied message without
   // redirecting them to Login or exposing administrator records.
   if (admin.role_id !== 1) {
@@ -30,7 +29,7 @@ export default async function AdminSettingsPage() {
           </h1>
 
           <p className="mt-3 text-sm text-gray-300">
-            Only the Owner can access Settings.
+            Only the Owner can access administrator management.
           </p>
 
           <Link

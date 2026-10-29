@@ -1,11 +1,10 @@
-
 # TEAZO Ownership Transfer and Owner Account Recovery
 
 ## Purpose
 
-This document describes the TEAZO administrator roles, the Owner-initiated ownership-transfer process, security controls, password recovery, deployment considerations, and operational limitations.
+This document describes the TEAZO administrator roles, the Owner-initiated ownership-transfer process, security controls, administrator account editing, password recovery, deployment considerations, and operational limitations.
 
-The ownership-transfer feature is managed through the administrative website. It is intended for deliberate transfers between existing, eligible administrator accounts.
+The ownership-transfer feature is managed through the Owner-only Admin page. It is intended for deliberate transfers between existing, eligible administrator accounts.
 
 Emergency Owner account recovery is not implemented.
 
@@ -15,16 +14,20 @@ TEAZO supports two administrator roles:
 
 | Role | Database role ID | Permissions |
 | --- | --- | --- |
-| Owner | 1 | Manage administrative content, access Settings, add and remove administrators, and initiate or cancel ownership offers |
-| Admin | 2 | Manage authorized site content, including Menu, Gallery, Events, and Website Content; cannot manage administrator membership |
+| Owner | 1 | Manage administrative content, access the Owner-only Admin page, add and remove       administrators, edit administrator usernames, and initiate or cancel ownership offers |
+| Admin | 2 | Manage authorized site content, including Menu, Gallery, Events, and Website Content; cannot manage administrator membership or edit administrator account details |
 
-Both roles can access the administrative dashboard and authorized content-management functionality.
+Both roles can access the administrative Dashboard and authorized content-management functionality.
 
-Only the Owner can access administrator-management Settings.
+Only the Owner can access the Owner-only administrator-management page, labeled **Admin** in navigation.
+
+The administrator-management page remains at `/admin/settings`. The existing Dashboard remains at `/admin`.
+
+The Admin page displays Owner and Admin accounts in separate sections. Regular Admins cannot access this page through navigation, direct URLs, or administrator-management API requests.
 
 The system supports exactly one current Owner. The database includes a unique Owner constraint to prevent multiple non-deleted Owner records.
 
-A regular Admin cannot promote themselves or another account through the Settings interface or administrator-management API.
+A regular Admin cannot promote themselves or another account through the Admin interface or administrator-management API.
 
 New administrators are created with role ID 2. Ownership changes occur only through the designated transfer process.
 
@@ -49,19 +52,23 @@ The receiving Admin must be able to authenticate through an existing supported s
 The current Owner performs these steps:
 
 1. Sign in to the TEAZO administrative website.
-2. Open **Admin Settings**.
+2. Open **Admin** from the administrative navigation.
 3. Locate the eligible Admin who should receive ownership.
 4. Open the Admin's three-dot menu.
 5. Select **Transfer Ownership**.
-6. Review the confirmation dialog.
+6. Review the confirmation dialog and receiving-account details.
 7. Acknowledge that accepting the offer will remove the current Owner's Owner-only privileges.
 8. Select **Send Ownership Offer**.
 
-Creating the offer does not immediately change either user's role.
+The confirmation dialog uses neutral wording rather than constructing sentences from administrator usernames.
+
+Creating an offer does not immediately change either user's role.
 
 The receiving Admin is sent an invitation containing a link to the ownership-transfer review page.
 
-The Owner can view the pending recipient, status, and expiration time in Settings.
+The Owner can view the pending recipient, status, and expiration time in the **Pending Ownership Transfer** section.
+
+This section appears below the Admins list and New User button. It is hidden when no transfer is pending.
 
 The system permits only one pending ownership offer at a time.
 
@@ -78,6 +85,8 @@ An unauthenticated recipient is directed to the login workflow. The application 
 After authenticating, the intended Admin can review the offer.
 
 The review page identifies the initiating Owner, receiving account, expiration, and consequences of acceptance.
+
+The introductory wording is neutral and remains grammatically correct regardless of administrator usernames.
 
 Opening the email, opening the review link, or signing in does not automatically transfer ownership.
 
@@ -108,9 +117,11 @@ The acceptance link cannot be used again.
 
 Both affected administrators must sign in again because their existing sessions are invalidated.
 
-The new Owner gains Owner-only Settings access. The former Owner retains regular Admin access.
+The new Owner gains access to the Owner-only Admin page and its administrator-management functionality. The former Owner retains regular Admin access.
 
-The application attempts to send completion notifications to both administrators. A notification-delivery failure does not reverse an already completed ownership exchange.
+The application attempts to send completion notifications to both administrators. These notifications use neutral wording and explain the recipients' resulting permissions.
+
+A notification-delivery failure does not reverse an already completed ownership exchange.
 
 A completed transfer is not automatically reversible. Restoring the previous Owner requires a new, legitimate transfer initiated by the current Owner.
 
@@ -126,22 +137,32 @@ A successful decline:
 - Releases the pending-offer restriction.
 - Attempts to notify the current Owner.
 
+The decline notification uses neutral wording and explains that the current Owner and receiving Admin retain their existing roles.
+
 The current Owner may initiate a new offer later.
 
 ## 7. Canceling a pending offer
 
 Before acceptance, the current Owner can:
 
-1. Open Admin Settings.
-2. Locate **Pending Ownership Transfer**.
-3. Select **Cancel Transfer**.
-4. Confirm the cancellation.
+1. Open **Admin**.
+2. Locate **Pending Ownership Transfer** below the Admins list.
+3. Review the receiving Admin, pending status, and expiration.
+4. Select **Cancel Transfer**.
+5. Review the cancellation warning.
+6. Select **Yes, Cancel Transfer**.
 
 Cancellation marks the request canceled and invalidates the emailed link.
 
 Neither account's role changes.
 
+After cancellation, the Owner can select **Refresh Status** to verify the updated status. The entire Pending Ownership Transfer section disappears when no pending offer remains.
+
+The **Refresh Status** and **Cancel Transfer** controls appear together. On narrow mobile layouts, they stack vertically using matching compact widths. On desktop, they appear side by side.
+
 If cancellation cannot be confirmed because of a server or database error, the Owner must use **Refresh Status** and verify the actual pending state before attempting another transfer.
+
+Pending-status lookup errors remain visible with a retry option. A failed lookup must not be treated as confirmation that no transfer exists.
 
 An already accepted transfer cannot be canceled through the pending-offer interface.
 
@@ -193,9 +214,54 @@ Ownership notifications include:
 - A decline notification to the initiating Owner.
 - Completion notifications to both affected accounts after acceptance.
 
+These notifications use neutral language rather than inserting administrator usernames into grammatical sentences.
+
+The invitation identifies the ownership offer, provides the single-use review link, explains the 24-hour expiration, and requires explicit acceptance or decline.
+
+Decline and completion notifications describe the resulting roles and permissions.
+
+Administrator password-setup invitations separately identify the appropriate Owner or Admin role and include the necessary setup instructions.
+
 Never expose API keys, database proxy credentials, or unexpired acceptance links in public logs or documentation.
 
-## 10. Owner password recovery
+## 10. Owner-only administrator account editing
+
+The Owner can update administrator usernames through the Owner-only Admin page.
+
+This includes:
+
+- Editing the Owner's own username.
+- Editing the username of an existing Admin account.
+
+To edit an account:
+
+1. Sign in as the current Owner.
+2. Open **Admin**.
+3. Locate the account in the Owner or Admins section.
+4. Open its three-dot menu.
+5. Select **Edit Account**.
+6. Modify the Username field.
+7. Select **Save Changes** to save or **Cancel** to discard the edit.
+
+The Edit Account dialog displays the account's role and email address for identification. Neither field can be changed through this dialog.
+
+Username validation requires a nonempty username of no more than 40 characters. Leading and trailing whitespace is removed before saving.
+
+The Save Changes action is unavailable when the username has not changed.
+
+Successful updates are saved to D1 and reflected in the administrator list. The updated username persists after refreshing the page.
+
+Canceling an edit does not modify the stored account.
+
+The server independently enforces Owner-only authorization. Regular Admins and unauthenticated users cannot modify administrator usernames through direct API requests.
+
+The editing API accepts only the username field. Account IDs, email addresses, roles, administrator permissions, passwords, and session versions are not modified by username editing.
+
+Username editing does not replace or bypass the ownership-transfer workflow. Changing the current Owner requires a successful authorized transfer, not an account-details edit.
+
+Email-address editing is not supported in this interface because changes to authentication and account-recovery identifiers require separate design and authorization.
+
+## 11. Owner password recovery
 
 If the Owner forgets their password but still controls the registered email address:
 
@@ -217,7 +283,7 @@ Password recovery does not transfer ownership and does not authorize another Adm
 
 If email delivery fails, check application configuration and transactional logs rather than manually promoting another account.
 
-## 11. Loss of all Owner recovery access
+## 12. Loss of all Owner recovery access
 
 If the current Owner has lost both:
 
@@ -240,7 +306,7 @@ That procedure is outside the scope of the ownership-transfer feature.
 
 Operators must not treat arbitrary direct database role changes as an approved recovery process.
 
-## 12. Database and deployment considerations
+## 13. Database and deployment considerations
 
 Relevant migrations include:
 
@@ -268,8 +334,9 @@ Before production deployment:
 7. Confirm Brevo configuration and sender verification.
 8. Confirm `NEXT_PUBLIC_BASE_URL` resolves to the intended HTTPS website origin.
 9. Ensure `BREVO_SANDBOX` is not enabled when real emails must be delivered.
-10. Deploy the application changes only after the required schema is available.
-11. Verify authentication, transfer creation, notifications, and authorization after deployment.
+10. Review application dependency security advisories and coordinate required security updates before deployment.
+11. Deploy the application changes only after the required schema is available.
+12. Verify authentication, transfer creation, notifications, account editing, and authorization after deployment.
 
 Relevant environment configuration includes:
 
@@ -289,21 +356,29 @@ This local command does not constitute production migration approval. Follow the
 
 Do not reset, replace, or overwrite the production D1 database during routine feature testing.
 
-## 13. Operational verification
+## 14. Operational verification
 
-After migration or a significant ownership-transfer change, verify:
+After migration or a significant administrator-management or ownership-transfer change, verify:
 
 - There is exactly one active, non-deleted Owner.
-- Regular Admins cannot manage administrator accounts.
+- Regular Admins cannot manage or edit administrator accounts.
+- Only the Owner can access the Owner-only Admin page.
+- The `/admin` Dashboard remains available.
+- The Owner and Admins sections display the correct accounts.
+- The Owner can edit their own username and existing Admin usernames.
+- Username edits persist without changing account IDs, roles, or permissions.
 - An Owner can initiate an offer only for an eligible active Admin.
 - The pending-offer status and expiration are displayed.
-- Cancellation invalidates the previous link.
+- Pending-transfer controls work on desktop and mobile.
+- Pending-status lookup failures display an error and retry option.
+- Cancellation invalidates the previous link and removes the pending section after status verification.
 - Decline invalidates the link without changing roles.
 - Acceptance exchanges roles and invalidates both existing sessions.
 - Completed links cannot be reused.
-- The new Owner can access Settings.
-- The former Owner can access authorized content but not Settings.
+- The new Owner can access the Owner-only Admin page.
+- The former Owner can access authorized content but not administrator management.
 - Both completion notifications are submitted and their delivery outcomes can be checked.
+- Invitation, decline, and completion messages use neutral wording.
 - Password and Google authentication continue to work.
 
 Use a dedicated local D1 environment and accounts controlled by the testers. Do not run ownership-exchange tests against production accounts without explicit authorization.
@@ -312,19 +387,31 @@ Relevant automated test files include:
 
 - `app/lib/ownership-transfer.test.ts`
 - `app/lib/ownership-transfer-sql.test.ts`
+- `app/lib/ownership-transfer-concurrency.test.ts`
+- `app/lib/ownership-transfer-email.test.ts`
+- `app/lib/admin-password-email.test.ts`
 - `app/api/admin/ownership-transfer/route.test.ts`
 - `app/api/admin/ownership-transfer/decision/route.test.ts`
+- `app/ownership-transfer/ownership-transfer-client.test.tsx`
+- `app/admin/settings/components/admin-table.test.tsx`
+- `app/admin/settings/components/transfer-ownership-dialog.test.tsx`
+- `app/api/admin/settings/admins/[id]/route.test.ts`
+- `app/lib/queries/settings.test.ts`
 
 Run the project test suite using:
 
 `npm test`
 
-Also run TypeScript, feature ESLint checks, and the production build before submitting a PR.
+Also run TypeScript, feature-specific ESLint checks, and the production build before submitting a PR.
 
-## 14. Current limitations
+The parent administrator-role simplification task additionally requires repository-wide ESLint and final integration/regression verification.
+
+## 15. Current limitations
 
 The current implementation is intentionally limited to a single Owner and authenticated, Owner-initiated transfers to existing active Admin accounts.
 
-There is no automatic reversal, self-service emergency recovery, or edit-account-details feature included in this workflow.
+The Owner-only Edit Account feature supports username changes only. Email-address editing, account role editing, and changing administrator-management permissions are not supported through this feature.
+
+There is no automatic ownership-transfer reversal or self-service emergency Owner recovery.
 
 Those capabilities require separately scoped design, authorization, implementation, and testing.

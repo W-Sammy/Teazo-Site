@@ -5,6 +5,7 @@ import { AdminActions } from "./AdminActions";
 type AdminRowProps = {
   admin: Admin;
   showActions?: boolean;
+  onEdit?: () => void;
   onDelete?: () => void;
   onResendInvitation?: () => void;
   onTransferOwnership?: () => void;
@@ -16,6 +17,7 @@ type AdminRowProps = {
 export function AdminRow({
   admin,
   showActions = false,
+  onEdit,
   onDelete,
   onResendInvitation,
   onTransferOwnership,
@@ -23,6 +25,12 @@ export function AdminRow({
   isTransferring = false,
 }: AdminRowProps) {
   const isOwner = admin.role === OWNER_ROLE;
+
+  // The current Owner may edit their own account and regular Admin accounts.
+  // The parent supplies this action only when administrator management is allowed.
+  const canEdit =
+    showActions &&
+    typeof onEdit === "function";
 
   const canDelete =
     showActions &&
@@ -43,7 +51,8 @@ export function AdminRow({
     admin.canReceiveOwnership &&
     typeof onTransferOwnership === "function";
 
-  const hasActions = canDelete || canResend || canTransfer;
+  const hasActions =
+    canEdit || canDelete || canResend || canTransfer;
 
   return (
     <div className="group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px] md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none">
@@ -91,6 +100,9 @@ export function AdminRow({
 
             <AdminActions
               username={admin.username}
+              onEdit={
+                canEdit ? onEdit : undefined
+              }
               onDelete={
                 canDelete ? onDelete : undefined
               }

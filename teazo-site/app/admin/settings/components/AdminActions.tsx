@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 type AdminActionsProps = {
   username: string;
+  onEdit?: () => void;
   onDelete?: () => void;
   onResendInvitation?: () => void;
   onTransferOwnership?: () => void;
@@ -14,6 +15,7 @@ type AdminActionsProps = {
 // Three-dot action menu for an individual administrator.
 export function AdminActions({
   username,
+  onEdit,
   onDelete,
   onResendInvitation,
   onTransferOwnership,
@@ -81,6 +83,21 @@ export function AdminActions({
           aria-label={`Actions for ${username}`}
           className="absolute right-0 top-full z-40 mt-1 w-52 max-w-[calc(100vw-2rem)] rounded-md border border-gray-100 bg-white shadow-lg"
         >
+          {onEdit && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isBusy}
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+              className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Edit Account
+            </button>
+          )}
+
           {onResendInvitation && (
             <button
               type="button"

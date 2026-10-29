@@ -1,4 +1,4 @@
-// Server code only. Never import this file into a client component.
+ // Server code only. Never import this file into a client component.
 
 import { prepare } from "@/app/lib/d1";
 import type {
@@ -91,6 +91,60 @@ export async function createSettingsAdmin(
     .run();
 
   return requireSettingsAdmin(id);
+}
+
+// Update the username of an existing Owner or Admin account.
+//
+// Owner-only authorization must be enforced by the calling API.
+// SQL independently restricts updates to non-deleted accounts
+// belonging to the supported two-role administrator system.
+//
+// Account IDs, email addresses, roles, permissions, passwords,
+// and session versions are never modified by this operation.
+export async function updateSettingsAdminUsername(
+  id: string,
+  username: string,
+): Promise<SettingsAdmin> {
+  if (typeof id !== "string" || !id.trim()) {
+    throw new Error("Admin not found or cannot be changed.");
+  }
+
+  if (typeof username !== "string") {
+    throw new Error("Username must be a string.");
+  }
+
+  const normalizedUsername = username.trim();
+
+  if (!normalizedUsername) {
+    throw new Error("Username is required.");
+  }
+
+  // Keep this limit consistent with administrator creation
+  // validation in the API.
+  if (normalizedUsername.length > 40) {
+    throw new Error("Username must be 40 characters or fewer.");
+  }
+
+  await prepare(
+    `UPDATE admin_user
+        SET username = ?2,
+            updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id = ?1
+        AND deleted_at IS NULL
+        AND role_id IN (1, 2)`,
+  )
+    .bind(id, normalizedUsername)
+    .run();
+
+  // Re-read the account to verify that the requested username
+  // was persisted and the account still exists.
+  const updated = await requireSettingsAdmin(id);
+
+  if (updated.username !== normalizedUsername) {
+    throw new Error("Admin not found or cannot be changed.");
+  }
+
+  return updated;
 }
 
 // Role editing and Manage Admins permission updates are retired.

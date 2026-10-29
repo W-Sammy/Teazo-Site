@@ -17,6 +17,7 @@ import {
   findSettingsAdminForInvitation,
   listSettingsAdmins,
   removeSettingsAdmin,
+  updateSettingsAdminUsername,
 } from "./settings";
 
 describe("Admin Settings database queries", () => {
@@ -285,6 +286,194 @@ describe("Admin Settings database queries", () => {
     expect(admin.canManageAdmins).toBe(false);
     expect(admin.canReceiveOwnership).toBe(false);
     expect(mocks.run).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    { id: "owner-id", role: 1, username: "Ben" },
+    { id: "admin-id", role: 2, username: "Updated Admin" },
+  ])(
+    "updates only the username of a role-$role account",
+    async ({ id, role, username }) => {
+      mocks.first.mockResolvedValue({
+        id,
+        username,
+        email: "original@example.invalid",
+        role,
+        canResendInvitation: 0,
+        canReceiveOwnership: role === 2 ? 1 : 0,
+      });
+
+      const updated = await updateSettingsAdminUsername(
+        id,
+        `  ${username}  `,
+      );
+
+      expect(mocks.prepare).toHaveBeenCalledTimes(2);
+
+      const sql = mocks.prepare.mock.calls[0][0] as string;
+
+      expect(sql).toMatch(/UPDATE\s+admin_user/i);
+      expect(sql).toMatch(/WHERE\s+id\s*=\s*\?1/i);
+      expect(sql).toMatch(/deleted_at\s+IS\s+NULL/i);
+      expect(sql).toMatch(
+        /role_id\s+IN\s*\(\s*1\s*,\s*2\s*\)/i,
+      );
+
+      // No identity, role, permission, or credential changes.
+      const setClause =
+        sql.split(/\bSET\b/i)[1]?.split(/\bWHERE\b/i)[0] ?? "";
+
+      expect(setClause).toMatch(/username\s*=\s*\?2/i);
+      expect(setClause).toMatch(/updated_at\s*=/i);
+      expect(setClause).not.toMatch(
+        /\b(?:id|email|email_normalized|role_id|can_invite_users|password_hash|session_version|status|deleted_at)\s*=/i,
+      );
+
+      expect(mocks.bind).toHaveBeenNthCalledWith(
+        1,
+        id,
+        username,
+      );
+      expect(mocks.run).toHaveBeenCalledOnce();
+      expect(mocks.bind).toHaveBeenNthCalledWith(2, id);
+      expect(mocks.first).toHaveBeenCalledOnce();
+
+      expect(updated).toEqual({
+        id,
+        username,
+        email: "original@example.invalid",
+        role,
+        canManageAdmins: role === 1,
+        canResendInvitation: false,
+        canReceiveOwnership: role === 2,
+      });
+    },
+  );
+
+  it("accepts a username with exactly 40 characters", async () => {
+    const username = "x".repeat(40);
+
+    mocks.first.mockResolvedValue({
+      id: "admin-id",
+      username,
+      email: "test@example.invalid",
+      role: 2,
+      canResendInvitation: 0,
+      canReceiveOwnership: 0,
+    });
+
+    const result = await updateSettingsAdminUsername(
+      "admin-id",
+      username,
+    );
+
+    expect(result.username).toBe(username);
+    expect(mocks.bind).toHaveBeenNthCalledWith(
+      1,
+      "admin-id",
+      username,
+    );
+    expect(mocks.run).toHaveBeenCalledOnce();
+  });
+
+  it.each(["", "  ", "\n\t"])(
+    "rejects an invalid administrator ID %j without querying D1",
+    async (id) => {
+      await expect(
+        updateSettingsAdminUsername(id, "Updated Admin"),
+      ).rejects.toThrow(
+        "Admin not found or cannot be changed.",
+      );
+
+      expect(mocks.prepare).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    {
+      description: "non-string username",
+      username: 123 as unknown as string,
+      error: "Username must be a string.",
+    },
+    {
+      description: "empty username",
+      username: "",
+      error: "Username is required.",
+    },
+    {
+      description: "whitespace username",
+      username: "  ",
+      error: "Username is required.",
+    },
+    {
+      description: "overlong username",
+      username: "x".repeat(41),
+      error: "Username must be 40 characters or fewer.",
+    },
+  ])(
+    "rejects $description without querying D1",
+    async ({ username, error }) => {
+      await expect(
+        updateSettingsAdminUsername("admin-id", username),
+      ).rejects.toThrow(error);
+
+      expect(mocks.prepare).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a nonexistent or deleted administrator after attempting the update", async () => {
+    mocks.first.mockResolvedValue(null);
+
+    await expect(
+      updateSettingsAdminUsername(
+        "missing-id",
+        "Updated Admin",
+      ),
+    ).rejects.toThrow(
+      "Admin not found or cannot be changed.",
+    );
+
+    expect(mocks.run).toHaveBeenCalledOnce();
+    expect(mocks.first).toHaveBeenCalledOnce();
+  });
+
+  it("rejects an update when the username cannot be verified after rereading", async () => {
+    mocks.first.mockResolvedValue({
+      id: "admin-id",
+      username: "Original Admin",
+      email: "original@example.invalid",
+      role: 2,
+      canResendInvitation: 0,
+      canReceiveOwnership: 1,
+    });
+
+    await expect(
+      updateSettingsAdminUsername(
+        "admin-id",
+        "Updated Admin",
+      ),
+    ).rejects.toThrow(
+      "Admin not found or cannot be changed.",
+    );
+
+    expect(mocks.run).toHaveBeenCalledOnce();
+    expect(mocks.first).toHaveBeenCalledOnce();
+  });
+
+  it("propagates database update failures", async () => {
+    mocks.run.mockRejectedValue(
+      new Error("Database unavailable"),
+    );
+
+    await expect(
+      updateSettingsAdminUsername(
+        "admin-id",
+        "Updated Admin",
+      ),
+    ).rejects.toThrow("Database unavailable");
+
+    expect(mocks.run).toHaveBeenCalledOnce();
+    expect(mocks.first).not.toHaveBeenCalled();
   });
 
   it("uses a soft delete instead of removing the database record", async () => {

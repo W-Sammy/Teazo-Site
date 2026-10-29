@@ -14,6 +14,7 @@ import type {
 } from "@/app/types/admin-perms";
 import { OWNER_ROLE } from "@/app/types/admin-perms";
 import { AddAdminModal } from "@/app/admin/settings/components/AddAdminModal";
+import { EditAccountModal } from "@/app/admin/settings/components/EditAccountModal";
 import { AdminRow } from "@/app/admin/settings/components/AdminRow";
 import TransferOwnershipDialog from "@/app/admin/settings/components/transfer-ownership-dialog";
 import DeleteAdminDialog from "@/app/admin/settings/components/delete-admin-dialog";
@@ -71,11 +72,16 @@ export default function AdminsTable() {
   const [successMessage, setSuccessMessage] = useState("");
   const [adminToDelete, setAdminToDelete] =
     useState<Admin | null>(null);
+  const [adminToEdit, setAdminToEdit] =
+    useState<Admin | null>(null);
+  const [editError, setEditError] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [resendingAdminId, setResendingAdminId] =
     useState<string | null>(null);
   const [invitationNotice, setInvitationNotice] =
     useState("");
 
+  const editInFlight = useRef(false);
   const resendInFlight = useRef(false);
   const transferInFlight = useRef(false);
   const cancelInFlight = useRef(false);
@@ -105,6 +111,7 @@ export default function AdminsTable() {
     addAdmin,
     loadAdmins,
     deleteAdmin,
+    editAdminUsername,
   } = useAdmins();
 
   useEffect(() => {
@@ -240,6 +247,49 @@ export default function AdminsTable() {
       setSuccessMessage(result.invitation.message);
     } else {
       setInvitationNotice(result.invitation.message);
+    }
+  }
+
+  // Only the Owner receives the account-editing action. Keep
+  // the dialog separate from account deletion and ownership transfer.
+  function handleEditAdmin(admin: Admin) {
+    if (!canManageAdmins || editInFlight.current) {
+      return;
+    }
+
+    setEditError("");
+    clearError();
+    setSuccessMessage("");
+    setAdminToEdit(admin);
+  }
+
+  async function handleSaveEditedAdmin(username: string) {
+    if (!canManageAdmins || !adminToEdit || editInFlight.current) {
+      return;
+    }
+
+    editInFlight.current = true;
+    setIsSavingEdit(true);
+    setEditError("");
+
+    try {
+      const result = await editAdminUsername(adminToEdit, username);
+
+      if (!result.success) {
+        setEditError(result.error);
+        return;
+      }
+
+      // The hook updates its list only after the API succeeds.
+      setAdminToEdit(null);
+      setSuccessMessage("Administrator username updated.");
+    } catch (error) {
+      setEditError(
+        errorMessage(error, "The administrator username could not be updated."),
+      );
+    } finally {
+      editInFlight.current = false;
+      setIsSavingEdit(false);
     }
   }
 
@@ -528,127 +578,9 @@ export default function AdminsTable() {
         </div>
       )}
 
-      {/* Owner-only pending ownership-transfer management */}
-      {canManageAdmins && (
-        <section className="mb-8 w-full max-w-3xl rounded-xl border border-[#dbb082] bg-[#fffaf6] p-4 text-sm text-gray-800">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">
-              Pending Ownership Transfer
-            </h2>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPendingLoaded(false);
-                void loadPendingTransfer();
-              }}
-              disabled={isSendingTransfer || isCancelingTransfer}
-              className={adminButtonStyles.secondary}
-            >
-              Refresh Status
-            </button>
-          </div>
-
-          {!pendingLoaded && !pendingError && (
-            <p role="status" className="mt-2 text-gray-600">
-              Checking for pending offers...
-            </p>
-          )}
-
-          {pendingError && (
-            <p role="alert" className="mt-3 text-red-700">
-              {pendingError}
-            </p>
-          )}
-
-          {pendingLoaded && !pendingTransfer && (
-            <p className="mt-2 text-gray-600">
-              No pending ownership transfer.
-            </p>
-          )}
-
-          {pendingLoaded && pendingTransfer && (
-            <div className="mt-3 space-y-3">
-              <p>
-                <span className="font-semibold">
-                  Receiving Admin:
-                </span>{" "}
-                {pendingTransfer.recipientUsername}
-                {" ("}
-                {pendingTransfer.recipientEmail}
-                {")"}
-              </p>
-
-              <p>
-                <span className="font-semibold">
-                  Status:
-                </span>{" "}
-                Pending acceptance
-              </p>
-
-              <p>
-                <span className="font-semibold">
-                  Expires:
-                </span>{" "}
-                {new Date(
-                  pendingTransfer.expiresAt * 1000,
-                ).toLocaleString()}
-              </p>
-
-              <p className="text-gray-600">
-                The receiving Admin must explicitly accept.
-                No roles have changed yet.
-              </p>
-
-              {confirmCancel ? (
-                <div className="rounded-lg border border-red-200 p-3">
-                  <p className="font-medium text-red-700">
-                    Cancel this ownership offer? Its emailed
-                    link will no longer be valid.
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void confirmCancelOwnershipTransfer()
-                      }
-                      disabled={isCancelingTransfer}
-                      className="rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      {isCancelingTransfer
-                        ? "Canceling..."
-                        : "Yes, Cancel Transfer"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setConfirmCancel(false)}
-                      disabled={isCancelingTransfer}
-                      className={adminButtonStyles.secondary}
-                    >
-                      Keep Offer
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmCancel(true)}
-                  disabled={isSendingTransfer || isCancelingTransfer}
-                  className="rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                >
-                  Cancel Transfer
-                </button>
-              )}
-            </div>
-          )}
-        </section>
-      )}
-
       {/* Owner section */}
       <section className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
-        <h2 className="text-xl font-bold text-[#2b211d]">
+        <h2 className="text-2xl font-bold text-[#2b211d]">
           Owner
         </h2>
 
@@ -668,6 +600,7 @@ export default function AdminsTable() {
               key={owner.id}
               admin={owner}
               showActions={canManageAdmins}
+              onEdit={() => handleEditAdmin(owner)}
               onResendInvitation={() => {
                 void handleResendInvitation(owner);
               }}
@@ -683,7 +616,7 @@ export default function AdminsTable() {
 
       {/* Regular administrators section */}
       <section className="mt-10 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
-        <h2 className="text-xl font-bold text-[#2b211d]">
+        <h2 className="text-2xl font-bold text-[#2b211d]">
           Admins
         </h2>
 
@@ -709,6 +642,7 @@ export default function AdminsTable() {
                   key={admin.id}
                   admin={admin}
                   showActions={canManageAdmins}
+                  onEdit={() => handleEditAdmin(admin)}
                   onDelete={() => handleDeleteAdmin(admin)}
                   onTransferOwnership={
                     canInitiateTransfer
@@ -750,6 +684,118 @@ export default function AdminsTable() {
         </div>
       </section>
 
+      {/* Owner-only pending transfer management follows the Admins list. */}
+      {canManageAdmins && (pendingTransfer !== null || pendingError !== "") && (
+        <section className="mt-10 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8">
+          <h2 className="text-2xl font-bold text-[#2b211d]">
+            Pending Ownership Transfer
+          </h2>
+
+          <div className="w-full min-w-0 max-w-5xl">
+            <div className="rounded-xl border border-[#dbb082] bg-[#fffaf6] p-4 text-sm text-gray-800">
+              {!pendingLoaded && !pendingError && (
+                <p role="status" className="text-gray-600">
+                  Checking for pending offers...
+                </p>
+              )}
+
+              {pendingError && (
+                <p role="alert" className="text-red-700">
+                  {pendingError}
+                </p>
+              )}
+
+              {pendingLoaded && pendingTransfer && (
+                <div className="space-y-3">
+                  <p>
+                    <span className="font-semibold">Receiving Admin:</span>{" "}
+                    {pendingTransfer.recipientUsername}
+                    {" ("}
+                    {pendingTransfer.recipientEmail}
+                    {")"}
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">Status:</span>{" "}
+                    Pending acceptance
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">Expires:</span>{" "}
+                    {new Date(pendingTransfer.expiresAt * 1000).toLocaleString()}
+                  </p>
+
+                  <p className="text-gray-600">
+                    The receiving Admin must explicitly accept. No roles have
+                    changed yet.
+                  </p>
+                </div>
+              )}
+
+              {/* Compact, equal-width mobile controls.
+                  Desktop keeps natural widths side by side. */}
+              <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingLoaded(false);
+                    void loadPendingTransfer();
+                  }}
+                  disabled={
+                    isSendingTransfer ||
+                    isCancelingTransfer ||
+                    (!pendingLoaded && !pendingError)
+                  }
+                  className={`${adminButtonStyles.secondary} w-[170px] text-center sm:w-auto`}
+                >
+                  Refresh Status
+                </button>
+
+                {pendingLoaded && pendingTransfer && !confirmCancel && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmCancel(true)}
+                    disabled={isSendingTransfer || isCancelingTransfer}
+                    className="w-[170px] rounded-lg border border-red-600 px-4 py-2 text-center font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 sm:w-auto"
+                  >
+                    Cancel Transfer
+                  </button>
+                )}
+              </div>
+
+              {confirmCancel && pendingLoaded && pendingTransfer && (
+                <div className="mt-4 rounded-lg border border-red-200 p-3">
+                  <p className="font-medium text-red-700">
+                    Cancel this ownership offer? Its emailed link will no longer
+                    be valid.
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void confirmCancelOwnershipTransfer()}
+                      disabled={isCancelingTransfer}
+                      className="rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {isCancelingTransfer ? "Canceling..." : "Yes, Cancel Transfer"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setConfirmCancel(false)}
+                      disabled={isCancelingTransfer}
+                      className={adminButtonStyles.secondary}
+                    >
+                      Keep Offer
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {canManageAdmins && showModal && (
         <AddAdminModal
           onAdd={handleAddAdmin}
@@ -758,6 +804,22 @@ export default function AdminsTable() {
             setShowModal(false);
           }}
           errorMessage={modalError}
+        />
+      )}
+
+      {canManageAdmins && adminToEdit && (
+        <EditAccountModal
+          key={adminToEdit.id}
+          admin={adminToEdit}
+          isSaving={isSavingEdit}
+          errorMessage={editError}
+          onSave={handleSaveEditedAdmin}
+          onCancel={() => {
+            if (!editInFlight.current) {
+              setAdminToEdit(null);
+              setEditError("");
+            }
+          }}
         />
       )}
 

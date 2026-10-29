@@ -49,17 +49,32 @@ export default function TransferOwnershipDialog({
 
         <div id={descriptionId} className="mt-4 space-y-3 text-sm">
           <p>
-            You are offering the Owner role to <strong>{admin.username}</strong>
-            {` (${admin.email}).`}
+            An ownership offer will be sent to the following Admin account:
           </p>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="break-words">
+              <span className="font-semibold">Username:</span>{" "}
+              {admin.username}
+            </p>
+            <p className="mt-1 break-words">
+              <span className="font-semibold">Email:</span>{" "}
+              {admin.email}
+            </p>
+          </div>
+
           <p>
-            They will receive an email with a link valid for 24 hours. They
-            must sign in and explicitly accept before anything changes.
+            The receiving Admin will receive an email containing a secure,
+            single-use link valid for 24 hours. Signing in alone does not
+            transfer ownership. The receiving Admin must explicitly accept
+            the offer before any roles change.
           </p>
+
           <p className="font-semibold text-red-700">
-            Warning: After they accept, you will immediately lose Owner
-            privileges and access to Settings. This transfer cannot be
-            automatically reversed.
+            Warning: If this offer is accepted, your account will immediately
+            become an Admin and lose Owner privileges, including access to
+            the Owner-only Admin page. This transfer cannot be automatically
+            reversed.
           </p>
         </div>
 
