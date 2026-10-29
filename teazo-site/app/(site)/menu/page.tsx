@@ -12,6 +12,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -315,7 +316,9 @@ async function loadMenu(): Promise<MenuLoadResult> {
       headers: {
         Accept: "application/json",
       },
-      cache: "no-store",
+      // Shared by every visitor for up to 60 seconds; the Square catalog
+      // webhook clears it as soon as the catalog changes (SQUARE_CATALOG_TAG).
+      next: { revalidate: 60, tags: [SQUARE_CATALOG_TAG] },
       credentials: "omit",
       redirect: "error",
       signal: AbortSignal.timeout(20_000),
