@@ -1,20 +1,35 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const fromRoot = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+const fromRoot = (path: string) =>
+  fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
   resolve: {
     alias: [
-      // Same as the "@/*" path in tsconfig.json.
-      { find: /^@\/(.*)$/, replacement: `${fromRoot("./")}$1` },
-      // "server-only" throws outside a Next.js server build. Tests run server
-      // code directly, so it is swapped for an empty module here.
-      { find: /^server-only$/, replacement: fromRoot("./test/server-only.ts") },
+      // Match the "@/*" path in tsconfig.json.
+      {
+        find: /^@\/(.*)$/,
+        replacement: `${fromRoot("./")}$1`,
+      },
+
+      // Server-only modules throw outside Next.js server builds.
+      // Replace the guard with an empty module during tests.
+      {
+        find: /^server-only$/,
+        replacement: fromRoot("./test/server-only.ts"),
+      },
     ],
   },
+
   test: {
+    // Server-side tests continue using Node by default.
     environment: "node",
-    include: ["app/**/*.test.ts"],
+
+    // Include both TypeScript and React component tests.
+    include: [
+      "app/**/*.test.ts",
+      "app/**/*.test.tsx",
+    ],
   },
 });
