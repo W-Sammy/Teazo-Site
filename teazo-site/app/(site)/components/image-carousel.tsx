@@ -17,6 +17,19 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
     const index = Math.min(selectedIndex, Math.max(0, images.length - 1));
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
+    // Slides that start hidden get their images once the page has loaded, so the
+    // three on screen download first (TZ-515). The first slide change is 5 s in.
+    const [loadHiddenSlides, setLoadHiddenSlides] = useState<boolean>(false);
+    useEffect(() => {
+        const load = () => setLoadHiddenSlides(true);
+        if (document.readyState === "complete") {
+            load();
+            return;
+        }
+        window.addEventListener("load", load, { once: true });
+        return () => window.removeEventListener("load", load);
+    }, []);
+
     const dragStartX = useRef<number>(0);
     const isDragging = useRef<boolean>(false);
     const isAnimating = useRef<boolean>(false);
@@ -155,17 +168,19 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
                         onMouseEnter={() => setIsHovered(true) } 
                         onMouseLeave={() => setIsHovered(false) } 
                     > 
-                        <Image 
+                        {(isVisible || loadHiddenSlides) && <Image
                             src={image.src}
                             alt={image.alt}
                             unoptimized={image.src.startsWith("http://") || image.src.startsWith("https://")}
-                            // END carousel content edit 
-                            fill 
-                            sizes="400px" 
-                            draggable={false} 
-                            className="object-cover rounded-xl" 
+                            // END carousel content edit
+                            fill
+                            // slide widths: w-65 / w-60 on phones, up to w-120 from sm up
+                            sizes="(max-width: 639px) 260px, 480px"
+                            draggable={false}
+                            className="object-cover rounded-xl"
                             loading={isVisible ? "eager" : "lazy"}
-                        /> 
+                            fetchPriority={isCenter ? "high" : "auto"}
+                        />}
                     </div> 
                 ); 
                 })} 
