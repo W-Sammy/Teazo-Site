@@ -17,11 +17,12 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
     const index = Math.min(selectedIndex, Math.max(0, images.length - 1));
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
-    // Slides that start hidden get their images once the page has loaded, so the
-    // three on screen download first (TZ-515). The first slide change is 5 s in.
-    const [loadHiddenSlides, setLoadHiddenSlides] = useState<boolean>(false);
+    // The carousel starts below the fold on phones and desktops, so its images
+    // load once the page has, instead of competing with the top of the page
+    // (TZ-515). The three slides on screen still load before the hidden ones.
+    const [pageLoaded, setPageLoaded] = useState<boolean>(false);
     useEffect(() => {
-        const load = () => setLoadHiddenSlides(true);
+        const load = () => setPageLoaded(true);
         if (document.readyState === "complete") {
             load();
             return;
@@ -168,7 +169,7 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
                         onMouseEnter={() => setIsHovered(true) } 
                         onMouseLeave={() => setIsHovered(false) } 
                     > 
-                        {(isVisible || loadHiddenSlides) && <Image
+                        {pageLoaded && <Image
                             src={image.src}
                             alt={image.alt}
                             unoptimized={image.src.startsWith("http://") || image.src.startsWith("https://")}
