@@ -6,6 +6,7 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
+import MapFrame from "./map-frame";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -210,11 +211,9 @@ export default async function ContactPage() {
           <div className="grid gap-6 lg:grid-cols-[1.03fr_0.97fr]">
             <div>
               <div className="overflow-hidden rounded-[16px] border border-[#e6ddd8] bg-[#efe7e0]">
-                <iframe
+                <MapFrame
                   title={`${location.businessName} map`}
                   src={embedSrc}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
                   className="h-[320px] w-full border-0 sm:h-[380px] lg:h-[430px]"
                 />
               </div>
