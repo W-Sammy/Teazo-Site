@@ -9,11 +9,13 @@ import type { MouseEvent } from "react"; // for mobile menu
 
 // setup fonts
 const montserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // reduce amount of importing to just letters, nums
     weight: ['700'] // bold
 });
 
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // same as above
     weight: ['400'] // normal
 });

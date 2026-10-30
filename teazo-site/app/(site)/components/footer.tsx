@@ -3,6 +3,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 
 // font setup
 const montserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // reduce amount of imports to just letters, nums
     weight: ['500'] // medium
 });

@@ -20,11 +20,13 @@ const MOBILE_USER_AGENT_REGEX =
 // Cabin Sketch is the approved display face for the hand-drawn headings on this
 // route. Reuse this instance instead of re-declaring font config inline.
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
 const montserrat = Montserrat({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400", "700"],
 });

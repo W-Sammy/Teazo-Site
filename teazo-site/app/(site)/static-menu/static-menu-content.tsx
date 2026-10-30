@@ -8,6 +8,7 @@ import { CURRENT_MENU_PDF_URL } from "@/app/lib/menu-upload";
 
 /* Font used for the button and helper text. */
 const montserrat = Montserrat({
+	preload: false, // preloading every font held back first paint on phones (TZ-515)
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });

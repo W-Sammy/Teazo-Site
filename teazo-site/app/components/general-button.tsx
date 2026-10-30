@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google"; // import fonts
 
 // setup fonts
 const montserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // reduce amount of importing to just letters & nums
     weight: ['600'] // semibold
 });

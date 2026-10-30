@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });

@@ -8,18 +8,21 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // import only letters, num
     weight: ['400'] // normal
 });
 
 // extra bold montserrat
 const boldMontserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'],
     weight: ['800'] // extra bold
 });
 
 // medium montserrat
 const mediumMontserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'],
     weight: ['500']
 });

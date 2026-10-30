@@ -77,11 +77,13 @@ const FALLBACK_WEBSITE_CONTENT: WebsiteContent = {
 };
 
 const montserrat = Montserrat({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });

@@ -7,6 +7,7 @@ import { Montserrat } from "next/font/google";
 
 // extra bold montserrat
 const boldMontserrat = Montserrat({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'],
     weight: ['700'] // extra bold
 });

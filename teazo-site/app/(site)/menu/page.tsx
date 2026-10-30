@@ -23,11 +23,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
 const montserrat = Montserrat({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400", "700"],
 });

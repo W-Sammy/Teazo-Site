@@ -11,12 +11,14 @@ export const metadata: Metadata = {
 
 /* Font used for the main page heading. */
 const cabinSketch = Cabin_Sketch({
+	preload: false, // preloading every font held back first paint on phones (TZ-515)
 	subsets: ["latin"],
 	weight: ["700"],
 });
 
 /* Font used for the supporting page text. */
 const montserrat = Montserrat({
+	preload: false, // preloading every font held back first paint on phones (TZ-515)
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
