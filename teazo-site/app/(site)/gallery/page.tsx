@@ -57,6 +57,7 @@ export default async function GalleryPage() {
               height={397}
               className="h-[170px] w-auto sm:h-[195px]"
               priority
+              fetchPriority="high"
               unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
           />
 
