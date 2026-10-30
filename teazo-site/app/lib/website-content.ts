@@ -56,14 +56,7 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "christmas", name: "Christmas", date: "12-25", closed: true },
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
-  carouselImages: [
-    { id: "default-drying-leaves", src: "/carousel_images/drying-leaves.jpg", alt: "Tea image 1", enabled: true },
-    { id: "default-picking-leaves", src: "/carousel_images/picking-leaves.jpg", alt: "Tea image 2", enabled: true },
-    { id: "default-spilled-tea", src: "/carousel_images/spilled-tea.jpg", alt: "Tea image 3", enabled: true },
-    { id: "default-tea-sort", src: "/carousel_images/tea-sort.jpg", alt: "Tea image 4", enabled: true },
-    { id: "default-tea-spoons", src: "/carousel_images/tea-spoons.jpg", alt: "Tea image 5", enabled: true },
-    { id: "default-rose-tea", src: "/carousel_images/rose-tea.jpg", alt: "Tea image 6", enabled: true },
-  ],
+  carouselImages: [],
   contactFormEnabled: true,
   onlineOrderingEnabled: true,
 };

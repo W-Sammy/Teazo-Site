@@ -68,17 +68,17 @@ export async function DELETE(request: Request) {
     }
 }
 
-// save img settings or initialize placeholder imgs
+// save img settings or load uploaded imgs without bundled originals
 export async function PATCH(request: Request) {
     // check admin access
     const access = await requireAdminApi(request, 2);
     if (!access.ok)
         return access.response;
     
-    // save settings/initialize original imgs
+    // save settings/load the saved carousel list
     try {
         const body: unknown = await request.json().catch(() => null);
-        // chooses between saving alt text/visibility & initializing original imgs
+        // chooses between saving alt text/visibility & loading imgs
         const result = await saveCarouselSettings(body);
 
         return NextResponse.json(result);

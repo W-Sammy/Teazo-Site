@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { prepare, batch } from "@/app/lib/d1";
-import { DEFAULT_WEBSITE_CONTENT } from "@/app/lib/website-content";
+// originals removed --the carousel no longer imports or adds default imgs
 import type { CarouselImage } from "@/app/types/website-content";
 import { mintKey, putMedia, toPublicUrl, MAX_MEDIA_BYTES, type MediaType } from "@/app/lib/media";
 
@@ -406,7 +406,7 @@ export async function removeCarouselImage(body: unknown) {
     }
 }
 
-// saves img settings, adds original imgs
+// saves img settings or loads uploaded imgs without the old bundled originals
 export async function saveCarouselSettings(body: unknown) {
     // attempt requested settings/initialization action & report failures to route.ts
     try {
@@ -420,52 +420,27 @@ export async function saveCarouselSettings(body: unknown) {
         if (!isDatabaseConfigured()) 
             throw new CarouselError("The database connection isn't configured.", 503);
         
-        await readCarouselImages("Saved carousel settings must be checked before adding originals.");
+        await readCarouselImages("Saved carousel settings must be checked before loading images.");
 
-        // adds back missing originals once, prevents removed originals from being added again
+        // filter the current database list so uploads/settings saved during this request aren't overwritten
         await batch([
             prepare(
-                `INSERT INTO content_block (key, page_key, slot_key, block_type, value)
-                    SELECT 'home.carousel', 'home', 'carousel', 'text', ?1
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM content_block WHERE key = 'home.carousel_defaults_seeded'
-                    )
-                    ON CONFLICT (key) DO UPDATE SET value = (
-                        SELECT json_group_array(json(combined.image)) FROM (
-                            SELECT original.value AS image, 0 AS image_group, CAST(original.key AS INTEGER) AS position
-                            FROM json_each(?1) AS original
-                            WHERE NOT EXISTS (
-                                SELECT 1 FROM json_each(content_block.value) AS saved
-                                WHERE json_extract(saved.value, '$.id') = json_extract(original.value, '$.id')
-                                    OR json_extract(saved.value, '$.src') = json_extract(original.value, '$.src')
-                            )
-                            UNION ALL
-                            SELECT saved.value AS image, 1 AS image_group, CAST(saved.key AS INTEGER) AS position
-                            FROM json_each(content_block.value) AS saved
-                            ORDER BY image_group, position
-                        ) AS combined
-                    ), updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`
-            ).bind(JSON.stringify(DEFAULT_WEBSITE_CONTENT.carouselImages ?? [])),
-
-            // save a flag showing originals were initialized so removed ones aren't added again
-            prepare(
-                `INSERT INTO content_block (key, page_key, slot_key, block_type, value)
-                    VALUES ('home.carousel_defaults_seeded', 'home', 'carousel_defaults_seeded', 'text', '1')
-                    ON CONFLICT (key) DO NOTHING`
+                `UPDATE content_block SET value = (
+                    SELECT json_group_array(json(kept.image)) FROM (
+                        SELECT entry.value AS image
+                        FROM json_each(content_block.value) AS entry
+                        WHERE COALESCE(substr(json_extract(entry.value, '$.src'), 1, length('/carousel_images/')), '') <> '/carousel_images/'
+                        ORDER BY CAST(entry.key AS INTEGER)
+                    ) AS kept
+                ), updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                WHERE key = 'home.carousel'`
             ),
         ]);
 
-        const row = await readCarouselRow();
-        // turn uploaded file keys into urls browser can display
-        const savedImages = JSON.parse(row?.value ?? "[]") as CarouselImage[];
-        const images = savedImages.map((image) => {
-            let src = image.src;
-            if (!src.startsWith("/carousel_images/"))
-                src = toPublicUrl(src);
-            
-            return { ...image, src };
-        });
-        refreshCarouselPages("Carousel originals saved, but page revalidation failed:");
+        // uploaded imgs keep their order, descs & visibility
+        const savedImages = await readCarouselImages("Saved carousel settings must be a list.") ?? [];
+        const images = savedImages.map((image) => ({ ...image, src: toPublicUrl(image.src) }));
+        refreshCarouselPages("Carousel originals removed, but page revalidation failed:");
 
         return { success: true, images };
 

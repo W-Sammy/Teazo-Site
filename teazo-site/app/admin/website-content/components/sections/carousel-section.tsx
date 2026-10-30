@@ -36,6 +36,15 @@ export default function CarouselSection({
         imageErrors,
     } = carousel;
 
+    // help remember which empty items need an upload reminder
+    const [altWarnings, setAltWarnings] = useState<Record<string, boolean>>({});
+
+    // clicking/tabbing into an empty item's desc shows error/reminder instead of allowing edits
+    function checkDescriptionImage(id: string) {
+        const image = carouselImages.find((entry) => entry.id === id);
+        if (image && !image.src) setAltWarnings((previous) => ({ ...previous, [id]: true }));
+    }
+
     // heic support --convert into jpegs before using existing jpeg upload handler
     const [converting, setConverting] = useState<Record<string, boolean>>({});
     const [conversionErrors, setConversionErrors] = useState<Record<string, string>>({});
@@ -76,11 +85,9 @@ export default function CarouselSection({
             if (file.size > maxImageBytes) 
                 throw new Error("The selected image must be 5 MB or smaller.");
 
-            // use gallery's converter; only load it when someone selects HEIC/HEIF
-            const { default: heic2any } = await import("heic2any");
-            const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
-            // if photo contains several frames, use the first still img
-            const jpeg = Array.isArray(result) ? result[0] : result;
+            // upload heic/heif files into the gallery! --just turn it into a jpeg!
+            const { heicTo } = await import("heic-to");
+            const jpeg = await heicTo({ blob: file, type: "image/jpeg", quality: 0.85 });
 
             if (!jpeg || jpeg.size === 0) 
                 throw new Error("The converted image is empty.");
@@ -172,6 +179,13 @@ export default function CarouselSection({
                         key={image.id}
                         className="flex min-w-0 flex-col gap-3 py-3.5 first:pt-3 last:pb-0"
                     >
+                        {/* show at top of item; disappears after an img is uploaded */}
+                        {!image.src && altWarnings[image.id] && (
+                            <div id={`carousel-alt-warning-${image.id}`} role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                                Please upload an image before adding a description.
+                            </div>
+                        )}
+
                         {/* image num/placement in carousel */}
                         <div className="flex min-w-0 items-center justify-between gap-3">
                             <span className="text-sm font-semibold text-[#4a3418]">
@@ -289,16 +303,26 @@ export default function CarouselSection({
                                         Image description
                                     </label>
                                     
-                                    {/* save screen reader descriptions while typing */}
+                                    {/* save screen reader descriptions while typing; put in read only mode to prevent admin from making a description before uploading an img/error to appear */}
                                     <input
                                         id={`carousel-alt-${image.id}`}
                                         type="text"
                                         disabled={!carouselReady || uploading[image.id] || deleting[image.id] || converting[image.id]}
+                                        readOnly={!image.src}
+                                        aria-disabled={!image.src}
+                                        aria-invalid={!image.src && Boolean(altWarnings[image.id])}
+                                        aria-describedby={!image.src && altWarnings[image.id] ? `carousel-alt-warning-${image.id}` : undefined}
+                                        onClick={() => checkDescriptionImage(image.id)}
+                                        onFocus={() => checkDescriptionImage(image.id)}
                                         value={image.alt}
-                                        onChange={(event) => updateCarouselImage(image.id, { alt: event.target.value })}
+                                        onChange={(event) => {
+                                            if (image.src) updateCarouselImage(image.id, { alt: event.target.value });
+                                        }}
                                         onBlur={flushAllCarouselSettings}
                                         placeholder="Describe the image for screen readers!"
-                                        className={`${fieldClass(false)} w-full min-w-0`}
+                                        // gray border edit start --empty items stay gray even when clicked/focused
+                                        className={`${fieldClass(false)} w-full min-w-0 ${!image.src ? "cursor-not-allowed opacity-50 border-gray-300! focus:border-gray-300! focus:ring-gray-300!" : ""}`}
+                                        // gray border edit end
                                     />
                                 </div>
 
