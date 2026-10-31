@@ -113,7 +113,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                 </div>
                 <div className="px-4 py-3">
                   <h3 className="font-bold text-[#3c2924]">{event.name}</h3>
-                  <p className="mt-1 text-xs font-medium text-[#9b7065]">{formatEventDuration(event)}</p>
+                  <p className="mt-1 text-xs font-medium text-[#8E5629]">{formatEventDuration(event)}</p>
                 </div>
               </button>
             ))}

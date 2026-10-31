@@ -300,7 +300,7 @@ function ItemCustomizerModalContent({
         <div
           ref={modalRef}
           tabIndex={-1}
-          className="relative flex flex-col w-full max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-hidden rounded-t-[28px] sm:rounded-2xl bg-[#fcfaf7] text-left shadow-2xl border border-stone-200 transition-all focus:outline-none"
+          className="relative flex flex-col w-full max-w-lg max-h-[92vh] sm:max-h-[85vh] overflow-hidden rounded-t-[28px] sm:rounded-2xl bg-[#FBF4EE] text-left shadow-2xl border border-stone-200 transition-all focus:outline-none"
         >
           {/* Header Bar */}
           <div className="relative border-b border-stone-200 bg-white px-5 py-4 flex items-center justify-between">
@@ -341,7 +341,7 @@ function ItemCustomizerModalContent({
                   <h3 className={`${montserrat.className} text-base font-bold text-stone-900 truncate`}>
                     {item.name}
                   </h3>
-                  <span className={`${montserrat.className} text-base font-bold text-[#c68f5d] whitespace-nowrap`}>
+                  <span className={`${montserrat.className} text-base font-bold text-[#8E5629] whitespace-nowrap`}>
                     {formatCurrency(basePriceCents)}
                   </span>
                 </div>
@@ -519,7 +519,7 @@ function ItemCustomizerModalContent({
                               {option.priceCents > 0 && (
                                 <span
                                   className={`text-xs font-medium whitespace-nowrap ${
-                                    isOptionSelected ? "text-[#DBAF82]" : "text-[#c68f5d]"
+                                    isOptionSelected ? "text-[#DBAF82]" : "text-[#8E5629]"
                                   }`}
                                 >
                                   +{formatCurrency(option.priceCents)}

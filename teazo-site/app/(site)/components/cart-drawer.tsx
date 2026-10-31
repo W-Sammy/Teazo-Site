@@ -627,7 +627,7 @@ export default function CartDrawer() {
                   <Link
                     href="/menu"
                     onClick={closeCart}
-                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white text-xs font-bold tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white text-xs font-bold tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
                   >
                     EXPLORE MENU
                   </Link>
