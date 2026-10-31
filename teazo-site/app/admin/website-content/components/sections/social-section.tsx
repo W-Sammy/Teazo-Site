@@ -138,7 +138,7 @@ export default function SocialSection({
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
                         alt="Default Icon"
                         className="h-6 w-6 object-contain"
-                      />
+                      /> 
                     </span>
                   )}
 
@@ -259,4 +259,4 @@ export default function SocialSection({
       </button>
     </AccordionItem>
   );
-}
+} 

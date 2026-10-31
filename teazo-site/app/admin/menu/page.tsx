@@ -27,7 +27,7 @@ function filterMenuItems(menuItems: MenuItem[]){
   return menuItems.map((item) => ({
     id: item.catalogObjectId,
     img: item.imageUrl ?? "/TEAZO_logo.svg",
-    name: item.name ?? "Unnamed item",
+    name: item.name ?? "Unnamed item", 
     price: item.priceCents / 100,
     description: item.description ?? "",
     availability: availabilityDescription(item),

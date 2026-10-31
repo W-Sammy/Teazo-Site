@@ -22,23 +22,23 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
     const isAnimating = useRef<boolean>(false);
     const clickedImageIndex = useRef<number | null>(null);
 
-    const getOffset = (imageIndex: number): number => {
-        let offset = imageIndex - index;
-        if (offset > images.length / 2) { offset -= images.length; }
-        if (offset < -images.length / 2) { offset += images.length; }
-        return offset;
+    const getOffset = (imageIndex: number): number => { 
+        let offset = imageIndex - index; 
+        if (offset > images.length / 2) { offset -= images.length; } 
+        if (offset < -images.length / 2) { offset += images.length; } 
+        return offset; 
     };
 
-    const changeSlide = useCallback((newIndex: number): void => {
-        if (newIndex < 0 || newIndex >= images.length || newIndex === index || isAnimating.current) {
-            return;
-        }
-
-        isAnimating.current = true;
+    const changeSlide = useCallback((newIndex: number): void => { 
+        if (newIndex < 0 || newIndex >= images.length || newIndex === index || isAnimating.current) { 
+            return; 
+        } 
+        
+        isAnimating.current = true; 
         setIndex(newIndex);
-        setTimeout(() => { isAnimating.current = false; }, 500);
+        setTimeout(() => { isAnimating.current = false; }, 500); 
     }, [index, images.length]);
-
+    
     const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>): void => {
         if (event.pointerType === "mouse" && event.button !== 0) {
             return;
@@ -70,14 +70,14 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
         isDragging.current = false;
         clickedImageIndex.current = null;
 
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) { 
+            event.currentTarget.releasePointerCapture(event.pointerId); 
         }
-
-        if (Math.abs(dragDistance) >= swipeThreshold) {
-            const direction = dragDistance < 0 ? 1 : -1;
+    
+        if (Math.abs(dragDistance) >= swipeThreshold) { 
+            const direction = dragDistance < 0 ? 1 : -1; 
             changeSlide((index + direction + images.length) % images.length);
-        }
+        }   
         else if (clickedIndex !== null) {
             changeSlide(clickedIndex);
         }
@@ -91,26 +91,26 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
         event.preventDefault();
     };
 
-    const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>): void => {
-        isDragging.current = false;
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-        }
+    const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>): void => { 
+        isDragging.current = false; 
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) { 
+            event.currentTarget.releasePointerCapture(event.pointerId); 
+        } 
     };
 
-    {/* Transition Timer */}
+    {/* Transition Timer */}    
     useEffect(() => {
-        if (images.length <= 1)
+        if (images.length <= 1) 
             return;
         const timer = setInterval(() => {
             if (!isDragging.current && !isAnimating.current) {
                 changeSlide( index === images.length - 1 ? 0 : index + 1);
-            }
+            } 
         }, 5000);
-
+    
         return () => clearInterval(timer);
     }, [index, images.length, changeSlide]);
-
+    
 
     const prevSlide = (): void => {
         changeSlide( index === 0 ? images.length - 1 : index - 1);
@@ -120,20 +120,20 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
         changeSlide( index === images.length - 1 ? 0 : index + 1);
     };
 
-    if (images.length === 0)
+    if (images.length === 0) 
         return null;
     {/* Display */}
     return (
         <div
             className="relative w-full flex flex-col items-center">
 
-            <div
+            <div 
                 className="relative w-full h-100 sm:h-140 flex items-center justify-center overflow-hidden"
-                onPointerDown={handlePointerDown}
-                onPointerUp={handlePointerUp}
+                onPointerDown={handlePointerDown} 
+                onPointerUp={handlePointerUp} 
                 onPointerMove={handlePointerMove}
-                onPointerCancel={handlePointerCancel}
-                style={{ touchAction: "pan-y", userSelect: "none",
+                onPointerCancel={handlePointerCancel} 
+                style={{ touchAction: "pan-y", userSelect: "none", 
                 }}
             >
                 {images.map((image, imageIndex) => { const offset = getOffset(imageIndex);
@@ -145,32 +145,32 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
                 let translateX = 0; if (offset < 0) { translateX = offset * sideDistance; } else if (offset > 0) { translateX = offset * sideDistance; }
                 const zIndex = 30 - Math.abs(offset) * 5;
 
-                return (
-                    <div
+                return ( 
+                    <div 
                         key={image.id}
                         data-carousel-index={imageIndex}
-                        className={` absolute ${width} ${height} rounded-xl overflow-hidden transition-all duration-500 ease-in-out `}
-                        style={{ transform: `translateX(${translateX}px)`, opacity: isVisible ? 1 : 0, zIndex, pointerEvents: isVisible ? "auto" : "none", }}
-
-                        onMouseEnter={() => setIsHovered(true) }
-                        onMouseLeave={() => setIsHovered(false) }
-                    >
-                        <Image
+                        className={` absolute ${width} ${height} rounded-xl overflow-hidden transition-all duration-500 ease-in-out `} 
+                        style={{ transform: `translateX(${translateX}px)`, opacity: isVisible ? 1 : 0, zIndex, pointerEvents: isVisible ? "auto" : "none", }} 
+            
+                        onMouseEnter={() => setIsHovered(true) } 
+                        onMouseLeave={() => setIsHovered(false) } 
+                    > 
+                        <Image 
                             src={image.src}
                             alt={image.alt}
                             unoptimized={image.src.startsWith("http://") || image.src.startsWith("https://")}
-                            // END carousel content edit
-                            fill
-                            sizes="400px"
-                            draggable={false}
-                            className="object-cover rounded-xl"
+                            // END carousel content edit 
+                            fill 
+                            sizes="400px" 
+                            draggable={false} 
+                            className="object-cover rounded-xl" 
                             loading={isVisible ? "eager" : "lazy"}
-                        />
-                    </div>
-                );
-                })}
+                        /> 
+                    </div> 
+                ); 
+                })} 
             </div>
-
+           
 
             {/* Dots */}
             <div
@@ -185,13 +185,13 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
                         changeSlide((index + direction + images.length) % images.length);
                     }}}
             >
-
+                
                 {images.map((_, dotIndex) => (
                     <button
                         key={dotIndex}
-                        type="button"
+                        type="button" 
                         onClick={() => changeSlide(dotIndex)}
-                        aria-label={`Go to image ${dotIndex + 1}`}
+                        aria-label={`Go to image ${dotIndex + 1}`} 
                         className={`
                             rounded-full
                             transition-all duration-300
@@ -201,6 +201,6 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
                 ))}
             </div>
         </div>
-
+        
     );
 }

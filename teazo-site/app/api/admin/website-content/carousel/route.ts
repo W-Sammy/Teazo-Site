@@ -10,7 +10,7 @@ function errorResponse(error: unknown) {
     // expected errors keep the msg & HTTP status provided by the library
     if (error instanceof CarouselError)
         return NextResponse.json({ error: error.message }, { status: error.status });
-
+    
     // log unexpected errors
     console.error("Unexpected carousel request error:", error);
     return NextResponse.json({ error: "Couldn't complete the carousel request. Please retry." }, { status: 500 });
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const access = await requireAdminApi(request, 2);
     if (!access.ok)
         return access.response;
-
+    
     // save img via formData
     try {
         let formData: FormData;
@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
     const access = await requireAdminApi(request, 2);
     if (!access.ok)
         return access.response;
-
+    
     // save settings/initialize original imgs
     try {
         const body: unknown = await request.json().catch(() => null);
