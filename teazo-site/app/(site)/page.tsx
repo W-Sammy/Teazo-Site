@@ -104,10 +104,9 @@ export default async function Home() {
             </div>
     
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
-            
+
             {/* logo */}
-            {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
+            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 text-center sm:px-8 lg:px-10">
                 <Image
                     src={logoSrc}
                     alt="TEAZO logo"

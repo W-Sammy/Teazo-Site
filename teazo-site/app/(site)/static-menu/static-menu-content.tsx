@@ -9,7 +9,7 @@ import { CURRENT_MENU_PDF_URL } from "@/app/lib/menu-upload";
 /* Font used for the button and helper text. */
 const montserrat = Montserrat({
 	subsets: ["latin"],
-	weight: ["400", "700"],
+	weight: ["400"],
 });
 
 /* Handles the PDF button and optional preview. */
@@ -51,7 +51,7 @@ export default function StaticMenuContent() {
 
 			{/* Simple helper message for the PDF button. */}
 			<p
-				className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
+				className={`${montserrat.className} mt-5 text-center text-[18px] text-sm leading-6 text-stone-600`}
 			>
 				Use the button above to open our menu.
 			</p>
