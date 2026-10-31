@@ -60,7 +60,7 @@ export default async function GalleryPage() {
           />
 
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             GALLERY
           </h1>

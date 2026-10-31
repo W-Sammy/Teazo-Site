@@ -580,9 +580,9 @@ export default function CartDrawer() {
           } ${montserrat.className}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-[#FAF7F2]">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-[#FBF4EE]">
             <div className="flex items-center gap-3">
-              <span className={`${cabinSketch.className} text-[32px] font-bold text-[#DBAF82] leading-none`}>
+              <span className={`${cabinSketch.className} text-[32px] font-bold text-[#B28458] leading-none`}>
                 TEAZO
               </span>
               <span className="text-gray-400 font-light">|</span>
@@ -607,7 +607,7 @@ export default function CartDrawer() {
             {/* Empty State */}
             {isHydrated && items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#DBAF82]">
+                <div className="w-16 h-16 rounded-full bg-[#FBF4EE] flex items-center justify-center text-[#B28458]">
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
@@ -627,7 +627,7 @@ export default function CartDrawer() {
                   <Link
                     href="/menu"
                     onClick={closeCart}
-                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#DBAF82] text-white text-xs font-bold tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white text-xs font-bold tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
                   >
                     EXPLORE MENU
                   </Link>
@@ -677,7 +677,7 @@ export default function CartDrawer() {
                               className="w-14 h-14 rounded-lg object-cover border border-gray-100 shrink-0"
                             />
                           ) : (
-                            <div className="w-14 h-14 rounded-lg bg-[#FAF7F2] border border-[#F0EAE1] flex items-center justify-center text-xl shrink-0">
+                            <div className="w-14 h-14 rounded-lg bg-[#FBF4EE] border border-[#F0EAE1] flex items-center justify-center text-xl shrink-0">
                               🧋
                             </div>
                           )}
@@ -701,7 +701,7 @@ export default function CartDrawer() {
                                 {item.selectedModifiers.map((mod) => (
                                   <span
                                     key={mod.optionId}
-                                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#FAF7F2] text-gray-700 border border-gray-100"
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#FBF4EE] text-gray-700 border border-gray-100"
                                   >
                                     {mod.optionName}
                                     {mod.priceCents > 0 && (
@@ -800,7 +800,7 @@ export default function CartDrawer() {
                 </div>
 
                 {/* Pickup Location Card */}
-                <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#F0EAE1] space-y-1">
+                <div className="p-3.5 rounded-xl bg-[#FBF4EE] border border-[#F0EAE1] space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">
@@ -914,7 +914,7 @@ export default function CartDrawer() {
                                 setUserSelectedSlot("");
                                 setFormErrors((prev) => ({ ...prev, timing: undefined }));
                               }}
-                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] focus:border-[#DBAF82] bg-white font-medium text-stone-900"
+                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
                             >
                               {pickupDays.map((day) => (
                                 <option key={day.date} value={day.date}>
@@ -934,7 +934,7 @@ export default function CartDrawer() {
                                 setUserSelectedSlot(e.target.value);
                                 setFormErrors((prev) => ({ ...prev, timing: undefined }));
                               }}
-                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] focus:border-[#DBAF82] bg-white font-medium text-stone-900"
+                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
                             >
                               {availableSlots.map((slot) => (
                                 <option key={slot} value={slot}>
@@ -984,7 +984,7 @@ export default function CartDrawer() {
                         if (formErrors.name) setFormErrors((p) => ({ ...p, name: undefined }));
                       }}
                       onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
-                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] transition ${
+                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
                         formErrors.name ? "border-red-400 bg-red-50/20" : "border-stone-200"
                       }`}
                     />
@@ -1011,7 +1011,7 @@ export default function CartDrawer() {
                         if (formErrors.phone) setFormErrors((p) => ({ ...p, phone: undefined }));
                       }}
                       onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
-                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] transition ${
+                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
                         formErrors.phone ? "border-red-400 bg-red-50/20" : "border-stone-200"
                       }`}
                     />
@@ -1038,7 +1038,7 @@ export default function CartDrawer() {
                         if (formErrors.email) setFormErrors((p) => ({ ...p, email: undefined }));
                       }}
                       onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
-                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#DBAF82] transition ${
+                      className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
                         formErrors.email ? "border-red-400 bg-red-50/20" : "border-stone-200"
                       }`}
                     />
@@ -1117,7 +1117,7 @@ export default function CartDrawer() {
                 className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 shadow-md ${
                   isCheckoutDisabled
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[#DBAF82] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
+                    : "bg-[#B28458] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
                 }`}
               >
                 {isSubmitting ? (

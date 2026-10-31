@@ -120,7 +120,7 @@ export default async function Home() {
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}>
+            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}>
                 TEAZO
             </h1>
 
@@ -168,15 +168,15 @@ export default async function Home() {
 
 {/* Call To Action */}
         <section
-                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#FBF4EE] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
                 >
                   <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
                     <div className="max-w-3xl">
-                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#8E5629]">
                         Group Orders
                       </p>
                       <h2
-                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#B28458] sm:text-[3.5rem]`}
                       >
                         Planning for a Crowd?
                       </h2>

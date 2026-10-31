@@ -63,7 +63,7 @@ export default async function Delivery() {
                 />
 
                 {/* DELIVERY part */}
-                <h1 className={`${cabinSketch.className} text-[70px] text-[#D9AE81] py-3`}>
+                <h1 className={`${cabinSketch.className} text-[70px] text-[#B28458] py-3`}>
                     DELIVERY
                 </h1>
             </div>
