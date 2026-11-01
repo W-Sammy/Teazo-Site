@@ -1,142 +1,334 @@
 # TEAZO Automated Testing Guide
 
-This guide is the primary reference for automated tests in the TEAZO website. It covers setup, frameworks, test creation, individual and grouped execution, parallelism, test isolation, database fixtures, and limitations.
+This document explains how to run, maintain, extend, and troubleshoot automated tests for the TEAZO website.
 
-For general development setup (Next.js, Cloudflare Worker, local database, authentication, and environment variables), see [DEV-GUIDE.md](DEV-GUIDE.md).
+It is intended for developers and administrators responsible for maintaining the website after its initial development.
 
-## 1. Requirements and setup
+The automated test suite helps verify application behavior, detect regressions, and reduce the risk of introducing defects when changing the website. It does not replace manual browser testing or verification of production services.
 
-- Node.js **22.13 or newer**, consistent with the project developer guide.
-- npm and Git.
-- A checkout containing the features that the tests exercise.
+For general development setup, including the Next.js application, Cloudflare Worker, local database, authentication, and environment variables, see the [Developer Guide](DEV-GUIDE.md).
 
-Run commands in the `teazo-site/` directory:
+## 1. Requirements and initial setup
+
+### Prerequisites
+
+- Node.js **22.13 or newer**.
+- npm.
+- Git.
+- A local checkout of the TEAZO repository.
+
+Commands in this guide assume the repository has the following structure:
+
+```text
+Teazo-Site/
+├── docs/
+│   ├── AUTOMATED-TESTING.md
+│   └── DEV-GUIDE.md
+├── teazo-site/
+│   ├── app/
+│   ├── migrations/
+│   ├── test/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vitest.config.mts
+└── teazo-d1-proxy/
+```
+
+Run application testing commands from the `teazo-site/` directory.
+
+### Install dependencies
+
+From the repository root:
 
 ```bash
 cd teazo-site
 npm ci
 ```
 
-Use `npm ci` for reproducible installation from `package-lock.json`. Existing installations may skip this if dependencies are up to date. On Windows, Git Bash is the recommended shell in the general developer guide. Quote paths containing parentheses in shell commands.
+`npm ci` installs dependencies from the committed `package-lock.json` and is recommended for reproducible test environments.
 
-Most automated tests do **not** require a running Next.js development server, Cloudflare Worker, R2 bucket, external database, real Square credentials, or other production services. The tests use mocks or local in-memory fixtures. This does not mean that such tests verify live service integrations.
+If the application is already installed and the dependencies have not changed, reinstalling may not be necessary.
 
-## 2. Frameworks and configuration
+Windows developers can use Git Bash or PowerShell for the testing commands shown here. The general Developer Guide recommends Git Bash for the broader local development environment.
 
-The application uses **Vitest** (`npm test` invokes `vitest run`), with:
+### Running tests does not normally require production services
 
-- Vitest's `describe`, `it`, `expect`, lifecycle hooks, and `vi` mocking utilities.
-- **React Testing Library** for user-facing React component behavior.
-- **jsdom** for DOM-dependent component tests.
-- **Node.js** as the default test environment.
-- In-memory **SQLite** through Node's `node:sqlite` for SQL integration tests.
+Most automated tests use mocks or in-memory databases. They generally do not require:
 
-The configuration is in `vitest.config.mts`. It discovers:
+- A running Next.js development server.
+- A running Cloudflare Worker.
+- A Cloudflare D1 or R2 connection.
+- Live Square credentials.
+- Live email delivery.
+- A production database.
+
+Some separate manual and integration verification procedures do require these services or their sandbox equivalents.
+
+Never use production credentials or customer data simply to make automated tests run.
+
+## 2. Testing frameworks and configuration
+
+TEAZO uses the following testing tools.
+
+| Tool | Purpose |
+|---|---|
+| Vitest | Test runner, assertions, mocks, lifecycle hooks |
+| React Testing Library | Testing React components and user interactions |
+| jsdom | Simulated browser DOM for React component tests |
+| Node.js | Default test execution environment |
+| `node:sqlite` | In-memory SQLite for database and migration tests |
+| ESLint | Static analysis of test and application code |
+| TypeScript | Type checking |
+| Next.js production build | Verification that the application compiles for deployment |
+
+### Vitest configuration
+
+The configuration is in:
+
+`teazo-site/vitest.config.mts`
+
+Vitest discovers files matching:
 
 ```text
 app/**/*.test.ts
 app/**/*.test.tsx
 ```
 
-Tests are generally located alongside the code they verify. For example, `app/lib/checkout-validators.test.ts` tests the checkout validators, while `app/admin/events/components/event-form.test.tsx` tests the Events form.
+The equivalent combined pattern is:
 
-The `@/` alias points to the `teazo-site/` root. The Next.js `server-only` guard is replaced by `test/server-only.ts` during tests, so server modules can be imported without a Next.js server build.
+```text
+app/**/*.test.{ts,tsx}
+```
 
-React tests that need a simulated browser declare this near the top of the test file:
+Tests are normally stored alongside the application code they verify.
+
+For example:
+
+```text
+app/lib/checkout-validators.ts
+app/lib/checkout-validators.test.ts
+```
+
+The configuration also supports the `@/` TypeScript import alias.
+
+Because Next.js server modules can contain `server-only` imports, the testing configuration substitutes `test/server-only.ts` when those modules are imported by Vitest.
+
+### Node and browser-like test environments
+
+The default test environment is Node.js.
+
+React components that require DOM APIs use jsdom. These test files declare:
 
 ```typescript
 // @vitest-environment jsdom
 ```
 
-This file-level override matters: the default environment is Node, not jsdom.
+This declaration must appear near the beginning of the relevant test file.
 
-## 3. Running tests
+A jsdom test can verify rendered elements and simulated interactions, but it does not reproduce every feature of Chrome, Safari, Firefox, or mobile browsers.
 
-Run these commands from `teazo-site/`.
+## 3. Running automated tests
 
-### Entire suite
+All commands in this section are run from `teazo-site/`.
+
+### Run the complete suite
 
 ```bash
 npm test
 ```
 
-For the expanded testing branch, the locally established command uses two workers and compact output:
+The `test` script invokes `vitest run`, which runs the discovered test files once and exits.
+
+### Recommended command for large regression runs
 
 ```bash
 npm test -- --maxWorkers=2 --reporter=dot
 ```
 
-A full-suite result applies only to the checkout and dependencies used for that run. Do not interpret results from an older commit as proof that newly added tests pass.
+This limits Vitest to two workers and displays compact test output.
 
-### One test file
+Using two workers is recommended for large combined test suites because high concurrency has previously caused intermittent timeouts in a Square SDK test.
 
-```bash
-npm test -- app/lib/checkout-validators.test.ts --maxWorkers=2 --reporter=dot
-```
+The worker setting does not change the assertions or intentionally increase test timeouts.
 
-A React component example:
+### Run one test file
 
 ```bash
-npm test -- app/admin/events/components/event-form.test.tsx --maxWorkers=2 --reporter=dot
+npm test -- app/lib/checkout-validators.test.ts
 ```
 
-### A related group
-
-Pass a path substring as a file filter. For Admin Menu:
+For a React component test:
 
 ```bash
-npm test -- app/admin/menu/ --maxWorkers=2 --reporter=dot
+npm test -- app/admin/events/components/event-form.test.tsx
 ```
 
-For the public Contact page (quote shell-special parentheses):
+### Run related tests using a directory filter
 
 ```bash
-npm test -- 'app/(site)/contact/' --maxWorkers=2 --reporter=dot
+npm test -- app/admin/menu/
 ```
 
-Tests for a single feature may be spread across `app/`, `app/api/`, and `app/lib/`. A directory filter does not automatically find every related test elsewhere.
-
-### Several file paths or groups
+For directory paths containing parentheses, use quotation marks:
 
 ```bash
-npm test -- app/api/checkout/ app/api/orders/ --maxWorkers=2 --reporter=dot
+npm test -- "app/(site)/contact/"
 ```
 
-### Tests matching a name
+A directory filter only selects matching test-file paths.
+
+Tests for a single feature may be distributed across the frontend, API routes, and shared libraries. A directory filter therefore might not include every related test.
+
+### Run several test files or groups
 
 ```bash
-npm test -- app/lib/checkout-validators.test.ts -t 'refuses' --maxWorkers=2 --reporter=dot
+npm test -- app/api/checkout/ app/api/orders/
 ```
 
-### Watch mode during development
+### Run tests matching a name
+
+```bash
+npm test -- app/lib/checkout-validators.test.ts -t "refuses"
+```
+
+The `-t` option filters tests by their descriptions.
+
+### Watch mode
+
+During active development:
 
 ```bash
 npx vitest --watch app/lib/checkout-validators.test.ts
 ```
 
-Stop watch mode with Ctrl+C. `npm test` uses `vitest run` and exits after one run.
+Watch mode reruns relevant tests as files change.
 
-## 4. Parallel execution
+Press Ctrl+C to stop watch mode.
 
-Vitest may execute different test files concurrently using worker processes or threads. The default worker count can increase contention and cause intermittent timeouts in heavier suites.
+## 4. Test coverage areas
 
-For local regression runs, use:
+The test suite covers frontend components, backend API routes, database operations, and shared application utilities.
 
-```bash
-npm test -- --maxWorkers=2 --reporter=dot
+Tests are organized by the functionality they verify rather than by individual development branches.
+
+### Functional coverage
+
+| Website area | Types of behavior tested |
+|---|---|
+| Public Menu | Catalog display, loading states, data handling, and error conditions |
+| Admin Menu | Item forms, creation, editing, deletion, refresh behavior, validation, PDF uploads |
+| Gallery | Public image display, administrator selection, upload/deletion routes, media utilities, database queries |
+| Events | Public Events display, administrator forms, API routes, event dates, database queries |
+| Checkout | Cart interactions, duplicate submissions, payment-link handling, order confirmation |
+| Orders and Webhooks | Order lifecycle, Square webhook validation and processing, failure scenarios |
+| Contact | Form submission, email notifications, notification recovery, Turnstile verification, database queries |
+| Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior |
+| Analytics | Dashboard queries, analytics storage, SQL behavior, cleanup procedures |
+| Authentication | Session validation, password setup/reset, password tokens, rate limiting, invitation handling |
+| Administrator Management | Owner/Admin authorization, administrator settings, invitations, database migrations |
+| Ownership Transfer | Ownership-transfer requests, acceptance/decline, concurrency, SQL operations, notifications, UI behavior |
+
+Some application features have additional tests in shared utility directories.
+
+### Frontend tests
+
+Frontend tests usually involve React components and may use React Testing Library and jsdom.
+
+Relevant directories include:
+
+```text
+app/(site)/
+app/admin/
+app/ownership-transfer/
 ```
 
-`--maxWorkers=2` limits worker concurrency; it does not activate parallelism. `--reporter=dot` changes only output presentation. Normal tests inside a file run sequentially unless concurrency is explicitly requested.
+Examples of behaviors to test include:
 
-In previous local runs, two workers were more stable than default concurrency. This is a project-specific operating recommendation, not a guarantee that every future test run will pass.
+- Whether components render the correct information.
+- Whether buttons and forms respond to interaction.
+- Whether user input is validated.
+- Whether successful actions update displayed information.
+- Whether failed requests produce appropriate feedback.
+- Whether cancellation and retry behavior work correctly.
+- Whether loading and disabled states prevent unintended actions.
 
-Tests must not depend on execution order across files. Reset mock state, environment settings, timers, component trees, and database data between relevant cases.
+Frontend tests should focus on observable behavior rather than implementation details whenever practical.
 
-## 5. Writing a test
+### Backend and API tests
 
-Name a test `*.test.ts` or `*.test.tsx` and place it beside the module or component under test.
+API route tests are generally located under:
 
-Example utility test:
+```text
+app/api/
+```
+
+These tests may invoke exported route handlers directly using mock `Request` objects.
+
+Relevant assertions include:
+
+- HTTP status codes.
+- Response bodies and headers.
+- Authentication and authorization.
+- Input validation.
+- Expected service calls.
+- Database and storage side effects.
+- Error recovery and failure responses.
+- Rate limiting.
+- Idempotency and duplicate-request handling.
+
+API route tests commonly mock external systems rather than performing live network requests.
+
+### Database and migration tests
+
+Database-related tests are commonly located under:
+
+```text
+app/lib/
+app/lib/queries/
+```
+
+Migration scripts are stored under:
+
+```text
+migrations/
+```
+
+Tests may verify:
+
+- SQL query behavior.
+- Filtering and data retrieval.
+- Database constraints.
+- Schema migrations.
+- Data preservation during migrations.
+- Transaction and concurrency behavior.
+- Application behavior when database operations fail.
+
+SQLite-backed tests execute real SQL against temporary in-memory databases. This differs from testing the actual deployed Cloudflare D1 service.
+
+### Utility tests
+
+Shared business logic tests are commonly found under:
+
+```text
+app/lib/
+```
+
+These include validation, dates, store hours, Square catalog rules, email content, and other reusable application logic.
+
+Utility tests should cover successful input, rejected input, edge cases, and relevant business rules.
+
+## 5. Writing and maintaining tests
+
+### Naming conventions
+
+Use:
+
+- `*.test.ts` for TypeScript tests.
+- `*.test.tsx` for React component tests.
+
+Place tests near the corresponding application modules when practical.
+
+### Example utility test
 
 ```typescript
 import { describe, expect, it } from "vitest";
@@ -149,103 +341,379 @@ describe("toE164Phone", () => {
 });
 ```
 
-Use clear descriptions that state the expected behavior. Cover success cases, rejected input, boundary conditions, failure paths, and meaningful side effects. For many inputs with the same assertion pattern, use `it.each`.
+Use test names that explain the expected behavior.
 
-For React component tests, import tools such as `render`, `screen`, `fireEvent`, `waitFor`, and `cleanup` from `@testing-library/react`. Add the jsdom environment comment. Prefer assertions about what a person can observe and interact with rather than internal implementation details.
+Prefer assertions that describe what the application should do rather than how the implementation happens to be written.
 
-For API route tests, construct realistic `Request` objects and invoke the exported handler. Assert the response status, returned body, authorization behavior, validation, and side effects. Mock integration boundaries instead of contacting production systems.
+### React component tests
 
-## 6. Mocking and isolation
+Use React Testing Library helpers such as:
 
-Vitest offers `vi.fn`, `vi.mock`, `vi.hoisted`, `vi.spyOn`, and setup/cleanup hooks such as `beforeEach` and `afterEach`.
+```typescript
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+```
 
-Test modules in this repository commonly mock:
+Use jsdom for tests that need browser-like DOM APIs.
 
-- Square service responses and Square location/catalog lookups.
-- D1 queries, R2 operations, and other storage helpers.
-- Email delivery, Turnstile verification, and authentication.
-- Next.js cache revalidation and browser-dependent modules.
+Mock browser or framework features that are not available in the test environment when necessary.
 
-Module mocks must be established before the module under test is evaluated. Some tests use a dynamic `await import()` for precisely that reason. Avoid accidentally accessing real credentials, remote services, or production data.
+### API route tests
 
-Reset the state appropriate to the test: `vi.clearAllMocks()` clears call history, `vi.resetAllMocks()` also resets mock implementations, `vi.restoreAllMocks()` restores spied-on implementations, and `vi.unstubAllEnvs()` removes environment stubs. These operations are not interchangeable.
+Construct realistic requests and invoke the route handler being tested.
 
-## 7. Database fixtures
+Verify successful and unsuccessful responses, authorization requirements, validation, and important side effects.
 
-Shared test utilities are located under `teazo-site/test/`.
+Do not contact production systems in automated unit or mocked integration tests.
+
+### Authentication and administrator roles
+
+The current administrator system uses two roles:
+
+| Role ID | Role | Intended access |
+|---|---|---|
+| 1 | Owner | Site administration, content management, and administrator membership management |
+| 2 | Admin | Authorized content management without administrator membership management |
+
+Authentication tests should confirm that permissions are enforced server-side, not solely by hiding controls in the user interface.
+
+Tests must not rely on the retired Can View/Can Edit role system or treat the legacy `can_invite_users` flag as granting administrator-management permissions.
+
+If the role model changes in the future, update both the relevant implementation and its authorization tests.
+
+## 6. Mocking and test isolation
+
+Vitest supports:
+
+- `vi.fn()` for mock functions.
+- `vi.mock()` for mocked modules.
+- `vi.hoisted()` for values used during module mocking.
+- `vi.spyOn()` for observing or replacing existing functions.
+- `beforeEach()` and `afterEach()` for test setup and cleanup.
+
+Common mocked services include:
+
+- Square catalog, location, checkout, and webhook integrations.
+- Cloudflare D1 and R2 operations.
+- Email providers and invitation delivery.
+- Authentication sessions.
+- Turnstile verification.
+- Next.js server utilities and cache behavior.
+
+Mocks must be established before modules that depend on them are evaluated.
+
+Some tests use dynamic imports to control module initialization and mocking order.
+
+### Reset state between tests
+
+Relevant Vitest utilities include:
+
+| Utility | Behavior |
+|---|---|
+| `vi.clearAllMocks()` | Clears mock call histories |
+| `vi.resetAllMocks()` | Also resets mock implementations |
+| `vi.restoreAllMocks()` | Restores spied-on implementations |
+| `vi.unstubAllEnvs()` | Removes environment-variable stubs |
+| `vi.unstubAllGlobals()` | Removes stubbed globals |
+
+These functions are not interchangeable.
+
+Tests should clean up timers, rendered components, environment settings, database fixtures, and other mutable state as necessary.
+
+A test must not depend on another test having run first.
+
+## 7. Database test fixtures
+
+Shared test utilities are located in:
+
+`teazo-site/test/`
 
 ### `test/fake-d1.ts`
 
-Provides a lightweight D1 replacement backed by in-memory table rows. It records statements passed to `batch()`. Use it when a test checks query parameters, SQL construction, or application behavior but does not need to execute real SQL.
+Provides a lightweight D1 substitute backed by in-memory table rows.
+
+Use this helper when testing query construction, parameter binding, or application behavior without executing SQL against a database engine.
+
+The helper can also record statements passed to `batch()` for verification.
 
 ### `test/sqlite-d1.ts`
 
-Provides an in-memory SQLite database with D1-like `prepare()` and `batch()` methods. It reads the `.sql` files from `teazo-site/migrations/` in filename order and applies them to a fresh database. Use it for actual SQL behavior, constraints, and transaction tests. Call `sqliteD1.reset()` when a test needs a fresh database.
+Provides an in-memory SQLite database with D1-like query methods.
 
-This helper uses Node's `node:sqlite` API. Your Node version may print an experimental SQLite warning; that warning is not itself a failed test.
+It loads SQL migrations from `teazo-site/migrations/` in filename order and applies them to a fresh database.
 
-### Other helpers
+Use this helper when tests require actual SQL execution, database constraints, or migration behavior.
 
-- `test/catalog-fixtures.ts`: shared catalog test data.
-- `test/server-only.ts`: substitute for Next.js's `server-only` import guard.
-- `test/node-sqlite.d.ts`: TypeScript support for Node's SQLite API.
+Call `sqliteD1.reset()` when a test needs a fresh database.
 
-The fixture files are already part of the project's shared testing base; do not duplicate them in each feature PR.
+### Other shared helpers
 
-**Branch dependency:** Tests that reference unmerged code or migration files may fail even when the tests themselves are correct. For example, admin-role and ownership-transfer tests require the implementation and migrations from PR #84. Verify them against the integrated `dev` code before opening their PRs.
+| File | Purpose |
+|---|---|
+| `test/catalog-fixtures.ts` | Shared Square catalog test data |
+| `test/server-only.ts` | Substitute for the Next.js `server-only` import guard |
+| `test/node-sqlite.d.ts` | TypeScript support for SQLite APIs |
 
-## 8. Checks before a testing PR
+Do not duplicate shared fixture utilities when extending an existing test suite.
 
-For each focused PR:
+### SQLite warnings
 
-1. Run the new or modified files.
-2. Run related existing regression tests, including relevant tests outside the changed directory.
-3. Run ESLint on the changed test and configuration files.
-4. Run the full suite against an integrated branch with the required application code.
-5. Check TypeScript and build results, distinguishing existing problems from newly introduced failures.
-6. Record commands, results, and relevant limitations in the PR description.
+Node.js may display a warning that its SQLite support is experimental.
 
-Examples:
+This warning alone does not indicate a failed test. Evaluate the test assertions and final process exit status.
+
+## 8. Branch dependencies and application changes
+
+**Branch dependency:** Tests that reference code or migrations unavailable in the current checkout may fail even when the tests themselves are correct. Run each testing branch against an updated `dev` checkout containing its required implementation and database migrations before opening a pull request.
+
+Tests should be updated whenever their application's public interfaces or expected behavior change.
+
+Examples include:
+
+- A React component prop being added or removed.
+- An API response structure changing.
+- A database migration changing a table or field.
+- Authorization requirements changing.
+- Error messages or user-facing behavior changing.
+- An external integration being upgraded.
+
+When an existing test fails after a code change, determine whether the failure exposes a regression or whether the test expectation is outdated.
+
+**Do not weaken a security or behavior assertion simply to make the suite pass.**
+
+Changes to permission checks, payment handling, stored data, and email security should receive particular attention.
+
+## 9. Verification before merging or releasing changes
+
+For each meaningful application change or testing pull request:
+
+1. Ensure the local branch contains the required current implementation.
+2. Install or refresh dependencies when package files have changed.
+3. Run the directly affected tests.
+4. Run related regression tests outside the changed directory.
+5. Run the complete automated test suite.
+6. Run targeted ESLint on changed code.
+7. Run TypeScript checking.
+8. Verify the Next.js production build.
+9. Review the Git diff for unrelated modifications.
+10. Perform manual integration or browser checks when the change requires them.
+
+### Recommended commands
 
 ```bash
-npx eslint "app/admin/events/components/event-form.test.tsx"
 npm test -- --maxWorkers=2 --reporter=dot
 npx tsc --noEmit
 npm run build
 ```
 
-Do not combine a testing PR with repository-wide formatting or ESLint autofixes. The general developer guide documents pre-existing lint problems. Keep changes limited to the feature being tested and any explicitly reviewed prerequisites.
+For targeted ESLint:
 
-## 9. Troubleshooting
+```bash
+npx eslint "app/lib/checkout-validators.test.ts"
+```
 
-**No tests found:** Ensure the current directory is `teazo-site/`, the test matches a configured `.test.ts` or `.test.tsx` pattern, and the path filter refers to a real file on the current branch.
+For a whitespace check, after committing the changes:
 
-**Missing module or DOM APIs:** Verify dependencies with `npm ci`, use the correct checkout, and add `// @vitest-environment jsdom` where DOM access is needed.
+```bash
+git diff --check origin/dev...HEAD
+```
 
-**Timeouts:** Try `--maxWorkers=2`; if an individual test still times out, investigate mocks, promises, cleanup, or external work rather than raising timeouts indiscriminately.
+For uncommitted changes:
 
-**SQLite migration failures:** Check that the required migration exists in the current checkout. Never copy unmerged application changes into a test-only branch without review.
+```bash
+git diff --check
+```
 
-**Individual tests pass, grouped tests fail:** Look for shared state, mock leakage, module caching, environment mutations, and incomplete fixture resets.
+Avoid mixing unrelated formatting changes, dependency upgrades, or repository-wide lint cleanups into a focused testing change.
 
-**Service failure messages:** Some tests deliberately simulate unavailable Square, email, or database services. Judge the outcome from Vitest assertions and process exit status, not a warning message alone.
+### Manual verification
 
-## 10. Coverage and limitations
+Automated tests should be supplemented with manual verification when functionality depends on real browser behavior or external services.
 
-Automated tests can verify utility logic, UI behavior in a simulated DOM, mocked API routes, and SQLite queries. They cannot by themselves establish correctness of every production integration or user workflow.
+Examples include:
 
-Additional verification may be needed for:
+- Signing in through Google.
+- Checking Owner/Admin permissions in the deployed interface.
+- Testing checkout using Square's sandbox.
+- Checking real email delivery in an approved test environment.
+- Verifying Cloudflare D1/R2 integrations.
+- Testing responsive layout on mobile devices.
+- Confirming browser-specific behavior.
+- Checking accessibility and keyboard navigation.
 
-- Real Google sign-in and session behavior.
-- Live Square sandbox transactions and webhooks.
-- Real Cloudflare D1, R2, and deployment configuration.
-- Actual contact and invitation email delivery.
-- Browser-specific, responsive, mobile, and accessibility behavior.
-- End-to-end interactions in a real browser.
-- Performance, concurrency in production, and operational monitoring.
+Use development or sandbox systems whenever possible.
 
-The project uses Vitest for this suite; Playwright is not part of the established TEAZO testing workflow. Passing test counts are not equivalent to line, branch, statement, or path coverage percentages. Do not claim complete coverage without a separate measurement and review.
+Do not modify production records or submit real payments solely for testing without an approved procedure.
 
-## 11. Maintaining this guide
+## 10. Troubleshooting
 
-Keep this document as the canonical testing reference. The repository's READMEs and [DEV-GUIDE.md](DEV-GUIDE.md) should link here rather than repeat detailed testing instructions. Update this guide when commands, dependencies, configuration, fixtures, or test conventions materially change.
+### Vitest reports no tests found
+
+Check that:
+
+- The terminal is in `teazo-site/`.
+- The test filename ends in `.test.ts` or `.test.tsx`.
+- The test exists in the current checkout.
+- The path filter is correct.
+- The file matches the configured Vitest discovery pattern.
+
+### A React test reports missing browser APIs
+
+Verify that the test uses:
+
+```typescript
+// @vitest-environment jsdom
+```
+
+Confirm that the testing dependencies were installed with `npm ci`.
+
+### Tests intermittently time out
+
+Retry a large suite with:
+
+```bash
+npm test -- --maxWorkers=2 --reporter=dot
+```
+
+If an individual test continues to time out, investigate its asynchronous operations, mocked services, timers, and cleanup.
+
+Avoid increasing timeouts indiscriminately.
+
+### SQLite or migration errors
+
+Confirm that the expected migration files exist in the current checkout.
+
+Check the initialization and reset behavior of the in-memory database fixture.
+
+If the schema recently changed, update the relevant tests and fixtures.
+
+### TypeScript errors after switching branches
+
+Next.js can retain generated route types from a previous checkout.
+
+Inspect the paths reported by TypeScript before changing production code.
+
+If generated route types are stale, regenerate them:
+
+```bash
+npx next typegen
+npx tsc --noEmit
+```
+
+Then check that no unintended tracked-file changes were introduced.
+
+### An API or component test fails after an application update
+
+Compare the test's expected behavior against the current implementation and product requirements.
+
+Look for changes to:
+
+- API authorization.
+- Component props.
+- Error messages.
+- Form validation.
+- Database schema.
+- Request and response formats.
+
+Correct outdated expectations only when the new behavior is intentional.
+
+### React warns about `jsx` or `global` attributes
+
+Some Next.js styling constructs may be rendered by jsdom without the normal Next.js compiler transformation.
+
+These warnings do not automatically mean the test failed.
+
+Review the component and assertions separately rather than suppressing all React warnings.
+
+### Square or other service errors appear in test output
+
+Some tests deliberately simulate unavailable external services.
+
+Messages such as a Square catalog being unavailable may be expected output from error-handling tests.
+
+The final Vitest result and process exit status determine whether the test run passed.
+
+### Individual tests pass but the full suite fails
+
+Investigate:
+
+- Shared mutable state.
+- Unreset mocks.
+- Environment-variable leakage.
+- Timer cleanup.
+- Module caching.
+- Database-fixture cleanup.
+- Worker contention.
+
+Tests should be independent and repeatable.
+
+## 11. Coverage limitations
+
+The presence of automated tests does not guarantee complete application coverage.
+
+The existing testing approach primarily verifies:
+
+- TypeScript utility and business logic.
+- React component behavior in a simulated DOM.
+- API handlers and error responses.
+- Mocked external service interactions.
+- Database queries and migrations.
+
+Additional testing may be necessary for:
+
+- Real browser end-to-end workflows.
+- Production Google authentication behavior.
+- Live Square sandbox integrations.
+- Deployed Cloudflare D1 and R2 behavior.
+- Actual email deliverability.
+- Mobile Safari and Android browser differences.
+- Accessibility.
+- Performance under load.
+- Production concurrency and operational monitoring.
+
+Vitest is the established automated testing framework for this project. Real-browser end-to-end testing is not provided by the Vitest component and API tests described in this guide.
+
+A successful test count is **not** a code-coverage percentage.
+
+Do not claim complete frontend, backend, or end-to-end coverage without separate measurement and verification.
+
+## 12. Maintaining the testing system
+
+The automated tests should be maintained alongside the application.
+
+Whenever a feature changes:
+
+- Update affected tests in the same development workflow.
+- Add regression tests for confirmed defects.
+- Add tests for new validation and error cases.
+- Keep authentication and authorization tests aligned with current permissions.
+- Keep database fixtures aligned with migrations.
+- Avoid relying on live external services in ordinary unit tests.
+- Review flaky tests rather than routinely increasing timeouts.
+- Record test failures and resolutions when they affect release decisions.
+
+### Keeping this documentation current
+
+This document is the canonical reference for automated testing.
+
+Update it when:
+
+- Test frameworks or dependencies change.
+- Commands or configuration change.
+- New shared fixtures are introduced.
+- Test conventions change.
+- New functional testing areas are added.
+- Additional integration or end-to-end testing tools are adopted.
+
+The repository READMEs and the [Developer Guide](DEV-GUIDE.md) should link to this document rather than maintain duplicate testing instructions.
+
+The test inventory is intentionally organized by website functionality instead of temporary development branches or historical test counts.
+
+For the current number of tests, run the test suite against the latest appropriate checkout and use its reported totals.
+
+This helps ensure the guide remains accurate and useful to future maintainers as the website evolves.

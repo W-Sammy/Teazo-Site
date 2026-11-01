@@ -11,6 +11,7 @@ import {
 type PasswordEmailAdmin = {
   id: string;
   email_normalized: string;
+  role_id: 1 | 2;
   needs_password_setup: 0 | 1;
 };
 
@@ -70,22 +71,25 @@ export async function sendAdminPasswordEmail(
     return null;
   }
 
-  // Resolve the account and recipient from the database.
+  // Resolve the account, role, and recipient from the database.
   const admin = await prepare(
-    `SELECT id, email_normalized, password_hash IS NULL AS needs_password_setup
+    `SELECT id, email_normalized, role_id,
+            password_hash IS NULL AS needs_password_setup
        FROM admin_user
       WHERE email_normalized = ?1
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
       LIMIT 1`,
   )
     .bind(normalizedEmail)
     .first<PasswordEmailAdmin>();
 
   if (!admin) return null;
+
   const purpose: PasswordTokenPurpose =
     admin.needs_password_setup === 1 ? "setup" : "reset";
+
   // Validate configuration before creating a token.
   const link = new URL("/login", applicationUrl());
 
@@ -98,10 +102,14 @@ export async function sendAdminPasswordEmail(
 
   const isSetup = purpose === "setup";
 
-  const action = isSetup ? "Create your password" : "Reset your password";
+  const action = isSetup
+    ? "Create your password"
+    : "Reset your password";
+
+  const roleLabel = admin.role_id === 1 ? "Owner" : "Admin";
 
   const explanation = isSetup
-    ? "Your email has been added as an admin of the TEAZO website."
+    ? `Your email address has been added to the TEAZO website with the ${roleLabel} role.`
     : "We received a request to reset your TEAZO admin password.";
 
   const expiration = isSetup ? "24 hours" : "30 minutes";
