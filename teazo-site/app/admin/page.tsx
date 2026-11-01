@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPage() {
-  await requireAdminPage(3)
+  await requireAdminPage(2);
+
   const dashboardData = await getDashboardData();
 
   return <DashboardClient {...dashboardData} />;
