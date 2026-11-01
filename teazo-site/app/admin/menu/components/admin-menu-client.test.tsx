@@ -469,7 +469,7 @@ describe("Admin Menu UI integration", () => {
 
       expect(
         screen.getByText(
-          "Owner or Can Edit access is required to edit a menu item.",
+          "Owner or Admin access is required to edit a menu item.",
         ),
       ).toBeTruthy();
 
