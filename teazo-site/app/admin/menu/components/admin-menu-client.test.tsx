@@ -106,7 +106,6 @@ function renderMenu(overrides: Partial<MenuProps> = {}) {
     <AdminMenuClient
       items={initialItems}
       categories={categories}
-      canUploadMenu={true}
       {...overrides}
     />,
   );
@@ -440,39 +439,26 @@ describe("Admin Menu UI integration", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("disables creation and uploads for read-only access", () => {
-      renderMenu({ canUploadMenu: false });
+    it("provides menu management controls for authorized admins", () => {
+      renderMenu();
+
+      const addItem = screen.getByRole("button", {
+        name: "Add Item",
+      });
+
+      const uploadMenu = screen.getByRole("button", {
+        name: "Upload Menu",
+      });
 
       expect(
-        (
-          screen.getByRole("button", {
-            name: "Add Item",
-          }) as HTMLButtonElement
-        ).disabled,
-      ).toBe(true);
+        (addItem as HTMLButtonElement).disabled,
+      ).toBe(false);
 
       expect(
-        (
-          screen.getByRole("button", {
-            name: "Upload Menu",
-          }) as HTMLButtonElement
-        ).disabled,
-      ).toBe(true);
+        (uploadMenu as HTMLButtonElement).disabled,
+      ).toBe(false);
 
-      const form = openEditForm();
-
-      fireEvent.click(
-        within(form).getByRole("button", {
-          name: "Save Changes",
-        }),
-      );
-
-      expect(
-        screen.getByText(
-          "Owner or Admin access is required to edit a menu item.",
-        ),
-      ).toBeTruthy();
-
+      expect(openEditForm()).toBeTruthy();
       expect(fetchMock).not.toHaveBeenCalled();
     });
   });
@@ -597,7 +583,6 @@ describe("Admin Menu UI integration", () => {
         <AdminMenuClient
           items={[...initialItems, itemFromServer]}
           categories={categories}
-          canUploadMenu={true}
         />,
       );
 
