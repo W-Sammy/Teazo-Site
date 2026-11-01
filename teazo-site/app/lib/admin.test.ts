@@ -94,7 +94,7 @@ describe("Admin session authorization", () => {
 
   // Revalidate the Auth.js session against the current D1 record.
   it("allows a session matching the database version", async () => {
-    const admin = await getAdmin(3);
+    const admin = await getAdmin(2);
 
     expect(admin).toEqual(databaseAdmin);
   });
@@ -104,7 +104,7 @@ describe("Admin session authorization", () => {
       session(3) as never,
     );
 
-    const admin = await getAdmin(3);
+    const admin = await getAdmin(2);
 
     expect(admin).toBeNull();
   });
@@ -114,7 +114,7 @@ describe("Admin session authorization", () => {
       session(4, "other-admin-id") as never,
     );
 
-    expect(await getAdmin(3)).toBeNull();
+    expect(await getAdmin(2)).toBeNull();
   });
 
   // Missing session claims must not grant admin access.
@@ -124,7 +124,7 @@ describe("Admin session authorization", () => {
       adminId: "admin-id",
     } as never);
 
-    expect(await getAdmin(3)).toBeNull();
+    expect(await getAdmin(2)).toBeNull();
   });
 
   it("rejects sessions missing adminId", async () => {
@@ -133,7 +133,7 @@ describe("Admin session authorization", () => {
       sessionVersion: 4,
     } as never);
 
-    expect(await getAdmin(3)).toBeNull();
+    expect(await getAdmin(2)).toBeNull();
   });
 
   it("rejects unauthenticated users", async () => {
@@ -183,20 +183,15 @@ describe("Admin session authorization", () => {
     );
 
     await expect(
-      requireAdminPage(3),
+      requireAdminPage(2),
     ).rejects.toThrow("REDIRECT:/login");
   });
 
-  // API write guards enforce server-side permissions and origin checks.
-  it("rejects insufficient Admin roles", async () => {
-    vi.mocked(findAuthorizedAdmin).mockResolvedValueOnce({
-      ...databaseAdmin,
-      role_id: 3,
-    } as never);
-
+  // Only the Owner may access Owner-restricted API operations.
+  it("denies Admin accounts access to Owner-only API routes", async () => {
     const result = await requireAdminApi(
       apiRequest(),
-      2,
+      1,
     );
 
     expect(result.ok).toBe(false);

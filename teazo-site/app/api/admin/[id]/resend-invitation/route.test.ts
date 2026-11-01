@@ -38,7 +38,6 @@ const owner = {
   id: "owner-id",
   username: "owner",
   role_id: 1,
-  can_invite_users: 1,
 };
 
 const eligibleAdmin = {
@@ -46,7 +45,6 @@ const eligibleAdmin = {
   username: "test admin",
   email: "test@example.com",
   role: 2,
-  canManageAdmins: false,
   canResendInvitation: true,
 };
 
@@ -103,16 +101,17 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
 
   it("rejects unauthorized administrators", async () => {
     vi.mocked(requireAdminApi).mockResolvedValueOnce({
-      ok: true,
-      admin: {
-        ...owner,
-        role_id: 2,
-        can_invite_users: 0,
-      },
-    } as never);
+      ok: false,
+      response: Response.json(
+        { error: "You do not have permission to perform this action." },
+        { status: 403 },
+      ),
+    });
 
-    const response = await POST(makeRequest(), context());
+    const request = makeRequest();
+    const response = await POST(request, context());
 
+    expect(requireAdminApi).toHaveBeenCalledWith(request, 1);
     expect(response.status).toBe(403);
     expect(sendAdminInvite).not.toHaveBeenCalled();
   });
@@ -124,19 +123,12 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(sendAdminInvite).toHaveBeenCalledOnce();
   });
 
-  // Preserve the route's existing permission behavior in this regression test.
-  it("allows Can Edit accounts with invitation permission", async () => {
-    vi.mocked(requireAdminApi).mockResolvedValueOnce({
-      ok: true,
-      admin: {
-        ...owner,
-        role_id: 2,
-        can_invite_users: 1,
-      },
-    } as never);
+  // The shared guard must require Owner access, not legacy invitation flags.
+  it("requires Owner-level authorization for invitation resends", async () => {
+    const request = makeRequest();
+    const response = await POST(request, context());
 
-    const response = await POST(makeRequest(), context());
-
+    expect(requireAdminApi).toHaveBeenCalledWith(request, 1);
     expect(response.status).toBe(200);
   });
 
@@ -206,7 +198,6 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
       email: "test@example.com",
       username: "test admin",
       role: 2,
-      canManageAdmins: false,
       invitedBy: "owner",
     });
   });
@@ -250,7 +241,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(response.status).toBe(200);
 
     expect(await response.json()).toEqual({
-      message: "Invitation generated. Check your local email output.",
+      message: "Invitation generated in the server terminal. No email was sent.",
     });
   });
 

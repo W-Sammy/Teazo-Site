@@ -144,7 +144,7 @@ describe("Admin password token helpers", () => {
 
     expect(sqlStatements[0]).toContain("deleted_at IS NULL");
     expect(sqlStatements[0]).toContain("password_hash IS NULL");
-    expect(sqlStatements[0]).toContain("role_id IN (1, 2, 3)");
+    expect(sqlStatements[0]).toContain("role_id IN (1, 2)");
   });
 
   // Reject malformed inputs before touching D1.
