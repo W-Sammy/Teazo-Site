@@ -1,14 +1,20 @@
 /**
  * Tests POST /api/admin/[id]/resend-invitation.
  *
- * Admin authorization, invitation eligibility, rate limiting, and sending
- * are mocked. Checks that only permitted admins can resend invitations,
- * target accounts remain eligible, and delivery states are reported safely.
+ * Verifies Owner-only authorization, account eligibility,
+ * rate limiting, invitation delivery outcomes, and error handling.
  *
- * No actual invitations are sent.
+ * External services are mocked. No real invitations are sent.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { requireAdminApi } from "@/app/lib/admin";
 import { sendAdminInvite } from "@/app/lib/admin-invite";
@@ -16,7 +22,6 @@ import { findSettingsAdminForInvitation } from "@/app/lib/queries/settings";
 import { consumePasswordRequestLimit } from "@/app/lib/password-request-rate-limit";
 import { POST } from "./route";
 
-// All authorization, eligibility, throttling, and delivery are isolated.
 vi.mock("@/app/lib/admin", () => ({
   requireAdminApi: vi.fn(),
 }));
@@ -33,11 +38,11 @@ vi.mock("@/app/lib/password-request-rate-limit", () => ({
   consumePasswordRequestLimit: vi.fn(),
 }));
 
-// Use known authorized sender and eligible recipient fixtures.
 const owner = {
   id: "owner-id",
   username: "owner",
   role_id: 1,
+  can_invite_users: 1,
 };
 
 const eligibleAdmin = {
@@ -45,8 +50,13 @@ const eligibleAdmin = {
   username: "test admin",
   email: "test@example.com",
   role: 2,
+  canManageAdmins: false,
   canResendInvitation: true,
 };
+
+type TestAdmin = typeof owner;
+
+let currentAdmin: TestAdmin;
 
 function makeRequest() {
   return new Request(
@@ -69,21 +79,52 @@ function context(id = "target-id") {
 describe("POST /api/admin/[id]/resend-invitation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
 
-    vi.mocked(requireAdminApi).mockResolvedValue({
-      ok: true,
-      admin: owner,
-    } as never);
+    currentAdmin = { ...owner };
+
+    // Simulate the actual role threshold enforced by
+    // requireAdminApi. A role 2 account cannot satisfy
+    // requireAdminApi(request, 1), even when a retired
+    // permission flag is present.
+    vi.mocked(requireAdminApi).mockImplementation(
+      async (_request, minRole = 2) => {
+        if (currentAdmin.role_id > minRole) {
+          return {
+            ok: false,
+            response: Response.json(
+              {
+                error:
+                  "You do not have permission to perform this action.",
+              },
+              { status: 403 },
+            ),
+          };
+        }
+
+        return {
+          ok: true,
+          admin: currentAdmin,
+        } as never;
+      },
+    );
 
     vi.mocked(findSettingsAdminForInvitation).mockResolvedValue(
       eligibleAdmin as never,
     );
 
-    vi.mocked(consumePasswordRequestLimit).mockResolvedValue(true);
+    vi.mocked(consumePasswordRequestLimit).mockResolvedValue(
+      true,
+    );
+
     vi.mocked(sendAdminInvite).mockResolvedValue("sent");
   });
 
-  // Only appropriately privileged admins may resend invitations.
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
   it("rejects unauthenticated requests", async () => {
     vi.mocked(requireAdminApi).mockResolvedValueOnce({
       ok: false,
@@ -97,42 +138,53 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
 
     expect(response.status).toBe(401);
     expect(sendAdminInvite).not.toHaveBeenCalled();
+    expect(consumePasswordRequestLimit).not.toHaveBeenCalled();
   });
 
-  it("rejects unauthorized administrators", async () => {
-    vi.mocked(requireAdminApi).mockResolvedValueOnce({
-      ok: false,
-      response: Response.json(
-        { error: "You do not have permission to perform this action." },
-        { status: 403 },
-      ),
-    });
+  it("rejects regular Admin accounts", async () => {
+    currentAdmin = {
+      ...owner,
+      role_id: 2,
+      can_invite_users: 0,
+    };
 
-    const request = makeRequest();
-    const response = await POST(request, context());
+    const response = await POST(makeRequest(), context());
 
-    expect(requireAdminApi).toHaveBeenCalledWith(request, 1);
     expect(response.status).toBe(403);
+    expect(requireAdminApi).toHaveBeenCalledWith(
+      expect.any(Request),
+      1,
+    );
     expect(sendAdminInvite).not.toHaveBeenCalled();
+    expect(consumePasswordRequestLimit).not.toHaveBeenCalled();
   });
 
   it("allows Owner accounts", async () => {
     const response = await POST(makeRequest(), context());
 
     expect(response.status).toBe(200);
+    expect(requireAdminApi).toHaveBeenCalledWith(
+      expect.any(Request),
+      1,
+    );
     expect(sendAdminInvite).toHaveBeenCalledOnce();
   });
 
-  // The shared guard must require Owner access, not legacy invitation flags.
-  it("requires Owner-level authorization for invitation resends", async () => {
-    const request = makeRequest();
-    const response = await POST(request, context());
+  it("rejects regular Admin accounts even with legacy invitation permission", async () => {
+    currentAdmin = {
+      ...owner,
+      role_id: 2,
+      can_invite_users: 1,
+    };
 
-    expect(requireAdminApi).toHaveBeenCalledWith(request, 1);
-    expect(response.status).toBe(200);
+    const response = await POST(makeRequest(), context());
+
+    expect(response.status).toBe(403);
+    expect(sendAdminInvite).not.toHaveBeenCalled();
+    expect(findSettingsAdminForInvitation).not.toHaveBeenCalled();
+    expect(consumePasswordRequestLimit).not.toHaveBeenCalled();
   });
 
-  // The recipient may have completed setup or become ineligible.
   it("rejects accounts that are no longer eligible", async () => {
     vi.mocked(findSettingsAdminForInvitation).mockResolvedValueOnce(
       null,
@@ -144,8 +196,7 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(sendAdminInvite).not.toHaveBeenCalled();
   });
 
-  // Rate-limit requester and recipient independently.
-  it("limits excessive requests from one administrator", async () => {
+  it("limits excessive requests from one Owner", async () => {
     vi.mocked(consumePasswordRequestLimit).mockResolvedValueOnce(
       false,
     );
@@ -154,7 +205,6 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBe("900");
-
     expect(sendAdminInvite).not.toHaveBeenCalled();
   });
 
@@ -189,7 +239,6 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     );
   });
 
-  // Build the invitation from server-approved recipient data, not user input.
   it("uses the server-authorized invitation sender", async () => {
     await POST(makeRequest(), context());
 
@@ -212,14 +261,12 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     });
   });
 
-  // Distinguish real delivery, failures, skips, and local printed email.
   it("reports failed email delivery", async () => {
     vi.mocked(sendAdminInvite).mockResolvedValueOnce("failed");
 
     const response = await POST(makeRequest(), context());
 
     expect(response.status).toBe(503);
-
     expect(await response.json()).toMatchObject({
       error: expect.stringContaining("could not be sent"),
     });
@@ -233,19 +280,41 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     expect(response.status).toBe(503);
   });
 
-  it("distinguishes local email output from real delivery", async () => {
+  it("distinguishes local terminal output from real delivery", async () => {
     vi.mocked(sendAdminInvite).mockResolvedValueOnce("printed");
 
     const response = await POST(makeRequest(), context());
 
     expect(response.status).toBe(200);
-
     expect(await response.json()).toEqual({
-      message: "Invitation generated in the server terminal. No email was sent.",
+      message:
+        "Invitation generated in the server terminal. No email was sent.",
     });
   });
 
-  // Invitation status responses should not be cached.
+  it("reports invitations captured by local Mailpit", async () => {
+    vi.mocked(sendAdminInvite).mockResolvedValueOnce("captured");
+
+    const response = await POST(makeRequest(), context());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      message: "Invitation generated in the local Mailpit inbox.",
+    });
+  });
+
+  it("does not claim email delivery in Brevo sandbox mode", async () => {
+    vi.stubEnv("BREVO_SANDBOX", "1");
+
+    const response = await POST(makeRequest(), context());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      message:
+        "Invitation processed in Brevo sandbox mode. No email was delivered.",
+    });
+  });
+
   it("returns no-store on successful responses", async () => {
     const response = await POST(makeRequest(), context());
 
@@ -264,5 +333,6 @@ describe("POST /api/admin/[id]/resend-invitation", () => {
     const response = await POST(makeRequest(), context());
 
     expect(response.status).toBe(503);
+    expect(sendAdminInvite).not.toHaveBeenCalled();
   });
 });
