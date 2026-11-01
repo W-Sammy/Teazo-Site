@@ -61,7 +61,6 @@ type MenuDrawer =
 type AdminMenuClientProps = {
   items: DisplayedMenuItem[];
   categories: Category[];
-  canUploadMenu: boolean;
 };
 
 const fallbackImage = "/TEAZO_logo.svg";
@@ -236,7 +235,6 @@ const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
 export default function AdminMenuClient({
   items,
   categories,
-  canUploadMenu,
 }: AdminMenuClientProps) {
   const [search, setSearch] = useState("");
 
@@ -515,7 +513,6 @@ export default function AdminMenuClient({
 
   function openUploadForm() {
     if (
-      !canUploadMenu ||
       uploadPendingRef.current ||
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
@@ -551,13 +548,6 @@ export default function AdminMenuClient({
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
     ) {
-      return;
-    }
-
-    if (!canUploadMenu) {
-      setUploadError(
-        "Owner or Admin access is required to upload a menu.",
-      );
       return;
     }
 
@@ -629,9 +619,7 @@ export default function AdminMenuClient({
   }
 
   function openAddItemForm() {
-    // Menu writes and PDF uploads currently use the same Owner/Admin roles.
     if (
-      !canUploadMenu ||
       uploadPendingRef.current ||
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
@@ -698,11 +686,6 @@ export default function AdminMenuClient({
 
     if (!itemPendingDelete) {
       return "No item is selected. Close this dialog and select an item again.";
-    }
-
-    // The server independently enforces the same Owner/Admin permission.
-    if (!canUploadMenu) {
-      return "Owner or Admin access is required to delete a menu item.";
     }
 
     // Capture the selected record so an async response cannot target another item.
@@ -791,13 +774,6 @@ export default function AdminMenuClient({
 
     // TZ-170: save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
-      if (!canUploadMenu) {
-        setItemSaveError(
-          "Owner or Admin access is required to edit a menu item.",
-        );
-        return;
-      }
-
       const original = allItems.find(
         (item) => item.id === drawer.item.id,
       );
@@ -930,13 +906,6 @@ export default function AdminMenuClient({
         setIsSavingItem(false);
       }
 
-      return;
-    }
-
-    if (!canUploadMenu) {
-      setItemSaveError(
-        "Owner or Admin access is required to add a menu item.",
-      );
       return;
     }
 
@@ -1259,16 +1228,11 @@ export default function AdminMenuClient({
                   type="button"
                   onClick={openAddItemForm}
                   disabled={
-                    !canUploadMenu ||
                     isUploading ||
                     isSavingItem ||
                     isDeletingItem
                   }
-                  title={
-                    canUploadMenu
-                      ? "Add a menu item"
-                      : "Owner or Admin access is required"
-                  }
+                  title="Add a menu item"
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Add Item
@@ -1278,16 +1242,11 @@ export default function AdminMenuClient({
                   type="button"
                   onClick={openUploadForm}
                   disabled={
-                    !canUploadMenu ||
                     isUploading ||
                     isSavingItem ||
                     isDeletingItem
                   }
-                  title={
-                    canUploadMenu
-                      ? "Upload a PDF menu"
-                      : "Owner or Admin access is required"
-                  }
+                  title="Upload a PDF menu"
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Upload Menu
@@ -1554,7 +1513,6 @@ export default function AdminMenuClient({
                     type="submit"
                     disabled={
                       isUploading ||
-                      !canUploadMenu ||
                       !uploadFile ||
                       !!getMenuFileError(uploadFile)
                     }

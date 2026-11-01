@@ -79,7 +79,6 @@ export default async function AdminMenuPage() {
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
-        canUploadMenu
       />
     </div>
   );
