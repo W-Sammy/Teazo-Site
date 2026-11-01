@@ -170,8 +170,7 @@ describe("/api/admin/events", () => {
     expect(await response.json()).toEqual([]);
   });
 
-  // The event listing requires a valid Admin session,
-  // but allows the route's view-level permission threshold.
+  // Event listings require a valid Owner or Admin session.
   it("requires Admin authorization before listing events", async () => {
     const req = request("GET");
 
@@ -179,7 +178,7 @@ describe("/api/admin/events", () => {
 
     expect(requireAdminApi).toHaveBeenCalledWith(
       req,
-      3,
+      2,
     );
   });
 
