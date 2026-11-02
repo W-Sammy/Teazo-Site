@@ -8,6 +8,21 @@ The automated test suite helps verify application behavior, detect regressions, 
 
 For general development setup, including the Next.js application, Cloudflare Worker, local database, authentication, and environment variables, see the [Developer Guide](DEV-GUIDE.md).
 
+## Table of Contents
+
+1. [Requirements and initial setup](#1-requirements-and-initial-setup)
+2. [Testing frameworks and configuration](#2-testing-frameworks-and-configuration)
+3. [Running automated tests](#3-running-automated-tests)
+4. [Test coverage areas](#4-test-coverage-areas)
+5. [Writing and maintaining tests](#5-writing-and-maintaining-tests)
+6. [Mocking and test isolation](#6-mocking-and-test-isolation)
+7. [Database test fixtures](#7-database-test-fixtures)
+8. [Branch dependencies and application changes](#8-branch-dependencies-and-application-changes)
+9. [Verification before merging or releasing changes](#9-verification-before-merging-or-releasing-changes)
+10. [Troubleshooting](#10-troubleshooting)
+11. [Coverage limitations](#11-coverage-limitations)
+12. [Maintaining the testing system](#12-maintaining-the-testing-system)
+
 ## 1. Requirements and initial setup
 
 ### Prerequisites
@@ -150,6 +165,45 @@ This limits Vitest to two workers and displays compact test output.
 Using two workers is recommended for large combined test suites because high concurrency has previously caused intermittent timeouts in a Square SDK test.
 
 The worker setting does not change the assertions or intentionally increase test timeouts.
+
+### Understanding test results
+
+After running the test command, Vitest displays the results in the terminal. When using the dot reporter, individual tests are represented by dots, followed by a summary of the run.
+
+For example, a successful run may end with output similar to:
+
+```text
+ RUN  v4.1.12
+
+.................................................
+.................................................
+
+ Test Files  12 passed (12)
+      Tests  240 passed (240)
+   Start at  14:30:00
+   Duration  18.42s
+```
+
+**This output is an illustrative example, not a recorded test run.** The test counts, start time, and duration are placeholders and do not represent the current test inventory.
+
+The output contains several important details:
+
+- **RUN** identifies the Vitest version executing the tests.
+- **Dots** represent completed tests when using the dot reporter.
+- **Test Files** indicates how many test files completed successfully.
+- **Tests** indicates how many individual tests passed.
+- **Start at** shows when execution began.
+- **Duration** shows how long the test run took.
+
+A successful run should report all completed tests as passed, with no failed tests, and exit with status code 0.
+
+If a test fails, Vitest displays failure details, including the affected test name and error messages. The final summary will indicate how many tests passed and failed.
+
+Some tests intentionally simulate unavailable external services and may print warnings or error messages. These messages do not necessarily indicate a failed test run.
+
+Always check the final Vitest summary and process exit status when determining whether the tests passed.
+
+The number of test files, total test count, and execution duration will vary as the suite grows and the execution environment changes.
 
 ### Run one test file
 
