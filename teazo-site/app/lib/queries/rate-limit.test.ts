@@ -15,7 +15,7 @@ beforeEach(() => {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("checkout rate limit (TZ-445)", () => {
+describe("checkout rate limit", () => {
   it("allows 10 attempts in 10 minutes and refuses the 11th", async () => {
     for (let i = 0; i < 10; i++) {
       expect(await consumeRateLimit(CHECKOUT_RATE_LIMIT, "203.0.113.7", minutesLater(i * 0.5))).toBe(true);

@@ -14,7 +14,7 @@ const item = (cartItemId: string, variationId: string): CartItem => ({
   itemTotalCents: 600,
 });
 
-describe("readCartIssue (TZ-444)", () => {
+describe("readCartIssue", () => {
   it("reads unavailable items and option problems", () => {
     expect(readCartIssue({ error: "x", code: "ITEM_UNAVAILABLE", variationIds: ["V1"] })).toEqual({
       code: "ITEM_UNAVAILABLE",
@@ -40,7 +40,7 @@ describe("readCartIssue (TZ-444)", () => {
   });
 });
 
-describe("cartItemsWithIssue (TZ-444)", () => {
+describe("cartItemsWithIssue", () => {
   const cart = [item("a", "V1"), item("b", "V2"), item("c", "V1")];
 
   it("finds every cart line with a named variation, including the same drink customized twice", () => {
