@@ -300,11 +300,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   // error takes priority, then saving, then saved confirmation
   let carouselSaveStatus: SaveStatus = "idle";
-  if (carouselHasAnyError) 
+  if (carouselHasAnyError)
     carouselSaveStatus = "error";
-  else if (carouselHasSaving) 
+  else if (carouselHasSaving)
     carouselSaveStatus = "saving";
-  else if (carouselSavedRecently) 
+  else if (carouselSavedRecently)
     carouselSaveStatus = "saved";
 
   // all carousel requests use the same address & response/error checks
@@ -323,14 +323,14 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     // uploads return an img; other requests need to explicitly confirm success
     if (!response.ok || (!isFile && result?.success !== true))
       throw new Error(typeof result?.error === "string" ? result.error : fallback);
-    
+
     return result;
   }
 
   // stop an img's typing timer so blur/toggles don't send the same save twice
   function cancelCarouselTimer(id: string) {
     const timer = carouselTimersRef.current.get(id);
-    if (timer) 
+    if (timer)
         clearTimeout(timer);
 
     carouselTimersRef.current.delete(id);
@@ -341,10 +341,10 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     cancelCarouselTimer(id);
 
     // skip save if is already saving or has no waiting edits
-    if (carouselSavingRef.current.has(id)) 
+    if (carouselSavingRef.current.has(id))
       return;
     const patch = carouselPendingRef.current.get(id);
-    if (!patch) 
+    if (!patch)
       return;
 
     // take edits out of waiting list & mark img as saving so another save waits
@@ -377,7 +377,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     } finally {
       carouselSavingRef.current.delete(id);
       // edits made during this request get their own save after it succeeds
-      if (succeeded && carouselPendingRef.current.has(id)) 
+      if (succeeded && carouselPendingRef.current.has(id))
         void flushCarouselSettings(id);
     }
   }
@@ -390,15 +390,15 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setCarouselSaveErrors((previous) => ({ ...previous, [id]: "" }));
     cancelCarouselTimer(id);
 
-    if (immediate) 
+    if (immediate)
       void flushCarouselSettings(id);
-    else 
+    else
       carouselTimersRef.current.set(id, setTimeout(() => { void flushCarouselSettings(id); }, 600));
   }
 
   // when leaving alt text field or clicking retry for failed settings
   function flushAllCarouselSettings() {
-    for (const id of carouselPendingRef.current.keys()) 
+    for (const id of carouselPendingRef.current.keys())
       void flushCarouselSettings(id);
   }
 
@@ -420,7 +420,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         const result = await requestCarousel("PATCH", { action: "initialize-defaults" }, "Couldn't load carousel images.");
 
         // stop with an error if the server didn't return a list of imgs
-        if (!result || !Array.isArray(result.images)) 
+        if (!result || !Array.isArray(result.images))
           throw new Error("Couldn't load carousel images.");
 
         if (active) {
@@ -430,7 +430,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         }
 
       } catch (error) {
-        if (active) 
+        if (active)
           setCarouselLoadError(error instanceof Error ? error.message : "Couldn't load carousel images.");
       }
     }
@@ -453,12 +453,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateCarouselImage(id: string, patch: Partial<CarouselImage>) {
     // find the img by id, merge changes & redraw item; empty items don't save settings yet
     const current = carouselImagesRef.current.find((image) => image.id === id);
-    if (!current) 
+    if (!current)
       return;
     const updated = { ...current, ...patch };
     carouselImagesRef.current = carouselImagesRef.current.map((image) => image.id === id ? updated : image);
     setCarouselImages(carouselImagesRef.current);
-    if (!updated.src) 
+    if (!updated.src)
       return;
 
     // a new upload saves both fields under the server's id --other edits save only changed fields
@@ -467,9 +467,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       settings.alt = updated.alt;
       settings.enabled = updated.enabled;
     } else {
-      if (patch.alt !== undefined) 
+      if (patch.alt !== undefined)
         settings.alt = patch.alt;
-      if (patch.enabled !== undefined) 
+      if (patch.enabled !== undefined)
         settings.enabled = patch.enabled;
     }
 
@@ -500,7 +500,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   // handles shared progress/errors
   async function runCarouselFileAction(id: string, removing: boolean, action: () => Promise<string>) {
     // ignore another upload/removal if another is already running for img
-    if (carouselFileBusyRef.current.has(id)) 
+    if (carouselFileBusyRef.current.has(id))
       return;
 
     // lock img against another file action, show uploading/removing progress & clear its old file error
@@ -527,7 +527,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   // check file before sending it, server checks it before storing it
   async function handleImageFile(id: string, file: File | undefined) {
     // stop if no file is selected or img is already uploading/removing
-    if (!file || carouselFileBusyRef.current.has(id)) 
+    if (!file || carouselFileBusyRef.current.has(id))
       return;
 
     // check file's type & size, reject unsupported/empty files & show error without uploading
@@ -536,7 +536,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
     if (!fileError && !["image/png", "image/jpeg", "image/webp"].includes(file.type))
       fileError = "Upload a PNG, JPG, or WebP image.";
-    if (!fileError && file.size === 0) 
+    if (!fileError && file.size === 0)
       fileError = "The image file is empty.";
     if (fileError) {
       setImageErrors((previous) => ({ ...previous, [id]: fileError }));
@@ -546,7 +546,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
     // find item the file belongs to, stop if item no longer exists
     const image = carouselImagesRef.current.find((entry) => entry.id === id);
-    if (!image) 
+    if (!image)
       return;
 
     await runCarouselFileAction(id, false, async () => {
@@ -556,14 +556,14 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       formData.append("alt", image.alt);
 
       // existing img's id tells server to replace it instead of adding a new item
-      if (image.src) 
+      if (image.src)
         formData.append("id", image.id);
 
       // upload the file & check that the reply includes url, stored file name & img id before changing preview
       const result = await requestCarousel("POST", formData, "Couldn't upload the image.");
-      if (typeof result?.url !== "string" || !result.url || typeof result.key !== "string" || !result.key || typeof result.image?.id !== "string" || !result.image.id) 
+      if (typeof result?.url !== "string" || !result.url || typeof result.key !== "string" || !result.key || typeof result.image?.id !== "string" || !result.image.id)
         throw new Error("The server returned an unexpected response. Check the saved carousel before uploading again.");
-      
+
       // replace preview after server confirms file is saved
       updateCarouselImage(id, { id: result.image.id, src: result.url });
       return result.image.id;
@@ -573,14 +573,14 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   // keep saved imgs visible until server confirms its removal
   async function handleRemoveImage(id: string) {
     // don't remove img while an upload/removal is running for it
-    if (carouselFileBusyRef.current.has(id)) 
+    if (carouselFileBusyRef.current.has(id))
       return;
 
     // find the img being removed; stop if it's already gone from the list
     const image = carouselImagesRef.current.find((entry) => entry.id === id);
-    if (!image) 
+    if (!image)
       return;
-    
+
     // an empty item has no saved file, remove it from page without server request
     if (!image.src) {
       removeCarouselImage(id);
@@ -727,11 +727,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   // handle save status for carousel --shows an error even when other sections are successful
   let sharedSaveStatus: SaveStatus = "idle";
-  if (saveStatus === "error" || carouselSaveStatus === "error") 
+  if (saveStatus === "error" || carouselSaveStatus === "error")
     sharedSaveStatus = "error";
-  else if (saveStatus === "saving" || carouselSaveStatus === "saving") 
+  else if (saveStatus === "saving" || carouselSaveStatus === "saving")
     sharedSaveStatus = "saving";
-  else if (saveStatus === "saved" || carouselSaveStatus === "saved") 
+  else if (saveStatus === "saved" || carouselSaveStatus === "saved")
     sharedSaveStatus = "saved";
 
   function updateOnlineOrderingEnabled(enabled: boolean) {
