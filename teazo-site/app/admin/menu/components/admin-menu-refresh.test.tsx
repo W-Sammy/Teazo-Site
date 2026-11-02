@@ -125,7 +125,6 @@ function renderMenu(
     <AdminMenuClient
       items={items}
       categories={categories}
-      canUploadMenu={true}
     />,
   );
 }
