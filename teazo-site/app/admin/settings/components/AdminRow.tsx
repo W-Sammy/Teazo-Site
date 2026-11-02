@@ -1,60 +1,67 @@
-import {
-  ADMIN_ROLE_LABELS,
-  OWNER_ROLE,
-  WRITE_ROLE,
-} from "@/app/types/admin-perms";
-import type {
-  Admin,
-  AdminRole,
-} from "@/app/types/admin-perms";
+import type { Admin } from "@/app/types/admin-perms";
+import { OWNER_ROLE } from "@/app/types/admin-perms";
 import { AdminActions } from "./AdminActions";
-import { InviteSwitch } from "./InviteSwitch";
-import { RoleDropdown } from "./RoleDropdown";
 
-// Display one admin and forward requested changes to the parent component.
 type AdminRowProps = {
   admin: Admin;
-  canEdit: boolean;
-  onRoleChange: (
-    role: AdminRole,
-  ) => void;
-  onToggleInvite: () => void;
-  onDelete: () => void;
-  onResendInvitation: () => void;
-  isResending: boolean;
+  showActions?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onResendInvitation?: () => void;
+  onTransferOwnership?: () => void;
+  isResending?: boolean;
+  isTransferring?: boolean;
 };
 
+// Display an administrator without role or permission selectors.
 export function AdminRow({
   admin,
-  canEdit,
-  onRoleChange,
-  onToggleInvite,
+  showActions = false,
+  onEdit,
   onDelete,
   onResendInvitation,
-  isResending,
+  onTransferOwnership,
+  isResending = false,
+  isTransferring = false,
 }: AdminRowProps) {
-  // Owners receive a fixed role label and do not get a delete action in this row.
-  const isOwner =
-    admin.role === OWNER_ROLE;
+  const isOwner = admin.role === OWNER_ROLE;
 
-  const showActions =
-    canEdit && (!isOwner || admin.canResendInvitation);
+  // The current Owner may edit their own account and regular Admin accounts.
+  // The parent supplies this action only when administrator management is allowed.
+  const canEdit =
+    showActions &&
+    typeof onEdit === "function";
 
-  // Use the listed admin's role to determine the invitation control's availability.
-  const canManageAdmins =
-    admin.role === WRITE_ROLE;
+  const canDelete =
+    showActions &&
+    !isOwner &&
+    typeof onDelete === "function";
 
-  // Stack fields in mobile cards and match the table's five-column grid on desktop.
+  const canResend =
+    showActions &&
+    admin.canResendInvitation &&
+    typeof onResendInvitation === "function";
+
+  // The server determines ownership-transfer eligibility.
+  // Pending invitations and other ineligible accounts
+  // must not display the transfer action.
+  const canTransfer =
+    showActions &&
+    !isOwner &&
+    admin.canReceiveOwnership &&
+    typeof onTransferOwnership === "function";
+
+  const hasActions =
+    canEdit || canDelete || canResend || canTransfer;
+
   return (
-    <div className="group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[1.4fr_2fr_1.2fr_1.3fr_40px] md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none">
+    <div className="group/row grid min-w-0 grid-cols-1 gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_40px] md:items-center md:gap-4 md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:p-0 md:py-3 md:shadow-none">
       {/* Username */}
       <div className="min-w-0">
-        {/* Mobile cards show their own field labels instead of a shared header. */}
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
           Username
         </span>
 
-        {/* Allow long usernames to wrap rather than widen the card or column. */}
         <div
           className="break-words text-sm text-gray-500 transition-colors [overflow-wrap:anywhere] group-hover/row:text-[#b98555]"
           title={admin.username}
@@ -66,7 +73,7 @@ export function AdminRow({
       {/* Email */}
       <div className="min-w-0">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
-          Email (SSO)
+          Email
         </span>
 
         <div
@@ -77,72 +84,15 @@ export function AdminRow({
         </div>
       </div>
 
-      {/* Role */}
-      <div className="min-w-0">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
-          Role
-        </span>
-
-        {/* Show the owner's role as text; other admins receive the role dropdown. */}
-        {isOwner || !canEdit ? (
-          <span className="block text-sm text-gray-400 transition-colors group-hover/row:text-[#b98555]">
-            {
-              ADMIN_ROLE_LABELS[
-                admin.role
-              ]
-            }
-          </span>
-        ) : (
-          <RoleDropdown
-            role={admin.role}
-            onChange={onRoleChange}
-          />
-        )}
-      </div>
-
-      {/* Manage admins permission */}
-      <div className="min-w-0">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
-          Manage Admins
-        </span>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/*
-           * Show owner invitations as on and mark the switch as locked.
-           * Mark other non-Write users as unavailable.
-           * The parent callback handles requests to change the permission.
-           */}
-          <InviteSwitch
-            checked={
-              isOwner ||
-              admin.canManageAdmins
-            }
-            locked={isOwner}
-            unavailable={
-              !canEdit || (!isOwner && !canManageAdmins)
-            }
-            onClick={onToggleInvite}
-          />
-
-          {/* Match the text label to the switch's displayed checked state. */}
-          <span className="text-xs text-gray-400">
-            {isOwner ||
-            admin.canManageAdmins
-              ? "On"
-              : "Off"}
-          </span>
-        </div>
-      </div>
-
-      {/* Actions */}
+      {/* Owner-only administrator actions */}
       <div
         className={
-          showActions
+          hasActions
             ? "flex min-w-0 items-center justify-between gap-3 md:block"
             : "hidden md:block"
         }
       >
-        {showActions && (
+        {hasActions && (
           <>
             <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 md:hidden">
               Actions
@@ -150,13 +100,20 @@ export function AdminRow({
 
             <AdminActions
               username={admin.username}
-              onDelete={!isOwner ? onDelete : undefined}
+              onEdit={
+                canEdit ? onEdit : undefined
+              }
+              onDelete={
+                canDelete ? onDelete : undefined
+              }
               onResendInvitation={
-                admin.canResendInvitation
-                  ? onResendInvitation
-                  : undefined
+                canResend ? onResendInvitation : undefined
+              }
+              onTransferOwnership={
+                canTransfer ? onTransferOwnership : undefined
               }
               isResending={isResending}
+              isTransferring={isTransferring}
             />
           </>
         )}

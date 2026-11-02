@@ -14,7 +14,12 @@ export default defineConfig({
     ],
   },
   test: {
+    // Existing tests run in Node by default.
+    // React component tests can opt into jsdom using
+    // the @vitest-environment jsdom directive.
     environment: "node",
-    include: ["app/**/*.test.ts"],
+
+    // Discover both TypeScript and React TSX test files.
+    include: ["app/**/*.test.{ts,tsx}"],
   },
 });
