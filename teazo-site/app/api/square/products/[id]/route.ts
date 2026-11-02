@@ -93,7 +93,7 @@ export async function PUT(
       return updateError("Request body must contain valid JSON.", 400);
     }
 
-    // Keep the TZ-165 validation before any Square lookup or write.
+    // Keep the validation before any Square lookup or write.
     const validation = validateUpdateMenuItemBody(requestBody);
 
     if (!validation.ok) {
