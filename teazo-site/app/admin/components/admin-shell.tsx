@@ -10,8 +10,10 @@ import Sidebar from "@/app/admin/components/admin-nav-bar";
 // Shared admin shell: navigation stays beside the active page content.
 export default function AdminShell({
   children,
+  isOwner,
 }: {
   children: ReactNode;
+  isOwner: boolean;
 }) {
   // The layout owns mobile navigation so its backdrop and sidebar stay in sync.
   const [
@@ -62,6 +64,7 @@ export default function AdminShell({
 
       {/* Navigation links can close the mobile drawer through the supplied callback. */}
       <Sidebar
+        isOwner={isOwner}
         mobileOpen={mobileNavOpen}
         onMobileToggle={() =>
           setMobileNavOpen(
