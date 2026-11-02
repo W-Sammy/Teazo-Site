@@ -63,16 +63,19 @@ export default function Sidebar({
     {
       id: "website-content",
       label: "Website Content",
+      img: "teazo_website_content_icon.svg",
       href: "/admin/website-content",
     },
     {
       id: "userview",
       label: "User View",
+      img: "teazo_user_view_icon.svg",
       href: "/",
     },
     {
       id: "logout",
       label: "Logout",
+      img: "teazo_logout_icon.svg",
       href: "/",
     },
   ];
@@ -194,10 +197,26 @@ export default function Sidebar({
           }`}
         >
           {controls.map((control) => {
+            const isActive =
+              control.id === "website-content" &&
+              pathname.startsWith(control.href);
+
             const className =
               "flex w-full items-center gap-3 rounded-lg px-2 py-3 " +
               "text-left text-base font-medium text-gray-700 " +
-              "transition-all duration-200 hover:text-[#dbb082]";
+              "transition-all duration-200 hover:text-[#dbb082]" +
+              (isActive ? " bg-white text-[#dbb082]" : "");
+
+            const controlIcon = (
+              <Image
+                src={iconRoot + control.img}
+                alt={`${control.label} icon`}
+                width={24}
+                height={24}
+                className="h-6 w-6 shrink-0 object-contain"
+                style={{ filter: isActive ? "none" : "brightness(0)" }}
+              />
+            );
 
             if (control.id === "logout") {
               return (
@@ -210,6 +229,7 @@ export default function Sidebar({
                     void signOut({ redirectTo: "/login" });
                   }}
                 >
+                  {controlIcon}
                   {control.label}
                 </button>
               );
@@ -222,6 +242,7 @@ export default function Sidebar({
                 onClick={onMobileClose}
                 className={className}
               >
+                {controlIcon}
                 {control.label}
               </Link>
             );
