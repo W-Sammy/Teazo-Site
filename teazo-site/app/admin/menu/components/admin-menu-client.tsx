@@ -283,6 +283,7 @@ export default function AdminMenuClient({
 
   const [itemSaveError, setItemSaveError] = useState("");
   const [itemSaveSuccess, setItemSaveSuccess] = useState("");
+  const [itemSaveWarning, setItemSaveWarning] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
   const itemSavePendingRef = useRef(false);
 
@@ -633,6 +634,7 @@ export default function AdminMenuClient({
     setMobileFiltersOpen(false);
     setItemSaveError("");
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
     setDrawer({ kind: "add-item" });
   }
 
@@ -647,6 +649,7 @@ export default function AdminMenuClient({
 
     setMobileFiltersOpen(false);
     setItemSaveError("");
+    setItemSaveWarning(false);
     setDrawer({ kind: "edit-item", item });
   }
 
@@ -698,6 +701,7 @@ export default function AdminMenuClient({
     setIsDeletingItem(true);
     setItemDeleteSuccess("");
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
 
     try {
       const response = await fetch(
@@ -894,6 +898,7 @@ export default function AdminMenuClient({
         setItemSaveSuccess(
           `Updated “${updatedItem.name}” in Square.${imageNotice}`,
         );
+      setItemSaveWarning(Boolean(result.imageUploadWarning));
         setDrawer(null);
       } catch {
         // Keep the form and original row intact when the update cannot be confirmed.
@@ -910,6 +915,7 @@ export default function AdminMenuClient({
     itemSavePendingRef.current = true;
     setIsSavingItem(true);
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
     setItemDeleteSuccess("");
 
     try {
@@ -983,6 +989,7 @@ export default function AdminMenuClient({
       setItemSaveSuccess(
         `Added “${newItem.name}” to Square.${imageNotice}`,
       );
+      setItemSaveWarning(Boolean(result.imageUploadWarning));
       setDrawer(null);
     } catch {
       // A network failure does not prove that Square rejected the creation.
@@ -1279,7 +1286,13 @@ export default function AdminMenuClient({
           )}
 
           {itemSaveSuccess && (
-            <div className="m-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900 sm:m-4">
+            <div
+              className={`m-3 rounded-lg border p-3 text-sm sm:m-4 ${
+                itemSaveWarning
+                  ? "border-yellow-300 bg-yellow-50 text-yellow-900"
+                  : "border-green-300 bg-green-50 text-green-900"
+              }`}
+            >
               <p
                 role="status"
                 className="[overflow-wrap:anywhere]"

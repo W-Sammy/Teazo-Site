@@ -308,7 +308,6 @@ export async function PUT(
     if (imageFile) {
       try {
         const existingImageId = currentItem.itemData.imageIds?.[0];
-
         if (existingImageId && !removeImage) {
           await squareClient.catalog.images.update({
             imageId: existingImageId,
@@ -338,7 +337,7 @@ export async function PUT(
       } catch (error) {
         console.error("Square catalog image upload failed:", error);
         imageUploadWarning =
-          "The item was updated, but its image could not be uploaded. Other changes were saved; you can add the image by editing the item later.";
+          "The item was updated, but its image could not be uploaded.";
       }
     }
 
