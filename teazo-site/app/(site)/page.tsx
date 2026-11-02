@@ -102,9 +102,9 @@ export default async function Home() {
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
             </div>
-    
+
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
-            
+
             {/* logo */}
             {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
@@ -138,22 +138,22 @@ export default async function Home() {
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
             <div className="mt-6 flex w-full items-center justify-center">
-                <GeneralButton text="ORDER NOW" href="/menu" />    
+                <GeneralButton text="ORDER NOW" href="/menu" />
                 </div>
         </section>
 
             {/*import image carousel*/}
                 <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
                 <ImageCarousel images={content.carouselImages ?? []} />
-            </div> 
+            </div>
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
             </div>
-      
-        
+
+
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]">
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -184,7 +184,7 @@ export default async function Home() {
                         Call us for group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
-        
+
                       <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
                         {isFbEnabled && (
                           <a
@@ -258,7 +258,7 @@ export default async function Home() {
                         )}
                       </div>
                     </div>
-        
+
                     <a
                       href={emailHref}
                       className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"
