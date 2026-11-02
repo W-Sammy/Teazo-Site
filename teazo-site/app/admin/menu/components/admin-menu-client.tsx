@@ -772,7 +772,7 @@ export default function AdminMenuClient({
 
     setItemSaveError("");
 
-    // TZ-170: save edits through the protected PUT endpoint before changing the row.
+    // Save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
       const original = allItems.find(
         (item) => item.id === drawer.item.id,
@@ -831,7 +831,7 @@ export default function AdminMenuClient({
 
         /*
          * The route preserves Square's image IDs. Replacement/removal controls
-         * affect the local preview only until TZ-171 is connected.
+         * affect the local preview only until image upload is connected.
          */
         let imageUrl = result.imageUrl?.trim() || fallbackImage;
         let imageNotice = "";
@@ -947,7 +947,7 @@ export default function AdminMenuClient({
       }
 
       /*
-       * TZ-171 image upload is not connected yet.
+       * Image upload is not connected yet.
        * A selected image is only a local preview; the returned item data is saved.
        */
       let imageUrl = result.imageUrl?.trim() || fallbackImage;
