@@ -432,7 +432,7 @@ export default async function ContactPage() {
         {/* Hidden when business_profile.contact_form_enabled is 0. */}
         {contactFormEnabled && (
           <>
-            <div 
+            <div
               id="contact-us"
               className="relative mt-14 flex items-center justify-center sm:mt-16"
             >

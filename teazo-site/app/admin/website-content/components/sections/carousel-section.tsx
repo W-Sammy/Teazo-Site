@@ -63,7 +63,7 @@ export default function CarouselSection({
     }
 
     async function handleSelectedImage(id: string, file: File | undefined) {
-        if (!file || !carouselReady || uploading[id] || deleting[id] || conversionsInProgress.current.has(id)) 
+        if (!file || !carouselReady || uploading[id] || deleting[id] || conversionsInProgress.current.has(id))
             return;
         setConversionErrors((previous) => ({ ...previous, [id]: "" }));
 
@@ -80,18 +80,18 @@ export default function CarouselSection({
         setConverting((previous) => ({ ...previous, [id]: true }));
         try {
             const maxImageBytes = 5 * 1024 * 1024;
-            if (file.size === 0) 
+            if (file.size === 0)
                 throw new Error("The image file is empty.");
-            if (file.size > maxImageBytes) 
+            if (file.size > maxImageBytes)
                 throw new Error("The selected image must be 5 MB or smaller.");
 
             // upload heic/heif files into the gallery! --just turn it into a jpeg!
             const { heicTo } = await import("heic-to");
             const jpeg = await heicTo({ blob: file, type: "image/jpeg", quality: 0.85 });
 
-            if (!jpeg || jpeg.size === 0) 
+            if (!jpeg || jpeg.size === 0)
                 throw new Error("The converted image is empty.");
-            if (jpeg.size > maxImageBytes) 
+            if (jpeg.size > maxImageBytes)
                 throw new Error("The converted image exceeds 5 MB. Try a smaller photo.");
 
             // keep original name but give converted file a jpeg extension
@@ -100,7 +100,7 @@ export default function CarouselSection({
                 lastModified: file.lastModified,
             });
 
-            if (conversionGeneration.current !== generation) 
+            if (conversionGeneration.current !== generation)
                 return;
             setConverting((previous) => ({ ...previous, [id]: false }));
 
@@ -109,7 +109,7 @@ export default function CarouselSection({
         } catch (error) {
             if (conversionGeneration.current === generation)
                 setConversionErrors((previous) => ({ ...previous, [id]: error instanceof Error ? error.message : "This HEIC/HEIF image couldn't be converted. Try a JPG instead." }));
-            
+
         } finally {
             if (conversionGeneration.current === generation) {
                 conversionsInProgress.current.delete(id);
