@@ -145,7 +145,7 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("refuses orders while online ordering is paused, without contacting Square (TZ-446)", async () => {
+  it("refuses orders while online ordering is paused, without contacting Square", async () => {
     mocks.getWebsiteContent.mockResolvedValue(content({ onlineOrderingEnabled: false }));
     const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
     expect(res.status).toBe(400);
@@ -153,7 +153,7 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("accepts a pickup scheduled days ahead (TZ-435)", async () => {
+  it("accepts a pickup scheduled days ahead", async () => {
     const pickupAt = pacificToUtc(2026, 10, 17, 12, 30).toISOString();
     const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
     expect(res.status).toBe(200);
@@ -175,13 +175,13 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("checks the bot token with the visitor's IP (TZ-445)", async () => {
+  it("checks the bot token with the visitor's IP", async () => {
     await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
     expect(mocks.verifyTurnstile).toHaveBeenCalledWith("token-1", "203.0.113.7");
     expect(mocks.consumeRateLimit).toHaveBeenCalledWith(expect.objectContaining({ name: "checkout" }), "203.0.113.7");
   });
 
-  it("refuses a missing or failed bot check without contacting Square (TZ-445)", async () => {
+  it("refuses a missing or failed bot check without contacting Square", async () => {
     mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "rejected" });
     const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items, turnstileToken: undefined });
     expect(res.status).toBe(400);
@@ -197,7 +197,7 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("answers 429 past the rate limit, without contacting Square (TZ-445)", async () => {
+  it("answers 429 past the rate limit, without contacting Square", async () => {
     mocks.consumeRateLimit.mockResolvedValue(false);
     const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
     expect(res.status).toBe(429);
