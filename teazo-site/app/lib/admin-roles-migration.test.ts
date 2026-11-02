@@ -9,7 +9,7 @@ import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// TZ-485: Verify migration of legacy Owner, Can Edit, and Can View
+// Verify migration of legacy Owner, Can Edit, and Can View
 // accounts without connecting to the actual local or production D1.
 //
 // Each test creates an independent in-memory SQLite database,
@@ -223,7 +223,7 @@ function runMigration() {
   db.exec(migrationSql());
 }
 
-describe("TZ-485 legacy administrator role migration", () => {
+describe("legacy administrator role migration", () => {
   beforeEach(() => {
     db = new DatabaseSync(":memory:");
 
