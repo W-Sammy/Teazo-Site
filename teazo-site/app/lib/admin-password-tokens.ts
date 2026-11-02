@@ -60,7 +60,7 @@ export async function createPasswordToken(
       WHERE id = ?6
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
         AND (
           (?3 = 'setup' AND password_hash IS NULL)
           OR
@@ -103,7 +103,7 @@ export async function findValidPasswordToken(
         AND t.expires_at > ?3
         AND a.deleted_at IS NULL
         AND a.status IN ('active', 'invited')
-        AND a.role_id IN (1, 2, 3)
+        AND a.role_id IN (1, 2)
         AND (
           (t.purpose = 'setup' AND a.password_hash IS NULL)
           OR
@@ -169,7 +169,7 @@ export async function savePasswordWithToken(
       WHERE id = ?3
         AND deleted_at IS NULL
         AND status IN ('active', 'invited')
-        AND role_id IN (1, 2, 3)
+        AND role_id IN (1, 2)
         AND (
           (?2 = 'setup' AND password_hash IS NULL)
           OR
@@ -195,11 +195,14 @@ export async function savePasswordWithToken(
       hashToken(token),
       now,
     )
-    .first<{ id: string, email_normalized: string }>();
+    .first<{ id: string; email_normalized: string }>();
 
   if (!updated) {
     return { ok: false, reason: "invalid-token" };
   }
 
-  return { ok: true, adminEmail: updated.email_normalized, };
+  return {
+    ok: true,
+    adminEmail: updated.email_normalized,
+  };
 }
