@@ -132,6 +132,7 @@ export async function PUT(
 
   const { id } = await ctx.params;
   let updateConfirmed = false;
+  let imageUploadWarning: string | undefined;
 
   try {
     let requestBody: unknown;
@@ -305,33 +306,39 @@ export async function PUT(
     updateConfirmed = true;
 
     if (imageFile) {
-      const existingImageId = currentItem.itemData.imageIds?.[0];
+      try {
+        const existingImageId = currentItem.itemData.imageIds?.[0];
 
-      if (existingImageId && !removeImage) {
-        await squareClient.catalog.images.update({
-          imageId: existingImageId,
-          request: {
-            idempotencyKey: crypto.randomUUID(),
-          },
-          imageFile,
-        });
-      } else if (!removeImage) {
-        await squareClient.catalog.images.create({
-          request: {
-            idempotencyKey: crypto.randomUUID(),
-            objectId: id,
-            image: {
-              type: "IMAGE",
-              id: "#new-image",
-              imageData: {
-                name: body.name ?? currentItem.itemData.name,
-                caption: body.description ?? currentItem.itemData.description,
-              },
+        if (existingImageId && !removeImage) {
+          await squareClient.catalog.images.update({
+            imageId: existingImageId,
+            request: {
+              idempotencyKey: crypto.randomUUID(),
             },
-            isPrimary: true,
-          },
-          imageFile,
-        });
+            imageFile,
+          });
+        } else if (!removeImage) {
+          await squareClient.catalog.images.create({
+            request: {
+              idempotencyKey: crypto.randomUUID(),
+              objectId: id,
+              image: {
+                type: "IMAGE",
+                id: "#new-image",
+                imageData: {
+                  name: body.name ?? currentItem.itemData.name,
+                  caption: body.description ?? currentItem.itemData.description,
+                },
+              },
+              isPrimary: true,
+            },
+            imageFile,
+          });
+        }
+      } catch (error) {
+        console.error("Square catalog image upload failed:", error);
+        imageUploadWarning =
+          "The item was updated, but its image could not be uploaded. Other changes were saved; you can add the image by editing the item later.";
       }
     }
 
@@ -349,9 +356,12 @@ export async function PUT(
       );
     }
 
-    return Response.json(menuItem, {
-      headers: { "Cache-Control": "no-store" },
-    });
+    return Response.json(
+      imageUploadWarning ? { ...menuItem, imageUploadWarning } : menuItem,
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (error: unknown) {
     console.error("Square catalog update failed:", error);
 

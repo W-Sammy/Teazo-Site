@@ -853,7 +853,9 @@ export default function AdminMenuClient({
         }
 
         const imageUrl = result.imageUrl?.trim() || fallbackImage;
-        const imageNotice = "";
+        const imageNotice = result.imageUploadWarning
+          ? ` ${result.imageUploadWarning}`
+          : "";
 
         const updatedItem: DisplayedMenuItem = {
           id: result.catalogObjectId,
