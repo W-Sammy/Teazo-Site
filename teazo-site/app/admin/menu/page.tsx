@@ -13,13 +13,17 @@ export const metadata: Metadata = {
 };
 
 async function getMenuItems(): Promise<MenuItem[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`, {
-    cache: "no-store",
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to fetch Menu Items");
   }
+
   return res.json();
 }
 
@@ -27,7 +31,7 @@ function filterMenuItems(menuItems: MenuItem[], visitCounts: Record<string, numb
   return menuItems.map((item) => ({
     id: item.catalogObjectId,
     img: item.imageUrl ?? "/TEAZO_logo.svg",
-    name: item.name ?? "Unnamed item", 
+    name: item.name ?? "Unnamed item",
     price: item.priceCents / 100,
     description: item.description ?? "",
     availability: availabilityDescription(item),
@@ -36,23 +40,31 @@ function filterMenuItems(menuItems: MenuItem[], visitCounts: Record<string, numb
   }));
 }
 
-function getUniqueCategories(items: ReturnType<typeof filterMenuItems>) {
+function getUniqueCategories(
+  items: ReturnType<typeof filterMenuItems>,
+) {
   const map = new Map<string, string>();
 
   for (const item of items) {
     for (const category of item.categories) {
       if (category.id && !map.has(category.id)) {
-        map.set(category.id, category.name ?? "Uncategorized");
+        map.set(
+          category.id,
+          category.name ?? "Uncategorized",
+        );
       }
     }
   }
 
-  return Array.from(map, ([id, name]) => ({ id, name }));
+  return Array.from(
+    map,
+    ([id, name]) => ({ id, name }),
+  );
 }
 
-export default async function AdminMenuPage(){
-  // Can View may open the page. The upload endpoint separately requires Can Edit.
-  const admin = await requireAdminPage(3);
+export default async function AdminMenuPage() {
+  // Owner and Admin both have menu management access.
+  await requireAdminPage(2);
 
   const revision = await getMenuRevision();
   const [menuItems, visitCounts] = await Promise.all([
@@ -60,9 +72,8 @@ export default async function AdminMenuPage(){
     listMenuItemVisitCounts().catch(() => ({})),
   ]);
   const displayedMenuItems = filterMenuItems(menuItems, visitCounts);
-  //what will be used for the filters
+  // Categories populate the menu filters.
   const categories = getUniqueCategories(displayedMenuItems);
-
 
   return (
     <div>
@@ -70,8 +81,7 @@ export default async function AdminMenuPage(){
       <AdminMenuClient
         items={displayedMenuItems}
         categories={categories}
-        canUploadMenu={admin.role_id <= 2}
       />
     </div>
-  )
+  );
 }

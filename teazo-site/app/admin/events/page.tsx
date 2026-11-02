@@ -28,7 +28,7 @@ export default async function AdminEventsPage({
 }: {
   searchParams: Promise<{ edit?: string }>;
 }) {
-  await requireAdminPage(3)
+  await requireAdminPage(2)
 
   const { edit } = await searchParams;
 
@@ -36,6 +36,7 @@ export default async function AdminEventsPage({
     getMenuItems(),
     getEvents(),
   ]);
+
   const items: EventCatalogItem[] = menuItems.map((item) => ({
     id: item.catalogObjectId,
     name: item.name ?? "Unnamed item",

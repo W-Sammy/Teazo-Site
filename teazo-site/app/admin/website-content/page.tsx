@@ -15,7 +15,7 @@ export default async function AdminWebsiteContentPage({
 }: {
   searchParams: Promise<{ section?: string | string[] }>;
 }) {
-  await requireAdminPage(3)
+  await requireAdminPage(2)
 
   const sectionParam = (await searchParams).section;
   const initialSection: SectionId | null =
