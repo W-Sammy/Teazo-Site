@@ -1,12 +1,11 @@
 import { availabilityDescription } from "@/app/lib/storefront-catalog";
 import type { Metadata } from "next";
-
-import { requireAdminPage } from "@/app/lib/admin";
-import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client";
-import type { MenuItem } from "@/app/types/menu-item";
+import {  requireAdminPage } from "@/app/lib/admin";
+import AdminMenuClient from "@/app/admin/menu/components/admin-menu-client"
+import { MenuItem } from "@/app/types/menu-item"
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
-
+import { listMenuItemVisitCounts } from "@/app/lib/queries/analytics";
 export const metadata: Metadata = {
   title: {
     absolute: "Teazo Menu Admin",
@@ -28,7 +27,7 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return res.json();
 }
 
-function filterMenuItems(menuItems: MenuItem[]) {
+function filterMenuItems(menuItems: MenuItem[], visitCounts: Record<string, number>){
   return menuItems.map((item) => ({
     id: item.catalogObjectId,
     img: item.imageUrl ?? "/TEAZO_logo.svg",
@@ -36,7 +35,8 @@ function filterMenuItems(menuItems: MenuItem[]) {
     price: item.priceCents / 100,
     description: item.description ?? "",
     availability: availabilityDescription(item),
-    categories: item.categories,
+    visits: visitCounts[item.catalogObjectId] ?? 0,
+    categories: item.categories
   }));
 }
 
@@ -67,9 +67,11 @@ export default async function AdminMenuPage() {
   await requireAdminPage(2);
 
   const revision = await getMenuRevision();
-  const menuItems = await getMenuItems();
-  const displayedMenuItems = filterMenuItems(menuItems);
-
+  const [menuItems, visitCounts] = await Promise.all([
+    getMenuItems(),
+    listMenuItemVisitCounts().catch(() => ({})),
+  ]);
+  const displayedMenuItems = filterMenuItems(menuItems, visitCounts);
   // Categories populate the menu filters.
   const categories = getUniqueCategories(displayedMenuItems);
 

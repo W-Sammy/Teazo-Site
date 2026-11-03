@@ -8,7 +8,7 @@ import type { DashboardClientProps } from "./dashboard/dashboard-types";
 
 export default function DashboardClient({ metrics, events, websiteContent, storageUsage }: DashboardClientProps) {
   const [period, setPeriod] = useState<DashboardPeriod>("24-hours");
-  const [visitType, setVisitType] = useState<DashboardVisitType>("menu-items");
+  const [visitType, setVisitType] = useState<DashboardVisitType>("pages");
   const topItems = useMemo(() => visitType === "menu-items" ? sortMetrics(metrics.menuItems?.[period] ?? []) : sortPageMetrics(metrics.pages?.[period] ?? []), [metrics, period, visitType]);
   const topItem = topItems[0];
   const totalVisits = topItems.reduce((total, item) => total + item.event_count, 0);
