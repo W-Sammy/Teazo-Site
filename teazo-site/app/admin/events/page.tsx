@@ -23,8 +23,14 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return response.json();
 }
 
-export default async function AdminEventsPage() {
-  await requireAdminPage(2);
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>;
+}) {
+  await requireAdminPage(2)
+
+  const { edit } = await searchParams;
 
   const [menuItems, initialEvents] = await Promise.all([
     getMenuItems(),
@@ -54,6 +60,7 @@ export default async function AdminEventsPage() {
       initialEvents={initialEvents}
       categories={categories}
       items={items}
+      initialEditEventId={edit ?? null}
     />
   );
 }

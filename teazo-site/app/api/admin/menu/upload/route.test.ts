@@ -323,23 +323,43 @@ describe("POST /api/admin/menu/upload", () => {
     expect(putMedia).not.toHaveBeenCalled();
   });
 
-  // The request body is also bounded while streaming, even
-  // when the declared Content-Length is missing.
+  // The request body is bounded while streaming, even when
+  // the declared Content-Length is missing.
+  //
+  // Use a controlled stream instead of a FormData encoder.
+  // Cancelling Node's asynchronously generated multipart body
+  // can otherwise produce an unhandled stream rejection after
+  // the expected HTTP 413 response.
   it("rejects oversized multipart bodies during streaming", async () => {
-    const oversized = pdf(
-      new Uint8Array(MAX_MENU_PDF_BYTES + 101_000),
-    );
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          new Uint8Array(MAX_MENU_PDF_BYTES),
+        );
 
-    const request = uploadRequest(
-      formWithFiles([oversized]),
-    );
+        controller.enqueue(
+          new Uint8Array(100_001),
+        );
 
-    request.headers.delete("Content-Length");
+        controller.close();
+      },
+    });
+
+    const request = new Request(URL, {
+      method: "POST",
+      headers: {
+        Origin: "http://localhost:3000",
+        "Content-Type": "multipart/form-data; boundary=test",
+      },
+      body: stream,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
 
     const response = await POST(request);
 
     expect(response.status).toBe(413);
     expect(putMedia).not.toHaveBeenCalled();
+    expect(publishMenuDocument).not.toHaveBeenCalled();
   });
 
   // A PDF can exceed the file limit without exceeding

@@ -56,6 +56,7 @@ const initialItems: DisplayItem[] = [
     description: "Classic black tea",
     categories: [{ id: "tea", name: "Tea" }],
     availability: "Available",
+    visits: 0,
   },
   {
     id: "item-2",
@@ -65,6 +66,7 @@ const initialItems: DisplayItem[] = [
     description: "Fresh mango drink",
     categories: [{ id: "fruit", name: "Fruit" }],
     availability: "Available",
+    visits: 0,
   },
 ];
 
@@ -76,6 +78,7 @@ const createdItem: DisplayItem = {
   description: "Brown sugar milk tea",
   categories: [{ id: "tea", name: "Tea" }],
   availability: "Available",
+  visits: 0,
 };
 
 const updatedItem: DisplayItem = {
@@ -83,6 +86,7 @@ const updatedItem: DisplayItem = {
   name: "Rose Milk Tea",
   price: 7.25,
   description: "Rose syrup",
+  visits: 0,
 };
 
 const fetchMock = vi.fn<typeof fetch>();

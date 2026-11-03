@@ -5,8 +5,8 @@
  * creation and editing, category selection, cancellation,
  * asynchronous saving, error recovery, and duplicate submissions.
  *
- * Also verifies optional image validation, preview handling,
- * image removal, and restoration of existing images.
+ * Also verifies optional image validation, preparation, preview
+ * handling, image removal, and restoration of existing images.
  *
  * No production data or external services are accessed.
  */
@@ -31,6 +31,7 @@ import {
   vi,
 } from "vitest";
 
+import { prepareImageForUpload } from "@/app/lib/image-conversion";
 import MenuItemForm, {
   type MenuItemFormValues,
 } from "./menu-item-form";
@@ -51,6 +52,25 @@ vi.mock("next/image", () => ({
       onError: props.onError,
     }),
 }));
+
+// Preserve the real image type checks while mocking browser-side
+// conversion and resizing, which require canvas/image decoding.
+vi.mock("@/app/lib/image-conversion", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/app/lib/image-conversion")
+    >();
+
+  return {
+    ...actual,
+    prepareImageForUpload: vi.fn(
+      async (file: File) => file,
+    ),
+  };
+});
+
+const prepareImageForUploadMock =
+  vi.mocked(prepareImageForUpload);
 
 const categories = [
   { id: "tea", name: "Tea" },
@@ -155,6 +175,11 @@ beforeEach(() => {
   onCancel.mockReset();
   createObjectURL.mockClear();
   revokeObjectURL.mockClear();
+
+  prepareImageForUploadMock.mockReset();
+  prepareImageForUploadMock.mockImplementation(
+    async (file: File) => file,
+  );
 
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
@@ -661,14 +686,15 @@ describe("Admin Menu Item Form", () => {
 
       expect(
         screen.getByText(
-          "Choose a JPG, PNG, or WEBP image.",
+          "Choose a JPG, PNG, WEBP, HEIC, or HEIF image.",
         ),
       ).toBeTruthy();
 
       expect(createObjectURL).not.toHaveBeenCalled();
+      expect(prepareImageForUploadMock).not.toHaveBeenCalled();
     });
 
-    it("rejects empty and oversized image files", () => {
+    it("rejects empty images and prepares oversized images for upload", async () => {
       renderForm();
 
       const emptyImage = new File([], "empty.png", {
@@ -678,10 +704,11 @@ describe("Admin Menu Item Form", () => {
       chooseImage(emptyImage);
 
       expect(
-        screen.getByText(
-          "Choose a nonempty image that is 10 MB or smaller.",
-        ),
+        screen.getByText("Choose a nonempty image."),
       ).toBeTruthy();
+
+      expect(createObjectURL).not.toHaveBeenCalled();
+      expect(prepareImageForUploadMock).not.toHaveBeenCalled();
 
       const oversizedImage = new File(
         ["sample"],
@@ -693,18 +720,65 @@ describe("Admin Menu Item Form", () => {
         value: 10 * 1024 * 1024 + 1,
       });
 
+      // Simulate the resized file returned by the browser-side
+      // image preparation utility.
+      const resizedImage = new File(
+        ["resized image"],
+        "large.png",
+        { type: "image/png" },
+      );
+
+      prepareImageForUploadMock.mockResolvedValueOnce(
+        resizedImage,
+      );
+
       chooseImage(oversizedImage);
 
-      expect(
-        screen.getByText(
-          "Choose a nonempty image that is 10 MB or smaller.",
-        ),
-      ).toBeTruthy();
+      await waitFor(() => {
+        expect(prepareImageForUploadMock).toHaveBeenCalledWith(
+          oversizedImage,
+          10 * 1024 * 1024,
+        );
 
-      expect(createObjectURL).not.toHaveBeenCalled();
+        expect(createObjectURL).toHaveBeenCalledTimes(1);
+      });
+
+      expect(
+        screen.queryByText("Choose a nonempty image."),
+      ).toBeNull();
+
+      fireEvent.change(nameInput(), {
+        target: { value: "Milk Tea" },
+      });
+
+      enterPriceDigits("500");
+
+      fireEvent.load(
+        await screen.findByRole("img", {
+          name: "Milk Tea preview",
+        }),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Checking image preview…"),
+        ).toBeNull();
+      });
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add Item" }),
+      );
+
+      await waitFor(() => {
+        expect(onSave).toHaveBeenCalledWith(
+          validSavedValues({
+            imageFile: resizedImage,
+          }),
+        );
+      });
     });
 
-    it("previews a valid image and waits for image loading before submission", async () => {
+    it("previews a valid image and prevents saving until the preview loads", async () => {
       renderForm();
 
       fireEvent.change(nameInput(), {
@@ -727,20 +801,8 @@ describe("Admin Menu Item Form", () => {
         screen.getByText("Checking image preview…"),
       ).toBeTruthy();
 
-      expect(
-        (
-          screen.getByRole("button", {
-            name: "Add Item",
-          }) as HTMLButtonElement
-        ).disabled,
-      ).toBe(true);
-
-      fireEvent.load(
-        screen.getByRole("img", {
-          name: "Milk Tea preview",
-        }),
-      );
-
+      // The submit button remains enabled, but the form's
+      // submission handler must block saving until ready.
       expect(
         (
           screen.getByRole("button", {
@@ -748,6 +810,24 @@ describe("Admin Menu Item Form", () => {
           }) as HTMLButtonElement
         ).disabled,
       ).toBe(false);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add Item" }),
+      );
+
+      expect(onSave).not.toHaveBeenCalled();
+
+      fireEvent.load(
+        screen.getByRole("img", {
+          name: "Milk Tea preview",
+        }),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Checking image preview…"),
+        ).toBeNull();
+      });
 
       fireEvent.click(
         screen.getByRole("button", { name: "Add Item" }),

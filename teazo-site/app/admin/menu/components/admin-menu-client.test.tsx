@@ -63,6 +63,7 @@ const initialItems: DisplayItem[] = [
     description: "Classic black tea",
     categories: [{ id: "tea", name: "Tea" }],
     availability: "Available",
+    visits: 0,
   },
   {
     id: "item-2",
@@ -72,6 +73,7 @@ const initialItems: DisplayItem[] = [
     description: "Fresh mango drink",
     categories: [{ id: "fruit", name: "Fruit" }],
     availability: "Available",
+    visits: 0,
   },
 ];
 
@@ -534,13 +536,21 @@ describe("Admin Menu UI integration", () => {
       expect(options?.method).toBe("POST");
       expect(options?.credentials).toBe("same-origin");
 
-      expect(JSON.parse(String(options?.body))).toEqual({
-        name: "Brown Sugar Tea",
-        description: "Brown sugar milk tea",
-        priceCents: 650,
-        currency: "USD",
-        categoryIds: ["tea"],
-      });
+      // New-item creation now sends multipart form data so
+      // images can be included without changing the endpoint.
+      expect(options?.body).toBeInstanceOf(FormData);
+
+      const submitted = options?.body as FormData;
+
+      expect(submitted.get("name")).toBe("Brown Sugar Tea");
+      expect(submitted.get("description")).toBe(
+        "Brown sugar milk tea",
+      );
+      expect(submitted.get("priceCents")).toBe("650");
+      expect(submitted.get("currency")).toBe("USD");
+      expect(submitted.get("categoryIds")).toBe('["tea"]');
+      expect(submitted.get("modifierListIds")).toBe("[]");
+      expect(submitted.has("imageFile")).toBe(false);
 
       await waitFor(() => {
         expect(screen.getByText("3 items")).toBeTruthy();
@@ -577,6 +587,7 @@ describe("Admin Menu UI integration", () => {
         img: "/TEAZO_logo.svg",
         categories: [{ id: "tea", name: "Tea" }],
         availability: "Available",
+        visits: 0,
       };
 
       view.rerender(

@@ -12,6 +12,11 @@ import {
 } from "react";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 import { adminButtonStyles } from "../../components/admin-button-styles";
+import {
+  defaultMaxImageSize,
+  isHeicImage,
+  prepareImageForStorage,
+} from "../../../lib/image-conversion";
 
 // A null file lets edits keep the existing image while updating its name or tags.
 export type GalleryUploadValues = {
@@ -35,22 +40,7 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-// Some browsers report HEIC/HEIF as an empty or generic MIME type.
-const heicImageTypes = new Set([
-  "image/heic",
-  "image/heif",
-  "image/heic-sequence",
-  "image/heif-sequence",
-]);
-
-function isHeicImage(file: File) {
-  return (
-    heicImageTypes.has(file.type.toLowerCase()) ||
-    /\.(heic|heif)$/i.test(file.name)
-  );
-}
-
-const maxFileSize = 10 * 1024 * 1024;
+const maxFileSize = defaultMaxImageSize;
 const maxTags = 12;
 const maxTagLength = 30;
 
@@ -190,10 +180,11 @@ export default function GalleryUploadForm({
     setImageError(null);
     setUploadError(null);
 
-    const needsConversion = isHeicImage(file);
+    const needsPreparation =
+      isHeicImage(file) || file.size > maxFileSize;
 
     if (
-      !needsConversion &&
+      !isHeicImage(file) &&
       !acceptedImageTypes.includes(
         file.type.toLowerCase(),
       )
@@ -204,61 +195,24 @@ export default function GalleryUploadForm({
       return;
     }
 
-    if (file.size > maxFileSize) {
+    if (file.size === 0) {
       setImageError(
-        "The selected image must be 10 MB or smaller.",
+        "The selected image must be nonempty.",
       );
       return;
     }
 
-    // Regular images keep the existing upload workflow.
-    if (!needsConversion) {
+    if (!needsPreparation) {
       applySelectedFile(file, file.name);
       return;
     }
 
-    // HEIC/HEIF files must be converted before preview/upload.
     const requestId = ++selectionSequence.current;
 
     setIsConverting(true);
 
     try {
-      // Dynamically load the converter only for HEIC/HEIF files.
-      const { heicTo } = await import("heic-to");
-      const jpegBlob = await heicTo({
-        blob: file,
-        type: "image/jpeg",
-        quality: 0.85,
-      });
-
-      if (!jpegBlob || jpegBlob.size === 0) {
-        throw new Error(
-          "The converted image was empty.",
-        );
-      }
-
-      // Preserve the 10 MB upload limit after conversion.
-      if (jpegBlob.size > maxFileSize) {
-        throw new Error(
-          "The converted image exceeds 10 MB.",
-        );
-      }
-
-      // Create a normal JPEG file for the existing upload API.
-      const jpegName =
-        file.name.replace(
-          /\.(heic|heif)$/i,
-          "",
-        ) + ".jpg";
-
-      const jpegFile = new File(
-        [jpegBlob],
-        jpegName,
-        {
-          type: "image/jpeg",
-          lastModified: file.lastModified,
-        },
-      );
+      const preparedFile = await prepareImageForStorage(file, maxFileSize);
 
       // Do not update state if the form closed during conversion.
       if (
@@ -266,13 +220,13 @@ export default function GalleryUploadForm({
         selectionSequence.current === requestId
       ) {
         applySelectedFile(
-          jpegFile,
+          preparedFile,
           file.name,
         );
       }
     } catch (error) {
       console.error(
-        "HEIC/HEIF conversion failed:",
+        "Gallery image preparation failed:",
         error,
       );
 
@@ -281,7 +235,7 @@ export default function GalleryUploadForm({
         selectionSequence.current === requestId
       ) {
         setImageError(
-          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+          "This image could not be prepared. Try another image or convert it to JPG first.",
         );
       }
     } finally {
@@ -683,12 +637,12 @@ export default function GalleryUploadForm({
                 className="cursor-pointer rounded-lg border border-[#dbb082] bg-[#fffaf6] px-4 py-2 text-sm font-semibold text-[#9b6d43] hover:bg-[#f3ece6] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isConverting
-                  ? "Converting HEIC..."
+                  ? "Preparing image..."
                   : "Change Image"}
               </button>
 
               <p className="text-center text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum
+                JPG, PNG, WebP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
               </p>
             </div>
           ) : (
@@ -727,12 +681,12 @@ export default function GalleryUploadForm({
                 className={`w-full max-w-full whitespace-normal break-words ${adminButtonStyles.primary} sm:w-auto`}
               >
                 {isConverting
-                  ? "Converting HEIC..."
+                  ? "Preparing image..."
                   : "Select/Drag Image Here"}
               </button>
 
               <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, or HEIF · 10 MB maximum
+                JPG, PNG, WebP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
               </p>
             </div>
           )}
@@ -742,7 +696,7 @@ export default function GalleryUploadForm({
               role="status"
               className="mt-2 text-center text-xs text-gray-500"
             >
-              Converting image for preview and upload...
+              Preparing image for preview and upload...
             </p>
           )}
 

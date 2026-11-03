@@ -67,6 +67,14 @@ export default function MenuCatalog({
   // Open item customizer and sync to URL query (?item=id) without trapping browser back navigation
   const handleSelectItem = useCallback((item: MenuItem) => {
     setSelectedItem(item);
+    void fetch("/api/analytics/menu-item-view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: item.catalogObjectId, itemName: item.name }),
+      keepalive: true,
+    }).catch(() => {
+      // Analytics must never prevent the item customizer from opening.
+    });
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.set("item", item.catalogObjectId);
