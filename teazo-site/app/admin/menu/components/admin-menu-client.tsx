@@ -37,6 +37,7 @@ type DisplayedMenuItem = {
   description: string;
   categories: ItemCategory[];
   availability: string;
+  visits: number;
 };
 
 type Category = {
@@ -61,7 +62,6 @@ type MenuDrawer =
 type AdminMenuClientProps = {
   items: DisplayedMenuItem[];
   categories: Category[];
-  canUploadMenu: boolean;
 };
 
 const fallbackImage = "/TEAZO_logo.svg";
@@ -77,7 +77,9 @@ type SavedMenuItem = Pick<
   | "currency"
   | "imageUrl"
   | "categories"
->;
+> & {
+  imageUploadWarning?: string;
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return (
@@ -121,7 +123,7 @@ function getCreateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 400) {
@@ -150,7 +152,7 @@ function getUpdateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 404) {
@@ -198,7 +200,7 @@ function getDeleteErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Can Edit access from the Teazo admin page.";
+    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Admin access from the Teazo admin page.";
   }
 
   if (
@@ -236,7 +238,6 @@ const menuViewOptions: readonly AdminViewOption<MenuViewMode>[] = [
 export default function AdminMenuClient({
   items,
   categories,
-  canUploadMenu,
 }: AdminMenuClientProps) {
   const [search, setSearch] = useState("");
 
@@ -282,6 +283,7 @@ export default function AdminMenuClient({
 
   const [itemSaveError, setItemSaveError] = useState("");
   const [itemSaveSuccess, setItemSaveSuccess] = useState("");
+  const [itemSaveWarning, setItemSaveWarning] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
   const itemSavePendingRef = useRef(false);
 
@@ -515,7 +517,6 @@ export default function AdminMenuClient({
 
   function openUploadForm() {
     if (
-      !canUploadMenu ||
       uploadPendingRef.current ||
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
@@ -551,13 +552,6 @@ export default function AdminMenuClient({
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
     ) {
-      return;
-    }
-
-    if (!canUploadMenu) {
-      setUploadError(
-        "Owner or Can Edit access is required to upload a menu.",
-      );
       return;
     }
 
@@ -629,9 +623,7 @@ export default function AdminMenuClient({
   }
 
   function openAddItemForm() {
-    // Menu writes and PDF uploads currently use the same Owner/Can Edit roles.
     if (
-      !canUploadMenu ||
       uploadPendingRef.current ||
       itemSavePendingRef.current ||
       itemDeletePendingRef.current
@@ -642,6 +634,7 @@ export default function AdminMenuClient({
     setMobileFiltersOpen(false);
     setItemSaveError("");
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
     setDrawer({ kind: "add-item" });
   }
 
@@ -656,6 +649,7 @@ export default function AdminMenuClient({
 
     setMobileFiltersOpen(false);
     setItemSaveError("");
+    setItemSaveWarning(false);
     setDrawer({ kind: "edit-item", item });
   }
 
@@ -700,11 +694,6 @@ export default function AdminMenuClient({
       return "No item is selected. Close this dialog and select an item again.";
     }
 
-    // The server independently enforces the same Owner/Can Edit permission.
-    if (!canUploadMenu) {
-      return "Owner or Can Edit access is required to delete a menu item.";
-    }
-
     // Capture the selected record so an async response cannot target another item.
     const item = itemPendingDelete;
 
@@ -712,6 +701,7 @@ export default function AdminMenuClient({
     setIsDeletingItem(true);
     setItemDeleteSuccess("");
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
 
     try {
       const response = await fetch(
@@ -791,13 +781,6 @@ export default function AdminMenuClient({
 
     // TZ-170: save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
-      if (!canUploadMenu) {
-        setItemSaveError(
-          "Owner or Can Edit access is required to edit a menu item.",
-        );
-        return;
-      }
-
       const original = allItems.find(
         (item) => item.id === drawer.item.id,
       );
@@ -818,21 +801,41 @@ export default function AdminMenuClient({
       setItemDeleteSuccess("");
 
       try {
+        const hasImageChange = Boolean(values.imageFile || values.removeImage);
+        const updateBody = {
+          name: values.name,
+          description: values.description,
+          priceCents: values.priceCents,
+          categoryIds: values.categoryIds,
+        };
+        let requestBody: BodyInit;
+        const requestHeaders: HeadersInit = {};
+
+        if (hasImageChange) {
+          const formData = new FormData();
+          formData.append("name", values.name);
+          formData.append("description", values.description);
+          formData.append("priceCents", String(values.priceCents));
+          formData.append("categoryIds", JSON.stringify(values.categoryIds));
+          formData.append("removeImage", String(values.removeImage));
+
+          if (values.imageFile) {
+            formData.append("imageFile", values.imageFile, values.imageFile.name);
+          }
+
+          requestBody = formData;
+        } else {
+          requestHeaders["Content-Type"] = "application/json";
+          requestBody = JSON.stringify(updateBody);
+        }
+
         const response = await fetch(
           `/api/square/products/${encodeURIComponent(itemId)}`,
           {
             method: "PUT",
             credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: values.name,
-              description: values.description,
-              priceCents: values.priceCents,
-              categoryIds: values.categoryIds,
-              // Omit currency, modifier lists, and images to preserve their saved settings.
-            }),
+            headers: requestHeaders,
+            body: requestBody,
           },
         );
 
@@ -853,37 +856,10 @@ export default function AdminMenuClient({
           return;
         }
 
-        /*
-         * The route preserves Square's image IDs. Replacement/removal controls
-         * affect the local preview only until TZ-171 is connected.
-         */
-        let imageUrl = result.imageUrl?.trim() || fallbackImage;
-        let imageNotice = "";
-
-        if (values.imageFile) {
-          try {
-            imageUrl = URL.createObjectURL(values.imageFile);
-            managedImageUrls.current.add(imageUrl);
-
-            imageNotice =
-              " The selected image is a local preview only; the saved Square image was not changed.";
-          } catch {
-            // An image-preview failure must not turn a confirmed edit into a failed save.
-            imageNotice =
-              " The item was saved, but the replacement image preview could not be displayed. The saved Square image was not changed.";
-          }
-        } else if (values.removeImage) {
-          imageUrl = fallbackImage;
-
-          imageNotice =
-            " The image was removed from this local preview only; the saved Square image was not changed.";
-        } else if (managedImageUrls.current.has(original.img)) {
-          // Retain an existing session-only preview without claiming it was uploaded.
-          imageUrl = original.img;
-
-          imageNotice =
-            " The image shown is still a local preview and will not persist after a reload.";
-        }
+        const imageUrl = result.imageUrl?.trim() || fallbackImage;
+        const imageNotice = result.imageUploadWarning
+          ? ` ${result.imageUploadWarning}`
+          : "";
 
         const updatedItem: DisplayedMenuItem = {
           id: result.catalogObjectId,
@@ -892,6 +868,7 @@ export default function AdminMenuClient({
           price: result.priceCents / 100,
           description: result.description ?? "",
           availability: availabilityDescription(result),
+          visits: original.visits,
 
           // Use returned membership, even if Square returns an empty category list.
           categories: result.categories.map((category) => ({
@@ -921,6 +898,7 @@ export default function AdminMenuClient({
         setItemSaveSuccess(
           `Updated “${updatedItem.name}” in Square.${imageNotice}`,
         );
+      setItemSaveWarning(Boolean(result.imageUploadWarning));
         setDrawer(null);
       } catch {
         // Keep the form and original row intact when the update cannot be confirmed.
@@ -933,34 +911,33 @@ export default function AdminMenuClient({
       return;
     }
 
-    if (!canUploadMenu) {
-      setItemSaveError(
-        "Owner or Can Edit access is required to add a menu item.",
-      );
-      return;
-    }
-
     // A ref blocks duplicate submissions immediately, before the next render.
     itemSavePendingRef.current = true;
     setIsSavingItem(true);
     setItemSaveSuccess("");
+    setItemSaveWarning(false);
     setItemDeleteSuccess("");
 
     try {
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("priceCents", String(values.priceCents));
+      formData.append("currency", "USD");
+      formData.append("categoryIds", JSON.stringify(values.categoryIds));
+      formData.append(
+        "modifierListIds",
+        JSON.stringify(values.modifierListIds ?? []),
+      );
+
+      if (values.imageFile) {
+        formData.append("imageFile", values.imageFile, values.imageFile.name);
+      }
+
       const response = await fetch("/api/square/products", {
         method: "POST",
         credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: values.name,
-          description: values.description,
-          priceCents: values.priceCents,
-          currency: "USD",
-          categoryIds: values.categoryIds,
-          modifierListIds: values.modifierListIds,
-        }),
+        body: formData,
       });
 
       const result: unknown = await response.json().catch(() => null);
@@ -977,26 +954,11 @@ export default function AdminMenuClient({
         return;
       }
 
-      /*
-       * TZ-171 image upload is not connected yet.
-       * A selected image is only a local preview; the returned item data is saved.
-       */
-      let imageUrl = result.imageUrl?.trim() || fallbackImage;
-      let imageNotice = "";
-
-      if (values.imageFile) {
-        try {
-          imageUrl = URL.createObjectURL(values.imageFile);
-          managedImageUrls.current.add(imageUrl);
-
-          imageNotice =
-            " The selected image is a local preview only and will not persist after a reload.";
-        } catch {
-          // Preview failure must not report a successfully created Square item as failed.
-          imageNotice =
-            " The item was saved, but its local image preview could not be displayed.";
-        }
-      }
+      const imageUrl = result.imageUrl?.trim() || fallbackImage;
+      const imageNotice =
+        result.imageUploadWarning
+          ? ` ${result.imageUploadWarning}`
+          : "";
 
       const newItem: DisplayedMenuItem = {
         id: result.catalogObjectId,
@@ -1004,7 +966,8 @@ export default function AdminMenuClient({
         name: result.name?.trim() || "Unnamed item",
         price: result.priceCents / 100,
         description: result.description ?? "",
-          availability: availabilityDescription(result),
+        availability: availabilityDescription(result),
+        visits: 0,
 
         // Keep returned category membership; only fill in missing display labels.
         categories: result.categories.map((category) => ({
@@ -1026,6 +989,7 @@ export default function AdminMenuClient({
       setItemSaveSuccess(
         `Added “${newItem.name}” to Square.${imageNotice}`,
       );
+      setItemSaveWarning(Boolean(result.imageUploadWarning));
       setDrawer(null);
     } catch {
       // A network failure does not prove that Square rejected the creation.
@@ -1259,16 +1223,11 @@ export default function AdminMenuClient({
                   type="button"
                   onClick={openAddItemForm}
                   disabled={
-                    !canUploadMenu ||
                     isUploading ||
                     isSavingItem ||
                     isDeletingItem
                   }
-                  title={
-                    canUploadMenu
-                      ? "Add a menu item"
-                      : "Owner or Can Edit access is required"
-                  }
+                  title="Add a menu item"
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Add Item
@@ -1278,16 +1237,11 @@ export default function AdminMenuClient({
                   type="button"
                   onClick={openUploadForm}
                   disabled={
-                    !canUploadMenu ||
                     isUploading ||
                     isSavingItem ||
                     isDeletingItem
                   }
-                  title={
-                    canUploadMenu
-                      ? "Upload a PDF menu"
-                      : "Owner or Can Edit access is required"
-                  }
+                  title="Upload a PDF menu"
                   className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.primary} md:inline-flex md:items-center md:justify-center`}
                 >
                   Upload Menu
@@ -1332,7 +1286,13 @@ export default function AdminMenuClient({
           )}
 
           {itemSaveSuccess && (
-            <div className="m-3 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900 sm:m-4">
+            <div
+              className={`m-3 rounded-lg border p-3 text-sm sm:m-4 ${
+                itemSaveWarning
+                  ? "border-yellow-300 bg-yellow-50 text-yellow-900"
+                  : "border-green-300 bg-green-50 text-green-900"
+              }`}
+            >
               <p
                 role="status"
                 className="[overflow-wrap:anywhere]"
@@ -1554,7 +1514,6 @@ export default function AdminMenuClient({
                     type="submit"
                     disabled={
                       isUploading ||
-                      !canUploadMenu ||
                       !uploadFile ||
                       !!getMenuFileError(uploadFile)
                     }

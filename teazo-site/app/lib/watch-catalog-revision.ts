@@ -39,7 +39,7 @@ export function watchCatalogRevision(initialRevision: string | null, onChange: (
     }
   }
 
-  const interval = window.setInterval(check, 20_000);
+  const interval = window.setInterval(check, 60_000);
   window.addEventListener("focus", check);
   document.addEventListener("visibilitychange", check);
   void check();

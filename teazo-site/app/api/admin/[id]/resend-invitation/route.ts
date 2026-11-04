@@ -32,22 +32,17 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const access = await requireAdminApi(request, 2);
+    // Only Owner (role 1) may manage administrator invitations.
+    // The legacy can_invite_users flag grants no permissions.
+    const access = await requireAdminApi(request, 1);
 
-    if (!access.ok) return access.response;
+    if (!access.ok) {
+      return access.response;
+    }
 
     const viewer = access.admin;
 
-    if (
-      viewer.role_id !== 1 &&
-      !(viewer.role_id === 2 && viewer.can_invite_users === 1)
-    ) {
-      return json(
-        { error: "You do not have permission to resend invitations." },
-        403,
-      );
-    }
-
+    // Rate-limit invitation requests by the requesting Owner.
     const requesterAllowed = await consumePasswordRequestLimit(
       REQUESTER_LIMIT,
       viewer.id,
@@ -55,7 +50,10 @@ export async function POST(
 
     if (!requesterAllowed) {
       return json(
-        { error: "Too many invitation requests. Try again in 15 minutes." },
+        {
+          error:
+            "Too many invitation requests. Try again in 15 minutes.",
+        },
         429,
       );
     }
@@ -73,6 +71,7 @@ export async function POST(
       );
     }
 
+    // Rate-limit invitations sent to the target account.
     const targetAllowed = await consumePasswordRequestLimit(
       TARGET_LIMIT,
       admin.id,
@@ -88,14 +87,13 @@ export async function POST(
       );
     }
 
-    // Await delivery so Settings can display success or failure.
-    // The token helper checks target eligibility again during insertion.
+    // Await delivery so Settings can report its outcome.
+    // The password token helper independently checks eligibility.
     const outcome = await sendAdminInvite({
       adminId: admin.id,
       email: admin.email,
       username: admin.username,
       role: admin.role,
-      canManageAdmins: admin.canManageAdmins,
       invitedBy: viewer.username,
     });
 
@@ -109,17 +107,41 @@ export async function POST(
       );
     }
 
+    if (outcome === "printed") {
+      return json({
+        message:
+          "Invitation generated in the server terminal. No email was sent.",
+      });
+    }
+
+    if (outcome === "captured") {
+      return json({
+        message:
+          "Invitation generated in the local Mailpit inbox.",
+      });
+    }
+
+    if (process.env.BREVO_SANDBOX === "1") {
+      return json({
+        message:
+          "Invitation processed in Brevo sandbox mode. No email was delivered.",
+      });
+    }
+
     return json({
-      message:
-        outcome === "sent"
-          ? "Invitation submitted for delivery."
-          : "Invitation generated. Check your local email output.",
+      message: "Invitation submitted for delivery.",
     });
   } catch {
-    console.error("Admin invitation resend could not be completed.");
+    // Do not expose invitation tokens or email provider details.
+    console.error(
+      "Admin invitation resend could not be completed.",
+    );
 
     return json(
-      { error: "Invitations are temporarily unavailable. Try again later." },
+      {
+        error:
+          "Invitations are temporarily unavailable. Try again later.",
+      },
       503,
     );
   }
