@@ -271,6 +271,103 @@ describe("Public Contact Form interface", () => {
     });
   });
 
+  // Verify the pending state of a submission that has not
+  // yet received a response from the server action.
+  //
+  // Keep the mocked action unresolved so React's
+  // useActionState hook can display the loading state.
+  //
+  // Confirm that:
+  // - The button changes from SUBMIT to SENDING...
+  // - The button becomes disabled while awaiting the action.
+  // - Success feedback is not displayed prematurely.
+  // - The button is enabled again once the action completes.
+  it("shows a disabled sending state while submission is pending", async () => {
+    // Store the Promise resolver so this test controls
+    // exactly when the simulated server action completes.
+    const deferred: {
+      resolve?: (state: { status: "sent" }) => void;
+    } = {};
+
+    mocks.submit.mockImplementation(
+      () =>
+        new Promise<{ status: "sent" }>((resolve) => {
+          deferred.resolve = resolve;
+        }),
+    );
+
+    renderForm();
+    fillRequiredFields();
+
+    // The submit button must initially be ready.
+    const initialButton = screen.getByRole("button", {
+      name: "SUBMIT",
+    }) as HTMLButtonElement;
+
+    expect(initialButton.disabled).toBe(false);
+
+    // Submit synchronously without awaiting the unresolved
+    // server action, allowing the pending UI to be inspected.
+    fireEvent.submit(getForm());
+
+    await waitFor(() => {
+      expect(mocks.submit).toHaveBeenCalledOnce();
+    });
+
+    // React must display the loading state while the
+    // mocked server action is still unresolved.
+    const sendingButton = await screen.findByRole(
+      "button",
+      {
+        name: "SENDING...",
+      },
+    ) as HTMLButtonElement;
+
+    expect(sendingButton.disabled).toBe(true);
+
+    // A success message should only appear after the
+    // mocked server action has completed successfully.
+    expect(
+      screen.getByRole("status").textContent,
+    ).not.toContain("Thank you.");
+
+    // Resolve the pending action and allow React to
+    // process the resulting state update.
+    await act(async () => {
+      if (!deferred.resolve) {
+        throw new Error(
+          "The mocked contact action was not started.",
+        );
+      }
+
+      deferred.resolve({
+        status: "sent",
+      });
+    });
+
+    // After the action completes, the submit button
+    // should return to its normal enabled state.
+    await waitFor(() => {
+      const submitButton = screen.getByRole(
+        "button",
+        {
+          name: "SUBMIT",
+        },
+      ) as HTMLButtonElement;
+
+      expect(submitButton.disabled).toBe(false);
+
+      expect(
+        screen.getByRole("status").textContent,
+      ).toContain(
+        "Thank you. Your message was sent",
+      );
+    });
+
+    // Verify that the action was submitted only once.
+    expect(mocks.submit).toHaveBeenCalledTimes(1);
+  });
+
   // Keep the returned error visible and provide an alternate
   // contact method if the server rejects the submission.
   it("shows submission errors with a fallback email", async () => {
