@@ -9,7 +9,9 @@
  */
 import "server-only";
 import sharp from "sharp";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
+import { GALLERY_TAG } from "@/app/lib/cache-tags";
 import { D1Error } from "@/app/lib/d1";
 import {
   deleteMediaNow,
@@ -260,6 +262,7 @@ export async function saveGalleryImage(input: {
     );
   }
 
+  revalidatePublicGallery();
   return {
     id: imageId,
     name,
@@ -315,6 +318,7 @@ export async function editGalleryImageMetadata(input: {
     );
   }
 
+  revalidatePublicGallery();
   return toAdminImage(updatedImage);
 }
 
@@ -372,6 +376,7 @@ export async function replaceGalleryImage(input: {
     throw new GalleryInputError(
       'This image changed while you were editing. Refresh the gallery and try again.', 409);
   }
+  revalidatePublicGallery();
   return toAdminImage(saved);
 }
 
@@ -383,7 +388,9 @@ export async function replaceGalleryImage(input: {
 export async function removeGalleryImage(
   id: string,
 ): Promise<boolean> {
-  return deleteGalleryImage(id);
+  const removed = await deleteGalleryImage(id);
+  revalidatePublicGallery();
+  return removed;
 }
 
 /** What the public gallery grid shows for one image. */
@@ -396,6 +403,26 @@ export type PublicGalleryImage = {
 
 let warnedAboutGallery = false;
 
+/** Clears the cached public gallery, so an admin's change shows on the next visit. */
+function revalidatePublicGallery(): void {
+  try {
+    revalidateTag(GALLERY_TAG, { expire: 0 });
+  } catch (error) {
+    console.error("Could not clear the cached gallery:", error);
+  }
+}
+
+/**
+ * Shared across requests until an admin gallery save clears it. A failed read
+ * throws here, so it is never cached. The hour limit only matters for changes
+ * made outside the app, such as SQL run by hand.
+ */
+const loadPublishedGalleryImages = unstable_cache(
+  listPublishedGalleryImages,
+  ["public-gallery"],
+  { tags: [GALLERY_TAG], revalidate: 3600 },
+);
+
 /**
  * Published images for the public gallery, or null when they can't be read,
  * for example on a machine without the Worker running. The page then shows
@@ -405,7 +432,7 @@ export async function getPublicGalleryImages(): Promise<
   PublicGalleryImage[] | null
 > {
   try {
-    return (await listPublishedGalleryImages()).map(
+    return (await loadPublishedGalleryImages()).map(
       (image) => ({
         id: image.id,
         url: toPublicUrl(image.r2Key),

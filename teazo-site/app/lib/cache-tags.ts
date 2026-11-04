@@ -4,3 +4,6 @@
  * a webhook is missed.
  */
 export const SQUARE_CATALOG_TAG = "square-catalog";
+
+/** Cache tag for the images the public gallery shows. Every admin gallery save clears it. */
+export const GALLERY_TAG = "gallery";
