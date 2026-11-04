@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Cabin_Sketch, Montserrat } from "next/font/google";
-import { headers } from "next/headers";
 import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
@@ -14,9 +13,6 @@ export const metadata: Metadata = {
   title: "Contact",
   description: "Visit TEAZO in San Francisco and check the latest store hours.",
 };
-
-const MOBILE_USER_AGENT_REGEX =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 
 // Cabin Sketch is the approved display face for the hand-drawn headings on this
 // route. Reuse this instance instead of re-declaring font config inline.
@@ -33,9 +29,6 @@ const montserrat = Montserrat({
 });
 
 // Fine-tune day/hour positions independently in the hours rows.
-const HOURS_TIME_COLUMN_MIN_WIDTH = "10.5rem";
-const HOURS_DAY_SHIFT_PX = 10;
-const HOURS_TIME_SHIFT_PX = -28;
 
 function PinIcon() {
   return (
@@ -127,8 +120,6 @@ function ClockIcon() {
 }
 
 export default async function ContactPage() {
-  const requestHeaders = await headers();
-  const userAgent = requestHeaders.get("user-agent") ?? "";
   const contactData = await getContactContent();
   const {
     location,
@@ -155,12 +146,6 @@ export default async function ContactPage() {
     dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
   const phoneDigits = location.phone.replace(/[^\d+]/g, "");
   const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
-  const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
-  const hoursDayShiftPx = isMobileRequest ? 0 : HOURS_DAY_SHIFT_PX;
-  const hoursTimeShiftPx = isMobileRequest ? 0 : HOURS_TIME_SHIFT_PX;
-  const hoursTimeMinWidth = isMobileRequest
-    ? "auto"
-    : HOURS_TIME_COLUMN_MIN_WIDTH;
   const emailHref = `mailto:${location.email || "teazosf@hotmail.com"}`;
   const opensWebmail = false;
   const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
@@ -299,8 +284,7 @@ export default async function ContactPage() {
                       <CalendarIcon />
                     </span>
                     <dt
-                      className="text-[0.98rem] font-semibold uppercase tracking-[0.04em] text-stone-700 sm:text-[1rem]"
-                      style={{ transform: `translateX(${hoursDayShiftPx}px)` }}
+                      className="text-[0.98rem] font-semibold uppercase tracking-[0.04em] text-stone-700 sm:text-[1rem] pointer-fine:translate-x-[10px]"
                     >
                       <span>{entry.day}</span>
                       {entry.holidayName && (
@@ -310,11 +294,7 @@ export default async function ContactPage() {
                       )}
                     </dt>
                     <dd
-                      className="col-start-2 row-start-2 justify-self-start whitespace-nowrap text-left text-[0.95rem] font-semibold text-stone-700 sm:col-start-3 sm:row-start-1 sm:justify-self-end sm:text-right sm:text-[1rem]"
-                      style={{
-                        minWidth: hoursTimeMinWidth,
-                        transform: `translateX(${hoursTimeShiftPx}px)`,
-                      }}
+                      className="col-start-2 row-start-2 justify-self-start whitespace-nowrap text-left text-[0.95rem] font-semibold text-stone-700 sm:col-start-3 sm:row-start-1 sm:justify-self-end sm:text-right sm:text-[1rem] pointer-fine:min-w-[10.5rem] pointer-fine:translate-x-[-28px]"
                     >
                       {entry.hours}
                     </dd>
