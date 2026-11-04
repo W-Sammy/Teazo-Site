@@ -102,16 +102,9 @@ http://localhost:3000
 
 # Testing
 
-> Placeholder section for CSC 191.
+The website uses Vitest for automated unit, API, database, and React component tests. See the [Automated Testing Guide](docs/AUTOMATED-TESTING.md) for setup, dependencies, test-writing conventions, execution commands, and limitations.
 
-Future testing plans include:
-- Unit testing
-- Integration testing
-- UI/UX testing
-- Responsive design testing
-- Authentication validation
-- API endpoint testing
-- User acceptance testing
+Run the tests from `teazo-site/` with `npm test`.
 
 
 ---

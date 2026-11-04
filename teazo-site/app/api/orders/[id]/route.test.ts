@@ -37,7 +37,7 @@ function squareOrder(overrides: Record<string, unknown> = {}) {
 
 afterEach(() => vi.clearAllMocks());
 
-describe("GET /api/orders/[id] (TZ-444)", () => {
+describe("GET /api/orders/[id]", () => {
   it("returns a paid website order with the contact details masked", async () => {
     mocks.getOrder.mockResolvedValue({ order: squareOrder() });
     const res = await lookup(ORDER_ID);
