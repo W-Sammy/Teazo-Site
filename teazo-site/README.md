@@ -46,6 +46,10 @@ creating a Payment Link; the resulting Square Order still uses the variation ID
 as its line item's catalog object ID. Run `npm test` for the rule, availability,
 catalog-response, and checkout regression tests.
 
+## Automated testing
+
+See the [TEAZO Automated Testing Guide](../docs/AUTOMATED-TESTING.md) for setup, writing tests, running individual or grouped tests, and limitations. Run `npm test` from this directory.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
