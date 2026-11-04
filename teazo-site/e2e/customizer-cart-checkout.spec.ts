@@ -3,10 +3,11 @@
  *
  * Covers cart totals, quantity changes, item editing,
  * modifier prices, checkout validation, rejected items,
- * retry behavior, pending requests, and mobile usability.
+ * retry behavior, pending requests, successful mocked
+ * checkout navigation, and mobile usability.
  *
  * Test items use synthetic Square IDs. Checkout requests
- * are intercepted before reaching the server, so no
+ * and external checkout navigation are intercepted, so no
  * orders, payment sessions, or charges are created.
  *
  * Uses the verified localhost Playwright development origin.
@@ -202,7 +203,8 @@ async function mockTurnstile(page: Page) {
 }
 
 // Mock the storefront dependencies and block checkout
-// by default. Individual tests override checkout errors.
+// by default. Individual tests override checkout errors
+// or return a synthetic successful response.
 async function mockStorefront(page: Page) {
   await seedTestCart(page);
   await mockTurnstile(page);
@@ -577,6 +579,146 @@ test.describe("Customizer, Cart, and Checkout browser tests", () => {
     await expect(
       bag.getByText("Test checkout stopped."),
     ).toBeVisible();
+  });
+
+  // Verify successful checkout-session handling.
+  //
+  // The browser must navigate to the URL returned by
+  // the mocked checkout API, but never contact Square.
+  //
+  // A fictional .invalid domain is used for the checkout
+  // destination, and Playwright serves its HTML locally.
+  test("navigates to a mocked successful checkout session", async ({
+    page,
+  }) => {
+    const checkoutUrl =
+      "https://checkout.example.invalid/test-session";
+
+    const orderId = "TEST_ORDER_123";
+
+    let checkoutRequests = 0;
+    let checkoutPageVisits = 0;
+    let submittedBody: unknown = null;
+
+    // Intercept the fake checkout destination before
+    // navigating to the Contact page.
+    //
+    // This verifies browser navigation without opening
+    // a real Square Hosted Checkout page.
+    await page.route(
+      "https://checkout.example.invalid/**",
+      async (route) => {
+        checkoutPageVisits += 1;
+
+        await route.fulfill({
+          status: 200,
+          contentType: "text/html",
+          body: `
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <title>Mock Checkout</title>
+              </head>
+              <body>
+                <h1>Mock Square Checkout</h1>
+                <p>Test checkout destination reached.</p>
+              </body>
+            </html>
+          `,
+        });
+      },
+    );
+
+    // Return an HTTP 200 response containing the same
+    // fields as a successful checkout-session response.
+    //
+    // No request is forwarded to the real checkout API.
+    await page.route(
+      "**/api/checkout",
+      async (route) => {
+        checkoutRequests += 1;
+
+        submittedBody =
+          route.request().postDataJSON();
+
+        await route.fulfill({
+          status: 200,
+          json: {
+            checkoutUrl,
+            orderId,
+          },
+        });
+      },
+    );
+
+    const bag = await openBag(page);
+    await fillCheckoutDetails(page);
+
+    const checkout = bag.getByRole("button", {
+      name: /Proceed to Checkout/,
+    });
+
+    // Register the response and navigation listeners
+    // before clicking, so fast redirects are not missed.
+    const responsePromise = page.waitForResponse(
+      (response) => {
+        return (
+          new URL(response.url()).pathname ===
+            "/api/checkout" &&
+          response.request().method() === "POST"
+        );
+      },
+    );
+
+    const navigationPromise =
+      page.waitForURL(checkoutUrl);
+
+    // The app should receive the successful response
+    // and initiate navigation to the returned URL.
+    const [checkoutResponse] = await Promise.all([
+      responsePromise,
+      navigationPromise,
+      checkout.click(),
+    ]);
+
+    // Confirm the checkout API returned success.
+    expect(checkoutResponse.status()).toBe(200);
+
+    // Only one checkout request should be submitted.
+    expect(checkoutRequests).toBe(1);
+
+    // Verify the customer and cart data passed to the
+    // intercepted endpoint before the redirect.
+    expect(submittedBody).toMatchObject({
+      customer: {
+        displayName: "Test Customer",
+        email: "customer@example.invalid",
+        phone: "(415) 555-0100",
+      },
+      pickupTiming: {
+        type: "SCHEDULED",
+      },
+      items: [
+        {
+          catalogObjectId: "ITEM1",
+          variationId: "VAR1",
+          quantity: 2,
+          modifierOptionIds: [],
+        },
+      ],
+    });
+
+    // Confirm the browser reached the fictional
+    // checkout URL, served entirely by Playwright.
+    await expect(page).toHaveURL(checkoutUrl);
+
+    await expect(
+      page.getByRole("heading", {
+        name: "Mock Square Checkout",
+      }),
+    ).toBeVisible();
+
+    expect(checkoutPageVisits).toBe(1);
   });
 
   // The mobile Shopping Bag must allow customers to
