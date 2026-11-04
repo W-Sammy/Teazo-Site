@@ -23,13 +23,20 @@ async function getMenuItems(): Promise<MenuItem[]> {
   return response.json();
 }
 
-export default async function AdminEventsPage() {
-  await requireAdminPage(3)
-  
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>;
+}) {
+  await requireAdminPage(2)
+
+  const { edit } = await searchParams;
+
   const [menuItems, initialEvents] = await Promise.all([
     getMenuItems(),
     getEvents(),
   ]);
+
   const items: EventCatalogItem[] = menuItems.map((item) => ({
     id: item.catalogObjectId,
     name: item.name ?? "Unnamed item",
@@ -53,6 +60,7 @@ export default async function AdminEventsPage() {
       initialEvents={initialEvents}
       categories={categories}
       items={items}
+      initialEditEventId={edit ?? null}
     />
   );
 }

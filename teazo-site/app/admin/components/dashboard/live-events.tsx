@@ -1,14 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AdminEvent } from "@/app/types/admin-event";
-import EventModal from "@/app/components/event-modal";
 import { formatEventDate } from "./dashboard-utils";
 
 export default function LiveEvents({ events }: { events: AdminEvent[] }) {
-  const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
-  return <><section className="rounded-2xl bg-white p-6" aria-labelledby="events-heading"><div className="mb-5 flex items-center justify-between gap-3"><div><h2 id="events-heading" className="text-lg font-bold text-[#374151]">Currently live events</h2><p className="mt-1 text-sm text-slate-400">Events visible to your guests right now.</p></div><span className="rounded-full bg-[#eef8f1] px-3 py-1 text-xs font-semibold text-[#4c9a68]">{events.length} live</span></div>{events.length > 0 ? <div className="grid gap-3 sm:grid-cols-2">{events.map((event) => <EventCard key={event.id} event={event} onSelect={setSelectedEvent} />)}</div> : <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">There are no active events right now.</p>}</section>{selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}</>;
+  const router = useRouter();
+
+  function openEvent(event: AdminEvent) {
+    router.push(`/admin/events?edit=${encodeURIComponent(event.id)}`);
+  }
+
+  return <><section className="rounded-2xl bg-white p-6" aria-labelledby="events-heading"><div className="mb-5 flex items-center justify-between gap-3"><div><h2 id="events-heading" className="text-lg font-bold text-[#374151]">Currently live events</h2><p className="mt-1 text-sm text-slate-400">Events visible to your guests right now.</p></div><span className="rounded-full bg-[#eef8f1] px-3 py-1 text-xs font-semibold text-[#4c9a68]">{events.length} live</span></div>{events.length > 0 ? <div className="grid gap-3 sm:grid-cols-2">{events.map((event) => <EventCard key={event.id} event={event} onSelect={openEvent} />)}</div> : <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">There are no active events right now.</p>}</section></>;
 }
 
 function EventCard({ event, onSelect }: { event: AdminEvent; onSelect: (event: AdminEvent) => void }) {
