@@ -8,6 +8,7 @@ import {
   IconLogo,
   IconStory,
   IconSocial,
+  IconDelivery,
   IconContact,
   IconHours,
   IconHolidays,
@@ -17,6 +18,7 @@ import OrderingSection from "./sections/ordering-section";
 import LogoSection from "./sections/logo-section";
 import StorySection from "./sections/story-section";
 import SocialSection from "./sections/social-section";
+import DeliverySection from "./sections/delivery-section";
 import ContactSection from "./sections/contact-section";
 import HoursSection from "./sections/hours-section";
 import HolidaysSection from "./sections/holidays-section";
@@ -31,6 +33,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
   { id: "story", label: "Our Story", icon: <IconStory /> },
   { id: "social", label: "Social Media", icon: <IconSocial /> },
+  { id: "delivery", label: "Delivery", icon: <IconDelivery /> },
   { id: "contact", label: "Contact Info", icon: <IconContact /> },
   { id: "hours", label: "Business Hours", icon: <IconHours /> },
   { id: "holidays", label: "Holiday Exceptions", icon: <IconHolidays /> },
@@ -53,6 +56,9 @@ export default function WebsiteContentClient({
     updateStory,
     updateAddress,
     updateDay,
+    addDeliveryLink,
+    updateDeliveryLink,
+    removeDeliveryLink,
     addSocialLink,
     updateSocialLink,
     removeSocialLink,
@@ -245,6 +251,17 @@ export default function WebsiteContentClient({
             onUpdateLink={updateSocialLink}
             onAddLink={addSocialLink}
             onRemoveLink={removeSocialLink}
+            onBlur={() => flushPatch()}
+          />
+
+          <DeliverySection
+            deliveryLinks={content.deliveryLinks ?? []}
+            isOpen={openSection === "delivery"}
+            onToggle={() => selectSection("delivery")}
+            setRef={setSectionRef("delivery")}
+            onUpdateLink={updateDeliveryLink}
+            onAddLink={addDeliveryLink}
+            onRemoveLink={removeDeliveryLink}
             onBlur={() => flushPatch()}
           />
 

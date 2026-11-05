@@ -2,6 +2,7 @@ import type {
   AddressInfo,
   Holiday,
   SocialLink,
+  DeliveryLink,
   WebsiteContent,
 } from "@/app/types/website-content";
 
@@ -200,7 +201,7 @@ export function validateAddress(address: Partial<AddressInfo>): {
   };
 }
 
-export function validateSocialLinks(links: SocialLink[]): {
+export function validateSocialLinks(links: (SocialLink | DeliveryLink)[]): {
   valid: boolean;
   errors: string[];
 } {
@@ -280,6 +281,11 @@ export function validateWebsiteContentPatch(
   if (patch.socialLinks !== undefined) {
     const { valid, errors: socialErrors } = validateSocialLinks(patch.socialLinks);
     if (!valid) errors.push(...socialErrors);
+  }
+
+  if (patch.deliveryLinks !== undefined) {
+    const { valid, errors: deliveryErrors } = validateSocialLinks(patch.deliveryLinks);
+    if (!valid) errors.push(...deliveryErrors);
   }
 
   if (patch.holidays !== undefined) {
