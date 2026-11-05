@@ -779,7 +779,7 @@ export default function AdminMenuClient({
 
     setItemSaveError("");
 
-    // TZ-170: save edits through the protected PUT endpoint before changing the row.
+    // Save edits through the protected PUT endpoint before changing the row.
     if (drawer.kind === "edit-item") {
       const original = allItems.find(
         (item) => item.id === drawer.item.id,
