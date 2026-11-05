@@ -63,6 +63,16 @@ export function isValidUrlOrEmail(value: unknown): boolean {
   return isValidEmail(trimmed) || URL_RE.test(trimmed);
 }
 
+export function isValidUrl(value: unknown): boolean {
+  if (typeof value !== "string") 
+    return false;
+  const trimmed = value.trim();
+  if (!trimmed) 
+    return false;
+  
+  return URL_RE.test(trimmed);
+}
+
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export function isValidImageFile(
@@ -285,7 +295,13 @@ export function validateWebsiteContentPatch(
 
   if (patch.deliveryLinks !== undefined) {
     const { valid, errors: deliveryErrors } = validateSocialLinks(patch.deliveryLinks);
-    if (!valid) errors.push(...deliveryErrors);
+    if (!valid) 
+      errors.push(...deliveryErrors);
+
+    // delivery buttons need links, even though social links can use emails
+    for (const link of patch.deliveryLinks)
+      if (isNonEmpty(link.url) && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url)))
+        errors.push(`Enter a valid http:// or https:// link for "${link.label || link.id}"`);
   }
 
   if (patch.holidays !== undefined) {

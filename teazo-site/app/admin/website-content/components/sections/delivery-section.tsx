@@ -5,7 +5,7 @@ import { AccordionItem } from "../section-shell";
 import { IconDelivery } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
 import type { SocialLink } from "@/app/types/website-content";
-import { isValidUrlOrEmail } from "../validators";
+import { isValidUrl } from "../validators";
 
 // delivery links use the same name/url/visibility fields as social links
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -41,12 +41,13 @@ export default function DeliverySection({
         const fields = touched[link.id] ?? {};
         const hasName = Boolean(link.label.trim());
         const hasUrl = Boolean(link.url.trim());
-        const labelError = fields.label && !hasName && hasUrl ? "A platform name is required" : "";
+        const labelError = fields.label && !hasName && hasUrl ? "A platform name is required*" : "";
         let urlError = "";
         if (fields.url) {
             if (!hasUrl && hasName) 
                 urlError = "A link is required*";
-            else if (hasUrl && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrlOrEmail(link.url))) 
+            // check for url for delivery buttons
+            else if (hasUrl && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url))) 
                 urlError = "Please enter a valid http:// or https:// link";
         }
         return { labelError, urlError };
