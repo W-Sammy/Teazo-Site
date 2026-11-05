@@ -125,7 +125,7 @@ describe("scheduled pickup", () => {
   });
 });
 
-describe("scheduling ahead (TZ-435)", () => {
+describe("scheduling ahead", () => {
   const content = makeContent();
   const scheduledAt = (pickup: Date, now: Date) =>
     validatePickupTiming({ type: "SCHEDULED", pickupAt: pickup.toISOString() }, { content, referenceNow: now });

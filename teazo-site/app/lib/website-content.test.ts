@@ -12,7 +12,7 @@ beforeEach(() => {
   db().reset();
 });
 
-describe("online ordering switch (TZ-446)", () => {
+describe("online ordering switch", () => {
   it("is on when no setting has been saved", async () => {
     expect((await getWebsiteContent()).onlineOrderingEnabled).toBe(true);
   });
@@ -38,7 +38,7 @@ describe("online ordering switch (TZ-446)", () => {
   });
 });
 
-describe("holiday dates from D1 (TZ-447)", () => {
+describe("holiday dates from D1", () => {
   it("keep the year on one-time holidays and leave yearly ones as MM-DD", async () => {
     db().tables.hours_exception = [
       { date: "12-25", is_closed: 1, display_text: "Closed", note: "Christmas" },
