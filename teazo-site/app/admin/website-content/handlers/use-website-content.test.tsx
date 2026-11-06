@@ -45,6 +45,7 @@ const DAYS = [
 
 function makeContent(): WebsiteContent {
   return {
+    collectionsRevision: 0,
     logo: "/TEAZO_logo.svg",
     story: "Original TEAZO story",
     socialLinks: [],
@@ -131,6 +132,7 @@ describe("Website Content save handling", () => {
             status: 200,
             json: async () => ({
               success: true,
+              collectionsRevision: 1,
             }),
           };
         }
@@ -323,6 +325,7 @@ describe("Website Content save handling", () => {
     await waitFor(() => {
       expect(savedPatches()).toEqual([
         {
+          collectionsRevision: 0,
           holidays: [
             {
               id: "holiday-1",

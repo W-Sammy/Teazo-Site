@@ -32,6 +32,8 @@ vi.mock("@/app/lib/admin", () => ({
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: mocks.getWebsiteContent,
   updateWebsiteContent: mocks.updateWebsiteContent,
+  WebsiteContentConflictError: class WebsiteContentConflictError extends Error {},
+  WebsiteContentNotFoundError: class WebsiteContentNotFoundError extends Error {},
 }));
 
 vi.mock("next/cache", () => ({
@@ -49,7 +51,9 @@ function patchRequest(body: unknown): Request {
         "Content-Type": "application/json",
         Origin: "http://localhost:3000",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body && typeof body === "object" &&
+        ("holidays" in body || "socialLinks" in body)
+          ? { ...body, collectionsRevision: 0 } : body),
     },
   );
 }
@@ -371,7 +375,7 @@ describe("Website content administration and publication", () => {
 
       expect(
         mocks.updateWebsiteContent,
-      ).toHaveBeenCalledExactlyOnceWith(patch);
+      ).toHaveBeenCalledExactlyOnceWith({ ...patch, collectionsRevision: 0 });
     });
   });
 
@@ -434,12 +438,9 @@ describe("Website content administration and publication", () => {
           (call) => call[0],
         );
 
+      expect(mocks.revalidatePath).toHaveBeenCalledWith("/", "layout");
       expect(invalidatedPaths).toEqual([
         "/",
-        "/contact",
-        "/delivery",
-        "/menu",
-        "/gallery",
         "/admin/website-content",
       ]);
     });
@@ -457,7 +458,7 @@ describe("Website content administration and publication", () => {
         story: "Valid website story",
       });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(503);
 
       expect(
         mocks.revalidatePath,

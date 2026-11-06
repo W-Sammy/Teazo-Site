@@ -6,6 +6,7 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
+import SocialLinks from "../components/social-links";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -135,21 +136,6 @@ export default async function ContactPage() {
     socialLinks: dynamicSocialLinks,
   } = contactData;
   const logoSrc = logo || "/TEAZO_logo.svg";
-  const fbLink =
-    dynamicSocialLinks?.find((l) => l.id === "facebook" && l.enabled)?.url ||
-    "https://www.facebook.com/people/TEAZO/100063111166083";
-  const igLink =
-    dynamicSocialLinks?.find((l) => l.id === "instagram" && l.enabled)?.url ||
-    "https://www.instagram.com/teazosf/";
-  const yelpLink =
-    dynamicSocialLinks?.find((l) => l.id === "yelp" && l.enabled)?.url ||
-    "https://www.yelp.com/biz/teazo-san-francisco";
-  const isFbEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
-  const isIgEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
-  const isYelpEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
   const phoneDigits = location.phone.replace(/[^\d+]/g, "");
   const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
   const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
@@ -346,78 +332,8 @@ export default async function ContactPage() {
                 drink, snack, and dessert orders.
               </p>
 
-              <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                {isFbEnabled && (
-                  <a
-                    href={fbLink}
-                    aria-label={`${location.businessName} on Facebook`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_fb_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-                <a
-                  href={emailHref}
-                  aria-label={`Email ${location.businessName}`}
-                  target={opensWebmail ? "_blank" : undefined}
-                  rel={opensWebmail ? "noreferrer" : undefined}
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_email_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
-                {isIgEnabled && (
-                  <a
-                    href={igLink}
-                    aria-label={`${location.businessName} on Instagram`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_insta_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-                {isYelpEnabled && (
-                  <a
-                    href={yelpLink}
-                    aria-label={`${location.businessName} on Yelp`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-              </div>
+              <SocialLinks links={dynamicSocialLinks} businessName={location.businessName}
+                email={location.email || "teazosf@hotmail.com"} />
             </div>
 
             <a

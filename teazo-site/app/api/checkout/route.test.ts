@@ -64,6 +64,7 @@ function checkout(body: Record<string, unknown>) {
 }
 
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://checkout.test/");
   vi.useFakeTimers({ toFake: ["Date"] });
   // Wednesday October 14, 2026 at 3:00 PM in San Francisco: the store is open
   vi.setSystemTime(pacificToUtc(2026, 10, 14, 15, 0));
@@ -79,6 +80,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -103,6 +105,33 @@ describe("POST /api/checkout", () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ code: "INVALID_OPTIONS", variationIds: ["VAR1"] });
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
+  it("keeps checkout returns on the preview deployment when no explicit base URL is set", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL_URL", "checkout-preview.vercel.app");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "teazous.com");
+    const response = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    expect(response.status).toBe(200);
+    expect(mocks.createPaymentLink.mock.calls[0][0].checkoutOptions.redirectUrl)
+      .toBe("https://checkout-preview.vercel.app/order/confirmation");
+  });
+
+  it("reports missing preview URL configuration before creating a payment link", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL_URL", undefined);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const response = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+      expect(response.status).toBe(503);
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("creates a Square pickup order and returns the payment link", async () => {

@@ -187,6 +187,7 @@ function submittedSquareRequests() {
 describe("Checkout duplicate submission and retry behavior", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://teazo.test");
 
     vi.useFakeTimers({
       toFake: ["Date"],
@@ -226,6 +227,7 @@ describe("Checkout duplicate submission and retry behavior", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });

@@ -10,6 +10,7 @@ beforeEach(() => {
   process.env.D1_PROXY_URL = "http://d1.test";
   process.env.PROXY_TOKEN = "test-token";
   db().reset();
+  db().tables.website_content_revision = [{ revision: 0 }];
 });
 
 describe("online ordering switch", () => {
@@ -53,6 +54,7 @@ describe("holiday dates from D1", () => {
 
   it("save one-time dates with their year", async () => {
     await updateWebsiteContent({
+      collectionsRevision: 0,
       holidays: [{ id: "t", name: "Thanksgiving", date: "2026-11-26", closed: true }],
     });
     const insert = db().batches.flat().find((w) => w.sql.includes("INSERT INTO hours_exception"));

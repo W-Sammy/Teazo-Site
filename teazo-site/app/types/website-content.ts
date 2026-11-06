@@ -70,6 +70,8 @@ export type CarouselImage = {
 };
 
 export type WebsiteContent = {
+  /** Optimistic lock for social links and holiday exceptions. */
+  collectionsRevision?: number;
   logo: string;
   story: string;
   socialLinks: SocialLink[];

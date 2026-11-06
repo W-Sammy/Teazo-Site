@@ -23,6 +23,7 @@ import {
 export type { ContactHour, ContactContent, SocialLink, DeliveryLink };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
+  collectionsRevision: 0,
   logo: "/TEAZO_logo.svg",
   story:
     "TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!",
@@ -68,6 +69,7 @@ const ONLINE_ORDERING_KEY = "site.online_ordering";
 
 function cloneDefaultWebsiteContent(): WebsiteContent {
   return {
+    collectionsRevision: 0,
     logo: DEFAULT_WEBSITE_CONTENT.logo,
     story: DEFAULT_WEBSITE_CONTENT.story,
     socialLinks: DEFAULT_WEBSITE_CONTENT.socialLinks.map((s) => ({ ...s })),
@@ -148,6 +150,13 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
   }
 
   try {
+    // Read the revision before the collections. If a concurrent write happens
+    // during these reads, subsequent saves safely fail with a conflict.
+    const revision = await prepare(
+      "SELECT revision FROM website_content_revision WHERE id = 1",
+    ).first<{ revision: number }>();
+    if (!revision) throw new Error("Website content revision is unavailable. Apply migration 0012.");
+    content.collectionsRevision = revision.revision;
     let profile: {
       business_name: string;
       street_address: string;
@@ -265,11 +274,15 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
         .map((l) => ({
           id: l.key,
           label: l.label,
-          icon: `/social_icons/social_svg/teazo_${l.key}_icon.svg`,
+          icon: ({ facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
+            instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
+            yelp: "/social_icons/social_svg/teazo_yelp_icon.svg" } as Record<string, string>)[l.key] || "",
           url: l.url,
           enabled: l.is_active === 1,
         }));
-      if (socials.length > 0) content.socialLinks = socials;
+      content.socialLinks = socials;
+    } else {
+      content.socialLinks = [];
     }
 
     content.deliveryLinks = d1Links.results
@@ -315,21 +328,19 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       }
     }
 
-    if (d1Holidays.results.length > 0) {
-      content.holidays = d1Holidays.results.map((h, i) => {
-        const timeRange = parseDisplayTextRange(h.display_text);
-        return {
-          id: `holiday-${h.date || i}`,
-          name: h.note || `Holiday`,
-          // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
-          date: h.date,
-          closed: h.is_closed === 1,
-          start: timeRange.start,
-          end: timeRange.end,
-          displayText: h.display_text || undefined,
-        };
-      });
-    }
+    content.holidays = d1Holidays.results.map((h, i) => {
+      const timeRange = parseDisplayTextRange(h.display_text);
+      return {
+        id: `holiday-${h.date || i}`,
+        name: h.note || `Holiday`,
+        // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+        date: h.date,
+        closed: h.is_closed === 1,
+        start: timeRange.start,
+        end: timeRange.end,
+        displayText: h.display_text || undefined,
+      };
+    });
 
     inMemoryContent = { ...content };
     return content;
@@ -351,7 +362,12 @@ export async function updateWebsiteContent(
     throw new Error(`Invalid website content: ${validation.errors.join("; ")}`);
   }
 
+  // Reads may use a fallback, but an admin write must never report a
+  // successful save that disappears when the server restarts.
+  if (!isD1Configured()) throw new Error("Website content storage is unavailable.");
   const current = await getWebsiteContent();
+  const changesCollections = patch.socialLinks !== undefined || patch.holidays !== undefined;
+  if (changesCollections) assertCollectionWrite(patch.collectionsRevision);
 
   const formattedAddress = patch.address
     ? {
@@ -369,14 +385,12 @@ export async function updateWebsiteContent(
     },
   };
 
-  inMemoryContent = { ...nextContent };
-
-  if (!isD1Configured()) {
-    return nextContent;
-  }
-
   try {
     const stmts: Array<{ toStmt(): { sql: string; params: unknown[] } }> = [];
+    if (changesCollections) {
+      stmts.push(claimCollectionsRevision(patch.collectionsRevision!));
+      nextContent.collectionsRevision = patch.collectionsRevision! + 1;
+    }
     const hasAddressUpdate = patch.address !== undefined;
     const hasFormToggleUpdate = patch.contactFormEnabled !== undefined;
 
@@ -542,11 +556,59 @@ export async function updateWebsiteContent(
     }
   } catch (err) {
     unstable_rethrow(err);
+    if (String(err).includes("website_content_conflict")) throw new WebsiteContentConflictError();
     console.error("Failed to update website content in D1:", err);
     throw err;
   }
 
+  inMemoryContent = { ...nextContent };
   return nextContent;
+}
+
+export class WebsiteContentConflictError extends Error {
+  constructor() {
+    super("Website content changed in another session. Reload this page before making more changes.");
+  }
+}
+
+function assertCollectionWrite(revision: unknown): asserts revision is number {
+  if (!isD1Configured()) throw new Error("Website content storage is unavailable.");
+  if (!Number.isSafeInteger(revision) || (revision as number) < 0) {
+    throw new WebsiteContentConflictError();
+  }
+}
+
+function claimCollectionsRevision(revision: number) {
+  return prepare(
+    "UPDATE website_content_revision SET revision = ?1 WHERE id = 1",
+  ).bind(revision + 1);
+}
+
+/** Targeted, transactional deletion. Repeats with the old revision conflict. */
+export async function deleteWebsiteContentEntry(
+  collection: "socialLinks" | "holidays",
+  id: string,
+  revision: number,
+): Promise<number> {
+  assertCollectionWrite(revision);
+  const statement = collection === "socialLinks"
+    ? prepare("DELETE FROM site_link WHERE link_group = 'social' AND key = ?1").bind(id)
+    : prepare("DELETE FROM hours_exception WHERE date = ?1").bind(id);
+  try {
+    await batch([claimCollectionsRevision(revision), statement]);
+  } catch (error) {
+    if (String(error).includes("website_content_conflict")) throw new WebsiteContentConflictError();
+    throw error;
+  }
+  // The next successful read refreshes the fallback; never publish uncommitted state.
+  inMemoryContent = {
+    ...inMemoryContent,
+    collectionsRevision: revision + 1,
+    ...(collection === "socialLinks"
+      ? { socialLinks: inMemoryContent.socialLinks.filter((link) => link.id !== id) }
+      : { holidays: inMemoryContent.holidays.filter((holiday) => holiday.date !== id) }),
+  };
+  return revision + 1;
 }
 
 /**

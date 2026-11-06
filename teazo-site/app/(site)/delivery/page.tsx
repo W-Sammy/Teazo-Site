@@ -75,7 +75,7 @@ export default async function Delivery() {
             
             <div className="relative z-20 flex flex-col md:flex-row md:flex-wrap items-center justify-center gap-6 md:gap-12 w-full mt-19">
                 {deliveryLinks.map((link) => (
-                    <GeneralButton key={link.id} text={link.label.toUpperCase()} href={link.url} />
+                    <GeneralButton key={link.id} text={link.label.toUpperCase()} href={link.url.trim()} />
                 ))}
             </div>
         </div>

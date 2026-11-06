@@ -316,9 +316,9 @@ export default function AdminEventsClient({
   }
 
   // Leave the confirmation open when deletion fails; clear it after success.
-  async function confirmDelete() {
+  async function confirmDelete(): Promise<string | null> {
     if (!eventPendingDelete) {
-      return;
+      return "Choose an event to delete.";
     }
 
     const deletedEvent =
@@ -329,7 +329,7 @@ export default function AdminEventsClient({
     );
 
     if (!deleted) {
-      return;
+      return "The event could not be deleted. Please try again.";
     }
 
     if (
@@ -340,19 +340,20 @@ export default function AdminEventsClient({
     }
 
     setEventPendingDelete(null);
+    return null;
   }
 
   // Delete ended events, then clear any editor or pending dialog for an ended event.
-  async function handleDeleteEndedEvents() {
+  async function handleDeleteEndedEvents(): Promise<string | null> {
     if (endedEventCount === 0) {
-      return;
+      return "There are no ended events to delete.";
     }
 
     const deleted =
       await deleteEndedEvents();
 
     if (!deleted) {
-      return;
+      return "The ended events could not be deleted. Please try again.";
     }
 
     if (
@@ -373,6 +374,7 @@ export default function AdminEventsClient({
     }
 
     setDeleteEndedDialogOpen(false);
+    return null;
   }
 
   // Reset matching criteria without changing the selected sort or view mode.

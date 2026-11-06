@@ -1382,13 +1382,13 @@ pages.
 | `PROXY_TOKEN` | the production Worker's secret | Secret. Must match `wrangler secret put PROXY_TOKEN` for that Worker |
 | `R2_PUBLIC_BASE` | the production Worker URL + `/media` | |
 | `AUTH_SECRET` | a long random string | Secret |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | Secret. The OAuth client must list the production site's `/api/auth/callback/google` URL |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | Secret. The OAuth client must list `https://teazous.com/api/auth/callback/google` (and `https://www.teazous.com/api/auth/callback/google`) |
 | `SQUARE_ENVIRONMENT` | `production` when going live | Defaults to `sandbox` regardless of Vercel's environment. Any other value fails startup and the build |
 | `SQUARE_ACCESS_TOKEN` | the shop's production Square access token | Secret. Must match `SQUARE_ENVIRONMENT` |
 | `SQUARE_LOCATION_ID` | the shop's production Square location ID | Required in production. Must belong to the account and environment selected above |
 | `SQUARE_WEBHOOK_SIGNATURE_KEY` | the production webhook subscription's signature key | Secret. Use the subscription for the selected Square environment |
 | `SQUARE_WEBHOOK_NOTIFICATION_URL` | the live site's HTTPS URL + `/api/square/webhooks` | Must exactly match that subscription's notification URL, including any trailing slash |
-| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazo-site.vercel.app/` | Used for catalog reads, checkout's post-payment redirect and invite links |
+| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazous.com/` | Used for catalog reads, checkout's post-payment redirect and invite links |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | Public |
 | `TURNSTILE_SECRET_KEY` | the production widget's secret | Secret |
 | `BREVO_API_KEY` | the Brevo API key | Secret. Unset means the deployment sends no email |
@@ -1436,9 +1436,8 @@ this on your machine, follow §2.8 and start the app with
 `VERCEL_ENV=production npm start`.
 
 **Turnstile.** On the team Cloudflare account, open Turnstile, add a widget in
-Managed mode, and list the production hostname (`teazo-site.vercel.app` for
-now, plus the shop's own domain later). It is free, and the site does not need
-to be on Cloudflare.
+Managed mode, and list the production hostname (`teazous.com` and `www.teazous.com`).
+It is free, and the site does not need to be on Cloudflare.
 
 **Brevo** (free plan: 300 emails a day, never billed while no card is added):
 
