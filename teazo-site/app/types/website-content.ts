@@ -23,6 +23,14 @@ export type SocialLink = {
   enabled: boolean;
 };
 
+export type DeliveryLink = {
+  id: string;
+  label: string;
+  icon: string;
+  url: string;
+  enabled: boolean;
+};
+
 export type AddressInfo = {
   businessName: string;
   streetAddress: string;
@@ -65,7 +73,7 @@ export type WebsiteContent = {
   logo: string;
   story: string;
   socialLinks: SocialLink[];
-  deliveryLinks?: SocialLink[];
+  deliveryLinks?: DeliveryLink[];
   address: AddressInfo;
   hours: DayHours[];
   holidays: Holiday[];

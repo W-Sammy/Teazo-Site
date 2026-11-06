@@ -1,6 +1,7 @@
 import type {
   DayHours,
   SocialLink,
+  DeliveryLink,
   WebsiteContent,
   ContactHour,
   ContactContent,
@@ -19,7 +20,7 @@ import {
   validateWebsiteContentPatch,
 } from "@/app/lib/website-content-validators";
 
-export type { ContactHour, ContactContent, SocialLink };
+export type { ContactHour, ContactContent, SocialLink, DeliveryLink };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
   logo: "/TEAZO_logo.svg",
@@ -56,14 +57,7 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     { id: "christmas", name: "Christmas", date: "12-25", closed: true },
     { id: "presidents", name: "Presidents Day", date: "02-16", closed: false, start: 10, end: 14 },
   ],
-  carouselImages: [
-    { id: "default-drying-leaves", src: "/carousel_images/drying-leaves.jpg", alt: "Tea image 1", enabled: true },
-    { id: "default-picking-leaves", src: "/carousel_images/picking-leaves.jpg", alt: "Tea image 2", enabled: true },
-    { id: "default-spilled-tea", src: "/carousel_images/spilled-tea.jpg", alt: "Tea image 3", enabled: true },
-    { id: "default-tea-sort", src: "/carousel_images/tea-sort.jpg", alt: "Tea image 4", enabled: true },
-    { id: "default-tea-spoons", src: "/carousel_images/tea-spoons.jpg", alt: "Tea image 5", enabled: true },
-    { id: "default-rose-tea", src: "/carousel_images/rose-tea.jpg", alt: "Tea image 6", enabled: true },
-  ],
+  carouselImages: [],
   contactFormEnabled: true,
   onlineOrderingEnabled: true,
 };
@@ -276,18 +270,17 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
           enabled: l.is_active === 1,
         }));
       if (socials.length > 0) content.socialLinks = socials;
-
-      const delivery = d1Links.results
-        .filter((l) => l.link_group === "delivery")
-        .map((l) => ({
-          id: l.key,
-          label: l.label,
-          icon: "",
-          url: l.url,
-          enabled: l.is_active === 1,
-        }));
-      if (delivery.length > 0) content.deliveryLinks = delivery;
     }
+
+    content.deliveryLinks = d1Links.results
+      .filter((link) => link.link_group === "delivery")
+      .map((link): DeliveryLink => ({
+        id: link.key,
+        label: link.label,
+        icon: "",
+        url: link.url,
+        enabled: link.is_active === 1,
+      }));
 
     if (d1Copy.results.length > 0) {
       for (const block of d1Copy.results) {
@@ -469,6 +462,21 @@ export async function updateWebsiteContent(
           prepare(
             `INSERT INTO site_link (key, link_group, label, url, sort_order, is_active)
              VALUES (?1, 'social', ?2, ?3, ?4, ?5)`
+          ).bind(link.id, link.label || link.id, link.url, i + 1, link.enabled ? 1 : 0)
+        );
+      }
+    }
+
+    if (patch.deliveryLinks !== undefined) {
+      stmts.push(prepare(`DELETE FROM site_link WHERE link_group = 'delivery'`));
+      for (let i = 0; i < patch.deliveryLinks.length; i++) {
+        const link = patch.deliveryLinks[i];
+        if (!link.id || !link.url) 
+          continue;
+        stmts.push(
+          prepare(
+            `INSERT INTO site_link (key, link_group, label, url, sort_order, is_active)
+             VALUES (?1, 'delivery', ?2, ?3, ?4, ?5)`
           ).bind(link.id, link.label || link.id, link.url, i + 1, link.enabled ? 1 : 0)
         );
       }

@@ -2,6 +2,7 @@ import type {
   AddressInfo,
   Holiday,
   SocialLink,
+  DeliveryLink,
   WebsiteContent,
 } from "@/app/types/website-content";
 
@@ -60,6 +61,16 @@ export function isValidUrlOrEmail(value: unknown): boolean {
   if (!trimmed) return false;
   if (trimmed.startsWith("mailto:")) return isValidEmail(trimmed.slice(7));
   return isValidEmail(trimmed) || URL_RE.test(trimmed);
+}
+
+export function isValidUrl(value: unknown): boolean {
+  if (typeof value !== "string") 
+    return false;
+  const trimmed = value.trim();
+  if (!trimmed) 
+    return false;
+  
+  return URL_RE.test(trimmed);
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -200,7 +211,7 @@ export function validateAddress(address: Partial<AddressInfo>): {
   };
 }
 
-export function validateSocialLinks(links: SocialLink[]): {
+export function validateSocialLinks(links: (SocialLink | DeliveryLink)[]): {
   valid: boolean;
   errors: string[];
 } {
@@ -280,6 +291,17 @@ export function validateWebsiteContentPatch(
   if (patch.socialLinks !== undefined) {
     const { valid, errors: socialErrors } = validateSocialLinks(patch.socialLinks);
     if (!valid) errors.push(...socialErrors);
+  }
+
+  if (patch.deliveryLinks !== undefined) {
+    const { valid, errors: deliveryErrors } = validateSocialLinks(patch.deliveryLinks);
+    if (!valid) 
+      errors.push(...deliveryErrors);
+
+    // delivery buttons need links, even though social links can use emails
+    for (const link of patch.deliveryLinks)
+      if (isNonEmpty(link.url) && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url)))
+        errors.push(`Enter a valid http:// or https:// link for "${link.label || link.id}"`);
   }
 
   if (patch.holidays !== undefined) {
