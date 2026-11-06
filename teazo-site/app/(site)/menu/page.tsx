@@ -405,23 +405,23 @@ export default async function MenuPage({
           />
 
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             MENU
           </h1>
 
           <div className="mt-4 flex flex-col items-center sm:mt-6">
-            <p
+            <h2
               className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
             >
               Too Much Scrolling?
-            </p>
+            </h2>
 
-            <p
+            <h2
               className={`${montserrat.className} mt-1 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
             >
               Download Our Menu
-            </p>
+            </h2>
 
             <div className="mt-5 cursor-pointer [&_*]:cursor-pointer">
               <GeneralButton text="DOWNLOAD" href="/static-menu" />

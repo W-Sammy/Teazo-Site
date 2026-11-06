@@ -25,7 +25,7 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
         {images.map((image) => (
             <figure
                 key={image.id}
-                className="group relative aspect-square overflow-hidden rounded-2xl bg-[#f3ece6]"
+                className="group relative aspect-square overflow-hidden rounded-2xl bg-[#FBF4EE]"
             >
               <Image
                   src={image.url}
