@@ -62,8 +62,7 @@ Authorization: Bearer <PROXY_TOKEN>
 ```
 
 The token is compared in constant time. A missing or wrong token returns 401.
-Production and preview use different token values, so a preview deployment
-cannot reach production data.
+Only the production Worker is deployed. A Vercel preview has no D1 or R2 proxy.
 
 ### POST /query
 
@@ -246,28 +245,23 @@ each thing R2 bills:
 | Reads (Class B) | 10 million | Each Worker request makes at most one read, and the free Workers plan refuses requests past 100,000 a day, so reads cannot pass 3.1 million |
 | Deletes | always free | nothing needed |
 
-The free amounts belong to the Cloudflare account, and production and preview
-share it. Each deployment gets a share, set in `teazo-d1-proxy/wrangler.jsonc`:
+The production Worker's limits are set in `teazo-d1-proxy/wrangler.jsonc`:
 
 | Deployment | Storage cap | Uploads and listings a day |
 |---|---|---|
 | production | 9.5 GB | 25,000 |
-| preview | 100 MB | 5,000 |
-| **total** | **9.6 GB** | **30,000**, at most 930,000 in any 31 days |
 
-If you change a share, keep the totals within 9.6 GB and 30,000. Neither Worker
-can see the other's numbers, so nothing checks the sum. Each Worker does refuse
-to go above the account totals on its own, and refuses all uploads if its
-values are missing.
+If you change these limits, keep them within the account's free allowance.
+The Worker refuses uploads when its values are missing.
 
-The storage total stops at 9.6 GB rather than the full 10 for three reasons.
+The account-wide storage ceiling is 9.6 GB rather than the full 10 for three reasons.
 Cloudflare's billing docs don't say how many bytes a GB is, so the Worker uses
 the smaller reading, 10,000,000,000 bytes. Storage is billed as the average of
 each day's peak over a period the docs call 30 days, but a monthly period can
 run 31, which would count a steady 10 GB as 10.33. And any overage is rounded
 up to a whole billed GB. 9.6 GB stays under 10 GB x 30/31 (about 9.68 GB) and
 leaves room for file names and metadata, which the docs don't say whether they
-bill.
+bill. The production Worker uses 9.5 GB, below that ceiling.
 
 D1 and Workers never bill on the free plans; they refuse requests at their
 limits instead. The cost of that is availability: past 100,000 Worker requests
@@ -298,8 +292,8 @@ against a different bucket rather than acting on it.
 | `Content-Length` | required | `/query`, `/batch`, `PUT /media` |
 | Upload types | jpeg, png, webp, pdf | `PUT /media` |
 | Key length | 512 characters | all `/media` routes |
-| Total stored in R2 | 9.5 GB production, 100 MB preview | `PUT /media` |
-| R2 uploads and listings | 25,000 a day production, 5,000 preview, reset at midnight UTC | `PUT /media`, `/usage?verify=1` |
+| Total stored in R2 | 9.5 GB production | `PUT /media` |
+| R2 uploads and listings | 25,000 a day, reset at midnight UTC | `PUT /media`, `/usage?verify=1` |
 
 Two limits come from outside the Worker and are worth knowing. Vercel rejects
 request bodies over 4.5 MB before a route runs, so large images are resized in

@@ -238,11 +238,9 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
  *             which caps reads at 3.1M a month.
  *   Deletes   always free.
  *
- * The free amounts belong to the ACCOUNT and are shared by every bucket on it,
- * so production and preview each get a share through their vars in
- * wrangler.jsonc. Neither Worker can see the other's share. Each clamps its own
- * to the account totals below; keeping the two shares' sum within them is up
- * to whoever edits those vars.
+ * The free amounts belong to the ACCOUNT and are shared by every bucket on it.
+ * This production Worker clamps its configured limits to the account totals
+ * below. Any future bucket or Worker must be included in that budget.
  *
  * The guarantee holds while the account stays on the free Workers plan and
  * nothing reaches the buckets except these Workers. Serving a bucket from a
@@ -519,7 +517,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function reapDeletedObjects(env: Env) {
-  // A preview sweeper must never delete production bytes, which is why
+  // A sweeper must never delete bytes from another bucket, which is why
   // pending_r2_deletion records the bucket and not only the key. That filter
   // belongs in the SQL, not only in the loop below: a row this Worker cannot
   // retire would otherwise sit at the head of the queue forever, so once
