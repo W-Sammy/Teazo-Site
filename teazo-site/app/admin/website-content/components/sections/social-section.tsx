@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
-import { isValidImageFile, parseAndNormalizeDestination } from "../validators";
+import { parseAndNormalizeDestination } from "../validators";
 import type { SocialLink } from "@/app/types/website-content";
 
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -29,7 +29,6 @@ export default function SocialSection({
   onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState<Record<string, FieldTouch>>({});
-  const [iconErrors, setIconErrors] = useState<Record<string, string>>({});
 
   function markTouched(id: string, field: keyof FieldTouch) {
     setTouched((prev) => ({
@@ -67,38 +66,6 @@ export default function SocialSection({
     return { labelError, urlError };
   }
 
-  function handleIconFile(id: string, file: File | undefined) {
-    if (!file) return;
-
-    const check = isValidImageFile(file);
-
-    if (!check.valid) {
-      setIconErrors((prev) => ({
-        ...prev,
-        [id]: check.error ?? "Invalid image file",
-      }));
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setIconErrors((prev) => ({ ...prev, [id]: "" }));
-        onUpdateLink(id, { icon: reader.result });
-      }
-    };
-
-    reader.onerror = () => {
-      setIconErrors((prev) => ({
-        ...prev,
-        [id]: "Couldn't read that image file",
-      }));
-    };
-
-    reader.readAsDataURL(file);
-  }
-
   return (
     <AccordionItem
       id="social"
@@ -109,13 +76,12 @@ export default function SocialSection({
       setRef={setRef}
     >
       <p className="mb-1 text-xs text-gray-400">
-        Links shown as icons in the site footer.
+        Links shown as icons in the site footer. Supported platforms (Facebook, Instagram, Yelp) automatically display their official brand icons; other destinations use a generic link icon. Custom icon uploads are not supported.
       </p>
 
       <div className="flex min-w-0 flex-col divide-y divide-[#f3ece4]">
         {socialLinks.map((link) => {
           const { labelError, urlError } = fieldErrors(link);
-          const iconError = iconErrors[link.id];
 
           return (
             <div
@@ -124,42 +90,26 @@ export default function SocialSection({
             >
               {/* Mobile: icon/actions, platform, then URL. Desktop: one row. */}
               <div className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 lg:grid-cols-[40px_96px_minmax(0,1fr)_auto] lg:gap-x-4">
-                <label
-                  htmlFor={`social-icon-${link.id}`}
-                  title="Change social media icon"
-                  className="group relative col-start-1 row-start-1 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#fbf3ea]"
+                <div
+                  title={link.label ? `${link.label} icon` : "Social media icon"}
+                  className="col-start-1 row-start-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fbf3ea]"
                 >
                   {link.icon ? (
                     <img
                       src={link.icon}
-                      alt={link.label}
+                      alt={link.label || "Platform icon"}
                       className="h-6 w-6 object-contain"
                     />
                   ) : (
                     <span className="text-[#a99584]">
                       <img
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
-                        alt="Default Icon"
+                        alt="Generic Link"
                         className="h-6 w-6 object-contain"
                       /> 
                     </span>
                   )}
-
-                  <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[9px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    Edit
-                  </span>
-
-                  {/* visually hidden; the styled label above is the actual click target that opens the file picker */}
-                  <input
-                    id={`social-icon-${link.id}`}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      handleIconFile(link.id, e.target.files?.[0])
-                    }
-                    className="hidden"
-                  />
-                </label>
+                </div>
 
                 <input
                   type="text"
@@ -251,11 +201,10 @@ export default function SocialSection({
                 const parsed = link.url.trim() ? parseAndNormalizeDestination(link.url) : null;
                 const showPreview = parsed?.ok && parsed.destination !== link.url.trim();
 
-                if (!labelError && !urlError && !iconError && !showPreview) return null;
+                if (!labelError && !urlError && !showPreview) return null;
 
                 return (
                   <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
-                    {iconError && <ErrorText>{iconError}</ErrorText>}
                     {labelError && <ErrorText>{labelError}</ErrorText>}
                     {urlError && <ErrorText>{urlError}</ErrorText>}
                     {showPreview && (
@@ -280,4 +229,4 @@ export default function SocialSection({
       </button>
     </AccordionItem>
   );
-} 
+}

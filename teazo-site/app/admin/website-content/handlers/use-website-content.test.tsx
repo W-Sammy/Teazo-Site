@@ -437,4 +437,18 @@ describe("Website Content save handling", () => {
       (saveCall?.[1] as RequestInit).keepalive,
     ).toBe(true);
   });
+
+  it("updates local logo state from confirmed upload without triggering redundant general PATCH", async () => {
+    const { result } = await renderContentHook();
+
+    act(() => {
+      result.current.updateLogo("https://r2.teazo.com/logo/2026/11/confirmed.webp");
+    });
+
+    expect(result.current.content.logo).toBe(
+      "https://r2.teazo.com/logo/2026/11/confirmed.webp",
+    );
+    // Ensure no redundant PATCH /api/website-content was dispatched
+    expect(savedPatches()).toEqual([]);
+  });
 });

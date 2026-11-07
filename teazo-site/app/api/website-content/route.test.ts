@@ -58,6 +58,25 @@ describe("PATCH /api/website-content", () => {
     expect(res.status).toBe(400);
     expect(mocks.updateWebsiteContent).not.toHaveBeenCalled();
   });
+
+  it("strictly rejects base64 and data URLs in logo text patch with status 400", async () => {
+    mocks.requireAdminApi.mockResolvedValue({ ok: true, admin: { id: 1 } });
+    const res = await patch({
+      logo: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    });
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toContain("Embedded image data and data URLs are not permitted");
+    expect(mocks.updateWebsiteContent).not.toHaveBeenCalled();
+  });
+
+  it("saves a valid logo reference for an admin", async () => {
+    mocks.requireAdminApi.mockResolvedValue({ ok: true, admin: { id: 1 } });
+    mocks.updateWebsiteContent.mockResolvedValue({ logo: "https://r2.teazo.com/logo/test.webp" });
+    const res = await patch({ logo: "https://r2.teazo.com/logo/test.webp" });
+    expect(res.status).toBe(200);
+    expect(mocks.updateWebsiteContent).toHaveBeenCalledWith({ logo: "https://r2.teazo.com/logo/test.webp" });
+  });
 });
 
 function remove(body: unknown) {

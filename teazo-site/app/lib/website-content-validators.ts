@@ -170,6 +170,117 @@ export function isValidUrl(value: unknown): boolean {
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
+export const ALLOWED_LOGO_MIME_TYPES = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+} as const;
+
+export type AllowedLogoMimeType = keyof typeof ALLOWED_LOGO_MIME_TYPES;
+
+// Keep the multipart request below Vercel's 4.5 MB body limit.
+export const MAX_LOGO_BYTES = 4 * 1024 * 1024;
+export const MAX_LOGO_URL_LENGTH = 2048;
+
+export function isValidLogoFile(
+  file: File | undefined,
+  maxBytes = MAX_LOGO_BYTES,
+): { valid: boolean; error?: string } {
+  if (!file) {
+    return { valid: false, error: "No image file provided." };
+  }
+  if (!Object.prototype.hasOwnProperty.call(ALLOWED_LOGO_MIME_TYPES, file.type)) {
+    return {
+      valid: false,
+      error: "Unsupported image format. Please upload PNG, JPG, or WebP.",
+    };
+  }
+  if (file.size === 0) {
+    return { valid: false, error: "The image file is empty." };
+  }
+  if (file.size > maxBytes) {
+    return {
+      valid: false,
+      error: `Image file is too large. Must be ${maxBytes / (1024 * 1024)} MiB or less.`,
+    };
+  }
+  return { valid: true };
+}
+
+export function validateLogo(logo: unknown): { valid: boolean; error?: string } {
+  if (typeof logo !== "string") {
+    return { valid: false, error: "Website logo must be a text URL or path" };
+  }
+  const trimmed = logo.trim();
+  if (!trimmed) {
+    return { valid: false, error: "Website logo cannot be empty" };
+  }
+  if (trimmed.length > MAX_LOGO_URL_LENGTH) {
+    return {
+      valid: false,
+      error: "Website logo reference is too long (keep under 2048 characters)",
+    };
+  }
+
+  // Strictly reject data URLs and embedded base64 images
+  if (/^data:/i.test(trimmed) || /;base64,/i.test(trimmed)) {
+    return {
+      valid: false,
+      error: "Embedded image data and data URLs are not permitted. Please upload the logo through the logo upload endpoint.",
+    };
+  }
+
+  // Reject whitespace characters inside the logo string
+  if (/\s/.test(trimmed)) {
+    return {
+      valid: false,
+      error: "Website logo destination must not contain whitespace characters",
+    };
+  }
+
+  // Root-relative path (e.g. /TEAZO_logo.svg), rejecting protocol-relative (//)
+  if (trimmed.startsWith("/")) {
+    if (trimmed.startsWith("//")) {
+      return {
+        valid: false,
+        error: "Protocol-relative paths are not supported for website logo",
+      };
+    }
+    return { valid: true };
+  }
+
+  // Absolute URL (http:// or https://)
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return {
+          valid: false,
+          error: "Only http: and https: logo URLs are supported",
+        };
+      }
+      const isLocal = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (!isLocal && !isValidDestinationHostname(parsed.hostname)) {
+        return {
+          valid: false,
+          error: "Enter a valid website logo URL with a valid domain name",
+        };
+      }
+      return { valid: true };
+    } catch {
+      return {
+        valid: false,
+        error: "Enter a valid website logo URL",
+      };
+    }
+  }
+
+  return {
+    valid: false,
+    error: "Enter a valid website logo URL (http:// or https://) or site path (e.g. /TEAZO_logo.svg)",
+  };
+}
+
 export function isValidImageFile(
   file: File,
   maxBytes = MAX_IMAGE_BYTES,
@@ -386,6 +497,11 @@ export function validateWebsiteContentPatch(
 
   if (patch.story !== undefined) {
     const { valid, error } = validateStory(patch.story);
+    if (!valid && error) errors.push(error);
+  }
+
+  if (patch.logo !== undefined) {
+    const { valid, error } = validateLogo(patch.logo);
     if (!valid && error) errors.push(error);
   }
 

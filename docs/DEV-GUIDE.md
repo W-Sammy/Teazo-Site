@@ -1027,6 +1027,22 @@ published or the database can't be read.
 > }
 > ```
 
+**Website logo uploads.** `POST /api/admin/website-content/logo` accepts PNG,
+JPEG, and WebP files up to **4 MiB**. The picker and route share validation;
+this lower limit leaves room for multipart encoding below Vercel's request
+limit. The endpoint uploads the file and saves `site.logo` once. The editor
+uses the confirmed URL without sending another general content PATCH. Logo
+text patches accept HTTP(S) URLs or site paths, never embedded image data.
+The favicon remains a static asset, and custom social icon uploads are not
+supported.
+
+If D1 definitely rejects the write, the endpoint removes the new upload. A
+transport failure, timeout, or server error may hide a committed write, so
+the file is retained and its key is logged for reconciliation. HTTP 503 with
+`requiresReload: true` tells the editor to disable uploads and offer Reload
+before another attempt. An explicit rejection returns `requiresReload: false`
+and allows retry. Failed cleanup is logged with the media key as well.
+
 ### 4.2 Deleting a file
 
 **Never delete the bytes yourself.** Retire the rows and queue the bytes, in one

@@ -3,10 +3,12 @@ import {
   daysInMonth,
   isValidDestination,
   isValidHolidayDate,
+  isValidLogoFile,
   normalizeDestination,
   parseAndNormalizeDestination,
   parseHolidayDate,
   validateHolidays,
+  validateLogo,
   validateSocialLinks,
   validateWebsiteContentPatch,
 } from "@/app/lib/website-content-validators";
@@ -246,5 +248,118 @@ describe("validateSocialLinks destination validation (Phase 3)", () => {
     const validation = validateWebsiteContentPatch(patch);
     expect(validation.valid).toBe(false);
     expect(validation.errors[0]).toContain('Enter a valid link or email for "Broken"');
+  });
+});
+
+describe("validateLogo and validateWebsiteContentPatch (Phase 4)", () => {
+  it("accepts valid root-relative path and absolute URLs", () => {
+    expect(validateLogo("/TEAZO_logo.svg").valid).toBe(true);
+    expect(validateLogo("/custom/path/logo.webp").valid).toBe(true);
+    expect(validateLogo("https://r2.teazo.com/logo/2026/11/test.webp").valid).toBe(true);
+    expect(validateLogo("http://localhost:3000/TEAZO_logo.svg").valid).toBe(true);
+
+    const patch = { logo: "https://r2.teazo.com/logo/2026/11/logo.png" };
+    const validation = validateWebsiteContentPatch(patch);
+    expect(validation.valid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
+  });
+
+  it.each([
+    ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "Embedded image data and data URLs are not permitted"],
+    ["DATA:image/jpeg;base64,/9j/4AAQSkZJRg==", "Embedded image data and data URLs are not permitted"],
+    ["https://example.com/logo.png;base64,123", "Embedded image data and data URLs are not permitted"],
+  ])("strictly rejects base64 and data URLs %j", (dataUrl, expectedError) => {
+    const res = validateLogo(dataUrl);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain(expectedError);
+
+    const patchValidation = validateWebsiteContentPatch({ logo: dataUrl });
+    expect(patchValidation.valid).toBe(false);
+    expect(patchValidation.errors[0]).toContain(expectedError);
+  });
+
+  it("rejects oversized logo references (> 2048 characters)", () => {
+    const oversized = "https://example.com/logo/" + "a".repeat(2050);
+    const res = validateLogo(oversized);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain("too long");
+
+    const patchValidation = validateWebsiteContentPatch({ logo: oversized });
+    expect(patchValidation.valid).toBe(false);
+    expect(patchValidation.errors[0]).toContain("too long");
+  });
+
+  it.each([
+    ["javascript:alert(1)", "Enter a valid website logo URL"],
+    ["//evil.com/logo.png", "Protocol-relative paths are not supported"],
+    ["https://", "Enter a valid website logo URL"],
+    ["http://invalid space/logo.png", "whitespace characters"],
+    ["", "Website logo cannot be empty"],
+    ["   ", "Website logo cannot be empty"],
+    [123 as unknown as string, "Website logo must be a text URL or path"],
+  ])("rejects invalid logo value %j", (input, expectedError) => {
+    const res = validateLogo(input);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain(expectedError);
+
+    const patchValidation = validateWebsiteContentPatch({ logo: input });
+    expect(patchValidation.valid).toBe(false);
+    expect(patchValidation.errors[0]).toContain(expectedError);
+  });
+});
+
+describe("isValidLogoFile (Phase 4)", () => {
+  function makeMockFile(name: string, type: string, size: number): File {
+    const file = new File([], name, { type });
+    Object.defineProperty(file, "size", { value: size });
+    return file;
+  }
+
+  it.each([
+    ["logo.png", "image/png"],
+    ["logo.jpg", "image/jpeg"],
+    ["logo.webp", "image/webp"],
+  ])("accepts supported image format %s (%s)", (name, type) => {
+    const file = makeMockFile(name, type, 1024);
+    const res = isValidLogoFile(file);
+    expect(res.valid).toBe(true);
+    expect(res.error).toBeUndefined();
+  });
+
+  it.each([
+    ["logo.gif", "image/gif"],
+    ["logo.svg", "image/svg+xml"],
+    ["logo.bmp", "image/bmp"],
+    ["document.pdf", "application/pdf"],
+    ["script.js", "application/javascript"],
+  ])("rejects unsupported format %s (%s)", (name, type) => {
+    const file = makeMockFile(name, type, 1024);
+    const res = isValidLogoFile(file);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain("Unsupported image format. Please upload PNG, JPG, or WebP.");
+  });
+
+  it("accepts exactly 4 MiB", () => {
+    expect(isValidLogoFile(makeMockFile("logo.png", "image/png", 4 * 1024 * 1024)).valid).toBe(true);
+  });
+
+  it("rejects files just over 4 MiB", () => {
+    const file = makeMockFile("large.png", "image/png", 4 * 1024 * 1024 + 1);
+    const res = isValidLogoFile(file);
+    expect(res.valid).toBe(false);
+    expect(res.error).toBe("Image file is too large. Must be 4 MiB or less.");
+  });
+
+  it("rejects empty files (0 bytes)", () => {
+    const file = makeMockFile("empty.png", "image/png", 0);
+    const res = isValidLogoFile(file);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain("The image file is empty.");
+  });
+
+  it("rejects undefined file", () => {
+    const res = isValidLogoFile(undefined);
+    expect(res.valid).toBe(false);
+    expect(res.error).toContain("No image file provided.");
   });
 });

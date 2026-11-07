@@ -209,16 +209,10 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     };
   }, []);
 
-  function updateLogo(dataUrl: string) {
+  function updateLogo(url: string) {
     setErrorMessage("");
-    try {
-      setContent((prev) => ({ ...prev, logo: dataUrl }));
-      flushPatch({ logo: dataUrl });
-      return true;
-    } catch {
-      setErrorMessage("Failed to update the logo.");
-      return false;
-    }
+    setContent((prev) => ({ ...prev, logo: url }));
+    return true;
   }
 
   function updateStory(story: string) {

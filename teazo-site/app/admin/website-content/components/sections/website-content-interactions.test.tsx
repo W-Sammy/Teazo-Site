@@ -23,6 +23,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 
 import type {
@@ -33,6 +34,7 @@ import StorySection from "./story-section";
 import ContactSection from "./contact-section";
 import OrderingSection from "./ordering-section";
 import SocialSection from "./social-section";
+import LogoSection from "./logo-section";
 
 const validAddress: AddressInfo = {
   businessName: "TEAZO",
@@ -499,5 +501,288 @@ describe("SocialSection destination normalization & inline feedback (Phase 3)", 
     fireEvent.blur(input);
 
     expect(screen.getByText(/Unsupported scheme "javascript:"/)).toBeTruthy();
+  });
+});
+
+describe("LogoSection media administration (Phase 4)", () => {
+  function makeMockFile(name: string, type: string, size: number): File {
+    const file = new File([], name, { type });
+    Object.defineProperty(file, "size", { value: size });
+    return file;
+  }
+
+  it("renders corrected favicon copy", () => {
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Browser tab favicon is a static asset/),
+    ).toBeTruthy();
+  });
+
+  it("shows validation error and does not upload when invalid file format is selected", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch");
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={vi.fn()}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.gif", "image/gif", 1024);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(
+      screen.getByText("Unsupported image format. Please upload PNG, JPG, or WebP."),
+    ).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects a file just over 4 MiB before uploading", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch");
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={vi.fn()}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("large.png", "image/png", 4 * 1024 * 1024 + 1);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(screen.getByText("Image file is too large. Must be 4 MiB or less.")).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("displays upload progress and disables input during submission", async () => {
+    let resolveUpload!: (value: Response) => void;
+    const uploadPromise = new Promise<Response>((resolve) => {
+      resolveUpload = resolve;
+    });
+    vi.spyOn(global, "fetch").mockReturnValue(uploadPromise);
+
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={vi.fn()}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.png", "image/png", 1024);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(screen.getAllByText("Uploading...").length).toBeGreaterThan(0);
+    expect(input.disabled).toBe(true);
+
+    // Resolve upload
+    resolveUpload(
+      new Response(JSON.stringify({ success: true, url: "https://r2.teazo.com/logo/new.png" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await waitFor(() => {
+      expect(input.disabled).toBe(false);
+    });
+  });
+
+  it("displays clear error message on server upload rejection without base64 fallback", async () => {
+    const onLogoChange = vi.fn();
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "Image file is too large. Must be 4 MiB or less." }), {
+        status: 413,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={onLogoChange}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.png", "image/png", 1024);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Image file is too large. Must be 4 MiB or less.")).toBeTruthy();
+    });
+
+    expect(onLogoChange).not.toHaveBeenCalled();
+    expect(input.disabled).toBe(false);
+  });
+
+  it("requires reconciliation after a lost response without base64 fallback or repeat upload", async () => {
+    const onLogoChange = vi.fn();
+    vi.spyOn(global, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={onLogoChange}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.png", "image/png", 1024);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "The logo save could not be confirmed. Reload this page to check the saved logo before uploading again.",
+        ),
+      ).toBeTruthy();
+    });
+
+    expect(onLogoChange).not.toHaveBeenCalled();
+    expect(input.disabled).toBe(true);
+    expect(screen.getByRole("button", { name: "Reload saved logo" })).toBeTruthy();
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [503, { error: "The logo save could not be confirmed.", requiresReload: true }],
+    [500, { error: "Upload processing failed." }],
+    [200, { success: true }],
+  ])("requires reload for an unconfirmed upload response (%s, %j)", async (status, body) => {
+    vi.spyOn(global, "fetch").mockResolvedValue(Response.json(body, { status }));
+    const onLogoChange = vi.fn();
+    render(<LogoSection logo="/TEAZO_logo.svg" isOpen onToggle={vi.fn()}
+      setRef={() => {}} onLogoChange={onLogoChange} />);
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.png", "image/png", 1024);
+    fireEvent.change(input, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Reload saved logo" })).toBeTruthy();
+    });
+    expect(input.disabled).toBe(true);
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(onLogoChange).not.toHaveBeenCalled();
+  });
+
+  it("allows retry after an explicitly rejected save", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(Response.json({
+      error: "Could not save the logo. Please try again.", requiresReload: false,
+    }, { status: 503 }));
+    render(<LogoSection logo="/TEAZO_logo.svg" isOpen onToggle={vi.fn()}
+      setRef={() => {}} onLogoChange={vi.fn()} />);
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [makeMockFile("logo.png", "image/png", 1024)] } });
+    await waitFor(() => {
+      expect(screen.getByText("Could not save the logo. Please try again.")).toBeTruthy();
+      expect(input.disabled).toBe(false);
+    });
+    expect(screen.queryByRole("button", { name: "Reload saved logo" })).toBeNull();
+  });
+
+  it("successfully updates logo upon confirmed upload response", async () => {
+    const onLogoChange = vi.fn();
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ success: true, url: "https://r2.teazo.com/logo/confirmed.webp" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(
+      <LogoSection
+        logo="/TEAZO_logo.svg"
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onLogoChange={onLogoChange}
+      />,
+    );
+
+    const input = document.getElementById("website-logo-upload") as HTMLInputElement;
+    const file = makeMockFile("logo.webp", "image/webp", 1024);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(onLogoChange).toHaveBeenCalledWith("https://r2.teazo.com/logo/confirmed.webp");
+    });
+  });
+});
+
+describe("SocialSection icon artwork resolution (Phase 4)", () => {
+  it("renders bundled brand icons and generic link fallback without dead upload controls", () => {
+    const { container } = render(
+      <SocialSection
+        socialLinks={[
+          {
+            id: "facebook",
+            label: "Facebook",
+            url: "https://facebook.com/teazo",
+            enabled: true,
+            icon: "/social_icons/social_svg/teazo_fb_icon.svg",
+          },
+          {
+            id: "threads",
+            label: "Threads",
+            url: "https://threads.net/@teazo",
+            enabled: true,
+            icon: "",
+          },
+        ]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={vi.fn()}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    // Official brand icon rendered for Facebook
+    const fbImg = container.querySelector('img[src="/social_icons/social_svg/teazo_fb_icon.svg"]');
+    expect(fbImg).toBeTruthy();
+
+    // Generic link icon rendered for custom platform
+    const genericImg = container.querySelector('img[src="/admin_icons/admin_svg/teazo_share_icon.svg"]');
+    expect(genericImg).toBeTruthy();
+
+    // Verify dead file picker controls have been completely removed
+    const fileInputs = container.querySelectorAll('input[type="file"]');
+    expect(fileInputs.length).toBe(0);
+
+    // Verify explanatory UI copy is present
+    expect(screen.getByText(/Custom icon uploads are not supported\./)).toBeTruthy();
   });
 });

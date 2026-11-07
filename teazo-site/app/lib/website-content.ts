@@ -357,7 +357,9 @@ export async function getWebsiteContent(options?: { allowOutageFallback?: boolea
         if (block.key === "home.story" && block.value) {
           content.story = block.value;
         } else if (block.key === "site.logo" && block.value) {
-          content.logo = block.value;
+          content.logo = block.value.startsWith("data:")
+            ? DEFAULT_WEBSITE_CONTENT.logo
+            : block.value;
         } else if (block.key === ONLINE_ORDERING_KEY) {
           content.onlineOrderingEnabled = block.value !== "off";
         }
