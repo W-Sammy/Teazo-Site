@@ -380,6 +380,8 @@ export function BubbleField({
       return;
     }
 
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let isReducedMotion = motionQuery.matches;
     let width = container.clientWidth;
     let height = container.clientHeight;
 
@@ -472,6 +474,9 @@ export function BubbleField({
     };
 
     const step = (time: number) => {
+      frameRef.current = null;
+      if (isReducedMotion) return;
+
       const particles = particlesRef.current;
 
       if (!lastTimeRef.current) {
@@ -658,6 +663,28 @@ export function BubbleField({
       frameRef.current = window.requestAnimationFrame(step);
     };
 
+    const startAnimation = () => {
+      if (!isReducedMotion && frameRef.current === null) {
+        lastTimeRef.current = 0;
+        frameRef.current = window.requestAnimationFrame(step);
+      }
+    };
+
+    const handleMotionChange = (event: MediaQueryListEvent) => {
+      isReducedMotion = event.matches;
+
+      if (isReducedMotion) {
+        // Freeze the current composition without moving bubbles on preference change.
+        if (frameRef.current !== null) {
+          window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+      } else {
+        startAnimation();
+      }
+    };
+
+    motionQuery.addEventListener("change", handleMotionChange);
     initializeParticles();
 
     // Re-initialize on resize so coverage and spacing stay proportional to the
@@ -667,13 +694,15 @@ export function BubbleField({
     });
 
     resizeObserver.observe(container);
-    frameRef.current = window.requestAnimationFrame(step);
+    startAnimation();
 
     return () => {
       resizeObserver.disconnect();
+      motionQuery.removeEventListener("change", handleMotionChange);
 
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
   }, [visibleCount]);
