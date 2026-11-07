@@ -10,6 +10,9 @@ const EMAIL_RE =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 const URL_RE =
   /^(https?:\/\/)?([\w-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i;
+const DOMAIN_RE =
+  /^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
+const DOMAIN_LABEL_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 const PHONE_CHAR_RE = /^[+]?[\d\s().-]{10,25}$/;
 
 export function isNonEmpty(value: unknown): boolean {
@@ -55,12 +58,104 @@ export function formatPhoneNumber(value: unknown): string {
   return trimmed;
 }
 
-export function isValidUrlOrEmail(value: unknown): boolean {
-  if (typeof value !== "string") return false;
+export type DestinationKind = "url" | "email";
+
+export type DestinationParseResult =
+  | { ok: true; destination: string; kind: DestinationKind }
+  | { ok: false; error: string };
+
+function isValidDestinationHostname(hostname: string): boolean {
+  // A final root dot is valid in a fully qualified domain name. URL parsing
+  // handles Unicode-to-ASCII conversion but does not enforce DNS label rules.
+  const domain = hostname.endsWith(".") ? hostname.slice(0, -1) : hostname;
+  const labels = domain.split(".");
+  return domain.length <= 253 && labels.length > 1 &&
+    labels.every((label) => DOMAIN_LABEL_RE.test(label));
+}
+
+export function parseAndNormalizeDestination(value: unknown): DestinationParseResult {
+  if (typeof value !== "string") {
+    return { ok: false, error: "Destination must be a text value" };
+  }
   const trimmed = value.trim();
-  if (!trimmed) return false;
-  if (trimmed.startsWith("mailto:")) return isValidEmail(trimmed.slice(7));
-  return isValidEmail(trimmed) || URL_RE.test(trimmed);
+  if (!trimmed) {
+    return { ok: false, error: "Destination cannot be empty" };
+  }
+  if (trimmed.length > 2048) {
+    return { ok: false, error: "Destination is too long (keep under 2048 characters)" };
+  }
+
+  // Bare email address
+  if (isValidEmail(trimmed)) {
+    return { ok: true, destination: `mailto:${trimmed}`, kind: "email" };
+  }
+
+  // A domain with a port resembles a scheme. Recognize that form separately
+  // so explicit schemes still work when their destination starts with a digit.
+  const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+  if (schemeMatch && !DOMAIN_RE.test(trimmed)) {
+    const scheme = schemeMatch[1].toLowerCase();
+    if (scheme === "mailto") {
+      const rest = trimmed.slice(schemeMatch[0].length).trim();
+      if (!rest) {
+        return { ok: false, error: "Enter a valid email address after mailto:" };
+      }
+      const [address, ...queryParts] = rest.split("?");
+      const trimmedAddress = address.trim();
+      if (!isValidEmail(trimmedAddress)) {
+        return { ok: false, error: "Enter a valid email address after mailto:" };
+      }
+      const query = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
+      return { ok: true, destination: `mailto:${trimmedAddress}${query}`, kind: "email" };
+    }
+
+    if (scheme !== "http" && scheme !== "https") {
+      return {
+        ok: false,
+        error: `Unsupported scheme "${scheme}:". Only http:, https:, and mailto: destinations are supported.`,
+      };
+    }
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!isValidDestinationHostname(parsed.hostname)) {
+        return { ok: false, error: "Enter a valid website destination with a domain name" };
+      }
+      return { ok: true, destination: parsed.href, kind: "url" };
+    } catch {
+      return { ok: false, error: "Enter a valid website destination" };
+    }
+  }
+
+  // Reject relative or protocol-relative paths
+  if (trimmed.startsWith("/") || trimmed.startsWith(".")) {
+    return { ok: false, error: "Relative paths are not supported. Enter a full website address or email." };
+  }
+
+  // Domain-only check (e.g. instagram.com/teazosf, domain.com:8080/path)
+  if (DOMAIN_RE.test(trimmed)) {
+    try {
+      const parsed = new URL(`https://${trimmed}`);
+      if (isValidDestinationHostname(parsed.hostname)) {
+        return { ok: true, destination: parsed.href, kind: "url" };
+      }
+    } catch {}
+  }
+
+  return { ok: false, error: "Enter a valid website destination (e.g. instagram.com/teazo) or email" };
+}
+
+export function normalizeDestination(value: unknown): string | null {
+  const result = parseAndNormalizeDestination(value);
+  return result.ok ? result.destination : null;
+}
+
+export function isValidDestination(value: unknown): boolean {
+  return parseAndNormalizeDestination(value).ok;
+}
+
+export function isValidUrlOrEmail(value: unknown): boolean {
+  return isValidDestination(value);
 }
 
 export function isValidUrl(value: unknown): boolean {
@@ -226,14 +321,20 @@ export function validateSocialLinks(links: (SocialLink | DeliveryLink)[]): {
       }
       if (urlEmpty) {
         errors.push(`URL required for link "${link.label || link.id}"`);
-      } else if (!isValidUrlOrEmail(link.url)) {
-        errors.push(`Enter a valid link or email for "${link.label || link.id}"`);
+      } else {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          errors.push(`Enter a valid link or email for "${link.label || link.id}": ${dest.error}`);
+        }
       }
     } else if (!labelEmpty || !urlEmpty) {
       if (labelEmpty) errors.push(`Platform name required for link`);
       if (urlEmpty) errors.push(`URL required for link "${link.label}"`);
-      else if (!isValidUrlOrEmail(link.url)) {
-        errors.push(`Enter a valid link or email for "${link.label}"`);
+      else {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          errors.push(`Enter a valid link or email for "${link.label}": ${dest.error}`);
+        }
       }
     }
   }

@@ -32,6 +32,7 @@ import type {
 import StorySection from "./story-section";
 import ContactSection from "./contact-section";
 import OrderingSection from "./ordering-section";
+import SocialSection from "./social-section";
 
 const validAddress: AddressInfo = {
   businessName: "TEAZO",
@@ -397,5 +398,106 @@ describe("Website Content — Online Ordering administration", () => {
     fireEvent.click(toggle);
 
     expect(onUpdate).toHaveBeenCalledWith(true);
+  });
+});
+
+describe("SocialSection destination normalization & inline feedback (Phase 3)", () => {
+  it("shows an inline preview hint when typing a domain-only destination", () => {
+    const onUpdateLink = vi.fn();
+    render(
+      <SocialSection
+        socialLinks={[{ id: "instagram", label: "Instagram", url: "instagram.com/teazosf", enabled: true, icon: "" }]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={onUpdateLink}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Will save as:")).toBeTruthy();
+    expect(screen.getByText("https://instagram.com/teazosf")).toBeTruthy();
+  });
+
+  it("shows an inline preview hint for bare email address", () => {
+    render(
+      <SocialSection
+        socialLinks={[{ id: "email", label: "Email", url: "teazosf@hotmail.com", enabled: true, icon: "" }]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={vi.fn()}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Will save as:")).toBeTruthy();
+    expect(screen.getByText("mailto:teazosf@hotmail.com")).toBeTruthy();
+  });
+
+  it("auto-normalizes domain-only destinations to https on blur", () => {
+    const onUpdateLink = vi.fn();
+    render(
+      <SocialSection
+        socialLinks={[{ id: "instagram", label: "Instagram", url: "instagram.com/teazosf", enabled: true, icon: "" }]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={onUpdateLink}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByLabelText("Instagram link");
+    fireEvent.blur(input);
+
+    expect(onUpdateLink).toHaveBeenCalledWith("instagram", {
+      url: "https://instagram.com/teazosf",
+    });
+  });
+
+  it("auto-normalizes bare email to mailto on blur", () => {
+    const onUpdateLink = vi.fn();
+    render(
+      <SocialSection
+        socialLinks={[{ id: "email", label: "Email", url: "teazosf@hotmail.com", enabled: true, icon: "" }]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={onUpdateLink}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByLabelText("Email link");
+    fireEvent.blur(input);
+
+    expect(onUpdateLink).toHaveBeenCalledWith("email", {
+      url: "mailto:teazosf@hotmail.com",
+    });
+  });
+
+  it("displays immediate inline error for unsupported scheme after touch", () => {
+    const onUpdateLink = vi.fn();
+    render(
+      <SocialSection
+        socialLinks={[{ id: "xss", label: "XSS", url: "javascript:alert(1)", enabled: true, icon: "" }]}
+        isOpen={true}
+        onToggle={vi.fn()}
+        setRef={() => {}}
+        onUpdateLink={onUpdateLink}
+        onAddLink={vi.fn()}
+        onRemoveLink={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByLabelText("XSS link");
+    fireEvent.blur(input);
+
+    expect(screen.getByText(/Unsupported scheme "javascript:"/)).toBeTruthy();
   });
 });

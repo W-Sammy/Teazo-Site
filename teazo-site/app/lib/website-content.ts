@@ -18,6 +18,7 @@ import {
   isNonEmpty,
   formatPhoneNumber,
   validateWebsiteContentPatch,
+  parseAndNormalizeDestination,
 } from "@/app/lib/website-content-validators";
 
 export type { ContactHour, ContactContent, SocialLink, DeliveryLink };
@@ -303,15 +304,18 @@ export async function getWebsiteContent(options?: { allowOutageFallback?: boolea
     if (d1Links.results.length > 0) {
       const socials = d1Links.results
         .filter((l) => l.link_group === "social" && l.key !== "email")
-        .map((l) => ({
-          id: l.key,
-          label: l.label,
-          icon: ({ facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
-            instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
-            yelp: "/social_icons/social_svg/teazo_yelp_icon.svg" } as Record<string, string>)[l.key] || "",
-          url: l.url,
-          enabled: l.is_active === 1,
-        }));
+        .map((l) => {
+          const parsed = parseAndNormalizeDestination(l.url);
+          return {
+            id: l.key,
+            label: l.label,
+            icon: ({ facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
+              instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
+              yelp: "/social_icons/social_svg/teazo_yelp_icon.svg" } as Record<string, string>)[l.key] || "",
+            url: parsed.ok ? parsed.destination : l.url,
+            enabled: l.is_active === 1,
+          };
+        });
       content.socialLinks = socials;
     } else {
       content.socialLinks = [];
@@ -412,9 +416,18 @@ export async function updateWebsiteContent(
       }
     : undefined;
 
+  const normalizedSocialLinks = patch.socialLinks?.map((link) => {
+    const parsed = parseAndNormalizeDestination(link.url);
+    return {
+      ...link,
+      url: parsed.ok ? parsed.destination : link.url.trim(),
+    };
+  });
+
   const nextContent: WebsiteContent = {
     ...current,
     ...patch,
+    ...(normalizedSocialLinks ? { socialLinks: normalizedSocialLinks } : {}),
     address: {
       ...current.address,
       ...(formattedAddress ?? {}),
@@ -503,10 +516,10 @@ export async function updateWebsiteContent(
       });
     }
 
-    if (patch.socialLinks) {
+    if (normalizedSocialLinks) {
       stmts.push(prepare(`DELETE FROM site_link WHERE link_group = 'social'`));
-      for (let i = 0; i < patch.socialLinks.length; i++) {
-        const link = patch.socialLinks[i];
+      for (let i = 0; i < normalizedSocialLinks.length; i++) {
+        const link = normalizedSocialLinks[i];
         if (!link.id || !link.url) continue;
         stmts.push(
           prepare(

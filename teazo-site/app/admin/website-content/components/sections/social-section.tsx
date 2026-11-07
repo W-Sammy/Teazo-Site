@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
-import { isValidImageFile, isValidUrlOrEmail } from "../validators";
+import { isValidImageFile, parseAndNormalizeDestination } from "../validators";
 import type { SocialLink } from "@/app/types/website-content";
 
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -56,8 +56,11 @@ export default function SocialSection({
     if (t.url) {
       if (urlEmpty && !labelEmpty) {
         urlError = "Link required";
-      } else if (!urlEmpty && !isValidUrlOrEmail(link.url)) {
-        urlError = "Enter a valid link or email";
+      } else if (!urlEmpty) {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          urlError = dest.error;
+        }
       }
     }
 
@@ -178,7 +181,13 @@ export default function SocialSection({
                   onChange={(e) =>
                     onUpdateLink(link.id, { url: e.target.value })
                   }
-                  onBlur={() => markTouched(link.id, "url")}
+                  onBlur={() => {
+                    markTouched(link.id, "url");
+                    const parsed = parseAndNormalizeDestination(link.url);
+                    if (parsed.ok && parsed.destination !== link.url) {
+                      onUpdateLink(link.id, { url: parsed.destination });
+                    }
+                  }}
                   placeholder={link.label ? `${link.label} link` : "Link"}
                   aria-label={
                     link.label ? `${link.label} link` : "Social media link"
@@ -238,13 +247,25 @@ export default function SocialSection({
                 </div>
               </div>
 
-              {(labelError || urlError || iconError) && (
-                <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
-                  {iconError && <ErrorText>{iconError}</ErrorText>}
-                  {labelError && <ErrorText>{labelError}</ErrorText>}
-                  {urlError && <ErrorText>{urlError}</ErrorText>}
-                </div>
-              )}
+              {(() => {
+                const parsed = link.url.trim() ? parseAndNormalizeDestination(link.url) : null;
+                const showPreview = parsed?.ok && parsed.destination !== link.url.trim();
+
+                if (!labelError && !urlError && !iconError && !showPreview) return null;
+
+                return (
+                  <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
+                    {iconError && <ErrorText>{iconError}</ErrorText>}
+                    {labelError && <ErrorText>{labelError}</ErrorText>}
+                    {urlError && <ErrorText>{urlError}</ErrorText>}
+                    {showPreview && (
+                      <span className="text-[11px] text-[#8c6b47]">
+                        Will save as: <span className="font-mono">{parsed.destination}</span>
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
