@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 // Site fonts
 const cabinSketch = Cabin_Sketch({
+    subsets: ["latin"],
     weight: "400",
     style: "normal"
 });

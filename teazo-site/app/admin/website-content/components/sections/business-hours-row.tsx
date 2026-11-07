@@ -14,6 +14,20 @@ import {
 const timeInputClass =
   "block min-h-11 w-full min-w-0 max-w-full cursor-pointer rounded border border-[#ecdfd7] bg-white px-1.5 py-1 text-base text-gray-700 disabled:cursor-default disabled:text-gray-400 lg:min-h-0 lg:text-xs";
 
+// maps an absolute pointer X to an hour value snapped to the nearest SNAP_HOURS increment
+function hourFromPointer(track: HTMLDivElement | null, clientX: number) {
+  const rect = track?.getBoundingClientRect();
+
+  if (!rect || rect.width <= 0) return 0;
+
+  const fraction = Math.max(
+    0,
+    Math.min(1, (clientX - rect.left) / rect.width)
+  );
+
+  return Math.round((fraction * 24) / SNAP_HOURS) * SNAP_HOURS;
+}
+
 export default function BusinessHoursRow({
   entry,
   holiday,
@@ -25,24 +39,12 @@ export default function BusinessHoursRow({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // maps an absolute pointer X to an hour value snapped to the nearest SNAP_HOURS increment
-  function hourFromClientX(clientX: number) {
-    const rect = trackRef.current?.getBoundingClientRect();
-
-    if (!rect || rect.width <= 0) return 0;
-
-    const fraction = Math.max(
-      0,
-      Math.min(1, (clientX - rect.left) / rect.width)
-    );
-
-    return Math.round((fraction * 24) / SNAP_HOURS) * SNAP_HOURS;
-  }
-
   // drag the edges to resize, drag the bar itself to slide the whole range
-  function startDrag(mode: "move" | "start" | "end") {
-    return (e: ReactPointerEvent<HTMLDivElement>) => {
-      if (entry.closed) return;
+  function handleDragStart(
+    mode: "move" | "start" | "end",
+    e: ReactPointerEvent<HTMLDivElement>
+  ) {
+    if (entry.closed) return;
 
       e.preventDefault();
       e.stopPropagation();
@@ -84,7 +86,7 @@ export default function BusinessHoursRow({
           });
         } else if (mode === "start") {
           // clamp against the opposite edge minus MIN_DURATION_HOURS so the two handles can't cross
-          const hour = hourFromClientX(ev.clientX);
+          const hour = hourFromPointer(trackRef.current, ev.clientX);
 
           onChange({
             start: Math.max(
@@ -93,7 +95,7 @@ export default function BusinessHoursRow({
             ),
           });
         } else {
-          const hour = hourFromClientX(ev.clientX);
+          const hour = hourFromPointer(trackRef.current, ev.clientX);
 
           onChange({
             end: Math.min(
@@ -122,7 +124,6 @@ export default function BusinessHoursRow({
       target.addEventListener("pointerup", handleEnd);
       target.addEventListener("pointercancel", handleEnd);
       target.addEventListener("lostpointercapture", handleEnd);
-    };
   }
 
   const leftPct = (entry.start / 24) * 100;
@@ -186,7 +187,7 @@ export default function BusinessHoursRow({
             </span>
           ) : (
             <div
-              onPointerDown={startDrag("move")}
+              onPointerDown={(e) => handleDragStart("move", e)}
               className="absolute bottom-[3px] top-[3px] flex touch-none select-none cursor-grab items-center justify-center overflow-hidden rounded bg-[#dbb082] text-[10px] font-bold text-[#4a3418] active:cursor-grabbing"
               style={{
                 left: `${leftPct}%`,
@@ -200,12 +201,12 @@ export default function BusinessHoursRow({
               </span>
 
               <div
-                onPointerDown={startDrag("start")}
+                onPointerDown={(e) => handleDragStart("start", e)}
                 className="absolute inset-y-0 left-0 w-3 touch-none cursor-ew-resize"
               />
 
               <div
-                onPointerDown={startDrag("end")}
+                onPointerDown={(e) => handleDragStart("end", e)}
                 className="absolute inset-y-0 right-0 w-3 touch-none cursor-ew-resize"
               />
             </div>
