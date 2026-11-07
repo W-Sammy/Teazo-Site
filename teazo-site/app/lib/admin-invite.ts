@@ -45,7 +45,7 @@ export function buildAdminInvite(
   setupUrl: string,
 ) {
   const loginUrl = new URL("/login", site).toString();
-  const logoUrl = new URL("/teazo_logo_text.png", site).toString();
+  const logoUrl = new URL("\teazo_logo_text.png", site).toString();
 
   const who = invite.invitedBy
     ? `${invite.invitedBy} added you`
@@ -69,6 +69,10 @@ export function buildAdminInvite(
     "",
     `After creating your password, sign in at ${loginUrl}`,
     `using this email address: ${invite.email}`,
+    "",
+    `Bookmark or save your admin login page: ${loginUrl}`,
+    "There is no link to this page on the public website. Use your saved link",
+    "or add /login to the website address whenever you need to sign in.",
     "",
     "Alternatively, if this email is associated with a Google account,",
     'choose "Continue with Google" on the login page.',
@@ -98,6 +102,7 @@ export function buildAdminInvite(
     '</td></tr></table>',
     '<p style="margin:16px 0 24px;font-size:13px;color:#65564c">This link expires in 24 hours and can be used only once.</p>',
     `<p style="margin:0 0 16px">After creating your password, <a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">sign in</a> using <strong>${escapeHtml(invite.email)}</strong>.</p>`,
+    `<p style="margin:0 0 16px"><strong>Bookmark or save your admin login page:</strong><br><a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">${escapeHtml(loginUrl)}</a><br>There is no link to this page on the public website. Use your saved link or add <strong>/login</strong> to the website address whenever you need to sign in.</p>`,
     '<p style="margin:0 0 16px">Alternatively, if this email is associated with a Google account, choose <strong>Continue with Google</strong> on the login page.</p>',
     '<p style="margin:0 0 16px">If the setup link expires, choose <strong>Set or reset password</strong> on the login page to request another link.</p>',
     "<p style=\"margin:0\">If you weren't expecting this invitation, you can ignore it.</p>",
