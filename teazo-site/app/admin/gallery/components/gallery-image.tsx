@@ -9,6 +9,7 @@ type GalleryImageProps = {
   sizes: string;
   loading?: "eager" | "lazy";
   className?: string;
+  mediaType?: "image" | "video";
 };
 
 export default function GalleryImage({
@@ -17,8 +18,24 @@ export default function GalleryImage({
   sizes,
   loading = "lazy",
   className = "object-cover",
+  mediaType = "image",
 }: GalleryImageProps) {
   const [failed, setFailed] = useState(false);
+
+  if (mediaType === "video") {
+  return (
+    <video
+      src={src}
+      controls
+      preload="metadata"
+      playsInline
+      className={`h-full w-full ${className}`}
+      aria-label={alt || "Gallery video"}
+    >
+      Your browser does not support video playback.
+    </video>
+  );
+}
 
   if (failed) {
     return (
