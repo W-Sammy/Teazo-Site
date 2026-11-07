@@ -5,11 +5,20 @@ import { createPortal } from "react-dom";
 import { adminButtonStyles } from "./admin-button-styles";
 
 /** A native modal keeps the background inert and traps keyboard focus. */
-export default function ConfirmDeleteDialog({ title, children, onCancel, onConfirm }: {
+export default function ConfirmDeleteDialog({
+  title,
+  children,
+  onCancel,
+  onConfirm,
+  onReload,
+  hasUnsavedEdits = false,
+}: {
   title: string;
   children: ReactNode;
   onCancel: () => void;
   onConfirm: () => Promise<string | null>;
+  onReload?: () => void;
+  hasUnsavedEdits?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +58,8 @@ export default function ConfirmDeleteDialog({ title, children, onCancel, onConfi
     }
   }
 
+  const isConflict = Boolean(error && /reload/i.test(error));
+
   return createPortal(
     <dialog ref={dialogRef} aria-labelledby={titleId} aria-describedby={descriptionId}
       className="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-md overflow-y-auto rounded-2xl border border-[#dbb082]/60 bg-white p-6 text-gray-900 shadow-xl backdrop:bg-black/45"
@@ -57,10 +68,21 @@ export default function ConfirmDeleteDialog({ title, children, onCancel, onConfi
       <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
       <div id={descriptionId} className="mt-3 text-sm leading-6 text-gray-600 [overflow-wrap:anywhere]">{children}</div>
       {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+      {isConflict && onReload && hasUnsavedEdits && (
+        <p role="status" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+          <strong>Warning:</strong> You have unsaved changes in other sections. Reloading will discard those local edits.
+        </p>
+      )}
       {pending && <p role="status" className="mt-4 text-sm text-gray-600">Deleting…</p>}
       <div className="mt-6 flex justify-end gap-3">
         <button ref={cancelRef} type="button" disabled={pending} onClick={cancel}
           className={adminButtonStyles.secondary}>Cancel</button>
+        {isConflict && onReload && (
+          <button type="button" disabled={pending} onClick={onReload}
+            className={adminButtonStyles.primary}>
+            {hasUnsavedEdits ? "Discard edits & Reload" : "Reload from storage"}
+          </button>
+        )}
         <button type="button" disabled={pending} onClick={confirm}
           className={adminButtonStyles.danger}>
           {pending ? "Deleting…" : "Delete"}

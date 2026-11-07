@@ -128,4 +128,112 @@ describe("confirmed website content deletion (TZ-239, TZ-240)", () => {
     expect(screen.getByRole("button", { name: "Remove Facebook" }).matches(":disabled")).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("renders reload recovery button inside deletion dialog on conflict and warns of unsaved edits", async () => {
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { reload: reloadMock },
+      writable: true,
+    });
+
+    fetchMock.mockResolvedValueOnce(Response.json({ error: "Content changed. Reload this page." }, { status: 409 }));
+    render(<WebsiteContentClient canEdit={true} initialContent={structuredClone(DEFAULT_WEBSITE_CONTENT)} />);
+
+    // Make a local edit in story (so hasUnsavedEdits is true)
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "story" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Our Story" }), {
+      target: { value: "Unsaved local story edit" },
+    });
+
+    // Attempt deletion of Facebook link
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "social" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Facebook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    await screen.findByText(/Content changed\. Reload this page\./);
+    expect(screen.getByText(/You have unsaved changes in other sections/i)).toBeTruthy();
+
+    const reloadBtn = screen.getByRole("button", { name: "Discard edits & Reload" });
+    fireEvent.click(reloadBtn);
+    expect(reloadMock).toHaveBeenCalledOnce();
+  });
+
+  it("disables add controls and displays helper text when social links or holidays are at capacity", () => {
+    const atCapacityContent = structuredClone(DEFAULT_WEBSITE_CONTENT);
+    atCapacityContent.socialLinks = Array.from({ length: 10 }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Platform ${i + 1}`,
+      icon: "",
+      url: `https://example.com/${i + 1}`,
+      enabled: true,
+    }));
+    atCapacityContent.holidays = Array.from({ length: 16 }, (_, i) => ({
+      id: `holiday-${i + 1}`,
+      name: `Holiday ${i + 1}`,
+      date: `12-${String(i + 1).padStart(2, "0")}`,
+      closed: true,
+    }));
+
+    render(<WebsiteContentClient canEdit={true} initialContent={atCapacityContent} />);
+
+    // Check social
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "social" } });
+    const addSocialBtn = screen.getByRole("button", { name: "New Social Media +" }) as HTMLButtonElement;
+    expect(addSocialBtn.disabled).toBe(true);
+    expect(screen.getByText(/Maximum limit of 10 social links reached/i)).toBeTruthy();
+
+    // Check holidays
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "holidays" } });
+    const addHolidayBtn = screen.getByRole("button", { name: "New Holiday +" }) as HTMLButtonElement;
+    expect(addHolidayBtn.disabled).toBe(true);
+    expect(screen.getByText(/Maximum limit of 16 holiday exceptions reached/i)).toBeTruthy();
+  });
+
+  it("displays distinct status badges: unsaved edits and all changes saved to storage", async () => {
+    fetchMock.mockResolvedValue(Response.json({ success: true, collectionsRevision: 0 }));
+
+    render(<WebsiteContentClient canEdit={true} initialContent={structuredClone(DEFAULT_WEBSITE_CONTENT)} />);
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "story" } });
+
+    // Typing triggers unsaved status badge
+    fireEvent.change(screen.getByRole("textbox", { name: "Our Story" }), {
+      target: { value: "Updated story content" },
+    });
+    expect(screen.getByText("Unsaved edits")).toBeTruthy();
+
+    // Blur triggers flushPatch and confirmation
+    fireEvent.blur(screen.getByRole("textbox", { name: "Our Story" }));
+    await screen.findByText("All changes saved to storage");
+  });
+
+  it("warns before conflict recovery discards an invalid local story", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ error: "Content changed. Reload this page." }, { status: 409 }));
+    render(<WebsiteContentClient canEdit={true} initialContent={structuredClone(DEFAULT_WEBSITE_CONTENT)} />);
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "story" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Our Story" }), { target: { value: "" } });
+    fireEvent.blur(screen.getByRole("textbox", { name: "Our Story" }));
+    expect(screen.getByText("Unsaved edits")).toBeTruthy();
+    expect(screen.queryByText("All changes saved to storage")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "social" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Facebook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await screen.findByText(/Content changed\. Reload this page\./);
+    expect(screen.getByText(/Reloading will discard those local edits/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Discard edits & Reload" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "story" } });
+    expect((screen.getByRole("textbox", { name: "Our Story" }) as HTMLTextAreaElement).value).toBe("");
+    expect(fetchMock.mock.calls.map((call) => call[1].method)).toEqual(["DELETE"]);
+  });
+
+  it("disables delivery additions at capacity and explains the limit", () => {
+    const initialContent = structuredClone(DEFAULT_WEBSITE_CONTENT);
+    initialContent.deliveryLinks = Array.from({ length: 10 }, (_, i) => ({
+      id: `delivery-${i}`, label: `Delivery ${i}`, icon: "", url: `https://example.com/${i}`, enabled: true,
+    }));
+    render(<WebsiteContentClient initialContent={initialContent} initialSection="delivery" />);
+    expect((screen.getByRole("button", { name: "New Delivery Link +" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Maximum limit of 10 delivery links reached/)).toBeTruthy();
+  });
 });

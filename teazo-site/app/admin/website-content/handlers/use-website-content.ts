@@ -16,9 +16,12 @@ import {
   validateSocialLinks,
   validateStory,
   validateWebsiteContentPatch,
+  MAX_SOCIAL_LINKS,
+  MAX_HOLIDAYS,
+  MAX_DELIVERY_LINKS,
 } from "@/app/lib/website-content-validators";
 
-export type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type SaveStatus = "idle" | "unsaved" | "saving" | "saved" | "error";
 
 const UNCERTAIN_SAVE = "The save could not be confirmed. Reload this page to check current content before trying again.";
 const UNCERTAIN_DELETE = "The deletion could not be confirmed. Reload this page to check current content before trying again.";
@@ -41,6 +44,9 @@ function createTemporaryId(prefix: string) {
  */
 export function useWebsiteContent(initialContent: WebsiteContent) {
   const [content, setContent] = useState<WebsiteContent>(initialContent);
+  // Validation may keep local edits out of the save queue. Only a confirmed
+  // write changes this snapshot, so incomplete edits and drafts stay dirty.
+  const [savedContent, setSavedContent] = useState<WebsiteContent>(initialContent);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -83,6 +89,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       return false;
     }
     if (saveOperationRef.current) return saveOperationRef.current;
+    if (Object.keys(pendingPatchRef.current).length === 0) return true;
 
     isSavingRef.current = true;
     const operation = (async () => {
@@ -125,6 +132,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
               if (payload.socialLinks) savedCollectionsRef.current.socialLinks = payload.socialLinks;
               if (payload.holidays) savedCollectionsRef.current.holidays = payload.holidays;
             }
+            setSavedContent((previous) => ({
+              ...previous,
+              ...payload,
+              address: { ...previous.address, ...payload.address },
+            }));
           } catch (error) {
             // A transport failure may hide a committed collection replacement.
             if (!responseReceived) reconciliationRef.current = UNCERTAIN_SAVE;
@@ -166,6 +178,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       }
       return;
     }
+
+    setSaveStatus((current) => current === "saving" ? "saving" : "unsaved");
 
     pendingPatchRef.current = {
       ...pendingPatchRef.current,
@@ -212,6 +226,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function updateLogo(url: string) {
     setErrorMessage("");
     setContent((prev) => ({ ...prev, logo: url }));
+    // The upload endpoint has already confirmed persistence before this callback.
+    setSavedContent((prev) => ({ ...prev, logo: url }));
     return true;
   }
 
@@ -619,10 +635,15 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   // keep empty new items on screen until refresh or name & link have been entered
   function addDeliveryLink() {
     setErrorMessage("");
+    if ((content.deliveryLinks ?? []).length >= MAX_DELIVERY_LINKS) {
+      setErrorMessage(`Maximum limit of ${MAX_DELIVERY_LINKS} delivery links reached.`);
+      return false;
+    }
     const link: SocialLink = {
       id: createTemporaryId("delivery"), label: "", icon: "", url: "", enabled: true,
     };
     setContent((previous) => ({ ...previous, deliveryLinks: [...(previous.deliveryLinks ?? []), link] }));
+    return true;
   }
 
   // show edits immediately, then save complete links
@@ -630,10 +651,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setContent((previous) => ({ ...previous, deliveryLinks: links }));
     // leave blank items out of the save; keep hidden links in the saved list
     const savedLinks = links.filter((link) => link.label.trim() || link.url.trim());
-    const { valid } = validateSocialLinks(savedLinks);
-    if (!valid) {
+    const validation = validateWebsiteContentPatch({ deliveryLinks: savedLinks });
+    if (!validation.valid) {
       // discard older waiting delivery save without cancelling other sections' saves
       delete pendingPatchRef.current.deliveryLinks;
+      setErrorMessage(validation.errors[0]);
+      setSaveStatus("error");
       return;
     }
     setErrorMessage("");
@@ -661,6 +684,10 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function addSocialLink() {
     setErrorMessage("");
     try {
+      if (content.socialLinks.length >= MAX_SOCIAL_LINKS) {
+        setErrorMessage(`Maximum limit of ${MAX_SOCIAL_LINKS} social links reached.`);
+        return false;
+      }
       const id = createTemporaryId("social");
       draftIdsRef.current.socialLinks.add(id);
       const updatedLinks = [
@@ -775,6 +802,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
           ? { socialLinks: previous.socialLinks.filter((entry) => entry.id !== id) }
           : { holidays: previous.holidays.filter((entry) => entry.id !== id) }),
       }));
+      setSavedContent((previous) => ({ ...previous,
+        collectionsRevision: result.collectionsRevision,
+        ...(collection === "socialLinks"
+          ? { socialLinks: previous.socialLinks.filter((entry) => entry.id !== id) }
+          : { holidays: previous.holidays.filter((entry) => entry.id !== id) }),
+      }));
       setErrorMessage("");
       deletionConfirmed = true;
       return null;
@@ -795,6 +828,10 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function addHoliday() {
     setErrorMessage("");
     try {
+      if (content.holidays.length >= MAX_HOLIDAYS) {
+        setErrorMessage(`Maximum limit of ${MAX_HOLIDAYS} holiday exceptions reached.`);
+        return false;
+      }
       const id = createTemporaryId("holiday");
       draftIdsRef.current.holidays.add(id);
       const updatedHolidays = [
@@ -855,12 +892,25 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
-  // handle save status for carousel --shows an error even when other sections are successful
+  const editableFields = [
+    "logo", "story", "address", "hours", "socialLinks", "deliveryLinks",
+    "holidays", "contactFormEnabled", "onlineOrderingEnabled",
+  ] as const;
+  const hasLocalEdits = editableFields.some((field) =>
+    JSON.stringify(content[field]) !== JSON.stringify(savedContent[field]));
+  const hasUnsavedEdits = hasLocalEdits ||
+    Object.keys(pendingPatchRef.current).length > 0 || isSavingRef.current ||
+    carouselHasSaving || carouselHasAnyError ||
+    carouselImages.some((image) => !image.src);
+
+  // A successful save in one section must not hide incomplete edits elsewhere.
   let sharedSaveStatus: SaveStatus = "idle";
   if (saveStatus === "error" || carouselSaveStatus === "error")
     sharedSaveStatus = "error";
   else if (saveStatus === "saving" || carouselSaveStatus === "saving")
     sharedSaveStatus = "saving";
+  else if (hasUnsavedEdits)
+    sharedSaveStatus = "unsaved";
   else if (saveStatus === "saved" || carouselSaveStatus === "saved")
     sharedSaveStatus = "saved";
 
@@ -880,6 +930,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     content: { ...content, carouselImages },
     isDeleting,
     saveStatus: sharedSaveStatus,
+    hasUnsavedEdits,
     errorMessage,
     setErrorMessage,
     flushPatch,

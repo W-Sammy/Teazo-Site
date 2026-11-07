@@ -15,6 +15,12 @@ const DOMAIN_RE =
 const DOMAIN_LABEL_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 const PHONE_CHAR_RE = /^[+]?[\d\s().-]{10,25}$/;
 
+export const MAX_SOCIAL_LINKS = 10;
+export const MAX_HOLIDAYS = 16;
+export const MAX_DELIVERY_LINKS = 10;
+export const MAX_D1_STATEMENTS = 40;
+export const MAX_WEBSITE_CONTENT_PAYLOAD_BYTES = 1_000_000;
+
 export function isNonEmpty(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
@@ -417,11 +423,18 @@ export function validateAddress(address: Partial<AddressInfo>): {
   };
 }
 
-export function validateSocialLinks(links: (SocialLink | DeliveryLink)[]): {
+export function validateSocialLinks(
+  links: (SocialLink | DeliveryLink)[],
+  maxLinks = MAX_SOCIAL_LINKS,
+  collectionName = "social links",
+): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
+  if (links.length > maxLinks) {
+    errors.push(`You can add up to ${maxLinks} ${collectionName}.`);
+  }
   for (const link of links) {
     const labelEmpty = !isNonEmpty(link.label);
     const urlEmpty = !isNonEmpty(link.url);
@@ -458,11 +471,17 @@ export function validateStory(story: string): { valid: boolean; error?: string }
   return { valid: true };
 }
 
-export function validateHolidays(holidays: Holiday[]): {
+export function validateHolidays(
+  holidays: Holiday[],
+  maxHolidays = MAX_HOLIDAYS,
+): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
+  if (holidays.length > maxHolidays) {
+    errors.push(`You can add up to ${maxHolidays} holiday exceptions.`);
+  }
   const seenDates = new Set<string>();
 
   for (const holiday of holidays) {
@@ -481,8 +500,71 @@ export function validateHolidays(holidays: Holiday[]): {
   return { valid: errors.length === 0, errors };
 }
 
+export type WebsiteContentPatch = Partial<Omit<WebsiteContent, "address">> & {
+  address?: Partial<AddressInfo>;
+};
+
+export function estimateWebsiteContentPatchStatements(
+  patch: WebsiteContentPatch,
+): number {
+  let count = 0;
+  const changesCollections =
+    patch.socialLinks !== undefined || patch.holidays !== undefined;
+  if (changesCollections) {
+    count += 1;
+  }
+  if (patch.address !== undefined || patch.contactFormEnabled !== undefined) {
+    count += 1;
+  }
+  if (patch.story !== undefined) {
+    count += 1;
+  }
+  if (patch.logo !== undefined) {
+    count += 1;
+  }
+  if (patch.onlineOrderingEnabled !== undefined) {
+    count += 1;
+  }
+  if (patch.hours && patch.hours.length === 7) {
+    count += 7;
+  }
+  if (patch.socialLinks !== undefined) {
+    count += 1; // DELETE FROM site_link WHERE link_group = 'social'
+    for (const link of patch.socialLinks) {
+      if (link.id && link.url) count += 1;
+    }
+  }
+  if (patch.deliveryLinks !== undefined) {
+    count += 1; // DELETE FROM site_link WHERE link_group = 'delivery'
+    for (const link of patch.deliveryLinks) {
+      if (link.id && link.url) count += 1;
+    }
+  }
+  if (patch.holidays !== undefined) {
+    count += 1; // DELETE FROM hours_exception
+    for (const holiday of patch.holidays) {
+      if (holiday.date) count += 1;
+    }
+  }
+  return count;
+}
+
+export function getWebsiteContentPatchByteSize(
+  patch: WebsiteContentPatch,
+): number {
+  try {
+    const jsonStr = JSON.stringify(patch);
+    if (typeof Buffer !== "undefined") {
+      return Buffer.byteLength(jsonStr, "utf8");
+    }
+    return new TextEncoder().encode(jsonStr).length;
+  } catch {
+    return 0;
+  }
+}
+
 export function validateWebsiteContentPatch(
-  patch: Partial<WebsiteContent>,
+  patch: WebsiteContentPatch,
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
@@ -506,12 +588,20 @@ export function validateWebsiteContentPatch(
   }
 
   if (patch.socialLinks !== undefined) {
-    const { valid, errors: socialErrors } = validateSocialLinks(patch.socialLinks);
+    const { valid, errors: socialErrors } = validateSocialLinks(
+      patch.socialLinks,
+      MAX_SOCIAL_LINKS,
+      "social links",
+    );
     if (!valid) errors.push(...socialErrors);
   }
 
   if (patch.deliveryLinks !== undefined) {
-    const { valid, errors: deliveryErrors } = validateSocialLinks(patch.deliveryLinks);
+    const { valid, errors: deliveryErrors } = validateSocialLinks(
+      patch.deliveryLinks,
+      MAX_DELIVERY_LINKS,
+      "delivery links",
+    );
     if (!valid) 
       errors.push(...deliveryErrors);
 
@@ -522,7 +612,10 @@ export function validateWebsiteContentPatch(
   }
 
   if (patch.holidays !== undefined) {
-    const { valid, errors: holidayErrors } = validateHolidays(patch.holidays);
+    const { valid, errors: holidayErrors } = validateHolidays(
+      patch.holidays,
+      MAX_HOLIDAYS,
+    );
     if (!valid) errors.push(...holidayErrors);
   }
 
@@ -530,6 +623,20 @@ export function validateWebsiteContentPatch(
     if (patch[key] !== undefined && typeof patch[key] !== "boolean") {
       errors.push(`${key} must be true or false`);
     }
+  }
+
+  const statements = estimateWebsiteContentPatchStatements(patch);
+  if (statements > MAX_D1_STATEMENTS) {
+    errors.push(
+      `Update requires ${statements} database operations, exceeding the maximum budget of ${MAX_D1_STATEMENTS}.`,
+    );
+  }
+
+  const byteSize = getWebsiteContentPatchByteSize(patch);
+  if (byteSize > MAX_WEBSITE_CONTENT_PAYLOAD_BYTES) {
+    errors.push(
+      `Content update payload (${byteSize} bytes) exceeds the maximum allowed size of ${MAX_WEBSITE_CONTENT_PAYLOAD_BYTES} bytes.`,
+    );
   }
 
   return { valid: errors.length === 0, errors };

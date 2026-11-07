@@ -54,6 +54,7 @@ export default function WebsiteContentClient({
     content,
     isDeleting,
     saveStatus,
+    hasUnsavedEdits,
     carousel,
     errorMessage,
     setErrorMessage,
@@ -141,6 +142,16 @@ export default function WebsiteContentClient({
             <h1 className="break-words text-2xl font-semibold leading-tight text-[#2b211d] sm:text-[26px]">
               Website Content
             </h1>
+            {saveStatus === "unsaved" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                Unsaved edits
+              </span>
+            )}
             {saveStatus === "saving" && (
               <span
                 role="status"
@@ -148,7 +159,7 @@ export default function WebsiteContentClient({
                 className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 animate-pulse"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                Saving...
+                Saving to server...
               </span>
             )}
             {saveStatus === "saved" && (
@@ -160,7 +171,7 @@ export default function WebsiteContentClient({
                 <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                All changes saved
+                All changes saved to storage
               </span>
             )}
             {saveStatus === "error" && (
@@ -318,6 +329,8 @@ export default function WebsiteContentClient({
         </fieldset>
       </div>
       {pendingDelete && <ConfirmDeleteDialog title="Delete content entry?"
+        hasUnsavedEdits={hasUnsavedEdits}
+        onReload={() => window.location.reload()}
         onCancel={() => setPendingDelete(null)}
         onConfirm={async () => {
           const error = await (pendingDelete.collection === "socialLinks"

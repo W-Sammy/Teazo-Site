@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
-import { parseAndNormalizeDestination } from "../validators";
+import { parseAndNormalizeDestination, MAX_SOCIAL_LINKS } from "../validators";
 import type { SocialLink } from "@/app/types/website-content";
 
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -223,10 +223,16 @@ export default function SocialSection({
       <button
         type="button"
         onClick={onAddLink}
+        disabled={socialLinks.length >= MAX_SOCIAL_LINKS}
         className="mt-4 min-h-11 w-full cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7] sm:min-h-0 sm:w-auto"
       >
         New Social Media +
       </button>
+      {socialLinks.length >= MAX_SOCIAL_LINKS && (
+        <p className="mt-2 text-xs text-amber-700">
+          Maximum limit of {MAX_SOCIAL_LINKS} social links reached. Delete an existing link to add another.
+        </p>
+      )}
     </AccordionItem>
   );
 }

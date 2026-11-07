@@ -3,7 +3,7 @@
 import { AccordionItem } from "../section-shell";
 import { IconHolidays } from "../icons";
 import type { Holiday } from "@/app/types/website-content";
-import { isValidHolidayDate } from "../validators";
+import { isValidHolidayDate, MAX_HOLIDAYS } from "../validators";
 import HolidayCard from "./holiday-card";
 
 // tallies how many holidays use each valid date so HolidayCard can flag duplicates
@@ -58,10 +58,16 @@ export default function HolidaysSection({
       <button
         type="button"
         onClick={onAddHoliday}
+        disabled={holidays.length >= MAX_HOLIDAYS}
         className="cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7]"
       >
         New Holiday +
       </button>
+      {holidays.length >= MAX_HOLIDAYS && (
+        <p className="mt-2 text-xs text-amber-700">
+          Maximum limit of {MAX_HOLIDAYS} holiday exceptions reached. Delete an existing holiday to add another.
+        </p>
+      )}
     </AccordionItem>
   );
 }

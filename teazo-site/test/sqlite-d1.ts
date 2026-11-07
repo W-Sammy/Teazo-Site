@@ -77,7 +77,7 @@ export function createSqliteD1() {
       db.close();
       db = open();
     },
-    module: { prepare, batch },
+    module: { prepare, batch, MAX_STATEMENTS: 40 },
   };
 }
 

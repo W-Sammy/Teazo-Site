@@ -5,6 +5,7 @@ import {
   deleteWebsiteContentEntry,
   WebsiteContentConflictError,
   WebsiteContentNotFoundError,
+  WebsiteContentValidationError,
 } from "@/app/lib/website-content";
 import { validateWebsiteContentPatch } from "@/app/lib/website-content-validators";
 import { requireAdminApi } from "@/app/lib/admin";
@@ -18,6 +19,9 @@ function revalidateContent() {
 }
 
 function writeError(error: unknown) {
+  if (error instanceof WebsiteContentValidationError) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
   if (error instanceof WebsiteContentNotFoundError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }

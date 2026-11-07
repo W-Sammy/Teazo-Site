@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sqliteD1 } from "@/test/sqlite-d1";
 import { DEFAULT_WEBSITE_CONTENT, deleteWebsiteContentEntry, getWebsiteContent, updateWebsiteContent, WebsiteContentConflictError, WebsiteContentUnavailableError } from "./website-content";
+import { MAX_SOCIAL_LINKS, MAX_HOLIDAYS } from "./website-content-validators";
 
 vi.mock("@/app/lib/d1", async () => (await import("@/test/sqlite-d1")).sqliteD1.module);
 
@@ -128,5 +129,108 @@ describe("website content removal (TZ-234, TZ-237, TZ-241, TZ-242)", () => {
     await expect(getWebsiteContent()).rejects.toBeInstanceOf(WebsiteContentUnavailableError);
     process.env.D1_PROXY_URL = "http://d1.test";
     expect((await getWebsiteContent()).socialLinks).toEqual(before.socialLinks);
+  });
+});
+
+describe("Phase 5 collection capacity and atomic transaction budgets in storage", () => {
+  it("commits the largest supported combined save atomically", async () => {
+    const maxSocial = Array.from({ length: MAX_SOCIAL_LINKS }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Social ${i + 1}`,
+      icon: "",
+      url: `https://example.com/social-${i + 1}`,
+      enabled: true,
+    }));
+
+    const maxHolidays = Array.from({ length: MAX_HOLIDAYS }, (_, i) => ({
+      id: `holiday-${i + 1}`,
+      name: `Holiday ${i + 1}`,
+      date: `08-${String(i + 1).padStart(2, "0")}`,
+      closed: true,
+    }));
+
+    const fullPatch = {
+      collectionsRevision: 0,
+      story: "Authoritative story from combined save",
+      logo: "/images/custom-logo.webp",
+      onlineOrderingEnabled: false,
+      contactFormEnabled: true,
+      address: {
+        businessName: "TEAZO Sunset",
+        streetAddress: "1050 Taraval St.",
+        locality: "San Francisco, CA 94116",
+        phone: "+1 (415) 748-7398",
+        email: "sunset@teazo.com",
+        mapQuery: "1050 Taraval St, San Francisco, CA 94116",
+      },
+      hours: [
+        { day: "Sun", start: 10, end: 21, closed: false },
+        { day: "Mon", start: 10, end: 21, closed: false },
+        { day: "Tue", start: 10, end: 21, closed: false },
+        { day: "Wed", start: 10, end: 21, closed: false },
+        { day: "Thu", start: 10, end: 21, closed: false },
+        { day: "Fri", start: 10, end: 22, closed: false },
+        { day: "Sat", start: 10, end: 22, closed: false },
+      ],
+      socialLinks: maxSocial,
+      holidays: maxHolidays,
+    };
+
+    const updated = await updateWebsiteContent(fullPatch);
+    expect(updated.collectionsRevision).toBe(1);
+    expect(updated.story).toBe("Authoritative story from combined save");
+    expect(updated.logo).toBe("/images/custom-logo.webp");
+    expect(updated.onlineOrderingEnabled).toBe(false);
+    expect(updated.socialLinks).toHaveLength(MAX_SOCIAL_LINKS);
+    expect(updated.holidays).toHaveLength(MAX_HOLIDAYS);
+
+    const reloaded = await getWebsiteContent();
+    expect(reloaded.collectionsRevision).toBe(1);
+    expect(reloaded.story).toBe("Authoritative story from combined save");
+    expect(reloaded.logo).toBe("/images/custom-logo.webp");
+    expect(reloaded.onlineOrderingEnabled).toBe(false);
+    expect(reloaded.address.businessName).toBe("TEAZO Sunset");
+    expect(reloaded.socialLinks).toHaveLength(MAX_SOCIAL_LINKS);
+    expect(reloaded.holidays).toHaveLength(MAX_HOLIDAYS);
+  });
+
+  it("fails atomically when a patch exceeds collection limits and leaves storage untouched", async () => {
+    const before = await getWebsiteContent();
+
+    const oversizedSocial = Array.from({ length: MAX_SOCIAL_LINKS + 1 }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Social ${i + 1}`,
+      icon: "",
+      url: `https://example.com/social-${i + 1}`,
+      enabled: true,
+    }));
+
+    await expect(
+      updateWebsiteContent({
+        collectionsRevision: before.collectionsRevision,
+        socialLinks: oversizedSocial,
+        story: "Should not be saved",
+      }),
+    ).rejects.toThrow(`You can add up to ${MAX_SOCIAL_LINKS} social links.`);
+
+    const after = await getWebsiteContent();
+    expect(after.collectionsRevision).toBe(before.collectionsRevision);
+    expect(after.story).toBe(before.story);
+    expect(after.socialLinks).toEqual(before.socialLinks);
+  });
+
+  it("preserves legacy stored rows without silent truncation on read", async () => {
+    // Directly insert 12 social links into SQLite database to simulate legacy data
+    sqliteD1.db.exec("DELETE FROM site_link WHERE link_group = 'social'");
+    for (let i = 1; i <= 12; i++) {
+      sqliteD1.db.exec(
+        `INSERT INTO site_link (key, link_group, label, url, sort_order, is_active)
+         VALUES ('legacy-${i}', 'social', 'Platform ${i}', 'https://example.com/${i}', ${i}, 1)`,
+      );
+    }
+
+    const content = await getWebsiteContent();
+    expect(content.socialLinks).toHaveLength(12);
+    expect(content.socialLinks.map((l) => l.id)).toContain("legacy-12");
   });
 });

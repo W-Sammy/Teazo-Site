@@ -34,6 +34,7 @@ vi.mock("@/app/lib/website-content", () => ({
   updateWebsiteContent: mocks.updateWebsiteContent,
   WebsiteContentConflictError: class WebsiteContentConflictError extends Error {},
   WebsiteContentNotFoundError: class WebsiteContentNotFoundError extends Error {},
+  WebsiteContentValidationError: class WebsiteContentValidationError extends Error {},
 }));
 
 vi.mock("next/cache", () => ({

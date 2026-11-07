@@ -25,3 +25,64 @@ it("focuses Cancel, blocks immediate repeated input and cancellation, then unloc
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(onCancel).toHaveBeenCalledOnce();
 });
+
+it("exposes conflict recovery inside the modal on revision conflict", async () => {
+  const onCancel = vi.fn();
+  const onReload = vi.fn();
+  const onConfirm = vi.fn().mockResolvedValue("The collection was modified. Reload this page to obtain current content.");
+
+  render(
+    <ConfirmDeleteDialog
+      title="Delete holiday?"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+      onReload={onReload}
+      hasUnsavedEdits={false}
+    >
+      Delete this holiday?
+    </ConfirmDeleteDialog>,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+  await screen.findByRole("alert");
+
+  const reloadButton = screen.getByRole("button", { name: "Reload from storage" });
+  expect(reloadButton).toBeTruthy();
+
+  fireEvent.click(reloadButton);
+  expect(onReload).toHaveBeenCalledOnce();
+  expect(screen.queryByText(/Warning: You have unsaved changes/)).toBeNull();
+});
+
+it("warns when unsaved local form edits exist before reloading from storage", async () => {
+  const onCancel = vi.fn();
+  const onReload = vi.fn();
+  const onConfirm = vi.fn().mockResolvedValue("Stale revision. Reload this page.");
+
+  render(
+    <ConfirmDeleteDialog
+      title="Delete link?"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+      onReload={onReload}
+      hasUnsavedEdits={true}
+    >
+      Delete this link?
+    </ConfirmDeleteDialog>,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+  await screen.findByRole("alert");
+
+  expect(
+    screen.getByText(/You have unsaved changes in other sections\. Reloading will discard those local edits\./),
+  ).toBeTruthy();
+
+  const reloadButton = screen.getByRole("button", { name: "Discard edits & Reload" });
+  expect(reloadButton).toBeTruthy();
+
+  // Cancel allows administrator to dismiss dialog and preserve unsaved edits
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(onCancel).toHaveBeenCalledOnce();
+  expect(onReload).not.toHaveBeenCalled();
+});

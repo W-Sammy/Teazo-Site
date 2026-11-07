@@ -52,7 +52,7 @@ export function createFakeD1() {
       for (const key of Object.keys(tables)) delete tables[key];
       batches.length = 0;
     },
-    module: { prepare, batch },
+    module: { prepare, batch, MAX_STATEMENTS: 40 },
   };
 }
 

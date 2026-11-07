@@ -14,6 +14,7 @@ vi.mock("@/app/lib/website-content", () => ({
   deleteWebsiteContentEntry: mocks.deleteWebsiteContentEntry,
   WebsiteContentConflictError: class WebsiteContentConflictError extends Error {},
   WebsiteContentNotFoundError: class WebsiteContentNotFoundError extends Error {},
+  WebsiteContentValidationError: class WebsiteContentValidationError extends Error {},
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 

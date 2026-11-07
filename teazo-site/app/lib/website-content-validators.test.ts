@@ -11,6 +11,12 @@ import {
   validateLogo,
   validateSocialLinks,
   validateWebsiteContentPatch,
+  estimateWebsiteContentPatchStatements,
+  getWebsiteContentPatchByteSize,
+  MAX_SOCIAL_LINKS,
+  MAX_HOLIDAYS,
+  MAX_D1_STATEMENTS,
+  MAX_WEBSITE_CONTENT_PAYLOAD_BYTES,
 } from "@/app/lib/website-content-validators";
 
 describe("holiday dates", () => {
@@ -361,5 +367,221 @@ describe("isValidLogoFile (Phase 4)", () => {
     const res = isValidLogoFile(undefined);
     expect(res.valid).toBe(false);
     expect(res.error).toContain("No image file provided.");
+  });
+});
+
+describe("Phase 5 collection capacity and transaction budgets", () => {
+  it("enforces MAX_SOCIAL_LINKS limit of 10", () => {
+    const tenLinks = Array.from({ length: MAX_SOCIAL_LINKS }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Platform ${i + 1}`,
+      icon: "",
+      url: `https://example.com/${i + 1}`,
+      enabled: true,
+    }));
+
+    expect(validateSocialLinks(tenLinks).valid).toBe(true);
+
+    const elevenLinks = [
+      ...tenLinks,
+      {
+        id: "social-11",
+        label: "Platform 11",
+        icon: "",
+        url: "https://example.com/11",
+        enabled: true,
+      },
+    ];
+
+    const result = validateSocialLinks(elevenLinks);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(`You can add up to ${MAX_SOCIAL_LINKS} social links.`);
+  });
+
+  it("enforces MAX_HOLIDAYS limit of 16", () => {
+    const sixteenHolidays = Array.from({ length: MAX_HOLIDAYS }, (_, i) => ({
+      id: `holiday-${i + 1}`,
+      name: `Holiday ${i + 1}`,
+      date: `12-${String(i + 1).padStart(2, "0")}`,
+      closed: true,
+    }));
+
+    expect(validateHolidays(sixteenHolidays).valid).toBe(true);
+
+    const seventeenHolidays = [
+      ...sixteenHolidays,
+      {
+        id: "holiday-17",
+        name: "Holiday 17",
+        date: "12-17",
+        closed: true,
+      },
+    ];
+
+    const result = validateHolidays(seventeenHolidays);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(`You can add up to ${MAX_HOLIDAYS} holiday exceptions.`);
+  });
+
+  it("calculates statement counts accurately across patch permutations", () => {
+    expect(estimateWebsiteContentPatchStatements({})).toBe(0);
+    expect(estimateWebsiteContentPatchStatements({ story: "New story" })).toBe(1);
+    expect(estimateWebsiteContentPatchStatements({ logo: "/logo.png" })).toBe(1);
+    expect(estimateWebsiteContentPatchStatements({ onlineOrderingEnabled: false })).toBe(1);
+    expect(estimateWebsiteContentPatchStatements({ address: { businessName: "New" } })).toBe(1);
+    expect(
+      estimateWebsiteContentPatchStatements({
+        hours: [
+          { day: "Sun", start: 10, end: 18, closed: false },
+          { day: "Mon", start: 10, end: 18, closed: false },
+          { day: "Tue", start: 10, end: 18, closed: false },
+          { day: "Wed", start: 10, end: 18, closed: false },
+          { day: "Thu", start: 10, end: 18, closed: false },
+          { day: "Fri", start: 10, end: 18, closed: false },
+          { day: "Sat", start: 10, end: 18, closed: false },
+        ],
+      }),
+    ).toBe(7);
+
+    // Social links: 1 claim revision + 1 delete + 2 inserts = 4 statements
+    expect(
+      estimateWebsiteContentPatchStatements({
+        socialLinks: [
+          { id: "fb", label: "FB", icon: "", url: "https://fb.com", enabled: true },
+          { id: "ig", label: "IG", icon: "", url: "https://ig.com", enabled: true },
+        ],
+      }),
+    ).toBe(4);
+
+    // Holidays: 1 claim revision + 1 delete + 2 inserts = 4 statements
+    expect(
+      estimateWebsiteContentPatchStatements({
+        holidays: [
+          { id: "h1", name: "H1", date: "12-25", closed: true },
+          { id: "h2", name: "H2", date: "01-01", closed: true },
+        ],
+      }),
+    ).toBe(4);
+  });
+
+  it("accepts the largest supported combined save without exceeding statement budget", () => {
+    const maxSocialLinks = Array.from({ length: MAX_SOCIAL_LINKS }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Social ${i + 1}`,
+      icon: "",
+      url: `https://example.com/social-${i + 1}`,
+      enabled: true,
+    }));
+
+    const maxHolidays = Array.from({ length: MAX_HOLIDAYS }, (_, i) => ({
+      id: `holiday-${i + 1}`,
+      name: `Holiday ${i + 1}`,
+      date: `10-${String(i + 1).padStart(2, "0")}`,
+      closed: true,
+    }));
+
+    const fullPatch = {
+      collectionsRevision: 0,
+      story: "Full story within character limits.",
+      logo: "/images/logo.png",
+      onlineOrderingEnabled: true,
+      contactFormEnabled: true,
+      address: {
+        businessName: "TEAZO",
+        streetAddress: "1050 Taraval St.",
+        locality: "San Francisco, CA 94116",
+        phone: "+1 (415) 748-7398",
+        email: "teazosf@hotmail.com",
+        mapQuery: "1050 Taraval St",
+      },
+      hours: [
+        { day: "Sun", start: 10, end: 20, closed: false },
+        { day: "Mon", start: 10, end: 20, closed: false },
+        { day: "Tue", start: 10, end: 20, closed: false },
+        { day: "Wed", start: 10, end: 20, closed: false },
+        { day: "Thu", start: 10, end: 20, closed: false },
+        { day: "Fri", start: 10, end: 20, closed: false },
+        { day: "Sat", start: 10, end: 20, closed: false },
+      ],
+      socialLinks: maxSocialLinks,
+      holidays: maxHolidays,
+    };
+
+    const count = estimateWebsiteContentPatchStatements(fullPatch);
+    expect(count).toBe(MAX_D1_STATEMENTS);
+    expect(count).toBeLessThanOrEqual(40);
+
+    const validation = validateWebsiteContentPatch(fullPatch);
+    expect(validation.valid).toBe(true);
+    expect(validation.errors).toEqual([]);
+  });
+
+  it("rejects an update that exceeds the 40 statements budget", () => {
+    const maxSocialLinks = Array.from({ length: MAX_SOCIAL_LINKS }, (_, i) => ({
+      id: `social-${i + 1}`,
+      label: `Social ${i + 1}`,
+      icon: "",
+      url: `https://example.com/social-${i + 1}`,
+      enabled: true,
+    }));
+
+    const maxHolidays = Array.from({ length: MAX_HOLIDAYS }, (_, i) => ({
+      id: `holiday-${i + 1}`,
+      name: `Holiday ${i + 1}`,
+      date: `10-${String(i + 1).padStart(2, "0")}`,
+      closed: true,
+    }));
+
+    // Adding delivery links on top of the max combined patch exceeds 40 statements
+    const oversizedPatch = {
+      collectionsRevision: 0,
+      story: "Story",
+      logo: "/logo.png",
+      onlineOrderingEnabled: true,
+      contactFormEnabled: true,
+      address: { businessName: "TEAZO" },
+      hours: [
+        { day: "Sun", start: 10, end: 20, closed: false },
+        { day: "Mon", start: 10, end: 20, closed: false },
+        { day: "Tue", start: 10, end: 20, closed: false },
+        { day: "Wed", start: 10, end: 20, closed: false },
+        { day: "Thu", start: 10, end: 20, closed: false },
+        { day: "Fri", start: 10, end: 20, closed: false },
+        { day: "Sat", start: 10, end: 20, closed: false },
+      ],
+      socialLinks: maxSocialLinks,
+      holidays: maxHolidays,
+      deliveryLinks: [
+        { id: "deliv-1", label: "Uber", icon: "", url: "https://ubereats.com", enabled: true },
+      ],
+    };
+
+    const count = estimateWebsiteContentPatchStatements(oversizedPatch);
+    expect(count).toBe(42);
+
+    const validation = validateWebsiteContentPatch(oversizedPatch);
+    expect(validation.valid).toBe(false);
+    expect(validation.errors).toContain(
+      `Update requires 42 database operations, exceeding the maximum budget of ${MAX_D1_STATEMENTS}.`,
+    );
+  });
+
+  it("rejects an update whose serialized payload exceeds 1,000,000 bytes", () => {
+    // Generate a very large story to exceed 1MB
+    const hugeStory = "a".repeat(MAX_WEBSITE_CONTENT_PAYLOAD_BYTES + 50);
+    const oversizedPayloadPatch = {
+      story: hugeStory,
+    };
+
+    const byteSize = getWebsiteContentPatchByteSize(oversizedPayloadPatch);
+    expect(byteSize).toBeGreaterThan(MAX_WEBSITE_CONTENT_PAYLOAD_BYTES);
+
+    const validation = validateWebsiteContentPatch(oversizedPayloadPatch);
+    expect(validation.valid).toBe(false);
+    expect(
+      validation.errors.some((err) =>
+        err.includes("exceeds the maximum allowed size of 1000000 bytes"),
+      ),
+    ).toBe(true);
   });
 });

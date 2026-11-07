@@ -9,6 +9,7 @@ import type {
 } from "@/app/types/website-content";
 import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
+import { getD1BatchBody } from "@/app/lib/d1-batch";
 import { toPublicUrl } from "@/app/lib/media";
 
 import { unstable_rethrow } from "next/navigation";
@@ -19,6 +20,8 @@ import {
   formatPhoneNumber,
   validateWebsiteContentPatch,
   parseAndNormalizeDestination,
+  MAX_D1_STATEMENTS,
+  MAX_WEBSITE_CONTENT_PAYLOAD_BYTES,
 } from "@/app/lib/website-content-validators";
 
 export type { ContactHour, ContactContent, SocialLink, DeliveryLink };
@@ -401,7 +404,7 @@ export async function updateWebsiteContent(
 ): Promise<WebsiteContent> {
   const validation = validateWebsiteContentPatch(patch);
   if (!validation.valid) {
-    throw new Error(`Invalid website content: ${validation.errors.join("; ")}`);
+    throw new WebsiteContentValidationError(`Invalid website content: ${validation.errors.join("; ")}`);
   }
 
   // Reads may use a fallback, but an admin write must never report a
@@ -570,6 +573,20 @@ export async function updateWebsiteContent(
       }
     }
 
+    if (stmts.length > MAX_D1_STATEMENTS) {
+      throw new WebsiteContentValidationError(
+        `Update generated ${stmts.length} database statements, exceeding the maximum budget of ${MAX_D1_STATEMENTS}.`,
+      );
+    }
+    // The proxy caps its SQL request, which includes the statement envelope,
+    // SQL text, normalized destinations, and values merged from stored content.
+    const batchBytes = Buffer.byteLength(JSON.stringify(getD1BatchBody(stmts)), "utf8");
+    if (batchBytes > MAX_WEBSITE_CONTENT_PAYLOAD_BYTES) {
+      throw new WebsiteContentValidationError(
+        `Content update requires ${batchBytes} bytes in the database request, exceeding the maximum of ${MAX_WEBSITE_CONTENT_PAYLOAD_BYTES} bytes. Reduce the content size and try again.`,
+      );
+    }
+
     if (stmts.length > 0) {
       try {
         await batch(stmts);
@@ -607,6 +624,7 @@ export async function updateWebsiteContent(
     }
   } catch (err) {
     unstable_rethrow(err);
+    if (err instanceof WebsiteContentValidationError) throw err;
     if (String(err).includes("website_content_conflict")) throw new WebsiteContentConflictError();
     console.error("Failed to update website content in D1:", err);
     throw err;
@@ -614,6 +632,9 @@ export async function updateWebsiteContent(
 
   return nextContent;
 }
+
+/** A preflight rejection: no write was sent and reconciliation is unnecessary. */
+export class WebsiteContentValidationError extends Error {}
 
 export class WebsiteContentConflictError extends Error {
   constructor() {
