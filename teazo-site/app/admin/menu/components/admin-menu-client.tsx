@@ -65,6 +65,7 @@ type AdminMenuClientProps = {
 };
 
 const fallbackImage = "/TEAZO_logo.svg";
+const uncategorizedFilterId = "__uncategorized__";
 
 // Validate only the response fields this page uses before displaying a saved item.
 type SavedMenuItem = Pick<
@@ -355,6 +356,11 @@ export default function AdminMenuClient({
     return counts;
   }, [allItems]);
 
+  const uncategorizedCount = useMemo(
+    () => allItems.filter((item) => item.categories.length === 0).length,
+    [allItems],
+  );
+
   const editingItem =
     drawer?.kind === "edit-item" ? drawer.item : null;
 
@@ -481,6 +487,8 @@ export default function AdminMenuClient({
     const filtered = allItems.filter((item) => {
       const matchesCategory =
         selectedCategories.length === 0 ||
+        (selectedCategories.includes(uncategorizedFilterId) &&
+          item.categories.length === 0) ||
         item.categories.some((category) =>
           selectedCategories.includes(category.id),
         );
@@ -1158,6 +1166,25 @@ export default function AdminMenuClient({
                 </span>
               </label>
             ))}
+
+            <label className="flex min-w-0 cursor-pointer items-start gap-2 py-2 text-sm md:py-1">
+              <input
+                type="checkbox"
+                name="menuCategory"
+                value={uncategorizedFilterId}
+                checked={selectedCategories.includes(uncategorizedFilterId)}
+                onChange={() => toggleCategory(uncategorizedFilterId)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#b98555]"
+              />
+
+              <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                Uncategorized
+              </span>
+
+              <span className="mt-0.5 shrink-0 whitespace-nowrap text-xs tabular-nums text-gray-400">
+                ({uncategorizedCount})
+              </span>
+            </label>
           </div>
         </div>
       </aside>
