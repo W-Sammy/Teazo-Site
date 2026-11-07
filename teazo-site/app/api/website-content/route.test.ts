@@ -13,11 +13,12 @@ vi.mock("@/app/lib/website-content", () => ({
   updateWebsiteContent: mocks.updateWebsiteContent,
   deleteWebsiteContentEntry: mocks.deleteWebsiteContentEntry,
   WebsiteContentConflictError: class WebsiteContentConflictError extends Error {},
+  WebsiteContentNotFoundError: class WebsiteContentNotFoundError extends Error {},
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { DELETE, PATCH } = await import("@/app/api/website-content/route");
-const { WebsiteContentConflictError } = await import("@/app/lib/website-content");
+const { WebsiteContentConflictError, WebsiteContentNotFoundError } = await import("@/app/lib/website-content");
 
 function patch(body: unknown) {
   return PATCH(
@@ -102,6 +103,25 @@ describe("DELETE /api/website-content", () => {
     const response = await remove({ collection: "socialLinks", id: "facebook", revision: 0 });
     expect(response.status).toBe(409);
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 for a missing target without invalidating pages", async () => {
+    mocks.requireAdminApi.mockResolvedValue({ ok: true });
+    mocks.deleteWebsiteContentEntry.mockRejectedValueOnce(new WebsiteContentNotFoundError());
+    const response = await remove({ collection: "holidays", id: "12-25", revision: 0 });
+    expect(response.status).toBe(404);
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("requires reconciliation when cache invalidation fails after commit", async () => {
+    mocks.requireAdminApi.mockResolvedValue({ ok: true });
+    mocks.deleteWebsiteContentEntry.mockResolvedValueOnce(1);
+    vi.mocked(revalidatePath).mockImplementationOnce(() => { throw new Error("cache failure"); });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const response = await remove({ collection: "holidays", id: "12-25", revision: 0 });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual(expect.objectContaining({ requiresReload: true }));
+    log.mockRestore();
   });
 
   it("returns a safe error without exposing database details", async () => {

@@ -13,6 +13,43 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("website content removal (TZ-234, TZ-237, TZ-241, TZ-242)", () => {
+  it.each(["holidays", "socialLinks"] as const)("rejects a missing %s target without changing data or revision", async (collection) => {
+    const before = await getWebsiteContent();
+    await expect(deleteWebsiteContentEntry(collection, "missing", before.collectionsRevision!))
+      .rejects.toThrow("no longer exists");
+    expect(await getWebsiteContent()).toEqual(before);
+  });
+
+  it("keeps a repeated holiday deletion a missing-target no-op, even with a stale revision", async () => {
+    await updateWebsiteContent({ collectionsRevision: 0, holidays: [
+      { id: "christmas", name: "Christmas", date: "12-25", closed: true },
+    ] });
+    await deleteWebsiteContentEntry("holidays", "12-25", 1);
+    await expect(deleteWebsiteContentEntry("holidays", "12-25", 1)).rejects.toThrow("no longer exists");
+    expect((await getWebsiteContent()).collectionsRevision).toBe(2);
+    expect((await getWebsiteContent()).holidays).toEqual([]);
+  });
+
+  it("rolls back a stale holiday deletion when its target still exists", async () => {
+    await updateWebsiteContent({ collectionsRevision: 0, holidays: [
+      { id: "christmas", name: "Christmas", date: "12-25", closed: true },
+    ] });
+    const before = await getWebsiteContent();
+    await expect(deleteWebsiteContentEntry("holidays", "12-25", 0)).rejects.toBeInstanceOf(WebsiteContentConflictError);
+    expect(await getWebsiteContent()).toEqual(before);
+  });
+
+  it("rolls back the holiday revision claim when deletion fails", async () => {
+    await updateWebsiteContent({ collectionsRevision: 0, holidays: [
+      { id: "christmas", name: "Christmas", date: "12-25", closed: true },
+    ] });
+    const before = await getWebsiteContent();
+    sqliteD1.db.exec(`CREATE TRIGGER fail_delete BEFORE DELETE ON hours_exception
+      BEGIN SELECT RAISE(ABORT, 'simulated database failure'); END;`);
+    await expect(deleteWebsiteContentEntry("holidays", "12-25", 1)).rejects.toThrow("simulated database failure");
+    expect(await getWebsiteContent()).toEqual(before);
+  });
+
   it("deletes one social entry from storage and public content, preserving delivery links", async () => {
     const before = await getWebsiteContent();
     await deleteWebsiteContentEntry("socialLinks", "facebook", before.collectionsRevision!);

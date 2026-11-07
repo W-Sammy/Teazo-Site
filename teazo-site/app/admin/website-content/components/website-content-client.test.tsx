@@ -94,7 +94,7 @@ describe("confirmed website content deletion (TZ-239, TZ-240)", () => {
     fetchMock.mockRejectedValueOnce(new TypeError("Network unavailable"));
     openSocialRemoval();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    await screen.findByText("The deletion could not be confirmed. Check your connection and try again.");
+    await screen.findByText("The deletion could not be confirmed. Reload this page to check current content before trying again.");
     expect(screen.getByRole("button", { name: "Remove Facebook", hidden: true })).toBeTruthy();
   });
 
@@ -102,7 +102,21 @@ describe("confirmed website content deletion (TZ-239, TZ-240)", () => {
     fetchMock.mockResolvedValueOnce(Response.json({ error: "Content changed. Reload this page." }, { status: 409 }));
     openSocialRemoval();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    await screen.findByText("Content changed. Reload this page.");
+    await screen.findByText(/Content changed\. Reload this page\./);
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await screen.findByText("Save pending changes successfully before deleting, or reload this page.");
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("keeps holiday confirmation informative on 404 and blocks retry until reload", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ error: "This entry no longer exists." }, { status: 404 }));
+    render(<WebsiteContentClient canEdit={true} initialContent={structuredClone(DEFAULT_WEBSITE_CONTENT)} />);
+    fireEvent.change(screen.getByLabelText("Sections"), { target: { value: "holidays" } });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Christmas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await screen.findByText("This entry no longer exists. Reload this page before making more changes.");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Remove Christmas", hidden: true })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     await screen.findByText("Save pending changes successfully before deleting, or reload this page.");
     expect(fetchMock).toHaveBeenCalledOnce();

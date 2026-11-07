@@ -5,12 +5,14 @@
  *
  *   vi.mock("@/app/lib/d1", async () => (await import("@/test/sqlite-d1")).sqliteD1.module);
  */
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-const MIGRATIONS = fileURLToPath(new URL("../migrations", import.meta.url));
+// Tests run from teazo-site; jsdom rewrites import.meta.url to a browser URL.
+const MIGRATIONS = existsSync(resolve("migrations"))
+  ? resolve("migrations")
+  : resolve("teazo-site/migrations");
 
 type Stmt = { sql: string; params: unknown[] };
 type SqlValue = string | number | bigint | null | Uint8Array;
@@ -51,17 +53,19 @@ export function createSqliteD1() {
   }
 
   async function batch(statements: Array<{ toStmt(): Stmt }>) {
+    const results = [];
     db.exec("BEGIN");
     try {
       for (const { sql, params } of statements.map((s) => s.toStmt())) {
-        db.prepare(sql).run(...(params as SqlValue[]));
+        const info = db.prepare(sql).run(...(params as SqlValue[]));
+        results.push({ results: [], success: true, meta: { changes: Number(info.changes) } });
       }
       db.exec("COMMIT");
     } catch (error) {
       db.exec("ROLLBACK");
       throw error;
     }
-    return [];
+    return { results };
   }
 
   return {

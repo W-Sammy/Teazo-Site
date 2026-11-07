@@ -4,6 +4,7 @@ import {
   updateWebsiteContent,
   deleteWebsiteContentEntry,
   WebsiteContentConflictError,
+  WebsiteContentNotFoundError,
 } from "@/app/lib/website-content";
 import { validateWebsiteContentPatch } from "@/app/lib/website-content-validators";
 import { requireAdminApi } from "@/app/lib/admin";
@@ -17,12 +18,15 @@ function revalidateContent() {
 }
 
 function writeError(error: unknown) {
+  if (error instanceof WebsiteContentNotFoundError) {
+    return NextResponse.json({ error: error.message }, { status: 404 });
+  }
   if (error instanceof WebsiteContentConflictError) {
     return NextResponse.json({ error: error.message }, { status: 409 });
   }
   console.error("Website content write failed:", error);
   return NextResponse.json(
-    { error: "Website content could not be saved. Please try again." },
+    { error: "The write could not be confirmed. Reload this page to check current content before trying again.", requiresReload: true },
     { status: 503 },
   );
 }

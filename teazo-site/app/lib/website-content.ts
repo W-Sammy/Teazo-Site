@@ -122,12 +122,6 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function normalizeHolidayDate(date: string): string {
-  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
-  // values from the database as well.
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
-}
-
 function isSavedCarouselImage(value: unknown): value is CarouselImage {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 
@@ -571,6 +565,12 @@ export class WebsiteContentConflictError extends Error {
   }
 }
 
+export class WebsiteContentNotFoundError extends Error {
+  constructor() {
+    super("This entry no longer exists. Reload this page before making more changes.");
+  }
+}
+
 function assertCollectionWrite(revision: unknown): asserts revision is number {
   if (!isD1Configured()) throw new Error("Website content storage is unavailable.");
   if (!Number.isSafeInteger(revision) || (revision as number) < 0) {
@@ -584,18 +584,37 @@ function claimCollectionsRevision(revision: number) {
   ).bind(revision + 1);
 }
 
-/** Targeted, transactional deletion. Repeats with the old revision conflict. */
+/** Claim only if the target exists; the revision trigger rejects stale writers.
+ * D1's batch is atomic and returns each statement's meta.changes through the proxy.
+ * A missing target changes neither the revision nor the collection.
+ */
 export async function deleteWebsiteContentEntry(
   collection: "socialLinks" | "holidays",
   id: string,
   revision: number,
 ): Promise<number> {
   assertCollectionWrite(revision);
-  const statement = collection === "socialLinks"
-    ? prepare("DELETE FROM site_link WHERE link_group = 'social' AND key = ?1").bind(id)
-    : prepare("DELETE FROM hours_exception WHERE date = ?1").bind(id);
+  const target = collection === "socialLinks"
+    ? "site_link WHERE link_group = 'social' AND key = ?2"
+    : "hours_exception WHERE date = ?2";
+  const claim = prepare(
+    `UPDATE website_content_revision SET revision = ?1
+     WHERE id = 1 AND EXISTS (SELECT 1 FROM ${target})`,
+  ).bind(revision + 1, id);
+  const statement = prepare(
+    `DELETE FROM ${target}
+     AND EXISTS (SELECT 1 FROM website_content_revision WHERE id = 1 AND revision = ?1)`,
+  ).bind(revision + 1, id);
   try {
-    await batch([claimCollectionsRevision(revision), statement]);
+    const { results } = await batch([claim, statement]);
+    const [claimed, deleted] = results;
+    if (results.length !== 2 || claimed?.success !== true || deleted?.success !== true) {
+      throw new Error("Deletion result is unavailable.");
+    }
+    if (claimed.meta.changes === 0 && deleted.meta.changes === 0) throw new WebsiteContentNotFoundError();
+    if (claimed.meta.changes !== 1 || deleted.meta.changes !== 1) {
+      throw new Error("Deletion could not be confirmed.");
+    }
   } catch (error) {
     if (String(error).includes("website_content_conflict")) throw new WebsiteContentConflictError();
     throw error;

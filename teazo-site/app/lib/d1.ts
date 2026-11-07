@@ -136,7 +136,7 @@ export function prepare(sql: string) {
  */
 export async function batch(
   statements: Array<{ toStmt(): Stmt }>,
-): Promise<{ results: unknown[] }> {
+): Promise<{ results: D1Result<Record<string, unknown>>[] }> {
   if (statements.length === 0) {
     throw new D1Error("batch() needs at least one statement");
   }
@@ -145,7 +145,7 @@ export async function batch(
       `batch() takes at most ${MAX_STATEMENTS} statements, received ${statements.length}`,
     );
   }
-  return post<{ results: unknown[] }>("/batch", {
+  return post<{ results: D1Result<Record<string, unknown>>[] }>("/batch", {
     statements: statements.map((s) => s.toStmt()),
   });
 }
