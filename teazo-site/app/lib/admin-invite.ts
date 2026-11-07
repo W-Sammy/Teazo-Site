@@ -45,7 +45,7 @@ export function buildAdminInvite(
   setupUrl: string,
 ) {
   const loginUrl = new URL("/login", site).toString();
-  const logoUrl = new URL("\teazo_logo_text.png", site).toString();
+  const logoUrl = new URL("/teazo_logo_text.png", site).toString();
 
   const who = invite.invitedBy
     ? `${invite.invitedBy} added you`

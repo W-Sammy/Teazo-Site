@@ -70,6 +70,12 @@ export default function EventModal({ event, categories = [], items = [], onClose
             <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Description</h3>
             <p className="mt-3 whitespace-pre-line text-base leading-7 text-stone-700">{event.description || "Join us at Teazo for this special event."}</p>
           </div>
+          {event.appliesToAll && (
+            <div className="mt-6">
+              <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Included items</h3>
+              <p className="mt-3 text-base leading-7 text-stone-700">All menu items are included in this event.</p>
+            </div>
+          )}
           {!event.appliesToAll && includedCategories.length > 0 && (
             <div className="mt-6">
               <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Included categories</h3>
