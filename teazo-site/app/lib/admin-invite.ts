@@ -45,6 +45,7 @@ export function buildAdminInvite(
   setupUrl: string,
 ) {
   const loginUrl = new URL("/login", site).toString();
+  const logoUrl = new URL("/teazo_logo_text.png", site).toString();
 
   const who = invite.invitedBy
     ? `${invite.invitedBy} added you`
@@ -76,19 +77,33 @@ export function buildAdminInvite(
     "on the login page to request another link.",
     "",
     "If you weren't expecting this invitation, you can ignore it.",
+    "",
+    "Please do not reply to this email. This message was automatically generated.",
   ].join("\n");
 
+  // Table layout and inline styles keep the invitation compatible with email clients.
   const html = [
-    '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#2b211d">',
-    `<p>Hi ${escapeHtml(invite.username)},</p>`,
-    `<p>${escapeHtml(introduction)}</p>`,
-    `<p><a href="${escapeHtml(setupUrl)}">Create your password</a></p>`,
-    "<p>This link expires in 24 hours and can be used only once.</p>",
-    `<p>After creating your password, <a href="${escapeHtml(loginUrl)}">sign in</a> using <strong>${escapeHtml(invite.email)}</strong>.</p>`,
-    "<p>Alternatively, if this email is associated with a Google account, choose <strong>Continue with Google</strong> on the login page.</p>",
-    "<p>If the setup link expires, choose <strong>Set or reset password</strong> on the login page to request another link.</p>",
-    "<p>If you weren't expecting this invitation, you can ignore it.</p>",
-    "</div>",
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>',
+    '<body style="margin:0;padding:0;background-color:#f8f4ef;color:#2b211d;font-family:Arial,Helvetica,sans-serif">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f4ef"><tr><td align="center" style="padding:32px 16px">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border:1px solid #e7ddd4;border-radius:16px">',
+    '<tr><td align="center" style="padding:32px 24px 24px;border-bottom:1px solid #eee5dc">',
+    `<img src="${escapeHtml(logoUrl)}" alt="TEAZO" width="180" style="display:block;width:180px;max-width:100%;height:auto;border:0">`,
+    '</td></tr><tr><td style="padding:28px 24px;font-size:15px;line-height:1.6">',
+    '<h1 style="margin:0 0 24px;font-size:24px;line-height:1.3;color:#2b211d">Welcome to TEAZO Admin</h1>',
+    `<p style="margin:0 0 16px">Hi ${escapeHtml(invite.username)},</p>`,
+    `<p style="margin:0 0 24px">${escapeHtml(introduction)}</p>`,
+    '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#2b211d" style="border-radius:8px;text-align:center">',
+    `<a href="${escapeHtml(setupUrl)}" style="display:inline-block;padding:14px 24px;border:1px solid #2b211d;border-radius:8px;background-color:#2b211d;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none">Create your password</a>`,
+    '</td></tr></table>',
+    '<p style="margin:16px 0 24px;font-size:13px;color:#65564c">This link expires in 24 hours and can be used only once.</p>',
+    `<p style="margin:0 0 16px">After creating your password, <a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">sign in</a> using <strong>${escapeHtml(invite.email)}</strong>.</p>`,
+    '<p style="margin:0 0 16px">Alternatively, if this email is associated with a Google account, choose <strong>Continue with Google</strong> on the login page.</p>',
+    '<p style="margin:0 0 16px">If the setup link expires, choose <strong>Set or reset password</strong> on the login page to request another link.</p>',
+    "<p style=\"margin:0\">If you weren't expecting this invitation, you can ignore it.</p>",
+    '</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #eee5dc;font-size:12px;line-height:1.6;color:#65564c;text-align:center">',
+    '<p style="margin:0">Please do not reply to this email.<br>This message was automatically generated.</p>',
+    '</td></tr></table></td></tr></table></body></html>',
   ].join("");
 
   return {
