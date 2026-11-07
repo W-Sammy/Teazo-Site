@@ -3,13 +3,15 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import type { AdminEvent } from "@/app/types/admin-event";
+import type { AdminEvent, EventCategory, EventItem } from "@/app/types/admin-event";
 import { formatEventDate } from "@/app/lib/event-date";
 
-type EventModalProps = { event: AdminEvent; onClose: () => void };
+type EventModalProps = { event: AdminEvent; categories?: EventCategory[]; items?: EventItem[]; onClose: () => void };
 
-export default function EventModal({ event, onClose }: EventModalProps) {
+export default function EventModal({ event, categories = [], items = [], onClose }: EventModalProps) {
   const dialogRef = useRef<HTMLElement>(null);
+  const includedCategories = categories.filter((category) => event.categoryIds.includes(category.id));
+  const includedItems = items.filter((item) => event.itemIds.includes(item.id));
 
   useEffect(() => {
     const previousFocus = document.activeElement;
@@ -68,7 +70,26 @@ export default function EventModal({ event, onClose }: EventModalProps) {
             <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Description</h3>
             <p className="mt-3 whitespace-pre-line text-base leading-7 text-stone-700">{event.description || "Join us at Teazo for this special event."}</p>
           </div>
-          <p className="mt-6 rounded-xl bg-[#fff8f4] px-4 py-3 text-sm font-medium text-[#76574e]">{event.appliesToAll ? "Available across the entire menu." : "Available on selected menu items."}</p>
+          {!event.appliesToAll && includedCategories.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Included categories</h3>
+              <ul className="mt-3 flex flex-wrap gap-2" aria-label="Included categories">
+                {includedCategories.map((category) => (
+                  <li key={category.id} className="rounded-full bg-[#fff8f4] px-4 py-2 text-sm font-medium text-[#76574e]">{category.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {!event.appliesToAll && includedItems.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3c2924]">Included items</h3>
+              <ul className="mt-3 flex flex-wrap gap-2" aria-label="Included items">
+                {includedItems.map((item) => (
+                  <li key={item.id} className="rounded-full bg-[#fff8f4] px-4 py-2 text-sm font-medium text-[#76574e]">{item.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
     </div>,
