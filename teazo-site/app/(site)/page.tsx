@@ -180,7 +180,7 @@ export default async function Home() {
                         Planning for a Crowd?
                       </h2>
                       <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                        Call us for group ordering and discounted pricing on larger
+                        Inquire about group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
 

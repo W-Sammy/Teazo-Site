@@ -42,7 +42,7 @@ type TagOption = {
 const galleryViewOptions: readonly AdminViewOption<GalleryViewMode>[] = [
   {
     value: "grid",
-    label: "Image View",
+    label: "Card View",
     icon: <GridViewIcon />,
   },
   {
@@ -1147,7 +1147,7 @@ export default function AdminGalleryClient({
               disabled={interactionLocked}
               className={`gallery-landscape-new inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap ${adminButtonStyles.primary} sm:w-auto sm:self-end lg:ml-4 lg:self-auto`}
             >
-              New Image +
+              New Item +
             </button>
             )}
           </div>
@@ -1277,7 +1277,7 @@ export default function AdminGalleryClient({
               <p className="mt-2 max-w-md text-sm text-gray-500">
                 {images.length === 0
                   ? canEdit
-                    ? "Use the New Image button to add your first gallery image."
+                    ? "Use the New Item button to add your first gallery item."
                     : "No gallery images have been added yet."
                   : "Try changing the photo search or clearing the selected tags."}
               </p>
@@ -1290,7 +1290,7 @@ export default function AdminGalleryClient({
                   }
                   className={`mt-4 ${adminButtonStyles.primary}`}
                 >
-                  Add an image
+                  Add an item
                 </button>
               ) : images.length > 0 ? (
                 <button
