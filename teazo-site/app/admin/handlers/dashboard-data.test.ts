@@ -315,4 +315,18 @@ describe("Admin dashboard analytics data", () => {
       "utf8",
     );
   });
+
+  it("keeps the dashboard available when website content storage fails", async () => {
+    mocks.listActiveEvents.mockResolvedValueOnce([]);
+    mocks.getWebsiteContent.mockRejectedValueOnce(
+      new Error("Website content storage is unavailable."),
+    );
+    mocks.getStorageUsage.mockResolvedValueOnce([]);
+
+    const result = await getDashboardData();
+
+    expect(result.websiteContent).toBeNull();
+    expect(result.events).toEqual([]);
+    expect(result.metrics).toBeDefined();
+  });
 });

@@ -182,6 +182,14 @@ describe("POST /api/checkout", () => {
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
+  it("fails closed with 503 when website content storage is unavailable, without contacting Square", async () => {
+    mocks.getWebsiteContent.mockRejectedValueOnce(new Error("Website content storage is unconfigured."));
+    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ code: "STORAGE_UNAVAILABLE" });
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
   it("accepts a pickup scheduled days ahead", async () => {
     const pickupAt = pacificToUtc(2026, 10, 17, 12, 30).toISOString();
     const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });

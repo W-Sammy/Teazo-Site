@@ -257,8 +257,8 @@ export default function CartDrawer() {
         setScheduleStatus("ready");
       } catch (err) {
         console.error("Failed to fetch store schedule in CartDrawer:", err);
-        // Keep hours that already loaded; otherwise say so instead of guessing.
-        if (isMounted) setScheduleStatus((status) => (status === "ready" ? status : "error"));
+        // Do not preserve stale "ready" status across failed refreshes; invalidate availability on outage
+        if (isMounted) setScheduleStatus("error");
       }
     }
 

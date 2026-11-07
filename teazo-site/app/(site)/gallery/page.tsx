@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { getPublicGalleryImages } from "@/app/lib/gallery";
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ const mockImages: GalleryImage[] = [
 
 export default async function GalleryPage() {
   const [content, galleryImages] = await Promise.all([
-    getWebsiteContent(),
+    getPublicWebsiteContent(),
     getPublicGalleryImages(),
   ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";

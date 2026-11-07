@@ -1,5 +1,5 @@
 import { Montserrat } from "next/font/google"; // font import
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 
 // font setup
 const montserrat = Montserrat({
@@ -9,7 +9,7 @@ const montserrat = Montserrat({
 
 // footer.
 export default async function Footer() {
-    const content = await getWebsiteContent();
+    const content = await getPublicWebsiteContent();
     const email = content.address.email || "teazosf@hotmail.com";
 
     return (

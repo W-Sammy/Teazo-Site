@@ -326,6 +326,25 @@ function submitCheckoutForm() {
   fireEvent.submit(form);
 }
 
+function createStorageMock() {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => store.set(key, String(value)),
+    removeItem: (key: string) => store.delete(key),
+    clear: () => store.clear(),
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    get length() {
+      return store.size;
+    },
+  };
+}
+
+const mockLocalStorage = createStorageMock();
+const mockSessionStorage = createStorageMock();
+Object.defineProperty(window, "localStorage", { value: mockLocalStorage, writable: true, configurable: true });
+Object.defineProperty(window, "sessionStorage", { value: mockSessionStorage, writable: true, configurable: true });
+
 describe("Shopping Bag checkout submission", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -694,5 +713,54 @@ describe("Shopping Bag checkout submission", () => {
     ).toBeNull();
 
     expect(checkoutCalls()).toHaveLength(0);
+  });
+
+  it("invalidates stale ready status and indicates unavailable settings when content refresh fails on reopening", async () => {
+    let isCartOpenState = true;
+    const baseCart = mocks.useCart.mock.results[0]?.value ?? {};
+    mocks.useCart.mockImplementation(() => ({
+      ...baseCart,
+      items: [cartItem],
+      totalCount: 1,
+      subtotalCents: 500,
+      isCartOpen: isCartOpenState,
+      isHydrated: true,
+      openCart: vi.fn(),
+      closeCart: vi.fn(),
+      updateQuantity: vi.fn(),
+      removeItem: vi.fn(),
+      clearCart: vi.fn(),
+    }));
+
+    const { rerender } = render(<CartDrawer />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /ASAP \(~20/ })).toBeTruthy();
+    });
+
+    // Close the cart
+    isCartOpenState = false;
+    rerender(<CartDrawer />);
+
+    // Simulate storage outage on /api/website-content
+    mocks.fetch.mockImplementation((url: string) => {
+      if (url.includes("/api/website-content")) {
+        return Promise.resolve(new Response(JSON.stringify({ error: "Storage unavailable" }), { status: 503 }));
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+
+    // Reopen the cart during the outage
+    isCartOpenState = true;
+    rerender(<CartDrawer />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/couldn't load pickup times/i)).toBeTruthy();
+    });
+    expect(screen.queryByRole("button", { name: /ASAP \(~20/ })).toBeNull();
+
+    fillCustomerForm();
+    supplySecurityToken();
+    expect(checkoutButton().disabled).toBe(true);
   });
 });

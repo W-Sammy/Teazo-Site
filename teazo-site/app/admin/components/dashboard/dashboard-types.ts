@@ -3,7 +3,7 @@ import type { WebsiteContent } from "@/app/types/website-content";
 import type { DashboardMetrics, DashboardPeriod, DashboardVisitType, MenuItemMetric, PageMetric } from "@/app/types/dashboard";
 import type { StorageUsage } from "@/app/types/storage-usage";
 
-export type DashboardClientProps = { metrics: DashboardMetrics; events: AdminEvent[]; websiteContent: WebsiteContent; storageUsage: StorageUsage[] };
+export type DashboardClientProps = { metrics: DashboardMetrics; events: AdminEvent[]; websiteContent: WebsiteContent | null; storageUsage: StorageUsage[] };
 export type DashboardVisitMetric = MenuItemMetric | PageMetric;
 export type DashboardPeriodOption = { value: DashboardPeriod; label: string };
 export type DashboardVisitTypeOption = { value: DashboardVisitType; label: string };

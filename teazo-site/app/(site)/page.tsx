@@ -11,7 +11,7 @@ import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import SocialLinks from "./components/social-links";
 import GeneralButton from "@/app/components/general-button";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
@@ -69,7 +69,7 @@ function MailIcon() {
 
 export default async function Home() {
   const [content, liveEvents] = await Promise.all([
-    getWebsiteContent(),
+    getPublicWebsiteContent(),
     // Events are optional: keep the homepage available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);

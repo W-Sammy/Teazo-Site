@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Montserrat, Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
@@ -25,7 +25,7 @@ const mediumMontserrat = Montserrat({
 });
 
 export default async function Delivery() {
-  const content = await getWebsiteContent();
+  const content = await getPublicWebsiteContent();
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const deliveryLinks = (content.deliveryLinks ?? []).filter(
     (link) => link.enabled && link.label.trim() && link.url.trim(),

@@ -83,8 +83,21 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Refuse orders while the owner has paused online ordering
-  const content = await getWebsiteContent();
+  // 3. Refuse orders while the owner has paused online ordering or settings cannot be verified
+  let content;
+  try {
+    content = await getWebsiteContent();
+  } catch (error) {
+    console.error("[checkout] Could not load authoritative website content:", error);
+    return Response.json(
+      {
+        error: "Checkout is temporarily unavailable. Please try again in a few moments.",
+        code: "STORAGE_UNAVAILABLE",
+      },
+      { status: 503 },
+    );
+  }
+
   if (!content.onlineOrderingEnabled) {
     return Response.json(
       { error: ONLINE_ORDERING_PAUSED_MESSAGE, code: "ORDERING_PAUSED" },

@@ -67,6 +67,57 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
 // paused; any other value, or no row, means orders are open.
 const ONLINE_ORDERING_KEY = "site.online_ordering";
 
+export class WebsiteContentUnavailableError extends Error {
+  constructor(message = "Website content storage is unavailable.", public readonly cause?: unknown) {
+    super(message);
+    this.name = "WebsiteContentUnavailableError";
+    Object.setPrototypeOf(this, WebsiteContentUnavailableError.prototype);
+  }
+}
+
+export function getOutageFallbackWebsiteContent(): WebsiteContent {
+  return {
+    collectionsRevision: 0,
+    logo: DEFAULT_WEBSITE_CONTENT.logo,
+    story: DEFAULT_WEBSITE_CONTENT.story,
+    socialLinks: [],
+    deliveryLinks: [],
+    address: { ...DEFAULT_WEBSITE_CONTENT.address },
+    hours: [],
+    holidays: [],
+    carouselImages: [],
+    contactFormEnabled: false,
+    onlineOrderingEnabled: false,
+  };
+}
+
+export function getOutageContactContent(): ContactContent {
+  return {
+    logo: DEFAULT_WEBSITE_CONTENT.logo,
+    location: {
+      businessName: DEFAULT_WEBSITE_CONTENT.address.businessName,
+      streetAddress: DEFAULT_WEBSITE_CONTENT.address.streetAddress,
+      locality: DEFAULT_WEBSITE_CONTENT.address.locality,
+      phone: DEFAULT_WEBSITE_CONTENT.address.phone,
+      email: DEFAULT_WEBSITE_CONTENT.address.email,
+      mapQuery:
+        DEFAULT_WEBSITE_CONTENT.address.mapQuery ||
+        `${DEFAULT_WEBSITE_CONTENT.address.streetAddress}, ${DEFAULT_WEBSITE_CONTENT.address.locality}`,
+    },
+    hours: [
+      { day: "Monday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Tuesday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Wednesday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Thursday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Friday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Saturday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Sunday", hours: "Temporarily unavailable", isHoliday: false },
+    ],
+    socialLinks: [],
+    contactFormEnabled: false,
+  };
+}
+
 function cloneDefaultWebsiteContent(): WebsiteContent {
   return {
     collectionsRevision: 0,
@@ -83,12 +134,9 @@ function cloneDefaultWebsiteContent(): WebsiteContent {
   };
 }
 
-let inMemoryContent: WebsiteContent = cloneDefaultWebsiteContent();
-
 function isD1Configured(): boolean {
   return Boolean(process.env.D1_PROXY_URL && process.env.PROXY_TOKEN);
 }
-
 
 const WEEKDAY_ABBRS_FROM_SUNDAY = [
   "Sun",
@@ -133,15 +181,31 @@ function isSavedCarouselImage(value: unknown): value is CarouselImage {
     typeof image.alt === "string" && typeof image.enabled === "boolean";
 }
 
+export async function getPublicWebsiteContent(): Promise<WebsiteContent> {
+  try {
+    return await getWebsiteContent();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Website content storage is unavailable for public page:", error);
+    return getOutageFallbackWebsiteContent();
+  }
+}
+
 /**
- * Loads current website content from D1 if configured, otherwise falls back to memory.
+ * Loads authoritative website content directly from D1 storage.
+ * Throws WebsiteContentUnavailableError if storage is unconfigured, queries fail,
+ * or collection revision is unavailable.
  */
-export async function getWebsiteContent(): Promise<WebsiteContent> {
-  const content = cloneDefaultWebsiteContent();
+export async function getWebsiteContent(options?: { allowOutageFallback?: boolean }): Promise<WebsiteContent> {
+  if (options?.allowOutageFallback) {
+    return getPublicWebsiteContent();
+  }
 
   if (!isD1Configured()) {
-    return inMemoryContent;
+    throw new WebsiteContentUnavailableError("Website content storage is unconfigured.");
   }
+
+  const content = cloneDefaultWebsiteContent();
 
   try {
     // Read the revision before the collections. If a concurrent write happens
@@ -149,46 +213,20 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
     const revision = await prepare(
       "SELECT revision FROM website_content_revision WHERE id = 1",
     ).first<{ revision: number }>();
-    if (!revision) throw new Error("Website content revision is unavailable. Apply migration 0012.");
+    if (!revision) throw new WebsiteContentUnavailableError("Website content revision is unavailable. Apply migration 0012.");
     content.collectionsRevision = revision.revision;
-    let profile: {
+    const profile = await prepare(
+      `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
+         FROM business_profile WHERE id = 1`
+    ).first<{
       business_name: string;
       street_address: string;
       locality: string;
       phone: string | null;
       email: string | null;
       map_query: string;
-      contact_form_enabled?: number;
-    } | null = null;
-
-    try {
-      profile = await prepare(
-        `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
-           FROM business_profile WHERE id = 1`
-      ).first<{
-        business_name: string;
-        street_address: string;
-        locality: string;
-        phone: string | null;
-        email: string | null;
-        map_query: string;
-        contact_form_enabled: number;
-      }>();
-    } catch (error) {
-      unstable_rethrow(error);
-      // Fallback query if contact_form_enabled column does not exist yet in database
-      profile = await prepare(
-        `SELECT business_name, street_address, locality, phone, email, map_query
-           FROM business_profile WHERE id = 1`
-      ).first<{
-        business_name: string;
-        street_address: string;
-        locality: string;
-        phone: string | null;
-        email: string | null;
-        map_query: string;
-      }>();
-    }
+      contact_form_enabled?: number | null;
+    }>();
 
     const d1Hours = await prepare(
       `SELECT day_of_week, display_text, opens_at, closes_at, is_closed
@@ -336,14 +374,18 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       };
     });
 
-    inMemoryContent = { ...content };
     return content;
   } catch (error) {
-    unstable_rethrow(error)
+    unstable_rethrow(error);
+    if (error instanceof WebsiteContentUnavailableError || (error as Error)?.name === "WebsiteContentUnavailableError") {
+      throw error;
+    }
     console.error("Failed to fetch website content from D1:", error);
-    return inMemoryContent;
+    throw new WebsiteContentUnavailableError("Failed to fetch website content from D1.", error);
   }
 }
+
+export const getAuthoritativeWebsiteContent = getWebsiteContent;
 
 /**
  * Updates website content with the provided partial values and persists to D1.
@@ -358,7 +400,7 @@ export async function updateWebsiteContent(
 
   // Reads may use a fallback, but an admin write must never report a
   // successful save that disappears when the server restarts.
-  if (!isD1Configured()) throw new Error("Website content storage is unavailable.");
+  if (!isD1Configured()) throw new WebsiteContentUnavailableError("Website content storage is unavailable.");
   const current = await getWebsiteContent();
   const changesCollections = patch.socialLinks !== undefined || patch.holidays !== undefined;
   if (changesCollections) assertCollectionWrite(patch.collectionsRevision);
@@ -555,7 +597,6 @@ export async function updateWebsiteContent(
     throw err;
   }
 
-  inMemoryContent = { ...nextContent };
   return nextContent;
 }
 
@@ -572,7 +613,7 @@ export class WebsiteContentNotFoundError extends Error {
 }
 
 function assertCollectionWrite(revision: unknown): asserts revision is number {
-  if (!isD1Configured()) throw new Error("Website content storage is unavailable.");
+  if (!isD1Configured()) throw new WebsiteContentUnavailableError("Website content storage is unavailable.");
   if (!Number.isSafeInteger(revision) || (revision as number) < 0) {
     throw new WebsiteContentConflictError();
   }
@@ -619,14 +660,6 @@ export async function deleteWebsiteContentEntry(
     if (String(error).includes("website_content_conflict")) throw new WebsiteContentConflictError();
     throw error;
   }
-  // The next successful read refreshes the fallback; never publish uncommitted state.
-  inMemoryContent = {
-    ...inMemoryContent,
-    collectionsRevision: revision + 1,
-    ...(collection === "socialLinks"
-      ? { socialLinks: inMemoryContent.socialLinks.filter((link) => link.id !== id) }
-      : { holidays: inMemoryContent.holidays.filter((holiday) => holiday.date !== id) }),
-  };
   return revision + 1;
 }
 
@@ -634,25 +667,31 @@ export async function deleteWebsiteContentEntry(
  * Returns formatted ContactContent preserving the exact shape expected by the frontend contact route.
  */
 export async function getContactContent(): Promise<ContactContent> {
-  const content = await getWebsiteContent();
-  const hours = getWeeklyCustomerHours(content);
+  try {
+    const content = await getWebsiteContent();
+    const hours = getWeeklyCustomerHours(content);
 
-  return {
-    logo: content.logo,
-    location: {
-      businessName: content.address.businessName,
-      streetAddress: content.address.streetAddress,
-      locality: content.address.locality,
-      phone: content.address.phone,
-      email: content.address.email,
-      mapQuery:
-        content.address.mapQuery ||
-        `${content.address.streetAddress}, ${content.address.locality}`,
-    },
-    hours,
-    socialLinks: content.socialLinks,
-    contactFormEnabled: content.contactFormEnabled,
-  };
+    return {
+      logo: content.logo,
+      location: {
+        businessName: content.address.businessName,
+        streetAddress: content.address.streetAddress,
+        locality: content.address.locality,
+        phone: content.address.phone,
+        email: content.address.email,
+        mapQuery:
+          content.address.mapQuery ||
+          `${content.address.streetAddress}, ${content.address.locality}`,
+      },
+      hours,
+      socialLinks: content.socialLinks,
+      contactFormEnabled: content.contactFormEnabled,
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Website content storage is unavailable for contact page:", error);
+    return getOutageContactContent();
+  }
 }
 
 /**

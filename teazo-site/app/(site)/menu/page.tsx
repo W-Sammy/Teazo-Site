@@ -8,7 +8,7 @@ import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 import Subtitle from "../components/sub-title";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
@@ -359,7 +359,7 @@ export default async function MenuPage({
   const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult] = await Promise.all([
     searchParams ? searchParams : Promise.resolve(undefined),
-    getWebsiteContent(),
+    getPublicWebsiteContent(),
     loadMenu(),
   ]);
 

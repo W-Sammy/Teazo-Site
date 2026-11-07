@@ -39,11 +39,15 @@ vi.mock("@/app/lib/queries/catalog-revision", () => ({
   getMenuRevision: vi.fn(async () => "test-revision"),
 }));
 
-vi.mock("@/app/lib/website-content", () => ({
-  getWebsiteContent: vi.fn(async () => ({
+vi.mock("@/app/lib/website-content", () => {
+  const content = vi.fn(async () => ({
     logo: "/TEAZO_logo.svg",
-  })),
-}));
+  }));
+  return {
+    getWebsiteContent: content,
+    getPublicWebsiteContent: content,
+  };
+});
 
 vi.mock("@/app/components/catalog-change-notice", () => ({
   default: () => null,

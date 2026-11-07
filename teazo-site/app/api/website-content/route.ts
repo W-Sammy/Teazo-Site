@@ -57,7 +57,8 @@ export async function GET() {
   try {
     const content = await getWebsiteContent();
     return NextResponse.json(content);
-  } catch {
+  } catch (error) {
+    console.error("Website content GET failed:", error);
     return NextResponse.json(
       { error: "Failed to load website content" },
       { status: 500 },
