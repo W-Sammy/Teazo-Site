@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-import type { AdminEvent } from "@/app/types/admin-event";
+import type { AdminEvent, EventCategory, EventItem } from "@/app/types/admin-event";
 import EventModal from "@/app/components/event-modal";
 import { formatEventDate } from "@/app/lib/event-date";
 
 type LiveEventsSidebarProps = {
   events: AdminEvent[];
+  categories?: EventCategory[];
+  items?: EventItem[];
 };
 
 function formatEventDuration(event: AdminEvent) {
@@ -23,7 +25,7 @@ function CloseIcon() {
   );
 }
 
-export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
+export default function LiveEventsSidebar({ events, categories = [], items = [] }: LiveEventsSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
@@ -121,7 +123,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         </div>
       </aside>
 
-      {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {selectedEvent && <EventModal event={selectedEvent} categories={categories} items={items} onClose={() => setSelectedEvent(null)} />}
 
       <button
         ref={toggleRef}

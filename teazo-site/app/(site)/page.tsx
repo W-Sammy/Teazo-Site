@@ -13,6 +13,7 @@ import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
+import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
@@ -74,6 +75,10 @@ export default async function Home() {
     listActiveEvents().catch(() => []),
   ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const [eventCategories, eventItems] = await Promise.all([
+    getEventCategories(liveEvents).catch(() => []),
+    getEventItems(liveEvents).catch(() => []),
+  ]);
   const contactData = await getContactContent();
   const {
     location,
@@ -96,7 +101,7 @@ export default async function Home() {
 
   return (
     <>
-    <LiveEventsSidebar events={liveEvents} />
+    <LiveEventsSidebar events={liveEvents} categories={eventCategories} items={eventItems} />
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
