@@ -4,6 +4,7 @@ import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import type { SquareEnvironmentName } from "@/app/lib/square-environment";
 import type { MenuItem } from "@/app/types/menu-item";
 import type { MenuDisplayItem, MenuDisplaySection } from "@/app/lib/queries/menu-display";
 import AdminForm from "@/app/admin/components/admin-form-page";
@@ -14,6 +15,7 @@ type DisplayCategory = MenuDisplaySection & {
 };
 
 type Props = {
+  squareEnvironment?: SquareEnvironmentName;
   items: MenuItem[];
   initialSections: MenuDisplaySection[];
   initialItemSettings: MenuDisplayItem[];
@@ -142,6 +144,7 @@ function sortCategories(a: DisplayCategory, b: DisplayCategory) {
 }
 
 export default function DisplayCategoriesClient({
+  squareEnvironment = "sandbox",
   items,
   initialSections,
   initialItemSettings,
@@ -191,7 +194,7 @@ export default function DisplayCategoriesClient({
           : savedBySquareId.get(categoryId);
         const fallbackOrder = 100000 + byCategory.size;
         const category: DisplayCategory = byCategory.get(categoryId) ?? {
-          id: saved?.id ?? `category:${categoryId}`,
+          id: saved?.id ?? `category:${squareEnvironment}:${categoryId}`,
           squareCategoryId: categoryId === uncategorizedId ? null : categoryId,
           title: categoryId === uncategorizedId
             ? "Uncategorized"
@@ -222,7 +225,7 @@ export default function DisplayCategoriesClient({
     }
 
     return [...byCategory.values()].sort(sortCategories);
-  }, [items, sections]);
+  }, [items, sections, squareEnvironment]);
 
   const visibleById = useMemo(
     () => new Map(itemSettings.map((setting) => [setting.squareCatalogObjectId, setting.visible])),
@@ -251,12 +254,13 @@ export default function DisplayCategoriesClient({
         }),
       });
       if (!response.ok) throw new Error();
+      const result = await response.json();
 
       setSections((current) => {
         const saved = current.find((section) => section.id === category.id || (
           next.squareCategoryId && section.squareCategoryId === next.squareCategoryId
         ));
-        const replacement = { ...next, id: saved?.id ?? next.id };
+        const replacement = { ...next, id: result.section?.id ?? saved?.id ?? next.id };
         return saved
           ? current.map((section) => section.id === saved.id ? replacement : section)
           : [...current, replacement];
@@ -381,22 +385,12 @@ export default function DisplayCategoriesClient({
 
     setSaving("reorder");
     try {
-      const responses = await Promise.all(reordered.map((category, index) => fetch("/api/admin/menu/display", {
+      const response = await fetch("/api/admin/menu/display", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update-section",
-          id: category.id,
-          squareCategoryId: category.squareCategoryId,
-          title: category.title,
-          sectionType: category.sectionType,
-          sortOrder: index,
-          isPublished: category.isPublished,
-          defaultItemVisible: category.defaultItemVisible,
-          itemIds: category.itemIds,
-        }),
-      })));
-      if (responses.some((response) => !response.ok)) throw new Error();
+        body: JSON.stringify({ action: "reorder-sections", sectionIds: reordered.map((category) => category.id) }),
+      });
+      if (!response.ok) throw new Error();
     } catch {
       setSections(previousSections);
       setMessage("The category order could not be saved. Please try again.");

@@ -1,3 +1,4 @@
+import { getSquareEnvironment } from "@/app/lib/square-config";
 import type { Metadata } from "next";
 import DisplayCategoriesClient from "./display-categories-client";
 import { requireAdminPage } from "@/app/lib/admin";
@@ -30,6 +31,7 @@ export default async function DisplayCategoriesPage() {
 
   return (
     <DisplayCategoriesClient
+      squareEnvironment={getSquareEnvironment()}
       items={items}
       initialSections={currentDisplayState.sections}
       initialItemSettings={currentDisplayState.items}
