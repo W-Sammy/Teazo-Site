@@ -5,6 +5,7 @@ import {
   getMenuDisplayState,
   initializeMenuDisplayItems,
 } from "@/app/lib/queries/menu-display";
+import { syncSquareMenuCategories } from "@/app/lib/sync-menu-categories";
 import type { MenuItem } from "@/app/types/menu-item";
 
 export const metadata: Metadata = {
@@ -22,10 +23,8 @@ async function getMenuItems(): Promise<MenuItem[]> {
 
 export default async function DisplayCategoriesPage() {
   await requireAdminPage(2);
-  const [items, displayState] = await Promise.all([
-    getMenuItems(),
-    getMenuDisplayState(),
-  ]);
+  const [items] = await Promise.all([getMenuItems(), syncSquareMenuCategories()]);
+  const displayState = await getMenuDisplayState();
   await initializeMenuDisplayItems(items, displayState.sections);
   const currentDisplayState = await getMenuDisplayState();
 

@@ -1249,9 +1249,9 @@ export default function AdminMenuClient({
               <div className="grid w-full min-w-0 grid-cols-1 gap-2 @min-[260px]/menu-toolbar:grid-cols-2 md:@min-[520px]/menu-toolbar:ml-auto md:@min-[520px]/menu-toolbar:flex md:@min-[520px]/menu-toolbar:w-auto md:@min-[520px]/menu-toolbar:shrink-0">
                 <Link
                   href="/admin/menu/display-categories"
-                  className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.secondary} md:inline-flex md:items-center md:justify-center`}
+                  className={`min-w-0 text-center [overflow-wrap:anywhere] ${adminButtonStyles.navigation} md:inline-flex md:items-center md:justify-center`}
                 >
-                  Public Menu Display
+                  Display Categories
                 </Link>
 
                 <button

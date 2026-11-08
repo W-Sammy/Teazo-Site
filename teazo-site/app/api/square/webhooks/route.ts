@@ -2,6 +2,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { recordCatalogRevision } from "@/app/lib/queries/catalog-revision";
 
+import { syncSquareMenuCategories } from "@/app/lib/sync-menu-categories";
+
 export const runtime = "nodejs";
 
 // Square signs the exact notification URL followed by the unmodified body.
@@ -62,11 +64,13 @@ export async function POST(request: Request) {
   }
 
   try {
+    await syncSquareMenuCategories();
     await recordCatalogRevision(event.created_at, event.event_id);
     // The menu loaders use no-store: the next render fetches Square again.
     // Repeating these invalidations is safe for retries or out-of-order events.
     revalidatePath("/menu");
     revalidatePath("/admin/menu");
+    revalidatePath("/admin/menu/display-categories");
     console.info("Square catalog invalidated:", event.event_id);
     return Response.json({ received: true });
   } catch (error) {

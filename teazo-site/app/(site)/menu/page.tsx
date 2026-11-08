@@ -337,8 +337,8 @@ async function loadMenu(): Promise<MenuLoadResult> {
     }
 
     // Website display controls are a local overlay on top of Square's catalog.
-    // If the overlay is temporarily unavailable, preserve the existing catalog
-    // behavior rather than taking the public menu down.
+    // Unconfigured Square categories stay hidden until an admin publishes them.
+    // A failed settings read must not accidentally publish hidden categories.
     let displayState: Awaited<ReturnType<typeof getMenuDisplayState>> = {
       sections: [],
       items: [],
@@ -367,7 +367,7 @@ async function loadMenu(): Promise<MenuLoadResult> {
         const defaultVisible = item.categories.length === 0
           ? uncategorizedSettings?.defaultItemVisible ?? true
           : item.categories.some(
-              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? true,
+              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? false,
             );
 
         return explicitVisibility ?? defaultVisible ? [orderable] : [];
@@ -382,7 +382,7 @@ async function loadMenu(): Promise<MenuLoadResult> {
           ? section.id.slice("category:".length)
           : null;
         return categoryId
-          ? sectionSettings.get(categoryId)?.isPublished ?? true
+          ? sectionSettings.get(categoryId)?.isPublished ?? false
           : true;
       }).sort((a, b) => {
         const aCategoryId = a.id.startsWith("category:")

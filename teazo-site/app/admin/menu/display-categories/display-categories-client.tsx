@@ -100,6 +100,7 @@ export default function DisplayCategoriesClient({
   const [deletePending, setDeletePending] = useState<DisplayCategory | null>(null);
   const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string; position: "before" | "after" } | null>(null);
+  const [hideHiddenCategories, setHideHiddenCategories] = useState(false);
   const [message, setMessage] = useState("");
 
   const categories = useMemo<DisplayCategory[]>(() => {
@@ -112,6 +113,12 @@ export default function DisplayCategoriesClient({
     const savedUncategorized = sections.find(
       (section) => section.sectionType === "uncategorized",
     );
+
+    for (const section of sections) {
+      if (section.sectionType === "square" && section.squareCategoryId) {
+        byCategory.set(section.squareCategoryId, { ...section, items: [] });
+      }
+    }
 
     for (const item of items) {
       const categoryIds = item.categories.length
@@ -134,8 +141,8 @@ export default function DisplayCategoriesClient({
             : squareCategory?.name?.trim() || "Unnamed category",
           sectionType: categoryId === uncategorizedId ? "uncategorized" : "square",
           sortOrder: saved?.sortOrder ?? (categoryId === uncategorizedId ? 999999 : fallbackOrder),
-          isPublished: saved?.isPublished ?? true,
-          defaultItemVisible: saved?.defaultItemVisible ?? true,
+          isPublished: saved?.isPublished ?? (categoryId === uncategorizedId),
+          defaultItemVisible: saved?.defaultItemVisible ?? (categoryId === uncategorizedId),
           itemIds: [],
           items: [],
         };
@@ -308,6 +315,10 @@ export default function DisplayCategoriesClient({
     reordered.splice(toIndex + (position === "after" ? 1 : 0), 0, moved);
     if (reordered.every((category, index) => category.id === categories[index].id)) return;
 
+    await persistCategoryOrder(reordered);
+  }
+
+  async function persistCategoryOrder(reordered: DisplayCategory[]) {
     const previousSections = sections;
     setSections(reordered.map((category, sortOrder) => ({ ...category, sortOrder })));
 
@@ -388,11 +399,8 @@ export default function DisplayCategoriesClient({
       <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-12 pt-6 sm:px-6 md:px-8 md:pt-10">
         <div className="-mx-4 flex flex-wrap items-start justify-between gap-4 border-b border-[#dbb082] px-4 pb-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#9b6d43]">
-              Menu display
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-gray-900">
-              Public menu categories
+            <h1 className="text-sm font-semibold uppercase tracking-[0.16em] text-[#9b6d43]">
+              Display Categories
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">
               Control which Square items appear on the TEAZO website. These settings do not change Square.
@@ -402,7 +410,7 @@ export default function DisplayCategoriesClient({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/admin/menu"
-              className={adminButtonStyles.secondary}
+              className={adminButtonStyles.navigation}
             >
               Back to Menu
             </Link>
@@ -416,13 +424,33 @@ export default function DisplayCategoriesClient({
           </div>
         </div>
 
-      <div className="relative flow-root min-h-[calc(100dvh-12rem)]">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-[266px] hidden w-px bg-[#dbb082] lg:block" />
+      <div className="relative flow-root min-h-[calc(100dvh-12rem)] md:-mx-8">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-52 hidden w-px bg-[#dbb082] md:block" />
         {message && <p role="status" className="mt-4 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-700">{message}</p>}
 
-      <div className="relative mt-8 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-        <aside className="-mx-4 border-b border-[#dbb082] px-4 pb-5 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:mx-0 lg:sticky lg:top-6 lg:border-b-0 lg:px-0 lg:pb-0 lg:pr-6">
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-gray-500">
+      <div className="relative mt-8 grid gap-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-0">
+        <aside className="-mx-4 border-b border-[#dbb082] px-4 pb-5 sm:-mx-6 sm:px-6 md:mx-0 md:sticky md:top-6 md:border-b-0 md:px-4 md:pb-0">
+          <div className="mb-4 flex flex-col gap-3 border-b border-[#dbb082]/40 pb-4">
+            <div className="flex items-center justify-between gap-3">
+              <span id="hide-hidden-categories-label" className="text-xs font-medium leading-5 text-gray-700">Hide hidden categories</span>
+              <Toggle
+                checked={hideHiddenCategories}
+                onChange={() => setHideHiddenCategories((current) => !current)}
+                label="Hide hidden categories"
+                small
+              />
+            </div>
+            <button type="button" disabled={saving !== null || !categories.some((category) => !category.isPublished)} onClick={() => {
+              const reordered = [...categories.filter((category) => category.isPublished), ...categories.filter((category) => !category.isPublished)];
+              if (reordered.some((category, index) => category.id !== categories[index].id)) void persistCategoryOrder(reordered);
+            }} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-[#dbb082]/60 bg-[#fffaf6] px-2 py-2 text-xs font-medium text-[#704b2d] transition-colors hover:border-[#b98555] hover:bg-[#f5e6d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dbb082] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 3v14m-4-4 4 4 4-4" />
+              </svg>
+              <span>Move hidden to bottom</span>
+            </button>
+          </div>
+          <h2 className="flex items-center gap-2 text-base font-semibold">
             Category Order
             <InfoTip label="Category Order" text="Drag categories to change the order in which their sections appear on the public menu." />
           </h2>
@@ -430,7 +458,7 @@ export default function DisplayCategoriesClient({
           <div className="mt-3 space-y-1" onDragLeave={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropTarget(null);
           }}>
-            {categories.map((category, index) => (
+            {categories.map((category, index) => hideHiddenCategories && !category.isPublished ? null : (
               <div
                 key={category.id}
                 draggable={saving !== "reorder"}
@@ -484,7 +512,12 @@ export default function DisplayCategoriesClient({
           </div>
         </aside>
 
-        <main className="min-w-0 self-start overflow-x-auto rounded-lg border border-[#dbb082]/60 bg-white">
+        <main className="min-w-0 self-start md:px-8">
+          <p className="mb-3 flex items-center gap-2 text-xs text-gray-600">
+            <span className="shrink-0 text-[#9b6d43]"><WebsiteIcon /></span>
+            Website-only category — created here and shown only on the TEAZO website.
+          </p>
+          <div className="overflow-x-auto rounded-lg border border-[#dbb082]/60 bg-white">
           <div role="table" aria-label="Public menu categories" className="min-w-[760px]">
             <div role="row" className="grid grid-cols-[minmax(0,1fr)_12rem_9rem_8rem] border-b border-[#dbb082] bg-[#fffaf6] text-left text-sm text-gray-700">
               <div role="columnheader" className="px-3 py-3">Name</div>
@@ -505,8 +538,8 @@ export default function DisplayCategoriesClient({
                       <span className="w-4 shrink-0 text-base text-gray-500">{openCategory === category.id ? "▾" : "▸"}</span>
                       <span className="min-w-0">
                         <span className={`flex items-center gap-2 truncate font-semibold ${category.isPublished ? "text-gray-900" : "text-gray-400 line-through"}`}>
+                          <span className="truncate">{category.title}</span>
                           {category.sectionType === "custom" && <span className="shrink-0 text-[#9b6d43]" title="Website-only category"><WebsiteIcon /></span>}
-                          {category.title}
                         </span>
                         <span className="block text-xs text-gray-500">{category.items.length} {category.items.length === 1 ? "item" : "items"}</span>
                       </span>
@@ -600,6 +633,7 @@ export default function DisplayCategoriesClient({
                 )}
               </div>
             ))}
+          </div>
           </div>
         </main>
       </div>

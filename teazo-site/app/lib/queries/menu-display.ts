@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Category } from "@/app/types/menu-item";
 import { batch, prepare } from "@/app/lib/d1";
 import { getSquareEnvironment } from "@/app/lib/square-config";
 
@@ -126,7 +127,7 @@ export async function initializeMenuDisplayItems(
       const visible = item.categories.length === 0
         ? uncategorized?.defaultItemVisible ?? true
         : item.categories.some(
-            (category) => sectionByCategory.get(category.id)?.defaultItemVisible ?? true,
+            (category) => sectionByCategory.get(category.id)?.defaultItemVisible ?? false,
           );
 
       return [
@@ -144,6 +145,30 @@ export async function initializeMenuDisplayItems(
       ];
     });
 
+  for (let offset = 0; offset < statements.length; offset += 40) {
+    await batch(statements.slice(offset, offset + 40));
+  }
+}
+
+/** Reconcile only after a complete, successful Square category listing. */
+export async function reconcileSquareMenuCategories(categories: Category[]) {
+  const squareEnv = getSquareEnvironment();
+  const current = await getMenuDisplayState();
+  const activeIds = new Set(categories.flatMap((category) => category.categoryId ? [category.categoryId] : []));
+  const statements = current.sections
+    .filter((section) => section.sectionType === "square" && section.squareCategoryId && !activeIds.has(section.squareCategoryId))
+    .map((section) => prepare("DELETE FROM menu_section WHERE id = ?1 AND square_env = ?2 AND section_type = 'square'").bind(section.id, squareEnv));
+  let nextOrder = Math.max(-1, ...current.sections.map((section) => section.sortOrder)) + 1;
+  for (const category of categories) {
+    if (!category.categoryId) continue;
+    statements.push(prepare(`
+      INSERT INTO menu_section
+        (id, square_env, square_category_id, title, section_type, sort_order, is_published, default_item_visible)
+      VALUES (?1, ?2, ?3, ?4, 'square', ?5, 0, 0)
+      ON CONFLICT (square_category_id, square_env) WHERE square_category_id IS NOT NULL
+      DO UPDATE SET title = excluded.title
+    `).bind(`category:${squareEnv}:${category.categoryId}`, squareEnv, category.categoryId, category.categoryName?.trim() || "Unnamed category", nextOrder++));
+  }
   for (let offset = 0; offset < statements.length; offset += 40) {
     await batch(statements.slice(offset, offset + 40));
   }
