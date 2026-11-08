@@ -481,7 +481,11 @@ export default function DisplayCategoriesClient({
 
       <div className="relative flow-root min-h-[calc(100dvh-12rem)] md:-mx-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-52 hidden w-px bg-[#dbb082] md:block" />
-        {message && <p role="status" className="mt-4 rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-700">{message}</p>}
+        {message && (
+          <p role="status" className={`mt-4 rounded-lg border px-4 py-3 text-sm [overflow-wrap:anywhere] md:ml-[15rem] md:mr-8 ${message.includes("could not") ? "border-red-200 bg-red-50 text-red-800" : "border-gray-200 bg-gray-100 text-gray-700"}`}>
+            {message}
+          </p>
+        )}
 
       <div className="relative mt-8 grid gap-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-0">
         <aside className="-mx-4 border-b border-[#dbb082] px-4 pb-5 sm:-mx-6 sm:px-6 md:mx-0 md:sticky md:top-6 md:border-b-0 md:px-4 md:pb-0">
