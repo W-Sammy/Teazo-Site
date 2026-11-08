@@ -104,14 +104,17 @@ export default function LiveEventsSidebar({ events, categories = [], items = [] 
                 className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
               >
                 <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#f4e9e4]">
-                  <Image
-                    src={event.imageUrl}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) calc(100vw - 4rem), 320px"
-                    className="object-cover transition duration-300 group-enabled:group-hover:scale-105"
-                    unoptimized={event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("data:")}
-                  />
+                  {/* The closed panel sits inside the viewport, so lazy images would still download; wait for the first open. */}
+                  {hasBeenOpenedByUser && (
+                    <Image
+                      src={event.imageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) calc(100vw - 4rem), 320px"
+                      className="object-cover transition duration-300 group-enabled:group-hover:scale-105"
+                      unoptimized={event.imageUrl.startsWith("blob:") || event.imageUrl.startsWith("data:")}
+                    />
+                  )}
                 </div>
                 <div className="px-4 py-3">
                   <h3 className="font-bold text-[#3c2924]">{event.name}</h3>
