@@ -207,7 +207,11 @@ export default function GalleryUploadForm({
       }
 
       if (file.size > maxVideoSize) {
-        setImageError("Videos must be 10 MB or smaller.");
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+
+        setImageError(
+          `Video is too large (${fileSizeMB} MB). The maximum allowed size is 10 MB. Please select a smaller video.`
+        );
         return;
       }
 
@@ -396,6 +400,10 @@ export default function GalleryUploadForm({
   ) {
     event.preventDefault();
 
+    if (imageError) {
+      return;
+    }
+
     if (isSaving || isConverting) {
       return;
     }
@@ -482,7 +490,7 @@ export default function GalleryUploadForm({
 
   // Submission remains unavailable during conversion.
   const canSave = Boolean(
-    name.trim() && previewUrl && !isConverting,
+    name.trim() && previewUrl && !isConverting && !imageError
   );
 
   return (
@@ -745,9 +753,15 @@ export default function GalleryUploadForm({
           )}
 
           {imageError && (
-            <p className="mt-2 break-words text-center text-xs text-red-600">
-              {imageError}
-            </p>
+            <div
+              role="alert"
+              className="mt-3 w-full rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+            >
+              <div className="flex items-start gap-2">
+                <span aria-hidden="true">⚠️</span>
+                <p className="break-words">{imageError}</p>
+              </div>
+            </div>
           )}
         </div>
 
