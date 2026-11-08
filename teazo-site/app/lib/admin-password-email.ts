@@ -64,7 +64,10 @@ export async function sendAdminPasswordEmail(
     admin.needs_password_setup === 1 ? "setup" : "reset";
 
   // Validate configuration before creating a token.
-  const link = new URL("/login", applicationUrl());
+  const site = applicationUrl();
+  const loginUrl = new URL("/login", site).toString();
+  const logoUrl = new URL("/teazo_logo_text.png", site).toString();
+  const link = new URL(loginUrl);
 
   const created = await createPasswordToken(admin.id, purpose);
 
@@ -96,16 +99,39 @@ export async function sendAdminPasswordEmail(
     passwordUrl,
     "",
     `This link expires in ${expiration} and can be used only once.`,
+    "",
+    `After ${isSetup ? "creating" : "resetting"} your password, sign in at ${loginUrl}`,
+    `using this email address: ${admin.email_normalized}`,
+    "",
+    `Bookmark or save your admin login page: ${loginUrl}`,
+    "There is no link to this page on the public website. Use your saved link",
+    "or add /login to the website address whenever you need to sign in.",
+    "",
     "If you were not expecting this email, you can ignore it.",
+    "",
+    "Please do not reply to this email. This message was automatically generated.",
   ].join("\n");
 
   const html = [
-    '<div style="font-family:Arial,sans-serif;line-height:1.5">',
-    `<p>${explanation}</p>`,
-    `<p><a href="${escapeHtml(passwordUrl)}">${action}</a></p>`,
-    `<p>This link expires in ${expiration} and can be used only once.</p>`,
-    "<p>If you were not expecting this email, you can ignore it.</p>",
-    "</div>",
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>',
+    '<body style="margin:0;padding:0;background-color:#f8f4ef;color:#2b211d;font-family:Arial,Helvetica,sans-serif">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f4ef"><tr><td align="center" style="padding:32px 16px">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border:1px solid #e7ddd4;border-radius:16px">',
+    '<tr><td align="center" style="padding:32px 24px 24px;border-bottom:1px solid #eee5dc">',
+    `<img src="${escapeHtml(logoUrl)}" alt="TEAZO" width="180" style="display:block;width:180px;max-width:100%;height:auto;border:0">`,
+    '</td></tr><tr><td style="padding:28px 24px;font-size:15px;line-height:1.6">',
+    `<h1 style="margin:0 0 24px;font-size:24px;line-height:1.3;color:#2b211d">${action}</h1>`,
+    `<p style="margin:0 0 24px">${escapeHtml(explanation)}</p>`,
+    '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#2b211d" style="border-radius:8px;text-align:center">',
+    `<a href="${escapeHtml(passwordUrl)}" style="display:inline-block;padding:14px 24px;border:1px solid #2b211d;border-radius:8px;background-color:#2b211d;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none">${action}</a>`,
+    '</td></tr></table>',
+    `<p style="margin:16px 0 24px;font-size:13px;color:#65564c">This link expires in ${expiration} and can be used only once.</p>`,
+    `<p style="margin:0 0 16px">After ${isSetup ? "creating" : "resetting"} your password, <a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">sign in</a> using <strong>${escapeHtml(admin.email_normalized)}</strong>.</p>`,
+    `<p style="margin:0 0 16px"><strong>Bookmark or save your admin login page:</strong><br><a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">${escapeHtml(loginUrl)}</a><br>There is no link to this page on the public website. Use your saved link or add <strong>/login</strong> to the website address whenever you need to sign in.</p>`,
+    '<p style="margin:0">If you were not expecting this email, you can ignore it.</p>',
+    '</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #eee5dc;font-size:12px;line-height:1.6;color:#65564c;text-align:center">',
+    '<p style="margin:0">Please do not reply to this email.<br>This message was automatically generated.</p>',
+    '</td></tr></table></td></tr></table></body></html>',
   ].join("");
 
   return sendEmail({
@@ -125,20 +151,40 @@ export async function sendAdminPasswordEmail(
 export async function sendAdminPasswordChangedEmail(
   email: string,
 ): Promise<SendOutcome> {
+  const site = applicationUrl();
+  const loginUrl = new URL("/login", site).toString();
+  const logoUrl = new URL("/teazo_logo_text.png", site).toString();
+
   const text = [
     "Your TEAZO admin password has been changed.",
     "",
     "If you made this change, no further action is needed.",
     "",
     "If you did not make this change, contact the website owner immediately.",
+    "",
+    `Bookmark or save your admin login page: ${loginUrl}`,
+    "There is no link to this page on the public website. Use your saved link",
+    "or add /login to the website address whenever you need to sign in.",
+    "",
+    "Please do not reply to this email. This message was automatically generated.",
   ].join("\n");
 
   const html = [
-    '<div style="font-family:Arial,sans-serif;line-height:1.5">',
-    "<p>Your TEAZO admin password has been changed.</p>",
-    "<p>If you made this change, no further action is needed.</p>",
-    "<p>If you did not make this change, contact the website owner immediately.</p>",
-    "</div>",
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>',
+    '<body style="margin:0;padding:0;background-color:#f8f4ef;color:#2b211d;font-family:Arial,Helvetica,sans-serif">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f4ef"><tr><td align="center" style="padding:32px 16px">',
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border:1px solid #e7ddd4;border-radius:16px">',
+    '<tr><td align="center" style="padding:32px 24px 24px;border-bottom:1px solid #eee5dc">',
+    `<img src="${escapeHtml(logoUrl)}" alt="TEAZO" width="180" style="display:block;width:180px;max-width:100%;height:auto;border:0">`,
+    '</td></tr><tr><td style="padding:28px 24px;font-size:15px;line-height:1.6">',
+    '<h1 style="margin:0 0 24px;font-size:24px;line-height:1.3;color:#2b211d">Your password has changed</h1>',
+    '<p style="margin:0 0 16px">Your TEAZO admin password has been changed.</p>',
+    '<p style="margin:0 0 16px">If you made this change, no further action is needed.</p>',
+    '<p style="margin:0 0 24px"><strong>If you did not make this change, contact the website owner immediately.</strong></p>',
+    `<p style="margin:0"><strong>Bookmark or save your admin login page:</strong><br><a href="${escapeHtml(loginUrl)}" style="color:#2b211d;text-decoration:underline">${escapeHtml(loginUrl)}</a><br>There is no link to this page on the public website. Use your saved link or add <strong>/login</strong> to the website address whenever you need to sign in.</p>`,
+    '</td></tr><tr><td style="padding:20px 24px;border-top:1px solid #eee5dc;font-size:12px;line-height:1.6;color:#65564c;text-align:center">',
+    '<p style="margin:0">Please do not reply to this email.<br>This message was automatically generated.</p>',
+    '</td></tr></table></td></tr></table></body></html>',
   ].join("");
 
   return sendEmail({
