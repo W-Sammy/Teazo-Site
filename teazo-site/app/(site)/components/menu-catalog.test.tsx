@@ -81,6 +81,7 @@ vi.mock("./item-customizer-modal", () => ({
 }));
 
 import MenuCatalog from "./menu-catalog";
+import { resetCustomizerModule } from "./lazy-customizer-modal";
 
 const specialItem: MenuItem = {
   catalogObjectId: "SPECIAL-1",
@@ -164,6 +165,7 @@ function selectedItemId() {
 describe("Public Menu catalog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCustomizerModule();
 
     window.history.replaceState(
       {},
@@ -253,7 +255,7 @@ describe("Public Menu catalog", () => {
   });
 
   describe("Item selection and customization", () => {
-    it("opens the selected item's customizer", () => {
+    it("opens the selected item's customizer", async () => {
       renderCatalog();
 
       fireEvent.click(
@@ -263,13 +265,30 @@ describe("Public Menu catalog", () => {
       );
 
       expect(
-        screen.getByRole("dialog", {
+        await screen.findByRole("dialog", {
           name: "Item Customizer",
         }),
       ).toBeTruthy();
 
       expect(
-        screen.getByText("Selected item: MILK-1"),
+        await screen.findByText("Selected item: MILK-1"),
+      ).toBeTruthy();
+    });
+
+    it("displays immediate loading feedback when selecting an item", () => {
+      renderCatalog();
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Classic Milk Tea",
+        }),
+      );
+
+      // Immediately upon click, the loading dialog is visible
+      expect(
+        screen.getByRole("dialog", {
+          name: "Loading drink customizer",
+        }),
       ).toBeTruthy();
     });
 
@@ -285,7 +304,7 @@ describe("Public Menu catalog", () => {
       expect(selectedItemId()).toBe("FRUIT-1");
     });
 
-    it("allows direct navigation to a valid item", () => {
+    it("allows direct navigation to a valid item", async () => {
       window.history.replaceState(
         {},
         "",
@@ -295,10 +314,26 @@ describe("Public Menu catalog", () => {
       renderCatalog("SPECIAL-1");
 
       expect(
-        screen.getByText(
+        await screen.findByText(
           "Selected item: SPECIAL-1",
         ),
       ).toBeTruthy();
+    });
+
+    it("does not open customizer if URL has no item query even if initialItemId is passed (Back navigation consistency)", () => {
+      // Simulates returning Back from another page after closing customizer:
+      // URL has no item query param, but RSC cache passes stale initialItemId
+      window.history.replaceState(
+        {},
+        "",
+        "/menu",
+      );
+
+      renderCatalog("SPECIAL-1");
+
+      expect(
+        screen.queryByRole("dialog"),
+      ).toBeNull();
     });
 
     it("does not open an unknown item", () => {
@@ -317,7 +352,7 @@ describe("Public Menu catalog", () => {
       ).toBeNull();
     });
 
-    it("closes the customizer and removes the item query parameter", () => {
+    it("closes the customizer and removes the item query parameter", async () => {
       renderCatalog();
 
       fireEvent.click(
@@ -328,16 +363,35 @@ describe("Public Menu catalog", () => {
 
       expect(selectedItemId()).toBe("MILK-1");
 
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Close Customizer",
-        }),
-      );
+      const closeButton = await screen.findByRole("button", {
+        name: "Close Customizer",
+      });
+      fireEvent.click(closeButton);
 
       expect(
         screen.queryByRole("dialog"),
       ).toBeNull();
 
+      expect(selectedItemId()).toBeNull();
+    });
+
+    it("allows dismissing loading modal before customizer finishes loading", () => {
+      renderCatalog();
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Classic Milk Tea",
+        }),
+      );
+
+      const cancelButton = screen.getByRole("button", {
+        name: "Cancel",
+      });
+      fireEvent.click(cancelButton);
+
+      expect(
+        screen.queryByRole("dialog"),
+      ).toBeNull();
       expect(selectedItemId()).toBeNull();
     });
   });
@@ -371,7 +425,7 @@ describe("Public Menu catalog", () => {
       );
     });
 
-    it("preserves unrelated parameters when closing the customizer", () => {
+    it("preserves unrelated parameters when closing the customizer", async () => {
       window.history.replaceState(
         {},
         "",
@@ -386,11 +440,10 @@ describe("Public Menu catalog", () => {
         }),
       );
 
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Close Customizer",
-        }),
-      );
+      const closeButton = await screen.findByRole("button", {
+        name: "Close Customizer",
+      });
+      fireEvent.click(closeButton);
 
       const params = new URLSearchParams(
         window.location.search,
@@ -403,7 +456,7 @@ describe("Public Menu catalog", () => {
       expect(params.has("item")).toBe(false);
     });
 
-    it("updates the selected item on browser history navigation", () => {
+    it("updates the selected item on browser history navigation", async () => {
       renderCatalog();
 
       window.history.replaceState(
@@ -415,7 +468,7 @@ describe("Public Menu catalog", () => {
       fireEvent.popState(window);
 
       expect(
-        screen.getByText("Selected item: MILK-1"),
+        await screen.findByText("Selected item: MILK-1"),
       ).toBeTruthy();
 
       window.history.replaceState(
@@ -427,11 +480,11 @@ describe("Public Menu catalog", () => {
       fireEvent.popState(window);
 
       expect(
-        screen.getByText("Selected item: FRUIT-1"),
+        await screen.findByText("Selected item: FRUIT-1"),
       ).toBeTruthy();
     });
 
-    it("closes the customizer when browser navigation removes the item", () => {
+    it("closes the customizer when browser navigation removes the item", async () => {
       renderCatalog();
 
       window.history.replaceState(
@@ -443,7 +496,7 @@ describe("Public Menu catalog", () => {
       fireEvent.popState(window);
 
       expect(
-        screen.getByRole("dialog"),
+        await screen.findByRole("dialog", { name: "Item Customizer" }),
       ).toBeTruthy();
 
       window.history.replaceState(

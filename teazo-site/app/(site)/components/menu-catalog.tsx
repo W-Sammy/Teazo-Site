@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import type { MenuItem } from "./menu-item-card";
 import MenuItemsSection from "./menu-items-section";
-import ItemCustomizerModal from "./item-customizer-modal";
+import CustomizerLoadingModal from "./customizer-loading-modal";
+import ChunkErrorBoundary from "./chunk-error-boundary";
+import LazyCustomizerModal, { resetCustomizerModule } from "./lazy-customizer-modal";
 
 export interface MenuSection {
   id: string;
@@ -39,11 +41,27 @@ export default function MenuCatalog({
     return list;
   }, [specialSections, menuSections]);
 
-  // Initialize selectedItem directly from initialItemId (avoiding setState in useEffect on mount)
+  // Establish URL/selection consistency:
+  // On client, check window.location.search first. If query param does not contain `item`,
+  // do not open the modal even if a stale `initialItemId` is passed (e.g. Back navigation).
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(() => {
+    if (typeof window !== "undefined") {
+      const searchItem = new URLSearchParams(window.location.search).get("item");
+      if (searchItem) {
+        return allItems.find((it) => it.catalogObjectId === searchItem) || null;
+      }
+      return null;
+    }
     if (!initialItemId) return null;
     return allItems.find((it) => it.catalogObjectId === initialItemId) || null;
   });
+
+  const [customizerRetryKey, setCustomizerRetryKey] = useState(0);
+
+  const handleRetryCustomizer = useCallback(() => {
+    resetCustomizerModule();
+    setCustomizerRetryKey((k) => k + 1);
+  }, []);
 
   // Handle browser back/forward buttons (popstate)
   useEffect(() => {
@@ -129,8 +147,22 @@ export default function MenuCatalog({
         </div>
       )}
 
-      {/* Drink Customization Modal */}
-      <ItemCustomizerModal item={selectedItem} onClose={handleCloseModal} />
+      {/* Drink Customization Modal - Coordinated Lazy Loading with Suspense & Retry Error Boundary */}
+      {selectedItem && (
+        <ChunkErrorBoundary
+          key={`customizer-boundary-${customizerRetryKey}`}
+          onRetry={handleRetryCustomizer}
+          onDismiss={handleCloseModal}
+        >
+          <Suspense fallback={<CustomizerLoadingModal onDismiss={handleCloseModal} />}>
+            <LazyCustomizerModal
+              key={`customizer-${customizerRetryKey}-${selectedItem.catalogObjectId}`}
+              item={selectedItem}
+              onClose={handleCloseModal}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
+      )}
     </>
   );
 }

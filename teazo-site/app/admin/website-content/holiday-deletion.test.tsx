@@ -279,6 +279,10 @@ describe("holiday deletion through the editor, API, and SQLite", () => {
         }]));
         const cart = render(<CartProvider initialOpen>{home}<CartDrawer /></CartProvider>);
         await act(async () => {});
+        // The cart interior is lazy-loaded. Fake timers stall findBy's polling, so flush manually.
+        for (let i = 0; i < 20 && !screen.queryByRole("button", { name: /ASAP \(/ }); i++) {
+          await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+        }
         const asap = screen.getByRole("button", { name: /ASAP \(/ }) as HTMLButtonElement;
         expect(asap.disabled).toBe(date.includes("11-26"));
         expect(screen.queryByText(/The store is closed today\./) !== null).toBe(date.includes("11-26"));

@@ -683,7 +683,7 @@ describe("Shopping Bag checkout submission", () => {
     expect(checkoutCalls()).toHaveLength(0);
   });
 
-  it("does not display a checkout button for an empty cart", () => {
+  it("does not display a checkout button for an empty cart", async () => {
     mocks.useCart.mockReturnValue({
       ...mocks.useCart.mock.results[0]?.value,
       items: [],
@@ -701,7 +701,7 @@ describe("Shopping Bag checkout submission", () => {
     render(<CartDrawer />);
 
     expect(
-      screen.getByText(
+      await screen.findByText(
         "Your bag is currently empty",
       ),
     ).toBeTruthy();
