@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import Image from "next/image";
 import type { MenuItem } from "@/app/types/menu-item";
 import type { MenuDisplayItem, MenuDisplaySection } from "@/app/lib/queries/menu-display";
 import AdminForm from "@/app/admin/components/admin-form-page";
@@ -20,18 +22,54 @@ type Props = {
 const uncategorizedId = "uncategorized";
 
 function InfoTip({ label, text }: { label: string; text: string }) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const tooltipId = useId();
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function positionTooltip() {
+      const trigger = triggerRef.current;
+      const tooltip = tooltipRef.current;
+      if (!trigger || !tooltip) return;
+      const bounds = trigger.getBoundingClientRect();
+      const { width, height } = tooltip.getBoundingClientRect();
+      const left = Math.max(12, Math.min(bounds.left + bounds.width / 2 - width / 2, window.innerWidth - width - 12));
+      const top = bounds.top >= height + 20 ? bounds.top - height - 8 : bounds.bottom + 8;
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${Math.max(12, Math.min(top, window.innerHeight - height - 12))}px`;
+    }
+    positionTooltip();
+    window.addEventListener("resize", positionTooltip);
+    window.addEventListener("scroll", positionTooltip, true);
+    return () => {
+      window.removeEventListener("resize", positionTooltip);
+      window.removeEventListener("scroll", positionTooltip, true);
+    };
+  }, [open]);
+
   return (
-    <span className="group relative inline-flex align-middle">
-      <span
-        tabIndex={0}
-        aria-label={`${label}: ${text}`}
+    <span className="inline-flex align-middle" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={label}
+        aria-describedby={open ? tooltipId : undefined}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onClick={() => setOpen(true)}
+        onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}
         className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-500 outline-none focus:ring-2 focus:ring-[#dbb082]"
       >
         i
-      </span>
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-56 -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-left text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus-within:block">
-        {text}
-      </span>
+      </button>
+      {open && createPortal(
+        <span ref={tooltipRef} id={tooltipId} role="tooltip" className="pointer-events-none fixed z-[100] w-56 max-w-[calc(100vw-24px)] rounded-lg bg-gray-900 px-3 py-2 text-left text-xs font-normal normal-case leading-5 tracking-normal text-white shadow-lg">
+          {text}
+        </span>,
+        document.body,
+      )}
     </span>
   );
 }
@@ -42,6 +80,25 @@ function WebsiteIcon() {
       <circle cx="10" cy="10" r="7.5" />
       <path d="M2.8 10h14.4M10 2.5c2 2.1 3 4.6 3 7.5s-1 5.4-3 7.5c-2-2.1-3-4.6-3-7.5s1-5.4 3-7.5Z" />
     </svg>
+  );
+}
+
+function ItemThumbnail({ imageUrl }: { imageUrl: MenuItem["imageUrl"] }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const source = imageUrl?.trim() || null;
+  const useLogo = !source || failedUrl === source;
+
+  return (
+    <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border border-[#dbb082]/40 bg-[#fffaf6]">
+      <Image
+        src={useLogo ? "/TEAZO_logo.svg" : source}
+        alt=""
+        fill
+        sizes="36px"
+        className={useLogo ? "object-contain p-1" : "object-cover"}
+        onError={() => { if (source) setFailedUrl(source); }}
+      />
+    </span>
   );
 }
 
@@ -396,15 +453,13 @@ export default function DisplayCategoriesClient({
 
   return (
     <div className="relative flex h-dvh w-full min-w-0 overflow-hidden bg-white">
-      <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-12 pt-6 sm:px-6 md:px-8 md:pt-10">
-        <div className="-mx-4 flex flex-wrap items-start justify-between gap-4 border-b border-[#dbb082] px-4 pb-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
-          <div>
+      <div className="min-w-0 flex-1 overflow-y-auto px-4 pb-12 sm:px-6 md:px-8">
+        <div className="-mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#dbb082] p-3 sm:-mx-6 sm:p-4 md:-mx-8">
+          <div className="flex items-center gap-2">
             <h1 className="text-sm font-semibold uppercase tracking-[0.16em] text-[#9b6d43]">
               Display Categories
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-gray-600">
-              Control which Square items appear on the TEAZO website. These settings do not change Square.
-            </p>
+            <InfoTip label="Display Categories" text="Control which Square items appear on the TEAZO website. These settings do not change Square." />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -599,9 +654,12 @@ export default function DisplayCategoriesClient({
                     const visible = visibleById.get(item.catalogObjectId) ?? true;
                     return (
                       <div key={`${category.id}:${item.catalogObjectId}`} role="row" className="grid grid-cols-[minmax(0,1fr)_8rem_9rem_8rem] items-center border-b border-[#dbb082]/40 pr-6 text-sm hover:bg-[#dbb082]/15">
-                        <div role="cell" className="min-w-0 px-3 py-2 pl-12">
-                          <p className={`truncate font-medium ${visible ? "text-gray-900" : "text-gray-400 line-through"}`}>{item.name ?? "Unnamed item"}</p>
-                          <p className="mt-0.5 text-xs text-gray-500">${(item.priceCents / 100).toFixed(2)}</p>
+                        <div role="cell" className="flex min-w-0 items-center gap-3 px-3 py-2 pl-12">
+                          <ItemThumbnail imageUrl={item.imageUrl} />
+                          <div className="min-w-0">
+                            <p className={`truncate font-medium ${visible ? "text-gray-900" : "text-gray-400 line-through"}`}>{item.name ?? "Unnamed item"}</p>
+                            <p className="mt-0.5 text-xs text-gray-500">${(item.priceCents / 100).toFixed(2)}</p>
+                          </div>
                         </div>
                         <div role="cell" />
                         <div role="cell" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600">
@@ -696,6 +754,7 @@ export default function DisplayCategoriesClient({
                         onChange={() => setPanelItemIds((current) => selected ? current.filter((id) => id !== item.catalogObjectId) : [...current, item.catalogObjectId])}
                         className="mt-0.5 h-4 w-4 shrink-0 accent-[#b98555]"
                       />
+                      <ItemThumbnail imageUrl={item.imageUrl} />
                       <span className="min-w-0 [overflow-wrap:anywhere]">{item.name ?? "Unnamed item"}</span>
                     </label>
                   );
