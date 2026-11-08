@@ -5,7 +5,16 @@ import type { MenuItem } from "./menu-item-card";
 import MenuItemsSection from "./menu-items-section";
 import CustomizerLoadingModal from "./customizer-loading-modal";
 import ChunkErrorBoundary from "./chunk-error-boundary";
-import LazyCustomizerModal, { resetCustomizerModule } from "./lazy-customizer-modal";
+import { prefetchItemAvailability } from "./customizer-availability-prefetch";
+import LazyCustomizerModal, { preloadCustomizerModule, resetCustomizerModule } from "./lazy-customizer-modal";
+
+// Deep link: fetch the customizer chunk and availability while the page hydrates instead of after it.
+const deepLinkItemId =
+  typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("item") : null;
+if (deepLinkItemId) {
+  preloadCustomizerModule();
+  prefetchItemAvailability(deepLinkItemId);
+}
 
 export interface MenuSection {
   id: string;

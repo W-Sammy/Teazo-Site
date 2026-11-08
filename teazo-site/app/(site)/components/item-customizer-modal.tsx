@@ -16,6 +16,7 @@ import { defaultModifierSelections } from "@/app/lib/square-option-rules";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import type { ModifierList, ModifierOption } from "@/app/types/menu-item";
 import type { MenuItem } from "./menu-item-card";
+import { availabilityUrl, takePrefetchedAvailability } from "./customizer-availability-prefetch";
 import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
 import { useCart, MIN_ITEM_QUANTITY, MAX_ITEM_QUANTITY } from "@/app/context/cart-context";
 
@@ -628,9 +629,8 @@ function FreshItemCustomizer({ item, initialCartItem, onClose }: {
     const controller = new AbortController();
     void (async () => {
       try {
-        const response = await fetch(`/api/square/products/${encodeURIComponent(item.catalogObjectId)}`, {
-          cache: "no-store", signal: controller.signal,
-        });
+        const response = await (takePrefetchedAvailability(item.catalogObjectId)
+          ?? fetch(availabilityUrl(item.catalogObjectId), { cache: "no-store", signal: controller.signal }));
         if (!response.ok) throw new Error("Catalog unavailable");
         const fresh: ApiMenuItem = await response.json();
         const choices = availableMenuChoices(fresh);
