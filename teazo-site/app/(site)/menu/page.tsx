@@ -12,6 +12,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { getMenuDisplayState } from "@/app/lib/queries/menu-display";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -335,13 +336,99 @@ async function loadMenu(): Promise<MenuLoadResult> {
       );
     }
 
-    return {
-      ok: true,
-      sections: buildMenuSections(data.flatMap((item) => {
-        const orderable = orderableMenuItem(item);
-        return orderable ? [orderable] : [];
-      })),
+    // Website display controls are a local overlay on top of Square's catalog.
+    // If the overlay is temporarily unavailable, preserve the existing catalog
+    // behavior rather than taking the public menu down.
+    let displayState: Awaited<ReturnType<typeof getMenuDisplayState>> = {
+      sections: [],
+      items: [],
     };
+    try {
+      displayState = await getMenuDisplayState();
+    } catch (error) {
+      console.error("Menu display settings could not be loaded:", error);
+    }
+
+    const itemSettings = new Map(
+      displayState.items.map((item) => [item.squareCatalogObjectId, item.visible]),
+    );
+    const sectionSettings = new Map(
+      displayState.sections.map((section) => [section.squareCategoryId, section]),
+    );
+    const uncategorizedSettings = displayState.sections.find(
+      (section) => section.sectionType === "uncategorized",
+    );
+
+    const visibleItems = data.flatMap((item) => {
+        const orderable = orderableMenuItem(item);
+        if (!orderable) return [];
+
+        const explicitVisibility = itemSettings.get(item.catalogObjectId);
+        const defaultVisible = item.categories.length === 0
+          ? uncategorizedSettings?.defaultItemVisible ?? true
+          : item.categories.some(
+              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? true,
+            );
+
+        return explicitVisibility ?? defaultVisible ? [orderable] : [];
+      });
+
+    const sections = buildMenuSections(visibleItems).filter((section) => {
+        if (section.id === uncategorizedSectionId) {
+          return uncategorizedSettings?.isPublished ?? true;
+        }
+
+        const categoryId = section.id.startsWith("category:")
+          ? section.id.slice("category:".length)
+          : null;
+        return categoryId
+          ? sectionSettings.get(categoryId)?.isPublished ?? true
+          : true;
+      }).sort((a, b) => {
+        const aCategoryId = a.id.startsWith("category:")
+          ? a.id.slice("category:".length)
+          : null;
+        const bCategoryId = b.id.startsWith("category:")
+          ? b.id.slice("category:".length)
+          : null;
+        const aOrder = aCategoryId
+          ? sectionSettings.get(aCategoryId)?.sortOrder ?? Number.MAX_SAFE_INTEGER
+          : Number.MAX_SAFE_INTEGER;
+        const bOrder = bCategoryId
+          ? sectionSettings.get(bCategoryId)?.sortOrder ?? Number.MAX_SAFE_INTEGER
+          : Number.MAX_SAFE_INTEGER;
+        return aOrder - bOrder;
+      });
+
+    const visibleItemById = new Map(
+      visibleItems.map((item) => [item.catalogObjectId, item]),
+    );
+    for (const custom of displayState.sections.filter(
+      (section) => section.sectionType === "custom" && section.isPublished,
+    )) {
+      const customItems = custom.itemIds
+        .map((itemId) => visibleItemById.get(itemId))
+        .filter((item): item is CatalogMenuItem => Boolean(item));
+      if (customItems.length > 0) {
+        sections.push({
+          id: `custom:${custom.id}`,
+          title: custom.title,
+          items: customItems.map((item) => toCardItem(item, null, custom.title)),
+        });
+      }
+    }
+
+    const sectionOrder = new Map(
+      displayState.sections.map((section) => [section.id, section.sortOrder]),
+    );
+    sections.sort((a, b) => {
+      const aId = a.id.startsWith("custom:") ? a.id.slice("custom:".length) : a.id.startsWith("category:") ? a.id.slice("category:".length) : null;
+      const bId = b.id.startsWith("custom:") ? b.id.slice("custom:".length) : b.id.startsWith("category:") ? b.id.slice("category:".length) : null;
+      return (aId ? sectionOrder.get(aId) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER) -
+        (bId ? sectionOrder.get(bId) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER);
+    });
+
+    return { ok: true, sections };
   } catch (error) {
     console.error("Public menu catalog loading failed:", error);
 
