@@ -109,12 +109,15 @@ describe("Media storage helpers", () => {
     expect(first).not.toBe(second);
   });
 
-  it("supports expected image and PDF MIME types", () => {
+  // The proxy accepts images, PDFs, and supported video formats.
+  it("supports expected image, PDF, and video MIME types", () => {
     expect(MEDIA_TYPES).toEqual([
       "image/jpeg",
       "image/png",
       "image/webp",
       "application/pdf",
+      "video/mp4",
+      "video/webm",
     ]);
   });
 

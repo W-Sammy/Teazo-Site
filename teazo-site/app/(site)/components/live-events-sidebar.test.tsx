@@ -28,6 +28,8 @@ import {
 
 import type {
   AdminEvent,
+  EventCategory,
+  EventItem,
 } from "@/app/types/admin-event";
 
 vi.mock("next/image", () => ({
@@ -77,11 +79,31 @@ const eventTwo: AdminEvent = {
 
 const events = [eventOne, eventTwo];
 
+// Supply catalog data so selected-item details can be
+// verified against the modal's actual rendering behavior.
+const categories: EventCategory[] = [
+  {
+    id: "milk-tea",
+    name: "Milk Tea",
+  },
+];
+
+const items: EventItem[] = [
+  {
+    id: "item-1",
+    name: "Classic Milk Tea",
+  },
+];
+
 function renderSidebar(
   suppliedEvents: AdminEvent[] = events,
 ) {
   return render(
-    <LiveEventsSidebar events={suppliedEvents} />,
+    <LiveEventsSidebar
+      events={suppliedEvents}
+      categories={categories}
+      items={items}
+    />,
   );
 }
 
@@ -311,7 +333,7 @@ describe("Public Events sidebar", () => {
 
     expect(
       within(dialog).getByText(
-        "Available across the entire menu.",
+        "All menu items are included in this event.",
       ),
     ).toBeTruthy();
 
@@ -345,10 +367,24 @@ describe("Public Events sidebar", () => {
       ),
     ).toBeTruthy();
 
+    // Targeted events now show the specific category
+    // and item names instead of a generic message.
+    const includedCategories = within(dialog).getByRole(
+      "list",
+      { name: "Included categories" },
+    );
+
     expect(
-      within(dialog).getByText(
-        "Available on selected menu items.",
-      ),
+      within(includedCategories).getByText("Milk Tea"),
+    ).toBeTruthy();
+
+    const includedItems = within(dialog).getByRole(
+      "list",
+      { name: "Included items" },
+    );
+
+    expect(
+      within(includedItems).getByText("Classic Milk Tea"),
     ).toBeTruthy();
 
     expect(

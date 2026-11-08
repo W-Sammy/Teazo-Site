@@ -287,14 +287,15 @@ describe("Gallery administration bulk selection", () => {
     expect(selectedCount()).toBe("0 selected");
   });
 
-  it("preserves selections when switching between List and Image views", () => {
+  // Selection must persist across both supported Gallery views.
+  it("preserves selections when switching between List and Card views", () => {
     renderGallery();
 
     selectImage("Boba Cup");
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Image View",
+        name: "Card View",
       }),
     );
 

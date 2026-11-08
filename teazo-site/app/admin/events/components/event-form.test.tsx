@@ -2,7 +2,8 @@
  * Admin Events form interaction tests.
  *
  * Covers creation, editing, cancellation, validation,
- * catalog targeting, image selection, and HEIC conversion.
+ * catalog targeting, image selection, image preparation,
+ * and HEIC/HEIF conversion.
  *
  * No production data or external services are accessed.
  */
@@ -36,6 +37,7 @@ import type {
 
 const mocks = vi.hoisted(() => ({
   heicTo: vi.fn(),
+  prepareOversizedImage: vi.fn(),
 }));
 
 vi.mock("next/image", () => ({
@@ -58,6 +60,36 @@ vi.mock("next/image", () => ({
 vi.mock("heic-to", () => ({
   heicTo: mocks.heicTo,
 }));
+
+// Preserve the production HEIC conversion behavior.
+// Only oversized-image resizing is replaced because jsdom
+// cannot decode and resize real browser images.
+vi.mock("@/app/lib/image-conversion", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("@/app/lib/image-conversion")
+  >();
+
+  return {
+    ...actual,
+    prepareImageForStorage: async (
+      file: File,
+      maxFileSize = 10 * 1024 * 1024,
+    ): Promise<File> => {
+      if (actual.isHeicImage(file)) {
+        return actual.convertHeicToJpeg(
+          file,
+          maxFileSize,
+        );
+      }
+
+      if (file.size > maxFileSize) {
+        return mocks.prepareOversizedImage(file);
+      }
+
+      return file;
+    },
+  };
+});
 
 import EventForm from "./event-form";
 
@@ -202,6 +234,17 @@ describe("Admin Events form interactions", () => {
       "blob:event-preview",
     );
 
+    // Simulate an image that was successfully reduced
+    // to a valid size by the browser image processor.
+    mocks.prepareOversizedImage.mockImplementation(
+      async (file: File) =>
+        new File(
+          ["resized image contents"],
+          file.name,
+          { type: file.type },
+        ),
+    );
+
     // Retain the native URL constructor so other
     // browser APIs continue to behave normally.
     const NativeURL = URL;
@@ -254,7 +297,9 @@ describe("Admin Events form interactions", () => {
     ).not.toHaveBeenCalled();
   });
 
-  it("rejects missing event name and description", () => {
+  // Event descriptions are optional. Only the event name
+  // must be provided before date validation can proceed.
+  it("rejects a missing event name", () => {
     renderForm();
 
     submitForm();
@@ -262,7 +307,7 @@ describe("Admin Events form interactions", () => {
     expect(
       screen.getByRole("alert").textContent,
     ).toBe(
-      "Enter an event name and description.",
+      "Enter an event name.",
     );
 
     expect(onSave).not.toHaveBeenCalled();
@@ -283,6 +328,23 @@ describe("Admin Events form interactions", () => {
     );
 
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("accepts a missing description when required fields are valid", () => {
+    renderForm();
+
+    fillValidFields();
+
+    setText(/^Description/, "");
+
+    submitForm();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Fall Tea Festival",
+        description: "",
+      }),
+    );
   });
 
   it("rejects an end date earlier than the start date", () => {
@@ -525,7 +587,7 @@ describe("Admin Events form interactions", () => {
 
     expect(
       screen.getByText(
-        "The selected image must be nonempty and 10 MB or smaller.",
+        "The selected image must be nonempty.",
       ),
     ).toBeTruthy();
 
@@ -533,7 +595,10 @@ describe("Admin Events form interactions", () => {
       .not.toHaveBeenCalled();
   });
 
-  it("rejects images exceeding 10 MB", () => {
+  // Oversized images are prepared automatically rather
+  // than rejected immediately. The mocked resize operation
+  // supplies a small, valid result without requiring canvas.
+  it("prepares images exceeding 10 MB before saving", async () => {
     renderForm();
 
     const file = imageFile(
@@ -548,14 +613,72 @@ describe("Admin Events form interactions", () => {
 
     chooseFile(file);
 
-    expect(
-      screen.getByText(
-        "The selected image must be nonempty and 10 MB or smaller.",
-      ),
-    ).toBeTruthy();
+    await waitFor(() => {
+      expect(
+        screen.getByText("oversized.jpg"),
+      ).toBeTruthy();
+    });
 
-    expect(createObjectURL)
-      .not.toHaveBeenCalled();
+    expect(
+      mocks.prepareOversizedImage,
+    ).toHaveBeenCalledWith(file);
+
+    fillValidFields();
+    submitForm();
+
+    expect(onSave).toHaveBeenCalledOnce();
+
+    const saved = onSave.mock.calls[0][0];
+
+    expect(saved.imageFile).toBeInstanceOf(File);
+    expect(saved.imageFile).not.toBe(file);
+    expect(saved.imageFile?.name).toBe("oversized.jpg");
+
+    expect(
+      saved.imageFile!.size,
+    ).toBeLessThanOrEqual(10 * 1024 * 1024);
+  });
+
+  // A failed image-preparation operation must show feedback
+  // and must not submit an unprepared oversized image.
+  it("reports an error when oversized-image preparation fails", async () => {
+    vi.spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mocks.prepareOversizedImage.mockRejectedValueOnce(
+      new Error("Unable to resize image"),
+    );
+
+    renderForm();
+
+    const file = imageFile(
+      "broken-large.png",
+      "image/png",
+    );
+
+    Object.defineProperty(file, "size", {
+      configurable: true,
+      value: 10 * 1024 * 1024 + 1,
+    });
+
+    chooseFile(file);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "This image could not be prepared. Try another image or convert it to JPG first.",
+        ),
+      ).toBeTruthy();
+    });
+
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(onSave).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole("button", {
+        name: "Choose File",
+      }).hasAttribute("disabled"),
+    ).toBe(false);
   });
 
   it("accepts a valid PNG and forwards the file on save", () => {
@@ -693,7 +816,7 @@ describe("Admin Events form interactions", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          "This HEIC/HEIF image could not be converted. Try another image or convert it to JPG first.",
+          "This image could not be prepared. Try another image or convert it to JPG first.",
         ),
       ).toBeTruthy();
     });
@@ -728,7 +851,7 @@ describe("Admin Events form interactions", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Converting HEIC...",
+        name: "Preparing image...",
       }).hasAttribute("disabled"),
     ).toBe(true);
 
