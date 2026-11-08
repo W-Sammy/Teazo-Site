@@ -15,7 +15,7 @@ import CartDrawer from "@/app/(site)/components/cart-drawer";
 import { CART_STORAGE_KEY, CartProvider } from "@/app/context/cart-context";
 
 vi.mock("@/app/lib/admin", () => ({ requireAdminApi: async () => ({ ok: true }) }));
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), unstable_cache: (fn: unknown) => fn }));
 vi.mock("next/font/google", () => ({
   Montserrat: () => ({ className: "font" }), Cabin_Sketch: () => ({ className: "font" }),
 }));
