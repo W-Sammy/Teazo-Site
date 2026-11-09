@@ -192,6 +192,20 @@ function OrderConfirmationContent() {
   const [order, setOrder] = useState<SquareOrderDetails | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [storeAddress, setStoreAddress] = useState<StoreAddress>(FALLBACK_ADDRESS);
+  const [isOrderIdExpanded, setIsOrderIdExpanded] = useState(false);
+  const [orderIdCopied, setOrderIdCopied] = useState(false);
+
+  async function copyOrderId() {
+  if (!order?.id) return;
+
+  try {
+    await navigator.clipboard.writeText(order.id);
+    setOrderIdCopied(true);
+    window.setTimeout(() => setOrderIdCopied(false), 2000);
+  } catch (error) {
+    console.error("Failed to copy order reference:", error);
+  }
+}
 
   // Derived loading state: true while an orderId exists and neither receipt nor error has resolved
   const isLoading = Boolean(orderId) && order === null && errorMessage === null;
@@ -376,10 +390,40 @@ function OrderConfirmationContent() {
             Order Confirmed!
           </h1>
           <p className="text-sm text-gray-600">
-            Thank you for ordering with TEAZO. Your drinks are being sent to our kitchen.
+            Thank you for ordering with TEAZO. Your order is being sent to our staff.
           </p>
-          <div className="mt-3 inline-block px-3 py-1 bg-gray-50 rounded-full border border-gray-200 text-xs text-gray-500 font-mono">
-            Order Reference: {order.id.slice(0, 16)}...
+          <div className="mt-3 w-full max-w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-center">
+            <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              Order Reference
+            </span>
+
+            <p
+              className={`mt-1 font-mono text-xs text-gray-600 ${
+                isOrderIdExpanded ? "break-all" : "truncate"
+              }`}
+              title={isOrderIdExpanded ? undefined : order.id}
+            >
+              {isOrderIdExpanded ? order.id : `${order.id.slice(0, 16)}...`}
+            </p>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <button
+                type="button"
+                onClick={() => setIsOrderIdExpanded((expanded) => !expanded)}
+                aria-expanded={isOrderIdExpanded}
+                className="text-[11px] font-semibold text-[#8E5629] transition hover:opacity-70"
+              >
+                {isOrderIdExpanded ? "Show less" : "Show full reference"}
+              </button>
+
+              <button
+                type="button"
+                onClick={copyOrderId}
+                className="text-[11px] font-semibold text-[#8E5629] transition hover:opacity-70"
+              >
+                {orderIdCopied ? "Copied!" : "Copy full reference"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -501,7 +545,7 @@ function OrderConfirmationContent() {
             href="/menu"
             className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-md"
           >
-            ORDER MORE DRINKS
+            ORDER AGAIN / BACK TO MENU
           </Link>
         </div>
       </div>
