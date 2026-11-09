@@ -15,10 +15,23 @@ const STORAGE_DETAILS = {
   },
 } satisfies Record<StorageUsage["service"], { label: string; description: string; cleanup: string }>;
 
-function formatStorage(bytes: number, service: StorageUsage["service"]) {
-  const divisor = service === "D1" ? 1024 ** 2 : 1024 ** 3;
-  const unit = service === "D1" ? "MB" : "GB";
-  return `${(bytes / divisor).toFixed(1)} ${unit}`;
+// Picks the unit that fits, so a few small images read "403.9 KB" rather than
+// rounding down to "0.0 GB" and looking like nothing is stored.
+function formatStorage(bytes: number) {
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
+// "<1%" instead of "0%" when something is stored but too little to round up.
+function formatPercent(usage: StorageUsage) {
+  const percent = getUsagePercent(usage);
+  return usage.currentBytes > 0 && percent < 1 ? "<1%" : `${percent.toFixed(0)}%`;
 }
 
 function getUsagePercent(usage: StorageUsage) {
@@ -85,14 +98,21 @@ export default function StorageUsage({ usage }: { usage: StorageUsage[] }) {
                     </span>
                   </div>
                 </div>
-                <span className="text-sm font-medium text-slate-400">{percentage.toFixed(0)}%</span>
+                <span className="text-sm font-medium text-slate-400">{formatPercent(item)}</span>
               </div>
               <div className={`h-4 overflow-hidden rounded-full ${trackColor}`}>
-                <div className={`h-full rounded-full ${color} transition-all duration-300`} style={{ width: `${percentage}%` }} />
+                <div className={`h-full rounded-full ${color} transition-all duration-300`} style={{ width: `${item.currentBytes > 0 ? Math.max(percentage, 1) : 0}%` }} />
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                <span className="font-semibold text-slate-600">{formatStorage(item.currentBytes, item.service)}</span>
-                <span className="text-slate-400">of {formatStorage(item.maxBytes, item.service)}</span>
+                <span className="font-semibold text-slate-600">
+                  {formatStorage(item.currentBytes)}
+                  {item.fileCount !== undefined && (
+                    <span className="font-normal text-slate-400">
+                      {" "}· {item.fileCount} {item.fileCount === 1 ? "file" : "files"}
+                    </span>
+                  )}
+                </span>
+                <span className="text-slate-400">of {formatStorage(item.maxBytes)}</span>
               </div>
             </div>
           );
