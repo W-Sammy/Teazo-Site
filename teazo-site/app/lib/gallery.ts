@@ -497,6 +497,7 @@ export type PublicGalleryImage = {
   url: string;
   alt: string;
   caption?: string;
+  mediaType: GalleryMediaType;
 };
 
 let warnedAboutGallery = false;
@@ -516,6 +517,7 @@ export async function getPublicGalleryImages(): Promise<
         url: toPublicUrl(image.r2Key),
         alt: image.alt || image.name,
         caption: image.caption || image.name,
+        mediaType: image.mimeType.startsWith("video/") ? "video" : "image",
       }),
     );
   } catch (error) {
