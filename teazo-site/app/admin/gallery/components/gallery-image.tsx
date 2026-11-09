@@ -9,6 +9,7 @@ type GalleryImageProps = {
   sizes: string;
   loading?: "eager" | "lazy";
   className?: string;
+  mediaType?: "image" | "video";
 };
 
 export default function GalleryImage({
@@ -17,6 +18,7 @@ export default function GalleryImage({
   sizes,
   loading = "lazy",
   className = "object-cover",
+  mediaType = "image",
 }: GalleryImageProps) {
   const [failed, setFailed] = useState(false);
 
