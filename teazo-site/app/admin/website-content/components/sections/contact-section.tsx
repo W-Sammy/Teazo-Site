@@ -95,18 +95,6 @@ export default function ContactSection({
             />
             {errors.phone && <ErrorText>{errors.phone}</ErrorText>}
           </div>
-          <div className="sm:w-full">
-            <FieldLabel>Email</FieldLabel>
-            <input
-              type="email"
-              value={address.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              onBlur={(e) => handleBlur("email", e.target.value)}
-              placeholder="teazosf@hotmail.com"
-              className={fieldClass(Boolean(errors.email))}
-            />
-            {errors.email && <ErrorText>{errors.email}</ErrorText>}
-          </div>
         </div>
 
         <div className="rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">
@@ -149,6 +137,19 @@ export default function ContactSection({
               {errors.mapQuery && <ErrorText>{errors.mapQuery}</ErrorText>}
             </div>
           </div>
+        </div>
+
+        <div className="sm:w-1/2">
+          <FieldLabel>Email</FieldLabel>
+          <input
+            type="email"
+            value={address.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            onBlur={(e) => handleBlur("email", e.target.value)}
+            placeholder="teazosf@hotmail.com"
+            className={fieldClass(Boolean(errors.email))}
+          />
+          {errors.email && <ErrorText>{errors.email}</ErrorText>}
         </div>
 
         <div className="rounded-xl border border-[#ecdfd7] bg-[#fbf3ea] p-4">

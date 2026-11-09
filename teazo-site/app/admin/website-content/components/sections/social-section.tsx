@@ -131,19 +131,6 @@ export default function SocialSection({
                       src={link.icon}
                       alt={link.label}
                       className="h-6 w-6 object-contain"
-                      onError={(e) => {
-                        const fallbackIcons: Record<string, string> = {
-                          facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
-                          instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
-                          yelp: "/social_icons/social_svg/teazo_yelp_icon.svg",
-                        };
-
-                        const fallback = fallbackIcons[link.id.toLowerCase()];
-
-                        if (fallback && e.currentTarget.src !== new URL(fallback, window.location.origin).href) {
-                          e.currentTarget.src = fallback;
-                        }
-                      }}
                     />
                   ) : (
                     <span className="text-[#a99584]">
