@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-import type { AdminEvent } from "@/app/types/admin-event";
+import type { AdminEvent, EventCategory, EventItem } from "@/app/types/admin-event";
 import EventModal from "@/app/components/event-modal";
 import { formatEventDate } from "@/app/lib/event-date";
 
 type LiveEventsSidebarProps = {
   events: AdminEvent[];
+  categories?: EventCategory[];
+  items?: EventItem[];
 };
 
 function formatEventDuration(event: AdminEvent) {
@@ -23,7 +25,7 @@ function CloseIcon() {
   );
 }
 
-export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
+export default function LiveEventsSidebar({ events, categories = [], items = [] }: LiveEventsSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasBeenOpenedByUser, setHasBeenOpenedByUser] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<AdminEvent | null>(null);
@@ -99,7 +101,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                 disabled={!isOpen}
                 onClick={() => setSelectedEvent(event)}
                 aria-label={`${event.name}. ${formatEventDuration(event)}. View event details`}
-                className="group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
+                className="cursor-pointer group block w-full overflow-hidden rounded-xl border border-[#eee1dc] bg-white text-left shadow-sm transition enabled:cursor-pointer enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default"
               >
                 <div className="relative aspect-[2/1] w-full overflow-hidden bg-[#f4e9e4]">
                   <Image
@@ -113,7 +115,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
                 </div>
                 <div className="px-4 py-3">
                   <h3 className="font-bold text-[#3c2924]">{event.name}</h3>
-                  <p className="mt-1 text-xs font-medium text-[#9b7065]">{formatEventDuration(event)}</p>
+                  <p className="mt-1 text-xs font-medium text-[#8E5629]">{formatEventDuration(event)}</p>
                 </div>
               </button>
             ))}
@@ -121,7 +123,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         </div>
       </aside>
 
-      {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {selectedEvent && <EventModal event={selectedEvent} categories={categories} items={items} onClose={() => setSelectedEvent(null)} />}
 
       <button
         ref={toggleRef}
@@ -130,7 +132,7 @@ export default function LiveEventsSidebar({ events }: LiveEventsSidebarProps) {
         aria-expanded={isOpen}
         aria-controls="live-events-sidebar"
         aria-label={isOpen ? "Close live events" : `Show live events${!hasBeenOpenedByUser ? `, ${events.length} live events` : ""}`}
-        className="fixed bottom-5 right-4 z-50 flex h-14 items-center gap-2 rounded-full bg-[#3c2924] px-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_8px_25px_rgba(62,35,30,0.28)] transition hover:bg-[#D9AE81] focus:outline-none focus:ring-4 focus:ring-[#D9AE81]/40 sm:right-6"
+        className="cursor-pointer fixed bottom-5 right-4 z-50 flex h-14 items-center gap-2 rounded-full bg-[#3c2924] px-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_8px_25px_rgba(62,35,30,0.28)] transition hover:bg-[#D9AE81] focus:outline-none focus:ring-4 focus:ring-[#D9AE81]/40 sm:right-6"
       >
         {isOpen ? (
           <CloseIcon />

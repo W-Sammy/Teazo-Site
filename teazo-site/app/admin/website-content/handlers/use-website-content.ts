@@ -595,6 +595,48 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     });
   }
 
+  // keep empty new items on screen until refresh or name & link have been entered
+  function addDeliveryLink() {
+    setErrorMessage("");
+    const link: SocialLink = {
+      id: createTemporaryId("delivery"), label: "", icon: "", url: "", enabled: true,
+    };
+    setContent((previous) => ({ ...previous, deliveryLinks: [...(previous.deliveryLinks ?? []), link] }));
+  }
+
+  // show edits immediately, then save complete links
+  function saveDeliveryLinks(links: SocialLink[], immediately = false) {
+    setContent((previous) => ({ ...previous, deliveryLinks: links }));
+    // leave blank items out of the save; keep hidden links in the saved list
+    const savedLinks = links.filter((link) => link.label.trim() || link.url.trim());
+    const { valid } = validateSocialLinks(savedLinks);
+    if (!valid) {
+      // discard older waiting delivery save without cancelling other sections' saves
+      delete pendingPatchRef.current.deliveryLinks;
+      return;
+    }
+    setErrorMessage("");
+    if (saveStatus === "error") setSaveStatus("idle");
+    if (immediately) {
+      void flushPatch({ deliveryLinks: savedLinks });
+    } else {
+      queuePatch({ deliveryLinks: savedLinks }, 600);
+    }
+  }
+
+  // merge the changed field into its platform; visibility switches save right away
+  function updateDeliveryLink(id: string, patch: Partial<SocialLink>) {
+    const links = (content.deliveryLinks ?? []).map((link) =>
+      link.id === id ? { ...link, ...patch } : link,
+    );
+    saveDeliveryLinks(links, patch.enabled !== undefined);
+  }
+
+  // save the remaining asap, including an empty list after the last removal
+  function removeDeliveryLink(id: string) {
+    saveDeliveryLinks((content.deliveryLinks ?? []).filter((link) => link.id !== id), true);
+  }
+
   function addSocialLink() {
     setErrorMessage("");
     try {
@@ -756,6 +798,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     updateStory,
     updateAddress,
     updateDay,
+    addDeliveryLink,
+    updateDeliveryLink,
+    removeDeliveryLink,
     addSocialLink,
     updateSocialLink,
     removeSocialLink,

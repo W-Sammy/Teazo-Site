@@ -28,7 +28,7 @@ export default function MenuItemsSection({
 		>
 			<div className="mb-6 flex flex-col items-center justify-center text-center">
 				<h3
-					className={`${headingClassName} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
+					className={`${headingClassName} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#B28458] sm:text-[2.6rem]`}
 				>
 					{title}
 				</h3>

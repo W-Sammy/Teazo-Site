@@ -56,10 +56,10 @@ describe("public gallery caching (TZ-515)", () => {
 
   it("maps published images to their public URLs", async () => {
     mocks.listPublished.mockResolvedValue([
-      { id: "1", name: "Boba", alt: null, caption: null, r2Key: "gallery/1.webp" },
+      { id: "1", name: "Boba", alt: null, caption: null, r2Key: "gallery/1.webp", mimeType: "image/webp" },
     ]);
     await expect(getPublicGalleryImages()).resolves.toEqual([
-      { id: "1", url: "https://media.test/gallery/1.webp", alt: "Boba", caption: "Boba" },
+      { id: "1", url: "https://media.test/gallery/1.webp", alt: "Boba", caption: "Boba", mediaType: "image" },
     ]);
   });
 

@@ -32,13 +32,19 @@ import {
   updateGalleryImageMetadata,
   type GalleryImageRecord,
 } from "@/app/lib/queries/gallery";
-import type { AdminGalleryImage } from "@/app/types/gallery-image";
+import type { AdminGalleryImage, GalleryMediaType, } from "@/app/types/gallery-image";
+import type { MediaType } from "@/app/lib/media";
 
 /** Upload types the admin can send. Every image is stored as WebP. */
-const UPLOAD_TYPES = new Set([
+const IMAGE_UPLOAD_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
+]);
+
+const VIDEO_UPLOAD_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
 ]);
 
 const MAX_NAME_LENGTH = 120;
@@ -67,7 +73,7 @@ function cleanName(value: unknown): string {
       : "";
 
   if (!name) {
-    throw new GalleryInputError("Give the image a name.");
+    throw new GalleryInputError("Give the item a name.");
   }
 
   if (name.length > MAX_NAME_LENGTH) {
@@ -125,6 +131,9 @@ function toAdminImage(
     url: toPublicUrl(image.r2Key),
     tags: image.tags,
     createdAt: image.createdAt,
+     mediaType: image.mimeType.startsWith("video/")
+      ? "video"
+      : "image",
   };
 }
 
@@ -152,6 +161,67 @@ async function toWebp(file: File) {
   }
 }
 
+
+type PreparedGalleryMedia = {
+  data: Uint8Array;
+  mimeType: MediaType;
+  extension: string;
+  width: number | null;
+  height: number | null;
+  mediaType: GalleryMediaType;
+};
+
+async function prepareGalleryMedia(
+  file: File,
+): Promise<PreparedGalleryMedia> {
+  if (file.size === 0) {
+    throw new GalleryInputError(
+      "Choose a file to upload.",
+    );
+  }
+
+  if (file.size > MAX_MEDIA_BYTES) {
+    throw new GalleryInputError(
+      "The file is over 10 MB.",
+      413,
+    );
+  }
+
+  if (IMAGE_UPLOAD_TYPES.has(file.type)) {
+    const resized = await toWebp(file);
+
+    return {
+      data: resized.data,
+      mimeType: "image/webp",
+      extension: "webp",
+      width: resized.info.width,
+      height: resized.info.height,
+      mediaType: "image",
+    };
+  }
+
+  if (VIDEO_UPLOAD_TYPES.has(file.type)) {
+    const mimeType = file.type as
+      | "video/mp4"
+      | "video/webm";
+
+    return {
+      data: new Uint8Array(await file.arrayBuffer()),
+      mimeType,
+      extension: mimeType === "video/mp4" ? "mp4" : "webm",
+      width: null,
+      height: null,
+      mediaType: "video",
+    };
+  }
+
+  throw new GalleryInputError(
+    "Upload a JPEG, PNG, WebP, MP4 or WebM file.",
+    415,
+  );
+}
+
+
 /** Every live image, as the admin gallery lists them. */
 export async function getAdminGalleryImages(): Promise<
   AdminGalleryImage[]
@@ -175,39 +245,25 @@ export async function saveGalleryImage(input: {
   const tags = cleanTags(input.tags);
   const file = input.file;
 
-  if (!(file instanceof File) || file.size === 0) {
-    throw new GalleryInputError(
-      "Choose an image to upload.",
-    );
-  }
-
-  if (!UPLOAD_TYPES.has(file.type)) {
-    throw new GalleryInputError(
-      "Upload a JPEG, PNG or WebP image.",
-      415,
-    );
-  }
-
-  if (file.size > MAX_MEDIA_BYTES) {
-    throw new GalleryInputError(
-      "The image is over 10 MB.",
-      413,
-    );
-  }
-
-  const resized = await toWebp(file);
-
-  // Build the URL before storing anything, so missing configuration fails
-  // before any bytes or rows are written.
-  const key = mintKey("gallery", "webp");
-  const url = toPublicUrl(key);
-
-  // Store the bytes first, so a failure never leaves rows pointing at nothing.
-  const stored = await putMedia(
-    key,
-    resized.data,
-    "image/webp",
+  
+if (!(file instanceof File) || file.size === 0) {
+  throw new GalleryInputError(
+    "Choose an image or video to upload.",
   );
+}
+
+const prepared = await prepareGalleryMedia(file);
+
+// Validate URL configuration before uploading.
+const key = mintKey("gallery", prepared.extension);
+const url = toPublicUrl(key);
+
+const stored = await putMedia(
+  key,
+  prepared.data,
+  prepared.mimeType,
+);
+
 
   const imageId = crypto.randomUUID();
 
@@ -216,9 +272,9 @@ export async function saveGalleryImage(input: {
       imageId,
       mediaId: crypto.randomUUID(),
       stored,
-      mimeType: "image/webp",
-      width: resized.info.width,
-      height: resized.info.height,
+      mimeType: prepared.mimeType,
+      width: prepared.width,
+      height: prepared.height,
       originalFilename: file.name,
       name,
       tags,
@@ -269,6 +325,7 @@ export async function saveGalleryImage(input: {
     url,
     tags,
     createdAt: new Date().toISOString(),
+    mediaType: prepared.mediaType,
   };
 }
 
@@ -323,6 +380,7 @@ export async function editGalleryImageMetadata(input: {
 }
 
 /** Replace an existing gallery image file, preserving its image ID and metadata. */
+
 export async function replaceGalleryImage(input: {
   id: string;
   file: unknown;
@@ -331,54 +389,100 @@ export async function replaceGalleryImage(input: {
   adminId: string;
 }): Promise<AdminGalleryImage> {
   const id = input.id.trim();
-  if (!id) throw new GalleryInputError('An image ID is required.');
+
+  if (!id) {
+    throw new GalleryInputError(
+      "A gallery item ID is required.",
+    );
+  }
+
   const name = cleanName(input.name);
   const tags = cleanTags(input.tags);
   const file = input.file;
-  if (!(file instanceof File) || file.size === 0) {
-    throw new GalleryInputError('Choose a replacement image.');
-  }
-  if (!UPLOAD_TYPES.has(file.type)) {
-    throw new GalleryInputError('Upload a JPEG, PNG or WebP image.', 415);
-  }
-  if (file.size > MAX_MEDIA_BYTES) {
-    throw new GalleryInputError('The image is over 10 MB.', 413);
-  }
-  const original = await getGalleryImage(id);
-  if (!original) throw new GalleryInputError('The gallery image was not found.', 404);
 
-  const resized = await toWebp(file);
-  const key = mintKey('gallery', 'webp');
-  toPublicUrl(key); // Fail before upload if public URL configuration is missing.
-  const stored = await putMedia(key, resized.data, 'image/webp');
+  if (!(file instanceof File) || file.size === 0) {
+    throw new GalleryInputError(
+      "Choose a replacement image or video.",
+    );
+  }
+
+  const original = await getGalleryImage(id);
+
+  if (!original) {
+    throw new GalleryInputError(
+      "The gallery item was not found.",
+      404,
+    );
+  }
+
+  // Process images with Sharp; keep videos in their original format.
+  const prepared = await prepareGalleryMedia(file);
+
+  const key = mintKey("gallery", prepared.extension);
+
+  // Fail before uploading if the public URL is not configured.
+  toPublicUrl(key);
+
+  const stored = await putMedia(
+    key,
+    prepared.data,
+    prepared.mimeType,
+  );
+
   let saved: GalleryImageRecord | null;
+
   try {
     saved = await replaceGalleryImageMedia({
-      id, expectedMediaId: original.mediaId,
-      newMediaId: crypto.randomUUID(), stored,
-      width: resized.info.width, height: resized.info.height,
-      originalFilename: file.name, adminId: input.adminId,
-      name, tags,
+      id,
+      expectedMediaId: original.mediaId,
+      newMediaId: crypto.randomUUID(),
+      stored,
+      mimeType: prepared.mimeType,
+      width: prepared.width,
+      height: prepared.height,
+      originalFilename: file.name,
+      adminId: input.adminId,
+      name,
+      tags,
     });
   } catch (error) {
-    // A definite 4xx rejection cannot have committed. On transport/5xx
-    // uncertainty leave the uploaded file in place for reconciliation.
-    if (error instanceof D1Error && error.status !== undefined && error.status < 500) {
+    // Remove files only when the database definitely rejected the update.
+    if (
+      error instanceof D1Error &&
+      error.status !== undefined &&
+      error.status < 500
+    ) {
       await deleteMediaNow(stored.key).catch((cleanup) =>
-        console.error('Could not clean up rejected replacement:', stored.key, cleanup));
+        console.error(
+          "Could not clean up rejected replacement:",
+          stored.key,
+          cleanup,
+        ),
+      );
     }
+
     throw error;
   }
+
   if (!saved) {
-    // Another edit or deletion won the race; this upload was never linked.
+    // Another edit or deletion won the race.
     await deleteMediaNow(stored.key).catch((cleanup) =>
-      console.error('Could not clean up stale replacement:', stored.key, cleanup));
+      console.error(
+        "Could not clean up stale replacement:",
+        stored.key,
+        cleanup,
+      ),
+    );
+
     throw new GalleryInputError(
-      'This image changed while you were editing. Refresh the gallery and try again.', 409);
+      "This gallery item changed while you were editing. Refresh the gallery and try again.",
+      409,
+    );
   }
   revalidatePublicGallery();
   return toAdminImage(saved);
 }
+
 
 /**
  * Remove an image from the gallery. Its file is deleted 24 hours later.
@@ -399,6 +503,7 @@ export type PublicGalleryImage = {
   url: string;
   alt: string;
   caption?: string;
+  mediaType: GalleryMediaType;
 };
 
 let warnedAboutGallery = false;
@@ -438,6 +543,7 @@ export async function getPublicGalleryImages(): Promise<
         url: toPublicUrl(image.r2Key),
         alt: image.alt || image.name,
         caption: image.caption || image.name,
+        mediaType: image.mimeType.startsWith("video/") ? "video" : "image",
       }),
     );
   } catch (error) {

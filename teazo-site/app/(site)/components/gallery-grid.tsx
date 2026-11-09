@@ -5,13 +5,14 @@ export type GalleryImage = {
   url: string;
   alt: string;
   caption?: string;
+  mediaType?: "image" | "video";
 };
 
 type GalleryGridProps = {
   images: GalleryImage[];
 };
 
-/* Display images in a responsive grid */
+/* display images & videos in a grid */
 export default function GalleryGrid({ images }: GalleryGridProps) {
   return (
       /*
@@ -25,9 +26,21 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
         {images.map((image, index) => (
             <figure
                 key={image.id}
-                className="group relative aspect-square overflow-hidden rounded-2xl bg-[#f3ece6]"
+                className="group relative aspect-square overflow-hidden rounded-2xl bg-[#FBF4EE]"
             >
-              <Image
+              {image.mediaType === "video" ? (
+                <video
+                  src={image.url}
+                  aria-label={image.alt}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
+              ) : (
+                <Image
                   src={image.url}
                   alt={image.alt}
                   fill
@@ -36,10 +49,11 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
                   // The first row is on screen at load (TZ-515); the rest wait until scrolled to.
                   loading={index < 3 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "auto"}
-              />
+                />
+              )}
 
-              {/* Optional Caption */}
-              {image.caption && (
+              {/* optional img caption */}
+              {image.mediaType !== "video" && image.caption && (
                   <figcaption className="absolute bottom-0 left-0 right-0 translate-y-full bg-black/50 px-4 py-3 text-sm font-medium text-white transition duration-300 group-hover:translate-y-0">
                     {image.caption}
                   </figcaption>

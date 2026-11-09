@@ -6,6 +6,8 @@ import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
 import MapFrame from "./map-frame";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -13,6 +15,9 @@ export const metadata: Metadata = {
   title: "Contact",
   description: "Visit TEAZO in San Francisco and check the latest store hours.",
 };
+
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 // Cabin Sketch is the approved display face for the hand-drawn headings on this
 // route. Reuse this instance instead of re-declaring font config inline.
@@ -120,7 +125,10 @@ function ClockIcon() {
 }
 
 export default async function ContactPage() {
-  const contactData = await getContactContent();
+  const [contactData, liveEvents] = await Promise.all([
+    getContactContent(),
+    listActiveEvents().catch(() => []),
+  ]);
   const {
     location,
     hours,
@@ -156,6 +164,8 @@ export default async function ContactPage() {
   )}`;
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative isolate min-h-screen scroll-smooth overflow-hidden bg-[#FFF8F9] text-stone-900">
       {/* Shared so other pages can reuse the same motion treatment without
           copying contact-specific files. */}
@@ -179,7 +189,7 @@ export default async function ContactPage() {
             }
           />
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             CONTACT
           </h1>
@@ -204,7 +214,7 @@ export default async function ContactPage() {
                 />
               </div>
 
-              <div className="mt-4 rounded-[16px] border border-[#eadfd9] bg-[#faf6f3] p-4 sm:p-5">
+              <div className="mt-4 rounded-[16px] border border-[#eadfd9] bg-[#FBF4EE] p-4 sm:p-5">
                 <div className="grid gap-x-8 gap-y-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 shrink-0 text-[#cd8f84]">
@@ -214,9 +224,14 @@ export default async function ContactPage() {
                       <p className="text-[1.01rem] font-semibold text-stone-900">
                         {location.streetAddress}
                       </p>
-                      <p className="mt-1 text-[1rem] font-medium text-stone-700">
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 text-[1rem] font-medium text-stone-700"
+                      >
                         {location.locality}
-                      </p>
+                      </a>
                     </div>
                   </div>
 
@@ -245,25 +260,16 @@ export default async function ContactPage() {
                       {location.email}
                     </a>
                   </div>
-
                   <div className="flex items-start justify-start sm:justify-end sm:pr-16">
-                    <a
-                      href={directionsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block whitespace-nowrap text-sm font-semibold uppercase tracking-[0.08em] text-[#cd8f84] transition hover:opacity-70"
-                    >
-                      Get Directions
-                    </a>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-[#eadfd9] bg-[#faf6f3] p-5 sm:p-6">
+            <div className="rounded-[16px] border border-[#eadfd9] bg-[#FBF4EE] p-5 sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-[1.35rem] font-bold uppercase tracking-[0.06em] text-[#cd8f84] sm:text-[1.5rem]">
+                  <h3 className="text-[1.35rem] font-bold uppercase tracking-[0.06em] text-[#B28458] sm:text-[1.5rem]">
                     Hours of Operation
                   </h3>
                   <span className="mt-3 block h-[2px] w-24 bg-[#e3bfb4]" />
@@ -311,20 +317,20 @@ export default async function ContactPage() {
         </section>
 
         <section
-          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#FBF4EE] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
         >
           <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
             <div className="max-w-3xl">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#8E5629]">
                 Group Orders
               </p>
               <h2
-                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#B28458] sm:text-[3.5rem]`}
               >
                 Planning for a Crowd?
               </h2>
               <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                Call us for group ordering and discounted pricing on larger
+                Inquire about group ordering and discounted pricing on larger
                 drink, snack, and dessert orders.
               </p>
 
@@ -430,5 +436,6 @@ export default async function ContactPage() {
         )}
       </div>
     </main>
+    </>
   );
 }
