@@ -49,7 +49,6 @@ export default function AdminGalleryGrid({
               <GalleryImage
                 src={image.url}
                 alt={image.name}
-                mediaType={image.mediaType}
                 loading={index < 3 ? "eager" : "lazy"}
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
@@ -61,18 +60,16 @@ export default function AdminGalleryGrid({
                     Preserve the Safari-compatible transparent
                     edit button instead of an animated overlay.
                   */}
-                  {image.mediaType !== "video" && (
-                    <button
-                      type="button"
-                      onClick={() => onEdit(image)}
-                      className="absolute inset-0 z-10 cursor-pointer bg-transparent"
-                      aria-label={`Edit ${image.name}`}
-                    >
-                      <span className="sr-only">
-                        Edit {image.name}
-                      </span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onEdit(image)}
+                    className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+                    aria-label={`Edit ${image.name}`}
+                  >
+                    <span className="sr-only">
+                      Edit {image.name}
+                    </span>
+                  </button>
 
                   <label
                     className="absolute left-3 top-3 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-white/95 shadow"
@@ -92,7 +89,7 @@ export default function AdminGalleryGrid({
                     onClick={() => onDelete(image)}
                     className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/95 text-red-500 shadow hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
                     aria-label={`Delete ${image.name}`}
-                    title="Delete gallery item"
+                    title="Delete image"
                   >
                     <svg
                       aria-hidden="true"

@@ -906,7 +906,7 @@ event flyers and the PDF menu.
 
 **The database stores a file's key, never its URL.** A key looks like
 `gallery/2026/09/<uuid>.webp`. The URL is built when the page renders, from
-`R2_PUBLIC_BASE`, so the same row works locally, on preview and in production.
+`R2_PUBLIC_BASE`, so the same row works locally and in production.
 
 `teazo-site/app/lib/media.ts` has everything for files. Import from it.
 
@@ -1252,7 +1252,7 @@ and a new provider in `auth.ts`.
 | `status` (`admin_user`) | `active` and `invited` can sign in; `suspended` cannot. |
 | `can_invite_users` | Per-admin flag, valid only for role 2. |
 | `contact_form_enabled` | 1 shows the public contact form; 0 hides it, and the form's action refuses messages. |
-| `r2_bucket` | Always record the `bucket` that `putMedia` returns. The sweeper only removes files from its own bucket, which keeps a preview from ever deleting production files. |
+| `r2_bucket` | Always record the `bucket` that `putMedia` returns. The sweeper only removes files from its configured bucket. |
 | `is_current` | At most one live PDF menu. None means the site serves the bundled `public/teazo-menu.pdf`. |
 | `deleted_at` | `admin_user`, `media_asset`, `gallery_image` and `event` are soft-deleted: filter `WHERE deleted_at IS NULL`. In `pending_r2_deletion` it means the bytes are gone. |
 
@@ -1352,61 +1352,49 @@ in the channel before you start.
 
 ## 8. How your code reaches production
 
-**The site deploys to Vercel, but the Worker doesn't exist yet**, so nothing
-there can reach a database. Vercel builds production from `dev`, and every
-other pushed branch gets its own preview. On Vercel today, sign-in fails with "We could not
-verify your access", the contact form refuses every message, and the PDF menu
-link returns an error. Test anything that involves the database, storage,
-sign-in or email on your machine.
+Vercel builds production from `dev`. The production Worker
+`teazo-d1-proxy` connects the app to D1 (`teazo-db`) and R2 (`teazo-media`).
+The preview Worker, D1 database, and R2 bucket were removed. Vercel may still
+build branch previews, but they have no preview database or storage proxy.
 
-Two D1 databases exist on the team Cloudflare account, `teazo-db` and
-`teazo-db-preview`, with migrations `0001` and `0002`. The Worker and the R2
-buckets are waiting on the account's payment setup. When they go live, the
-order is: apply the missing migrations (without `0004` every upload is
-refused, and without `0003` the contact form refuses every message), then
-deploy the Worker (production and preview) and add both `workers.dev`
-hostnames to `app/lib/imageHosts.ts` so `/gallery` can show stored images,
-then the app. Build as though that is already true and nothing you write now
-will need reworking.
-
-While that is pending:
-
-- **Nothing validates your migrations for you.** Test them yourself (§7).
-- **Nothing you merge reaches those databases.** The app can only reach them
-  through the deployed Worker.
-- `npm run tail` and `npm run db:backup` work on the real Worker and database
-  and need the team Cloudflare account. Leave them to Juan.
+**Nothing applies D1 migrations automatically.** Before deploying app code
+that reads new columns or tables, list and apply the pending migrations to
+`teazo-db` from `teazo-d1-proxy`, then verify the schema. Google admin login
+failed when app code began reading `admin_user.session_version` before migration
+`0007_admin_password_tokens.sql` was applied. Test migrations locally first
+(§7). `npm run tail` and `npm run db:backup` need access to the team Cloudflare
+account.
 
 ### 8.1 Settings for Vercel
 
 Save each variable marked Secret in the Notes column as Vercel's Secret type
 (the Sensitive switch on older screens), which hides its value once saved. Set
-it for Production and Preview as the table shows. If Vercel won't let you
+the database and storage variables for Production. If Vercel won't let you
 change a variable you already saved as Config (plain) into a Secret, delete it
 and add it again. Never prefix a secret with `NEXT_PUBLIC_`. Vercel applies a variable only to
 deployments made after you save it, so redeploy after adding or changing any
 of these. That includes the `NEXT_PUBLIC_` ones, which are built into the
 pages.
 
-| Variable | Production | Preview | Notes |
-|---|---|---|---|
-| `D1_PROXY_URL` | the production Worker's `workers.dev` URL | the preview Worker's URL | |
-| `PROXY_TOKEN` | the production Worker's secret | the preview Worker's secret | Secret. Must match `wrangler secret put PROXY_TOKEN` for that Worker |
-| `R2_PUBLIC_BASE` | the production Worker URL + `/media` | the preview Worker URL + `/media` | |
-| `AUTH_SECRET` | a long random string | its own string | Secret |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | the same | Secret. The OAuth client must list `https://teazo-site.vercel.app/api/auth/callback/google`. Google allows no wildcards, and each commit's preview gets a new address, so a preview can sign in only at its branch URL (shown on the deployment's page in Vercel, like `https://teazo-site-git-<branch>-<team>.vercel.app`), and only after Sammy adds that URL's `/api/auth/callback/google` |
-| `SQUARE_ENVIRONMENT` | `production` when going live | `sandbox` (or leave unset) | Defaults to `sandbox` regardless of Vercel's environment. Any other value fails startup and the build |
-| `SQUARE_ACCESS_TOKEN` | the shop's production Square access token | the team's sandbox token | Secret. Must match `SQUARE_ENVIRONMENT` |
-| `SQUARE_LOCATION_ID` | the shop's production Square location ID | a sandbox location ID, or leave unset to discover one | Required in production. Must belong to the account and environment selected above |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY` | the production webhook subscription's signature key | the sandbox webhook subscription's signature key | Secret. Use the subscription for the selected Square environment |
-| `SQUARE_WEBHOOK_NOTIFICATION_URL` | the live site's HTTPS URL + `/api/square/webhooks` | the preview's stable HTTPS branch URL + `/api/square/webhooks` | Must exactly match that subscription's notification URL, including any trailing slash |
-| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazo-site.vercel.app/` | the preview's stable branch URL with a trailing `/` | Used for catalog reads, checkout's post-payment redirect and invite links. Keep Preview pointed at its own deployment so its catalog matches its sandbox checkout |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | `1x00000000000000000000AA` | Public |
-| `TURNSTILE_SECRET_KEY` | the production widget's secret | `1x0000000000000000000000000000000AA` | Secret |
-| `BREVO_API_KEY` | the Brevo API key | leave unset | Secret. Unset means the deployment sends no email |
-| `EMAIL_FROM` | a sender address verified in Brevo | | Required whenever `BREVO_API_KEY` is set, or every email fails |
-| `EMAIL_FROM_NAME` | optional | | Defaults to "TEAZO website" |
-| `CONTACT_NOTIFY_TO` | the owner's inbox | | Required. Without it, contact messages are saved but nobody is emailed, and the logs say `CONTACT_NOTIFY_TO is not set` |
+| Variable | Production | Notes |
+|---|---|---|
+| `D1_PROXY_URL` | the production Worker's `workers.dev` URL | |
+| `PROXY_TOKEN` | the production Worker's secret | Secret. Must match `wrangler secret put PROXY_TOKEN` for that Worker |
+| `R2_PUBLIC_BASE` | the production Worker URL + `/media` | |
+| `AUTH_SECRET` | a long random string | Secret |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | Secret. The OAuth client must list the production site's `/api/auth/callback/google` URL |
+| `SQUARE_ENVIRONMENT` | `production` when going live | Defaults to `sandbox` regardless of Vercel's environment. Any other value fails startup and the build |
+| `SQUARE_ACCESS_TOKEN` | the shop's production Square access token | Secret. Must match `SQUARE_ENVIRONMENT` |
+| `SQUARE_LOCATION_ID` | the shop's production Square location ID | Required in production. Must belong to the account and environment selected above |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | the production webhook subscription's signature key | Secret. Use the subscription for the selected Square environment |
+| `SQUARE_WEBHOOK_NOTIFICATION_URL` | the live site's HTTPS URL + `/api/square/webhooks` | Must exactly match that subscription's notification URL, including any trailing slash |
+| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazo-site.vercel.app/` | Used for catalog reads, checkout's post-payment redirect and invite links |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | Public |
+| `TURNSTILE_SECRET_KEY` | the production widget's secret | Secret |
+| `BREVO_API_KEY` | the Brevo API key | Secret. Unset means the deployment sends no email |
+| `EMAIL_FROM` | a sender address verified in Brevo | Required whenever `BREVO_API_KEY` is set, or every email fails |
+| `EMAIL_FROM_NAME` | optional | Defaults to "TEAZO website" |
+| `CONTACT_NOTIFY_TO` | the owner's inbox | Required. Without it, contact messages are saved but nobody is emailed, and the logs say `CONTACT_NOTIFY_TO is not set` |
 
 **Going live with Square:** in the Square Developer Console, select the
 production environment and copy the production access token and the shop's
@@ -1424,9 +1412,8 @@ Redeploy after saving all six settings, then send a test notification from
 Square and confirm the endpoint returns 200. Missing either webhook setting
 returns 503 and prevents automatic menu refreshes; a mismatched signature key
 or notification URL causes signature verification to fail with 403.
-Keep Preview on sandbox with sandbox credentials, its own webhook subscription
-and its own site URL. These are deployment settings; a production Next.js
-build alone does not switch Square out of sandbox.
+These are deployment settings; a production Next.js build alone does not
+switch Square out of sandbox.
 
 Vercel sets `NODE_ENV`, `VERCEL`, `VERCEL_ENV` and
 `VERCEL_PROJECT_PRODUCTION_URL` itself; don't add them. `BREVO_SANDBOX=1`,
@@ -1436,21 +1423,17 @@ not that email arrives. Delete it and redeploy when you are done, or no email
 is ever delivered.
 
 **The Worker's own settings** live in `teazo-d1-proxy/wrangler.jsonc`: the
-bucket name and each deployment's R2 storage cap and daily upload budget. Its
-one secret is set with `npx wrangler secret put PROXY_TOKEN` (and again with
-`--env preview`).
+bucket name, R2 storage cap and daily upload budget. Its one secret is set
+with `npx wrangler secret put PROXY_TOKEN`.
 
-Previews use Cloudflare's Turnstile test keys because each preview gets its own
-`*.vercel.app` address, and a widget only covers the hostnames listed on it. On
-the production deployment the code ignores a test secret, so every submission
-is refused until the real one is set; a test site key there is logged as an
-error. Either way the check fails closed, never open: the visitor sees "The
+On the production deployment the code ignores a Turnstile test secret, so every
+submission is refused until the real one is set; a test site key there is logged
+as an error. The check fails closed: the visitor sees "The
 security check isn't working right now", and the logs show `TURNSTILE_SECRET_KEY
 is one of Cloudflare's test secrets`, plus `NEXT_PUBLIC_TURNSTILE_SITE_KEY is
 missing or is a Cloudflare test key on production` for a test site key. To see
 this on your machine, follow §2.8 and start the app with
-`VERCEL_ENV=production npm start`. With `VERCEL_ENV=preview`, the same test
-keys pass.
+`VERCEL_ENV=production npm start`.
 
 **Turnstile.** On the team Cloudflare account, open Turnstile, add a widget in
 Managed mode, and list the production hostname (`teazo-site.vercel.app` for

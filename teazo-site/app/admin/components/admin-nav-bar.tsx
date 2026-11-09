@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,15 +24,6 @@ export default function Sidebar({
 
   // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
-
- useEffect(() => {
-  setPendingPath(null);
-  onMobileClose();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [pathname]);
-
-  const activePath = pendingPath ?? pathname;
 
   // Keep labels, destinations, and icon filenames together for each primary link.
   // Admin management is included only for the authenticated Owner.
@@ -156,28 +146,17 @@ export default function Sidebar({
             // Dashboard matches exactly; other sections also match their nested routes.
             const isActive =
               page.href === "/admin"
-                ? activePath === "/admin"
-                : activePath === page.href ||
-                  activePath.startsWith(`${page.href}/`);
+                ? pathname === "/admin"
+                : pathname.startsWith(page.href);
+
             return (
               <Link
                 key={page.id}
                 href={page.href}
-                onClick={() => {
-                  setPendingPath(page.href);
-                  if (pathname === page.href) {
-                    onMobileClose();
-                  }
-                }}
-                aria-current={
-                  pathname === page.href ||
-                  (page.href !== "/admin" &&
-                    pathname.startsWith(`${page.href}/`))
-                    ? "page"
-                    : undefined
-                }
+                onClick={onMobileClose}
+                aria-current={isActive ? "page" : undefined}
                 title={mobileOpen ? undefined : page.label}
-                className="block cursor-pointer"
+                className="block"
               >
                 {/*
                  * Keep collapsed mobile icons centered.
@@ -190,7 +169,6 @@ export default function Sidebar({
                   style={{
                     color: isActive ? "#dbb082" : "#374151",
                     backgroundColor: isActive ? "#ffffff" : "transparent",
-                    fontWeight: isActive ? 700 : 500,
                   }}
                 >
                   <Image
@@ -229,8 +207,7 @@ export default function Sidebar({
           {controls.map((control) => {
             const isActive =
               control.id === "website-content" &&
-              (activePath === control.href ||
-                activePath.startsWith(`${control.href}/`));
+              pathname.startsWith(control.href);
 
             const className =
               "flex w-full items-center gap-3 rounded-lg px-2 py-3 " +
@@ -270,14 +247,8 @@ export default function Sidebar({
               <Link
                 key={control.id}
                 href={control.href}
-                onClick={() => {
-                  setPendingPath(control.href);
-
-                  if (pathname === control.href) {
-                    onMobileClose();
-                  }
-                }}
-                className={`${className} cursor-pointer`}
+                onClick={onMobileClose}
+                className={className}
               >
                 {controlIcon}
                 {control.label}

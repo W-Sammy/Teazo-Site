@@ -62,11 +62,11 @@ export default function AdminGalleryList({
                   <input
                     type="checkbox"
                     checked={allSelected}
-                    aria-label="Select all displayed gallery items"
+                    aria-label="Select all displayed images"
                     title={
                       allSelected
-                        ? "Deselect displayed gallery items"
-                        : "Select all displayed gallery items"
+                        ? "Deselect displayed images"
+                        : "Select all displayed images"
                     }
                     onChange={(event) =>
                       onSelectAll(event.target.checked)
@@ -146,7 +146,7 @@ export default function AdminGalleryList({
                         }}
                         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg font-bold text-red-500 hover:bg-red-50 hover:text-red-700"
                         aria-label={`Delete ${image.name}`}
-                        title="Delete gallery item"
+                        title="Delete image"
                       >
                         ×
                       </button>
@@ -174,7 +174,6 @@ export default function AdminGalleryList({
                     <GalleryImage
                       src={image.url}
                       alt={image.name}
-                      mediaType={image.mediaType}
                       className="object-cover"
                       sizes="44px"
                     />
