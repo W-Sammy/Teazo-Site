@@ -200,7 +200,7 @@ describe("Gallery administration bulk selection", () => {
 
     expect(
       screen.queryByRole("button", {
-        name: "New Item +",
+        name: "New Image +",
       }),
     ).toBeNull();
   });

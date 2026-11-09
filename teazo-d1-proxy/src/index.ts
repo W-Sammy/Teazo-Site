@@ -131,7 +131,7 @@ function prepare(env: Env, s: Stmt): D1PreparedStatement {
  *   DELETE /media/<key>   token required; idempotent
  */
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024; // backstop — the app resizes before upload
-const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf","video/mp4","video/webm",]);
+const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 /** Keys the app mints look like gallery/2026/09/<uuid>.webp. */
 const KEY_RE = /^[a-z0-9][a-z0-9/_.-]{0,511}$/i;
 
@@ -146,132 +146,16 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
     return json({ error: "bad_key" }, 400);
   }
 
-  
   if (request.method === "GET" || request.method === "HEAD") {
-    const rangeHeader = request.headers.get("range");
-
-    const metadata = await env.MEDIA.head(key);
-
-    if (!metadata) {
-      return new Response("Not found", { status: 404 });
-    }
-
-    let range:
-      | {
-          offset: number;
-          length: number;
-        }
-      | undefined;
-
-    if (rangeHeader) {
-      const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
-
-      if (!match || (!match[1] && !match[2])) {
-        return new Response(null, {
-          status: 416,
-          headers: {
-            "Content-Range": `bytes */${metadata.size}`,
-          },
-        });
-      }
-
-      const [, startText, endText] = match;
-      const size = metadata.size;
-
-      let start: number;
-      let end: number;
-
-      if (startText === "") {
-        // Example: bytes=-500 (last 500 bytes)
-        const suffixLength = Number(endText);
-
-        if (
-          !Number.isSafeInteger(suffixLength) ||
-          suffixLength <= 0
-        ) {
-          return new Response(null, {
-            status: 416,
-            headers: {
-              "Content-Range": `bytes */${size}`,
-            },
-          });
-        }
-
-        start = Math.max(0, size - suffixLength);
-        end = size - 1;
-      } else {
-        // Example: bytes=0-1023 or bytes=1024-
-        start = Number(startText);
-        end = endText === "" ? size - 1 : Number(endText);
-      }
-
-      if (
-        !Number.isSafeInteger(start) ||
-        !Number.isSafeInteger(end) ||
-        start < 0 ||
-        start >= size ||
-        end < start
-      ) {
-        return new Response(null, {
-          status: 416,
-          headers: {
-            "Content-Range": `bytes */${size}`,
-          },
-        });
-      }
-
-      end = Math.min(end, size - 1);
-
-      range = {
-        offset: start,
-        length: end - start + 1,
-      };
-    }
-
-    // Fetch either the entire file or the requested byte range.
-    const obj = await env.MEDIA.get(
-      key,
-      range ? { range } : undefined,
-    );
-
-    if (!obj) {
-      return new Response("Not found", { status: 404 });
-    }
-
+    const obj = await env.MEDIA.get(key);
+    if (!obj) return new Response("Not found", { status: 404 });
     const headers = new Headers();
-
     obj.writeHttpMetadata(headers);
-
     headers.set("etag", obj.httpEtag);
-    headers.set("accept-ranges", "bytes");
-    headers.set(
-      "cache-control",
-      "public, max-age=31536000, immutable",
-    );
-
-    if (range) {
-      const start = range.offset;
-      const end = start + range.length - 1;
-
-      headers.set(
-        "content-range",
-        `bytes ${start}-${end}/${metadata.size}`,
-      );
-
-      headers.set("content-length", String(range.length));
-    } else {
-      headers.set("content-length", String(metadata.size));
-    }
-
-    return new Response(
-      request.method === "HEAD" ? null : obj.body,
-      {
-        status: range ? 206 : 200,
-        headers,
-      },
-    );
+    // Keys are UUIDs and never reused, so a cached copy can never go stale.
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+    return new Response(request.method === "HEAD" ? null : obj.body, { headers });
   }
-
 
   if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
   if (!(await authorized(request, env.PROXY_TOKEN))) return json({ error: "unauthorized" }, 401);

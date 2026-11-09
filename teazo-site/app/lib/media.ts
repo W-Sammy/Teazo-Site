@@ -25,8 +25,6 @@ export const MEDIA_TYPES = [
   "image/png",
   "image/webp",
   "application/pdf",
-  "video/mp4",
-  "video/webm",
 ] as const;
 
 export type MediaType = (typeof MEDIA_TYPES)[number];

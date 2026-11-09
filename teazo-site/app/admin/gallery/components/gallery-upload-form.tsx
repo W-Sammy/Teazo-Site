@@ -40,12 +40,6 @@ const acceptedImageTypes = [
   "image/webp",
 ];
 
-const acceptedVideoTypes = [
-  "video/mp4",
-  "video/webm",
-];
-
-const maxVideoSize = 10 * 1024 * 1024;
 const maxFileSize = defaultMaxImageSize;
 const maxTags = 12;
 const maxTagLength = 30;
@@ -94,10 +88,6 @@ export default function GalleryUploadForm({
     useState<string | null>(
       initialImage?.url ?? null,
     );
-
-  const [previewType, setPreviewType] = useState<"image" | "video">(
-  initialImage?.mediaType ?? "image",
-  );
 
   const [isDragging, setIsDragging] =
     useState(false);
@@ -170,12 +160,6 @@ export default function GalleryUploadForm({
     setSelectedFile(file);
     setPreviewUrl(nextPreviewUrl);
 
-    setPreviewType(
-    acceptedVideoTypes.includes(file.type.toLowerCase())
-    ? "video"
-    : "image",
-);
-
     if (previousPreviewUrl) {
       URL.revokeObjectURL(previousPreviewUrl);
     }
@@ -196,29 +180,6 @@ export default function GalleryUploadForm({
     setImageError(null);
     setUploadError(null);
 
-    const isVideo = acceptedVideoTypes.includes(
-      file.type.toLowerCase(),
-    );
-
-    if (isVideo) {
-      if (file.size === 0) {
-        setImageError("The selected video must be nonempty.");
-        return;
-      }
-
-      if (file.size > maxVideoSize) {
-        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-
-        setImageError(
-          `Video is too large (${fileSizeMB} MB). The maximum allowed size is 10 MB. Please select a smaller video.`
-        );
-        return;
-      }
-
-      applySelectedFile(file, file.name);
-      return;
-    }
-
     const needsPreparation =
       isHeicImage(file) || file.size > maxFileSize;
 
@@ -229,7 +190,7 @@ export default function GalleryUploadForm({
       )
     ) {
       setImageError(
-        "Choose a JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM file.",
+        "Choose a JPG, PNG, WebP, HEIC, or HEIF image.",
       );
       return;
     }
@@ -400,10 +361,6 @@ export default function GalleryUploadForm({
   ) {
     event.preventDefault();
 
-    if (imageError) {
-      return;
-    }
-
     if (isSaving || isConverting) {
       return;
     }
@@ -490,7 +447,7 @@ export default function GalleryUploadForm({
 
   // Submission remains unavailable during conversion.
   const canSave = Boolean(
-    name.trim() && previewUrl && !isConverting && !imageError
+    name.trim() && previewUrl && !isConverting,
   );
 
   return (
@@ -502,8 +459,8 @@ export default function GalleryUploadForm({
       <div className="mx-auto flex w-full max-w-xl min-w-0 flex-1 flex-col md:max-w-none">
         <h2 className="mb-5 break-words pr-10 text-center text-lg font-semibold sm:mb-6 sm:text-xl">
           {initialImage
-            ? "Edit Item"
-            : "Create New Item"}
+            ? "Edit Image"
+            : "Create New Image"}
         </h2>
 
         {/* Image name */}
@@ -632,32 +589,23 @@ export default function GalleryUploadForm({
         {/* Image preview and selector */}
         <div className="mt-6 min-w-0">
           <label htmlFor="gallery-image-file" className="mb-2 block text-sm text-gray-700">
-            Image or Video{initialImage ? " (optional)" : <> <span className="text-red-600" aria-hidden="true">*</span></>}
+            Image{initialImage ? " (optional)" : <> <span className="text-red-600" aria-hidden="true">*</span></>}
           </label>
           {previewUrl && (
             <div className="mb-3 min-w-0">
               <div className="relative h-52 w-full overflow-hidden rounded-xl border border-[#dbb082] bg-[#f3ece6] md:h-44">
-                {previewType === "video" ? (
-                  <video
-                    src={previewUrl}
-                    controls
-                    preload="metadata"
-                    playsInline
-                    className="h-full w-full object-contain"
-                    aria-label={`${name || "Selected video"} preview`}
-                  >
-                    Your browser does not support video playback.
-                  </video>
-                ) : (
-                  <Image
-                    src={previewUrl}
-                    alt={`${name || "Selected image"} preview`}
-                    fill
-                    unoptimized={previewUrl.startsWith("blob:")}
-                    className="object-cover"
-                    sizes="(max-width: 767px) 100vw, 272px"
-                  />
-                )}
+                <Image
+                  src={previewUrl}
+                  alt={`${
+                    name || "Selected image"
+                  } preview`}
+                  fill
+                  unoptimized={previewUrl.startsWith(
+                    "blob:",
+                  )}
+                  className="object-cover"
+                  sizes="(max-width: 767px) 100vw, 272px"
+                />
               </div>
 
               <p className="mt-1 text-center text-xs text-gray-500">
@@ -672,7 +620,7 @@ export default function GalleryUploadForm({
             id="gallery-image-file"
             name="galleryImageFile"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
             onChange={handleFileChange}
             disabled={isSaving || isConverting}
             className="hidden"
@@ -694,7 +642,7 @@ export default function GalleryUploadForm({
               </button>
 
               <p className="text-center text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 10 MB will be resized automatically. Videos must be 10 MB or smaller.
+                JPG, PNG, WebP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
               </p>
             </div>
           ) : (
@@ -734,11 +682,11 @@ export default function GalleryUploadForm({
               >
                 {isConverting
                   ? "Preparing image..."
-                  : "Select/Drag Items Here"}
+                  : "Select/Drag Image Here"}
               </button>
 
               <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 10 MB will be resized automatically. Videos must be 10 MB or smaller.
+                JPG, PNG, WebP, HEIC, or HEIF · Images over 10 MB will have their resolution reduced automatically.
               </p>
             </div>
           )}
@@ -753,15 +701,9 @@ export default function GalleryUploadForm({
           )}
 
           {imageError && (
-            <div
-              role="alert"
-              className="mt-3 w-full rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-            >
-              <div className="flex items-start gap-2">
-                <span aria-hidden="true">⚠️</span>
-                <p className="break-words">{imageError}</p>
-              </div>
-            </div>
+            <p className="mt-2 break-words text-center text-xs text-red-600">
+              {imageError}
+            </p>
           )}
         </div>
 

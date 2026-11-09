@@ -40,7 +40,7 @@ export default function HoursSection({
       onToggle={onToggle}
       setRef={setRef}
     >
-      <p className="mb-3.5 break-words text-[15px] font-semibold text-black">
+      <p className="mb-3.5 break-words text-[15px] font-semibold text-blue-500">
         Week: {weekLabel}
       </p>
 
