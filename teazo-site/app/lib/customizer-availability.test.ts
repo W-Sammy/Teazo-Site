@@ -46,13 +46,13 @@ describe("background customizer availability", () => {
     expect(checkCustomizerAvailability(fresh, true, "VAR1", selected)).toMatchObject({ canAdd: false });
   });
 
-  it("keeps the drink and its choices visible but blocks adding until the fresh check completes", () => {
+  it("keeps the drink and its choices usable, but unconfirmed, until the fresh check completes", () => {
     const item = choices();
     expect(item.name).toBe("Milk tea");
     expect(item.variations).toHaveLength(2);
     expect(item.modifiers[0].options).toHaveLength(2);
     expect(checkCustomizerAvailability(item, false, "VAR1", selected)).toEqual({
-      canAdd: false, message: undefined, unavailableModifiers: false,
+      canAdd: true, message: undefined, unavailableModifiers: false, confirmed: false,
     });
     expect(checkCustomizerAvailability(item, true, "VAR1", selected)).toMatchObject({ canAdd: true, message: undefined });
   });
@@ -115,11 +115,11 @@ describe("background customizer availability", () => {
     expect(checkCustomizerAvailability(choices(fixture), true, "VAR1", selected)).toMatchObject({ canAdd: false, message: expect.stringContaining("requires 1 choices; only 0 available") });
   });
 
-  it("blocks adding on failure and throughout retry without using the previous snapshot", () => {
+  it("blocks adding when the check fails, and evaluates provisionally again while a retry is pending", () => {
     const item = choices();
     expect(checkCustomizerAvailability(item, false, "VAR1", selected, "Could not confirm availability. Please try again."))
       .toMatchObject({ canAdd: false, message: "Could not confirm availability. Please try again." });
-    expect(checkCustomizerAvailability(item, false, "VAR1", selected)).toMatchObject({ canAdd: false, message: undefined });
+    expect(checkCustomizerAvailability(item, false, "VAR1", selected)).toMatchObject({ canAdd: true, confirmed: false });
     expect(checkCustomizerAvailability(item, true, "VAR1", selected)).toMatchObject({ canAdd: true });
   });
 

@@ -113,6 +113,10 @@ function ItemCustomizerModalContent({
   const availability = checkCustomizerAvailability(
     item, availabilityChecked, selectedVariationId, selectedModifiers, availabilityError,
   );
+  // Add to Bag can be pressed before the fresh check returns; the add then completes once it is confirmed.
+  const [addRequested, setAddRequested] = useState(false);
+  const addRequestedRef = useRef(false);
+  const isAddPending = addRequested && !availability.confirmed && !availabilityError;
 
   const removeUnavailableOptions = () => {
     setModifierChoices(Object.fromEntries(Object.entries(selectedModifiers).map(([listId, ids]) => [
@@ -173,6 +177,15 @@ function ItemCustomizerModalContent({
   // Add to Cart
   const handleAddToCart = () => {
     if (!availability.canAdd) return;
+    if (!availability.confirmed) {
+      addRequestedRef.current = true;
+      setAddRequested(true);
+      return;
+    }
+    commitAdd();
+  };
+
+  const commitAdd = () => {
     const effectiveVariationId = selectedVariationId || item.variationId;
     if (!effectiveVariationId) {
       setValidationError("Unable to customize this drink: Missing size variation.");
@@ -235,6 +248,18 @@ function ItemCustomizerModalContent({
     openCart();
     onClose();
   };
+
+  // The add finishes once the fresh check confirms it; if the check now rejects the choices, the banner explains why.
+  const commitAddRef = useRef(commitAdd);
+  useEffect(() => {
+    commitAddRef.current = commitAdd;
+  });
+  const canAddNow = availability.canAdd;
+  useEffect(() => {
+    if (!addRequestedRef.current || !availabilityChecked) return;
+    addRequestedRef.current = false;
+    if (canAddNow) commitAddRef.current();
+  }, [availabilityChecked, canAddNow]);
 
   // Keyboard accessibility & Focus trap
   useEffect(() => {
@@ -366,7 +391,7 @@ function ItemCustomizerModalContent({
                 <div className={`${montserrat.className} font-medium`}>
                   <p>{availability.message || validationError}</p>
                   {availabilityError && (
-                    <button type="button" onClick={onRetryAvailability} className="mt-2 underline">Try again</button>
+                    <button type="button" onClick={() => { addRequestedRef.current = false; setAddRequested(false); onRetryAvailability(); }} className="mt-2 underline">Try again</button>
                   )}
                   {availability.unavailableModifiers && (
                     <button type="button" onClick={removeUnavailableOptions} className="mt-2 underline">Remove unavailable options</button>
@@ -473,7 +498,7 @@ function ItemCustomizerModalContent({
                               type="button"
                               role={isSingle ? "radio" : "checkbox"}
                               aria-checked={isOptionSelected}
-                              disabled={!availabilityChecked || (!isSingle && !isOptionSelected && !!maxAllowed && currentSelected.length >= maxAllowed)}
+                              disabled={(!isSingle && !isOptionSelected && !!maxAllowed && currentSelected.length >= maxAllowed)}
                               onClick={() => {
                                 if (isSingle) {
                                   if (minRequired === 0 && isOptionSelected) {
@@ -601,11 +626,11 @@ function ItemCustomizerModalContent({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={!availability.canAdd}
-                aria-busy={!availabilityChecked && !availabilityError}
+                disabled={!availability.canAdd || isAddPending}
+                aria-busy={isAddPending}
                 className={`${montserrat.className} flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#161616] px-5 py-3.5 text-sm font-bold text-white shadow-md transition enabled:hover:bg-[#DBAF82] enabled:active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                <span>{initialCartItem ? "Update Drink" : "Add to Bag"}</span>
+                <span>{isAddPending ? "Checking availability…" : initialCartItem ? "Update Drink" : "Add to Bag"}</span>
                 <span className="text-[#DBAF82] font-semibold">•</span>
                 <span>{formatCurrency(totalPriceCents)}</span>
               </button>
