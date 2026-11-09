@@ -92,7 +92,7 @@ export default function NavBar() {
                         type="button"
                         onClick={openCart}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
+                        className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
                     >
                         <svg
                             className="w-6 h-6 transition-transform group-hover:scale-105"
@@ -295,7 +295,7 @@ export default function NavBar() {
                         type="button"
                         onClick={openCart}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
+                        className="cursor-pointer relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
                     >
                         <svg
                             className="w-6 h-6 transition-transform group-hover:scale-105"

@@ -12,14 +12,18 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 export const metadata: Metadata = {
   title: "Menu",
   description: "Explore TEAZO menu categories and featured specials.",
 };
 
+// Live-event visibility must be evaluated for each request as events start and end.
 // Read the catalog at request time, not while building a static copy of the page.
 export const dynamic = "force-dynamic";
+
 
 const cabinSketch = Cabin_Sketch({
   subsets: ["latin"],
@@ -357,11 +361,13 @@ export default async function MenuPage({
 }) {
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
-  const [resolvedParams, content, menuResult] = await Promise.all([
-    searchParams ? searchParams : Promise.resolve(undefined),
-    getWebsiteContent(),
-    loadMenu(),
-  ]);
+  const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
+  searchParams ? searchParams : Promise.resolve(undefined),
+  getWebsiteContent(),
+  loadMenu(),
+  // Events are optional: keep the menu available if D1 cannot load them.
+  listActiveEvents().catch(() => []),
+]);
 
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
@@ -382,6 +388,8 @@ export default async function MenuPage({
   );
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
       <CatalogChangeNotice initialRevision={revision} />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -499,5 +507,6 @@ export default async function MenuPage({
         )}
       </div>
     </main>
+    </>
   );
 }

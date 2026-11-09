@@ -6,6 +6,8 @@ import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -13,6 +15,9 @@ export const metadata: Metadata = {
   title: "Contact",
   description: "Visit TEAZO in San Francisco and check the latest store hours.",
 };
+
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 const MOBILE_USER_AGENT_REGEX =
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
@@ -126,7 +131,10 @@ function ClockIcon() {
 export default async function ContactPage() {
   const requestHeaders = await headers();
   const userAgent = requestHeaders.get("user-agent") ?? "";
-  const contactData = await getContactContent();
+  const [contactData, liveEvents] = await Promise.all([
+    getContactContent(),
+    listActiveEvents().catch(() => []),
+  ]);
   const {
     location,
     hours,
@@ -168,6 +176,8 @@ export default async function ContactPage() {
   )}`;
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative isolate min-h-screen scroll-smooth overflow-hidden bg-[#FFF8F9] text-stone-900">
       {/* Shared so other pages can reuse the same motion treatment without
           copying contact-specific files. */}
@@ -227,9 +237,14 @@ export default async function ContactPage() {
                       <p className="text-[1.01rem] font-semibold text-stone-900">
                         {location.streetAddress}
                       </p>
-                      <p className="mt-1 text-[1rem] font-medium text-stone-700">
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 text-[1rem] font-medium text-stone-700"
+                      >
                         {location.locality}
-                      </p>
+                      </a>
                     </div>
                   </div>
 
@@ -258,16 +273,7 @@ export default async function ContactPage() {
                       {location.email}
                     </a>
                   </div>
-
                   <div className="flex items-start justify-start sm:justify-end sm:pr-16">
-                    <a
-                      href={directionsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block whitespace-nowrap text-sm font-semibold uppercase tracking-[0.08em] text-[#8E5629] transition hover:opacity-70"
-                    >
-                      Get Directions
-                    </a>
                   </div>
                 </div>
               </div>
@@ -342,7 +348,7 @@ export default async function ContactPage() {
                 Planning for a Crowd?
               </h2>
               <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                Call us for group ordering and discounted pricing on larger
+                Inquire about group ordering and discounted pricing on larger
                 drink, snack, and dessert orders.
               </p>
 
@@ -448,5 +454,6 @@ export default async function ContactPage() {
         )}
       </div>
     </main>
+    </>
   );
 }
