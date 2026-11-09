@@ -238,8 +238,9 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
   // Fetch live website content for database-backed schedule & holiday exceptions.
   // Runs again each time the bag opens, which also brings the clock up to date.
   // When the interior content is mounted, fetch when cart is open or has items
+  const hasItems = totalCount > 0;
   useEffect(() => {
-    if (!isCartOpen && totalCount === 0) return;
+    if (!isCartOpen && !hasItems) return;
     let isMounted = true;
     async function loadContent() {
       try {
@@ -264,7 +265,7 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
     return () => {
       isMounted = false;
     };
-  }, [isCartOpen, totalCount]);
+  }, [isCartOpen, hasItems]); // hasItems, not totalCount: quantity taps must not refetch
 
   // Turnstile token lifecycle:
   // When bag opens (or re-opens after being closed), ensure token is refreshed if expired or null

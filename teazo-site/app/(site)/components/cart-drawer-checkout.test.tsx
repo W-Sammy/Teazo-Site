@@ -763,4 +763,89 @@ describe("Shopping Bag checkout submission", () => {
     supplySecurityToken();
     expect(checkoutButton().disabled).toBe(true);
   });
+  describe("store hours refresh", () => {
+    function websiteContentCalls() {
+      return mocks.fetch.mock.calls.filter((call) => call[0] === "/api/website-content");
+    }
+
+    function mockCartState(state: { isCartOpen: boolean; totalCount: number }) {
+      mocks.useCart.mockImplementation(() => ({
+        items: state.totalCount > 0 ? [{ ...cartItem, quantity: state.totalCount }] : [],
+        totalCount: state.totalCount,
+        subtotalCents: 500 * state.totalCount,
+        isCartOpen: state.isCartOpen,
+        isHydrated: true,
+        openCart: vi.fn(),
+        closeCart: vi.fn(),
+        updateQuantity: vi.fn(),
+        removeItem: vi.fn(),
+        clearCart: vi.fn(),
+      }));
+    }
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it("does not refetch store hours when only the quantity changes", async () => {
+      const state = { isCartOpen: true, totalCount: 1 };
+      mockCartState(state);
+      const { rerender } = render(<CartDrawer />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /ASAP \(~20/ })).toBeTruthy();
+      });
+      expect(websiteContentCalls()).toHaveLength(1);
+
+      state.totalCount = 2;
+      rerender(<CartDrawer />);
+      state.totalCount = 3;
+      rerender(<CartDrawer />);
+      await flush();
+
+      expect(websiteContentCalls()).toHaveLength(1);
+    });
+
+    it("refetches store hours when the bag is reopened", async () => {
+      const state = { isCartOpen: true, totalCount: 1 };
+      mockCartState(state);
+      const { rerender } = render(<CartDrawer />);
+
+      await waitFor(() => {
+        expect(websiteContentCalls()).toHaveLength(1);
+      });
+
+      state.isCartOpen = false;
+      rerender(<CartDrawer />);
+      await flush();
+      const callsWhileClosed = websiteContentCalls().length;
+
+      state.isCartOpen = true;
+      rerender(<CartDrawer />);
+
+      await waitFor(() => {
+        expect(websiteContentCalls()).toHaveLength(callsWhileClosed + 1);
+      });
+    });
+
+    it("fetches store hours when the first item is added while the bag is closed", async () => {
+      const state = { isCartOpen: true, totalCount: 0 };
+      mockCartState(state);
+      const { rerender } = render(<CartDrawer />);
+
+      await waitFor(() => {
+        expect(websiteContentCalls()).toHaveLength(1);
+      });
+
+      state.isCartOpen = false;
+      rerender(<CartDrawer />);
+      await flush();
+      expect(websiteContentCalls()).toHaveLength(1);
+
+      state.totalCount = 1;
+      rerender(<CartDrawer />);
+
+      await waitFor(() => {
+        expect(websiteContentCalls()).toHaveLength(2);
+      });
+    });
+  });
 });
