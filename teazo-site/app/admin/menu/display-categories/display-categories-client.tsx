@@ -62,7 +62,7 @@ function InfoTip({ label, text }: { label: string; text: string }) {
         onBlur={() => setOpen(false)}
         onClick={() => setOpen(true)}
         onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}
-        className="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-500 outline-none focus:ring-2 focus:ring-[#dbb082]"
+        className="inline-flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-500 outline-none focus:ring-2 focus:ring-[#dbb082]"
       >
         i
       </button>
@@ -588,7 +588,7 @@ export default function DisplayCategoriesClient({
                     document.getElementById(`display-category-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                     openCategoryPanel(category);
                   }}
-                  className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-left text-sm ${category.isPublished ? "text-gray-800" : "text-gray-400 line-through"}`}
+                  className={`min-w-0 flex-1 cursor-pointer rounded-md px-2 py-1.5 text-left text-sm ${category.isPublished ? "text-gray-800" : "text-gray-400 line-through"}`}
                   title={`${category.title} · ${category.items.length} ${category.items.length === 1 ? "item" : "items"}`}
                 >
                   <span className="block truncate">{category.title}</span>
@@ -634,7 +634,7 @@ export default function DisplayCategoriesClient({
               <div key={category.id} id={`display-category-${category.id}`} className="scroll-mt-6">
                 <div role="row" className="grid grid-cols-[minmax(0,1fr)_12rem_9rem_8rem] items-center border-b border-[#dbb082]/60 bg-white text-sm hover:bg-[#dbb082]/15">
                   <div role="cell" className="min-w-0 px-3 py-2">
-                    <button type="button" onClick={(event) => { event.stopPropagation(); setOpenCategory(openCategory === category.id ? null : category.id); }} className="flex min-w-0 items-center gap-3 text-left">
+                    <button type="button" onClick={(event) => { event.stopPropagation(); setOpenCategory(openCategory === category.id ? null : category.id); }} className="flex min-w-0 cursor-pointer items-center gap-3 text-left">
                       <span className="w-4 shrink-0 text-base text-gray-500">{openCategory === category.id ? "▾" : "▸"}</span>
                       <span className="min-w-0">
                         <span className={`flex items-center gap-2 truncate font-semibold ${category.isPublished ? "text-gray-900" : "text-gray-400 line-through"}`}>
@@ -668,7 +668,7 @@ export default function DisplayCategoriesClient({
                     </span>
                   </div>
                   <div role="cell" className="flex items-center gap-1 px-3 py-2">
-                    <button type="button" disabled={saving !== null} onClick={(event) => { event.stopPropagation(); openCategoryPanel(category); }} className="rounded bg-[#dbb082] px-2 py-1 text-[10px] font-bold text-white hover:bg-[#c89968]" aria-label={`Edit ${category.title}`}>EDIT</button>
+                    <button type="button" disabled={saving !== null} onClick={(event) => { event.stopPropagation(); openCategoryPanel(category); }} className="cursor-pointer rounded bg-[#dbb082] px-2 py-1 text-[10px] font-bold text-white hover:bg-[#c89968] disabled:cursor-not-allowed" aria-label={`Edit ${category.title}`}>EDIT</button>
                     <button
                       type="button"
                       onClick={(event) => {
@@ -676,7 +676,7 @@ export default function DisplayCategoriesClient({
                         if (category.sectionType === "custom") setDeletePending(category);
                         else setMessage("This is a category that is pulled from Square and can only be deleted from the square dashboard");
                       }}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold ${category.sectionType === "custom" ? "text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold disabled:cursor-not-allowed ${category.sectionType === "custom" ? "cursor-pointer text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
                       disabled={saving !== null}
                       aria-label={`Delete ${category.title}`}
                       title={category.sectionType === "custom" ? "Delete category" : "This category can only be deleted from Square"}
@@ -723,7 +723,7 @@ export default function DisplayCategoriesClient({
                             type="button"
                             onClick={() => void removeItemFromCategory(category, item.catalogObjectId)}
                             disabled={category.sectionType !== "custom" || saving !== null}
-                            className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold ${category.sectionType === "custom" ? "text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
+                            className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold disabled:cursor-not-allowed ${category.sectionType === "custom" ? "cursor-pointer text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
                             aria-label={`Remove ${item.name ?? "item"} from category`}
                             title={category.sectionType === "custom" ? "Remove item from category" : "Square category memberships must be changed in Square"}
                           >
