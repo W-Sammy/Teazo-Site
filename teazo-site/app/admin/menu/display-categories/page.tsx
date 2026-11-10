@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 async function getMenuItems(): Promise<MenuItem[]> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}api/square/products`,
+    new URL("/api/square/products", process.env.NEXT_PUBLIC_BASE_URL?.trim()),
     { cache: "no-store" },
   );
   if (!response.ok) throw new Error("Failed to fetch menu items");

@@ -153,6 +153,7 @@ export default function DisplayCategoriesClient({
   const [itemSettings, setItemSettings] = useState(initialItemSettings);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const savingRef = useRef(false);
   const [categoryPanel, setCategoryPanel] = useState<DisplayCategory | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelName, setPanelName] = useState("");
@@ -178,6 +179,10 @@ export default function DisplayCategoriesClient({
       if (section.sectionType === "square" && section.squareCategoryId) {
         byCategory.set(section.squareCategoryId, { ...section, items: [] });
       }
+    }
+
+    if (savedUncategorized) {
+      byCategory.set(uncategorizedId, { ...savedUncategorized, items: [] });
     }
 
     for (const item of items) {
@@ -234,6 +239,8 @@ export default function DisplayCategoriesClient({
 
   async function saveSection(category: DisplayCategory, changes: Partial<MenuDisplaySection>) {
     const next = { ...category, ...changes };
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(category.id);
     setMessage("");
 
@@ -268,11 +275,14 @@ export default function DisplayCategoriesClient({
     } catch {
       setMessage("The display setting could not be saved. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
 
   async function setItemVisible(itemId: string, visible: boolean) {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(itemId);
     setMessage("");
     try {
@@ -289,6 +299,7 @@ export default function DisplayCategoriesClient({
     } catch {
       setMessage("The item visibility could not be saved. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
@@ -297,12 +308,13 @@ export default function DisplayCategoriesClient({
   const categorySaving = saving === "category-panel";
 
   function closeCategoryPanel() {
-    if (categorySaving) return;
+    if (savingRef.current) return;
     setCategoryPanel(null);
     setPanelOpen(false);
   }
 
   function openCategoryPanel(category: DisplayCategory | null) {
+    if (savingRef.current) return;
     setCategoryPanel(category);
     setPanelOpen(true);
     setPanelName(category?.title ?? "");
@@ -314,6 +326,9 @@ export default function DisplayCategoriesClient({
     const title = panelName.trim();
     if (!title) return;
 
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setMessage("");
     setSaving("category-panel");
     try {
       const category = categoryPanel ?? {
@@ -321,7 +336,7 @@ export default function DisplayCategoriesClient({
         squareCategoryId: null,
         title,
         sectionType: "custom" as const,
-        sortOrder: categories.length,
+        sortOrder: Math.max(-1, ...categories.map((category) => category.sortOrder)) + 1,
         isPublished: true,
         defaultItemVisible: true,
         itemIds: [],
@@ -356,12 +371,22 @@ export default function DisplayCategoriesClient({
           ? current.map((section) => section.id === category.id ? savedSection : section)
           : [...current, savedSection];
       });
+      if (result.itemSettings) {
+        const updatedSettings: MenuDisplayItem[] = result.itemSettings;
+        setItemSettings((current) => [
+          ...current.filter((setting) => !updatedSettings.some(
+            (updated) => updated.squareCatalogObjectId === setting.squareCatalogObjectId,
+          )),
+          ...updatedSettings,
+        ]);
+      }
       setCategoryPanel(null);
       setPanelOpen(false);
       setMessage(`${categoryPanel ? "Updated" : "Created"} website-only category “${title}”.`);
     } catch {
       setMessage("The website category could not be saved. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
@@ -380,6 +405,9 @@ export default function DisplayCategoriesClient({
   }
 
   async function persistCategoryOrder(reordered: DisplayCategory[]) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setMessage("");
     const previousSections = sections;
     setSections(reordered.map((category, sortOrder) => ({ ...category, sortOrder })));
 
@@ -395,6 +423,7 @@ export default function DisplayCategoriesClient({
       setSections(previousSections);
       setMessage("The category order could not be saved. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
@@ -404,6 +433,9 @@ export default function DisplayCategoriesClient({
       setMessage("Square category memberships must be changed in Square.");
       return;
     }
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setMessage("");
     setSaving(`${category.id}:${itemId}`);
     try {
       const response = await fetch("/api/admin/menu/display", {
@@ -418,6 +450,7 @@ export default function DisplayCategoriesClient({
     } catch {
       setMessage("The item could not be removed from this category.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
@@ -427,6 +460,9 @@ export default function DisplayCategoriesClient({
       setMessage("This is a category that is pulled from Square and can only be deleted from the square dashboard");
       return;
     }
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setMessage("");
     setSaving(category.id);
     try {
       const response = await fetch("/api/admin/menu/display", {
@@ -441,6 +477,7 @@ export default function DisplayCategoriesClient({
     } catch {
       setMessage("The website category could not be deleted. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(null);
     }
   }
@@ -466,6 +503,7 @@ export default function DisplayCategoriesClient({
             <button
               type="button"
               onClick={() => openCategoryPanel(null)}
+              disabled={saving !== null}
               className={adminButtonStyles.primary}
             >
               Create custom category
@@ -514,8 +552,9 @@ export default function DisplayCategoriesClient({
             {categories.map((category, index) => hideHiddenCategories && !category.isPublished ? null : (
               <div
                 key={category.id}
-                draggable={saving !== "reorder"}
+                draggable={saving === null}
                 onDragStart={(event) => {
+                  if (savingRef.current) { event.preventDefault(); return; }
                   event.dataTransfer.effectAllowed = "move";
                   event.dataTransfer.setData("text/plain", category.id);
                   setDraggedCategoryId(category.id);
@@ -523,7 +562,7 @@ export default function DisplayCategoriesClient({
                 }}
                 onDragEnd={() => { setDraggedCategoryId(null); setDropTarget(null); }}
                 onDragOver={(event) => {
-                  if (!draggedCategoryId || draggedCategoryId === category.id) {
+                  if (savingRef.current || !draggedCategoryId || draggedCategoryId === category.id) {
                     setDropTarget(null);
                     return;
                   }
@@ -575,7 +614,7 @@ export default function DisplayCategoriesClient({
             <div role="row" className="grid grid-cols-[minmax(0,1fr)_12rem_9rem_8rem] border-b border-[#dbb082] bg-[#fffaf6] text-left text-sm text-gray-700">
               <div role="columnheader" className="px-3 py-3">Name</div>
               <div role="columnheader" className="flex items-center gap-2 px-3 py-3">
-                New Item Default <InfoTip label="New Item Default" text="Controls whether items first added to this category start visible on the website." />
+                New Item Default <InfoTip label="New Item Default" text="Sets visibility for newly discovered Square items or items newly added to a custom category. Items already in the category keep their visibility settings." />
               </div>
               <div role="columnheader" className="flex items-center gap-2 px-3 py-3">
                 Visibility <InfoTip label="Visibility" text="Controls whether this category is shown on the public website. Item visibility is controlled on each item row." />
@@ -601,7 +640,7 @@ export default function DisplayCategoriesClient({
                   <div role="cell" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600">
                     <Toggle
                       checked={category.defaultItemVisible}
-                      disabled={saving === category.id}
+                      disabled={saving !== null}
                       onChange={() => void saveSection(category, { defaultItemVisible: !category.defaultItemVisible })}
                       label={`Make new ${category.title} items visible by default`}
                       small
@@ -611,7 +650,7 @@ export default function DisplayCategoriesClient({
                   <div role="cell" className="flex items-center gap-2 px-3 py-2 text-xs font-medium">
                     <Toggle
                       checked={category.isPublished}
-                      disabled={saving === category.id}
+                      disabled={saving !== null}
                       onChange={() => void saveSection(category, { isPublished: !category.isPublished })}
                       label={`Show ${category.title} on public menu`}
                       small
@@ -621,7 +660,7 @@ export default function DisplayCategoriesClient({
                     </span>
                   </div>
                   <div role="cell" className="flex items-center gap-1 px-3 py-2">
-                    <button type="button" onClick={(event) => { event.stopPropagation(); openCategoryPanel(category); }} className="rounded bg-[#dbb082] px-2 py-1 text-[10px] font-bold text-white hover:bg-[#c89968]" aria-label={`Edit ${category.title}`}>EDIT</button>
+                    <button type="button" disabled={saving !== null} onClick={(event) => { event.stopPropagation(); openCategoryPanel(category); }} className="rounded bg-[#dbb082] px-2 py-1 text-[10px] font-bold text-white hover:bg-[#c89968]" aria-label={`Edit ${category.title}`}>EDIT</button>
                     <button
                       type="button"
                       onClick={(event) => {
@@ -630,6 +669,7 @@ export default function DisplayCategoriesClient({
                         else setMessage("This is a category that is pulled from Square and can only be deleted from the square dashboard");
                       }}
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold ${category.sectionType === "custom" ? "text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
+                      disabled={saving !== null}
                       aria-label={`Delete ${category.title}`}
                       title={category.sectionType === "custom" ? "Delete category" : "This category can only be deleted from Square"}
                     >×</button>
@@ -663,7 +703,7 @@ export default function DisplayCategoriesClient({
                         <div role="cell" className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600">
                           <Toggle
                             checked={visible}
-                            disabled={saving === item.catalogObjectId}
+                            disabled={saving !== null}
                             onChange={() => void setItemVisible(item.catalogObjectId, !visible)}
                             label={`Show ${item.name ?? "item"} on public menu`}
                             small
@@ -674,7 +714,7 @@ export default function DisplayCategoriesClient({
                           <button
                             type="button"
                             onClick={() => void removeItemFromCategory(category, item.catalogObjectId)}
-                            disabled={category.sectionType !== "custom" || saving === `${category.id}:${item.catalogObjectId}`}
+                            disabled={category.sectionType !== "custom" || saving !== null}
                             className={`flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold ${category.sectionType === "custom" ? "text-red-500 hover:bg-red-50" : "cursor-not-allowed text-gray-300"}`}
                             aria-label={`Remove ${item.name ?? "item"} from category`}
                             title={category.sectionType === "custom" ? "Remove item from category" : "Square category memberships must be changed in Square"}
@@ -736,7 +776,7 @@ export default function DisplayCategoriesClient({
             <fieldset disabled={categoryReadOnly || categorySaving} className="mt-4 min-w-0">
               <legend className="text-sm text-gray-700">Items</legend>
               <p className="mb-2 mt-1 text-xs text-gray-500">
-                {categoryReadOnly ? `${categoryPanel?.items.length ?? 0} items in this Square category.` : `${panelItemIds.length} selected. Choose the items in this category.`}
+                {categoryReadOnly ? `${categoryPanel?.items.length ?? 0} items in this Square category.` : `${panelItemIds.length} selected. Newly added items start ${categoryPanel?.defaultItemVisible === false ? "hidden" : "visible"}. Item visibility applies across the menu.`}
               </p>
               <div className="max-h-44 min-w-0 space-y-1 overflow-y-auto rounded border border-[#dbb082] p-2">
                 {items.length === 0 && <p className="text-sm text-gray-500">No menu items available.</p>}
@@ -781,7 +821,7 @@ export default function DisplayCategoriesClient({
             <h2 id="delete-category-heading" className="text-xl font-semibold text-gray-900">Delete category?</h2>
             <p className="mt-3 text-sm text-gray-600">Delete “{deletePending.title}”? This removes the website category and its assignments, but does not delete any Square items.</p>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setDeletePending(null)} className={adminButtonStyles.secondary}>Cancel</button>
+              <button type="button" disabled={saving !== null} onClick={() => setDeletePending(null)} className={adminButtonStyles.secondary}>Cancel</button>
               <button type="button" onClick={() => void deleteCategory(deletePending)} disabled={saving === deletePending.id} className={adminButtonStyles.danger}>Delete category</button>
             </div>
           </div>

@@ -12,7 +12,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
-import { getMenuDisplayState } from "@/app/lib/queries/menu-display";
+import { getMenuDisplayState, initializeMenuDisplayItems } from "@/app/lib/queries/menu-display";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -339,14 +339,15 @@ async function loadMenu(): Promise<MenuLoadResult> {
     // Website display controls are a local overlay on top of Square's catalog.
     // Unconfigured Square categories stay hidden until an admin publishes them.
     // A failed settings read must not accidentally publish hidden categories.
-    let displayState: Awaited<ReturnType<typeof getMenuDisplayState>> = {
-      sections: [],
-      items: [],
-    };
-    try {
+    let displayState = await getMenuDisplayState();
+    const initializedItemIds = new Set(
+      displayState.items.map((item) => item.squareCatalogObjectId),
+    );
+    if (data.some((item) => !initializedItemIds.has(item.catalogObjectId))) {
+      // Freeze defaults when the website first sees an item, even if no admin
+      // has visited Display Categories since it was added to Square.
+      await initializeMenuDisplayItems(data, displayState.sections);
       displayState = await getMenuDisplayState();
-    } catch (error) {
-      console.error("Menu display settings could not be loaded:", error);
     }
 
     const itemSettings = new Map(

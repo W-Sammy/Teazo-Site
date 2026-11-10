@@ -135,6 +135,10 @@ export async function POST(request: Request) {
       return Response.json({ error: "Square category names and memberships cannot be changed here." }, { status: 409 });
     }
     const id = existing?.id ?? (sectionType === "uncategorized" ? `category:${squareEnv}:uncategorized` : requestedId);
+    const existingItemIds = new Set(existing?.itemIds ?? []);
+    const addedItemIds = sectionType === "custom"
+      ? itemIds.filter((itemId) => !existingItemIds.has(itemId))
+      : [];
     const statements = [];
     if (existing && sectionType !== "custom") {
       // Protected names, types and memberships never appear in the UPDATE.
@@ -166,6 +170,17 @@ export async function POST(request: Request) {
           SELECT value, ?2 FROM json_each(?1) WHERE true
           ON CONFLICT (square_object_id, square_env) DO NOTHING
         `).bind(serializedIds, squareEnv),
+        // Adding an item to a custom category applies that category's default
+        // once. Saving defaults or editing existing members preserves visibility.
+        prepare(`
+          INSERT INTO menu_item_display
+            (square_catalog_object_id, square_env, hide_on_website, updated_by)
+          SELECT value, ?2, ?3, ?4 FROM json_each(?1) WHERE true
+          ON CONFLICT (square_catalog_object_id, square_env) DO UPDATE SET
+            hide_on_website = excluded.hide_on_website,
+            updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+            updated_by = excluded.updated_by
+        `).bind(JSON.stringify(addedItemIds), squareEnv, defaultItemVisible ? 0 : 1, access.admin.id),
         prepare(`
           INSERT INTO menu_section_item (section_id, square_catalog_object_id, square_env, position)
           SELECT ?1, value, ?2, CAST(key AS INTEGER) FROM json_each(?3)
@@ -175,7 +190,9 @@ export async function POST(request: Request) {
     await batch(statements);
     return Response.json({ ok: true, section: {
       id, title, sectionType, squareCategoryId, sortOrder, isPublished, defaultItemVisible, itemIds,
-    } });
+    }, itemSettings: addedItemIds.map((itemId) => ({
+      squareCatalogObjectId: itemId, visible: defaultItemVisible,
+    })) });
   }
 
   if (action === "create-category") {
