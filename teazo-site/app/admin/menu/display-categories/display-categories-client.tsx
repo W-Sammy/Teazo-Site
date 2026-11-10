@@ -513,11 +513,6 @@ export default function DisplayCategoriesClient({
 
       <div className="relative flow-root min-h-[calc(100dvh-12rem)] md:-mx-8">
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-52 hidden w-px bg-[#dbb082] md:block" />
-        {message && (
-          <p role="status" className={`mt-4 rounded-lg border px-4 py-3 text-sm [overflow-wrap:anywhere] md:ml-[15rem] md:mr-8 ${message.includes("could not") ? "border-red-200 bg-red-50 text-red-800" : "border-gray-200 bg-gray-100 text-gray-700"}`}>
-            {message}
-          </p>
-        )}
 
       <div className="relative mt-8 grid gap-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-0">
         <aside className="-mx-4 border-b border-[#dbb082] px-4 pb-5 sm:-mx-6 sm:px-6 md:mx-0 md:sticky md:top-6 md:border-b-0 md:px-4 md:pb-0">
@@ -605,6 +600,19 @@ export default function DisplayCategoriesClient({
         </aside>
 
         <main className="min-w-0 self-start md:px-8">
+          {message && (
+            <div role="status" className={`mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${message.includes("could not") ? "border-red-200 bg-red-50 text-red-800" : "border-gray-200 bg-gray-100 text-gray-700"}`}>
+              <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{message}</span>
+              <button
+                type="button"
+                onClick={() => setMessage("")}
+                aria-label="Dismiss message"
+                className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-lg leading-none hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9b6d43]"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+          )}
           <p className="mb-3 flex items-center gap-2 text-xs text-gray-600">
             <span className="shrink-0 text-[#9b6d43]"><WebsiteIcon /></span>
             Website-only category — created here and shown only on the TEAZO website.
