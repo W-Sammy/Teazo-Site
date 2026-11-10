@@ -384,20 +384,6 @@ async function loadMenu(): Promise<MenuLoadResult> {
         return categoryId
           ? sectionSettings.get(categoryId)?.isPublished ?? false
           : true;
-      }).sort((a, b) => {
-        const aCategoryId = a.id.startsWith("category:")
-          ? a.id.slice("category:".length)
-          : null;
-        const bCategoryId = b.id.startsWith("category:")
-          ? b.id.slice("category:".length)
-          : null;
-        const aOrder = aCategoryId
-          ? sectionSettings.get(aCategoryId)?.sortOrder ?? Number.MAX_SAFE_INTEGER
-          : Number.MAX_SAFE_INTEGER;
-        const bOrder = bCategoryId
-          ? sectionSettings.get(bCategoryId)?.sortOrder ?? Number.MAX_SAFE_INTEGER
-          : Number.MAX_SAFE_INTEGER;
-        return aOrder - bOrder;
       });
 
     const visibleItemById = new Map(
@@ -418,15 +404,23 @@ async function loadMenu(): Promise<MenuLoadResult> {
       }
     }
 
+    // Match each rendered section to its saved identity before sorting all
+    // Square, custom, and uncategorized sections together.
     const sectionOrder = new Map(
-      displayState.sections.map((section) => [section.id, section.sortOrder]),
+      displayState.sections.map((section) => {
+        const renderedId = section.sectionType === "custom"
+          ? `custom:${section.id}`
+          : section.sectionType === "uncategorized"
+            ? uncategorizedSectionId
+            : `category:${section.squareCategoryId}`;
+        return [renderedId, section.sortOrder];
+      }),
     );
-    sections.sort((a, b) => {
-      const aId = a.id.startsWith("custom:") ? a.id.slice("custom:".length) : a.id.startsWith("category:") ? a.id.slice("category:".length) : null;
-      const bId = b.id.startsWith("custom:") ? b.id.slice("custom:".length) : b.id.startsWith("category:") ? b.id.slice("category:".length) : null;
-      return (aId ? sectionOrder.get(aId) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER) -
-        (bId ? sectionOrder.get(bId) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER);
-    });
+    sections.sort((a, b) =>
+      (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) ||
+      a.title.localeCompare(b.title),
+    );
 
     return { ok: true, sections };
   } catch (error) {
@@ -455,18 +449,6 @@ export default async function MenuPage({
 
   const logoSrc = content.logo || "/TEAZO_logo.svg";
   const sections = menuResult.ok ? menuResult.sections : [];
-
-  // TEAZO Special is shown only when real items have that actual category.
-  // Keep distinct category IDs separate, even when their display names match.
-  const specialSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) === "teazo special",
-  );
-
-  const menuSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) !== "teazo special",
-  );
 
   return (
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
@@ -577,8 +559,7 @@ export default async function MenuPage({
           </section>
         ) : (
           <MenuCatalog
-            specialSections={specialSections}
-            menuSections={menuSections}
+            sections={sections}
             initialItemId={initialItemId}
             headingClassName={cabinSketch.className}
             bodyClassName={montserrat.className}
