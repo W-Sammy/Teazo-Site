@@ -13,6 +13,7 @@ import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
+import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
@@ -74,6 +75,10 @@ export default async function Home() {
     listActiveEvents().catch(() => []),
   ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const [eventCategories, eventItems] = await Promise.all([
+    getEventCategories(liveEvents).catch(() => []),
+    getEventItems(liveEvents).catch(() => []),
+  ]);
   const contactData = await getContactContent();
   const {
     location,
@@ -96,7 +101,7 @@ export default async function Home() {
 
   return (
     <>
-    <LiveEventsSidebar events={liveEvents} />
+    <LiveEventsSidebar events={liveEvents} categories={eventCategories} items={eventItems} />
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
@@ -106,8 +111,7 @@ export default async function Home() {
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
 
             {/* logo */}
-            {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
+            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 text-center sm:px-8 lg:px-10">
                 <Image
                     src={logoSrc}
                     alt="TEAZO logo"
@@ -120,7 +124,7 @@ export default async function Home() {
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}>
+            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}>
                 TEAZO
             </h1>
 
@@ -168,20 +172,20 @@ export default async function Home() {
 
 {/* Call To Action */}
         <section
-                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#FBF4EE] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
                 >
                   <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
                     <div className="max-w-3xl">
-                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#8E5629]">
                         Group Orders
                       </p>
                       <h2
-                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#B28458] sm:text-[3.5rem]`}
                       >
                         Planning for a Crowd?
                       </h2>
                       <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                        Call us for group ordering and discounted pricing on larger
+                        Inquire about group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
 

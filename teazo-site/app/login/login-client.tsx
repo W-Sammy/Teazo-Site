@@ -148,10 +148,7 @@ export default function AdminLoginPage({
               className="mb-1 h-[100px] w-auto"
               priority
             />
-
-            <h1
-              className={`${cabinSketch.className} text-[46px] tracking-[0.05em] font-semibold text-[#DBAF82] text-center mb-2`}
-            >
+            <h1 className={`${cabinSketch.className} text-[46px] tracking-[0.05em] font-semibold text-[#B28458] text-center mb-2`}>
               TEAZO
             </h1>
 

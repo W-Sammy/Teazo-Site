@@ -70,7 +70,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
       role={onCustomize ? "button" : undefined}
       tabIndex={onCustomize ? 0 : undefined}
       aria-label={onCustomize ? `Customize ${item.name}` : undefined}
-      className={`group flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`group flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#FBF4EE] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         onCustomize ? "cursor-pointer active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#DBAF82]" : ""
       }`}
     >
@@ -79,13 +79,13 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
         {/* Stacking the name and price on mobile prevents the price from being covered by the image. */}
         <div className="flex flex-col gap-1">
           <h4
-            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 group-hover:text-[#c68f5d] transition-colors sm:text-[1.05rem]`}
+            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 group-hover:text-[#8E5629] transition-colors sm:text-[1.05rem]`}
           >
             {item.name}
           </h4>
 
           <span
-            className={`${montserrat.className} text-[0.95rem] font-bold text-[#c68f5d]`}
+            className={`${montserrat.className} text-[0.95rem] font-bold text-[#8E5629]`}
           >
             {formattedPrice}
           </span>
