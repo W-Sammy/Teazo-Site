@@ -243,6 +243,7 @@ describe("Gallery service", () => {
         url: "https://media.example/gallery/original.webp",
         alt: "A cup of milk tea",
         caption: "Our signature tea",
+        mediaType: "image",
       },
     ]);
   });
