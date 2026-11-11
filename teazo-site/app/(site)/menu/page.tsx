@@ -12,14 +12,18 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 export const metadata: Metadata = {
   title: "Menu",
   description: "Explore TEAZO menu categories and featured specials.",
 };
 
+// Live-event visibility must be evaluated for each request as events start and end.
 // Read the catalog at request time, not while building a static copy of the page.
 export const dynamic = "force-dynamic";
+
 
 const cabinSketch = Cabin_Sketch({
   subsets: ["latin"],
@@ -357,11 +361,13 @@ export default async function MenuPage({
 }) {
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
-  const [resolvedParams, content, menuResult] = await Promise.all([
-    searchParams ? searchParams : Promise.resolve(undefined),
-    getWebsiteContent(),
-    loadMenu(),
-  ]);
+  const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
+  searchParams ? searchParams : Promise.resolve(undefined),
+  getWebsiteContent(),
+  loadMenu(),
+  // Events are optional: keep the menu available if D1 cannot load them.
+  listActiveEvents().catch(() => []),
+]);
 
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
@@ -382,6 +388,8 @@ export default async function MenuPage({
   );
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
       <CatalogChangeNotice initialRevision={revision} />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -405,23 +413,23 @@ export default async function MenuPage({
           />
 
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             MENU
           </h1>
 
           <div className="mt-4 flex flex-col items-center sm:mt-6">
-            <p
+            <h2
               className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
             >
               Too Much Scrolling?
-            </p>
+            </h2>
 
-            <p
+            <h2
               className={`${montserrat.className} mt-1 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
             >
               Download Our Menu
-            </p>
+            </h2>
 
             <div className="mt-5 cursor-pointer [&_*]:cursor-pointer">
               <GeneralButton text="DOWNLOAD" href="/static-menu" />
@@ -499,5 +507,6 @@ export default async function MenuPage({
         )}
       </div>
     </main>
+    </>
   );
 }

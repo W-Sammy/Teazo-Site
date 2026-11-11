@@ -5,11 +5,16 @@ import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import { getPublicGalleryImages } from "@/app/lib/gallery";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Photos of TEAZO drinks and the shop.",
 };
+
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 const cabinSketch = Cabin_Sketch({
   subsets: ["latin"],
@@ -31,13 +36,17 @@ const mockImages: GalleryImage[] = [
 ];
 
 export default async function GalleryPage() {
-  const [content, galleryImages] = await Promise.all([
+  const [content, galleryImages, liveEvents] = await Promise.all([
     getWebsiteContent(),
     getPublicGalleryImages(),
+    // Events are optional: keep the menu available if D1 cannot load them.
+    listActiveEvents().catch(() => []),
   ]);
   const logoSrc = content.logo || "/TEAZO_logo.svg";
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative z-0 min-h-screen bg-[#FFF8F9] text-stone-900">
       {/* bubble background */}
       <div className="">
@@ -60,7 +69,7 @@ export default async function GalleryPage() {
           />
 
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             GALLERY
           </h1>
@@ -69,5 +78,6 @@ export default async function GalleryPage() {
         <GalleryGrid images={galleryImages?.length ? galleryImages : mockImages} />
       </div>
     </main>
+    </>
   );
 }

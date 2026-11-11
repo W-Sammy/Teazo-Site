@@ -27,15 +27,9 @@ const mediumMontserrat = Montserrat({
 export default async function Delivery() {
   const content = await getWebsiteContent();
   const logoSrc = content.logo || "/TEAZO_logo.svg";
-  const uberLink =
-    content.deliveryLinks?.find((l) => l.id === "ubereats")?.url ||
-    "https://www.ubereats.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg?srsltid=AfmBOoranl_YtSY-qug2w6ZzmFcwawnUN1t6RJMvTnqq32BwwVXubRgr";
-  const doordashLink =
-    content.deliveryLinks?.find((l) => l.id === "doordash")?.url ||
-    "https://www.doordash.com/en/store/teazo-san-francisco-849601/1213761/?srsltid=AfmBOortGz8HB9dVSbrcnGxXWHRoalBu_ObBQ_Fv-r0SRKiFrYvWQawu";
-  const postmatesLink =
-    content.deliveryLinks?.find((l) => l.id === "postmates")?.url ||
-    "https://postmates.com/store/teazo/HmB7kkvSQdeWw6qSClzgzg";
+  const deliveryLinks = (content.deliveryLinks ?? []).filter(
+    (link) => link.enabled && link.label.trim() && link.url.trim(),
+  );
 
   return (
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen flex flex-col items-center justify-center">
@@ -63,7 +57,7 @@ export default async function Delivery() {
                 />
 
                 {/* DELIVERY part */}
-                <h1 className={`${cabinSketch.className} text-[70px] text-[#D9AE81] py-3`}>
+                <h1 className={`${cabinSketch.className} text-[70px] text-[#B28458] py-3`}>
                     DELIVERY
                 </h1>
             </div>
@@ -79,11 +73,10 @@ export default async function Delivery() {
                 </h1>
             </div>
             
-            {/* buttons */}
-            <div className="relative z-20 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 w-full mt-19">
-                <GeneralButton text="UBER EATS" href={uberLink} />
-                <GeneralButton text="DOORDASH" href={doordashLink} />
-                <GeneralButton text="POSTMATES" href={postmatesLink} />
+            <div className="relative z-20 flex flex-col md:flex-row md:flex-wrap items-center justify-center gap-6 md:gap-12 w-full mt-19">
+                {deliveryLinks.map((link) => (
+                    <GeneralButton key={link.id} text={link.label.toUpperCase()} href={link.url} />
+                ))}
             </div>
         </div>
     </main>

@@ -82,7 +82,7 @@ export default function NavBar() {
                         left on desktop, centered on mobile */}
                     <Link 
                         href="/" 
-                        className={`${cabinSketch.className} border-b-2 border-[#DBAF82] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#DBAF82] md:text-[64px]`}
+                        className={`${cabinSketch.className} border-b-2 border-[#B28458] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#B28458] md:text-[64px]`}
                     >
                         TEAZO
                     </Link>
