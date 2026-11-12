@@ -9,6 +9,7 @@ import MapFrame from "./map-frame";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 import { montserrat } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -132,7 +133,7 @@ export default async function ContactPage() {
     logo,
     socialLinks: dynamicSocialLinks,
   } = contactData;
-  const logoSrc = logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(logo);
   const fbLink =
     dynamicSocialLinks?.find((l) => l.id === "facebook" && l.enabled)?.url ||
     "https://www.facebook.com/people/TEAZO/100063111166083";
@@ -178,7 +179,7 @@ export default async function ContactPage() {
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
-            priority
+            priority={!logoSrc.startsWith("data:")}
             fetchPriority="high"
             unoptimized={
               logoSrc.startsWith("data:") || logoSrc.startsWith("http")

@@ -5,6 +5,7 @@ import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import StaticMenuContent from "./static-menu-content";
 import { montserrat400 } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 /* Sets the browser tab title and page description. */
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ const montserrat = montserrat400;
 /* Static menu route page. */
 export default async function StaticMenuPage() {
 	const content = await getWebsiteContent();
-	const logoSrc = content.logo || "/TEAZO_logo.svg";
+	const logoSrc = heroLogoSrc(content.logo);
 
 	return (
 		<main className="relative isolate min-h-screen bg-[#FFF8F9] px-5 pb-20 pt-45 text-stone-900 sm:px-8 lg:px-10">
@@ -45,7 +46,7 @@ export default async function StaticMenuPage() {
 						width={389}
 						height={397}
 						className="h-[170px] w-auto sm:h-[195px]"
-						priority
+						priority={!logoSrc.startsWith("data:")}
 						unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
 					/>
 

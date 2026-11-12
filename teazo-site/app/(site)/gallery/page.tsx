@@ -7,6 +7,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { getPublicGalleryImages } from "@/app/lib/gallery";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -43,7 +44,7 @@ export default async function GalleryPage() {
     // Events are optional: keep the menu available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
 
   return (
     <>
@@ -65,7 +66,7 @@ export default async function GalleryPage() {
               width={389}
               height={397}
               className="h-[170px] w-auto sm:h-[195px]"
-              priority
+              priority={!logoSrc.startsWith("data:")}
               fetchPriority="high"
               unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
           />

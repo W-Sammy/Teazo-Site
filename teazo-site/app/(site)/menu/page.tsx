@@ -16,6 +16,7 @@ import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 import { montserrat } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -373,7 +374,7 @@ export default async function MenuPage({
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
 
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const sections = menuResult.ok ? menuResult.sections : [];
 
   // TEAZO Special is shown only when real items have that actual category.
@@ -406,7 +407,7 @@ export default async function MenuPage({
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
-            priority
+            priority={!logoSrc.startsWith("data:")}
             fetchPriority="high"
             unoptimized={
               logoSrc.startsWith("data:") ||

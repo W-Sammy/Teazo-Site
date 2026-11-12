@@ -16,6 +16,7 @@ import { listActiveEvents } from "@/app/lib/queries/events";
 import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 import { montserrat, montserrat500, montserrat800 } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -66,7 +67,7 @@ export default async function Home() {
     // Events are optional: keep the homepage available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const [eventCategories, eventItems] = await Promise.all([
     getEventCategories(liveEvents).catch(() => []),
     getEventItems(liveEvents).catch(() => []),
@@ -111,7 +112,7 @@ export default async function Home() {
                     width={389}
                     height={397}
                     className="h-[170px] w-auto sm:h-[195px]"
-                    priority
+                    priority={!logoSrc.startsWith("data:")}
                     fetchPriority="high"
                     unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
