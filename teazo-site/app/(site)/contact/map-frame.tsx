@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
 /**
  * The Google Maps embed, mounted once the page has loaded. The embed pulls in
@@ -8,19 +8,7 @@ import { useEffect, useState } from "react";
  * page's own text on phones (TZ-515). The map box shows its background until then.
  */
 export default function MapFrame({ title, src, className }: { title: string; src: string; className: string }) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    const load = () => setShow(true);
-    if (document.readyState === "complete") {
-      load();
-      return;
-    }
-    window.addEventListener("load", load, { once: true });
-    return () => window.removeEventListener("load", load);
-  }, []);
-
-  if (!show) {
+  if (!usePageLoaded()) {
     return <div role="presentation" className={className} />;
   }
 

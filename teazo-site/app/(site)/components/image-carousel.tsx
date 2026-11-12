@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, JSX } from "react";
 import type { CarouselImage } from "@/app/types/website-content";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
 type ImageCarouselProps = {
     images: CarouselImage[];
@@ -20,16 +21,7 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
     // The carousel starts below the fold on phones and desktops, so its images
     // load once the page has, instead of competing with the top of the page
     // (TZ-515). The three slides on screen still load before the hidden ones.
-    const [pageLoaded, setPageLoaded] = useState<boolean>(false);
-    useEffect(() => {
-        const load = () => setPageLoaded(true);
-        if (document.readyState === "complete") {
-            load();
-            return;
-        }
-        window.addEventListener("load", load, { once: true });
-        return () => window.removeEventListener("load", load);
-    }, []);
+    const pageLoaded = usePageLoaded();
 
     const dragStartX = useRef<number>(0);
     const isDragging = useRef<boolean>(false);

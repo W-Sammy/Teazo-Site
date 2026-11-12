@@ -1,7 +1,8 @@
 "use client";
 
 import Script from "next/script";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
 /**
  * Cloudflare Turnstile, the bot check (see app/lib/turnstile.ts). With no key
@@ -67,17 +68,8 @@ export default function TurnstileWidget({
    */
   afterPageLoad?: boolean;
 }) {
-  const [loadScript, setLoadScript] = useState(!afterPageLoad);
-  useEffect(() => {
-    if (loadScript) return;
-    const load = () => setLoadScript(true);
-    if (document.readyState === "complete") {
-      load();
-      return;
-    }
-    window.addEventListener("load", load, { once: true });
-    return () => window.removeEventListener("load", load);
-  }, [loadScript]);
+  const pageLoaded = usePageLoaded();
+  const loadScript = !afterPageLoad || pageLoaded;
 
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
