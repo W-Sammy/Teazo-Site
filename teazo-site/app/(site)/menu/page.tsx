@@ -361,14 +361,18 @@ export default async function MenuPage({
 }: {
   searchParams?: Promise<{ item?: string }>;
 }) {
+  // Events and website content don't depend on the catalog, so they start right
+  // away instead of waiting for the revision check (TZ-515).
+  // Events are optional: keep the menu available if D1 cannot load them.
+  const liveEventsRequest = listActiveEvents().catch(() => []);
+  const contentRequest = getWebsiteContent();
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
   searchParams ? searchParams : Promise.resolve(undefined),
-  getWebsiteContent(),
+  contentRequest,
   loadMenu(),
-  // Events are optional: keep the menu available if D1 cannot load them.
-  listActiveEvents().catch(() => []),
+  liveEventsRequest,
 ]);
 
   const initialItemId =
