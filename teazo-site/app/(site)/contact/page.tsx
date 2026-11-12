@@ -6,6 +6,7 @@ import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
 import MapFrame from "./map-frame";
+import SocialIcon from "./social-icon";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
 import { montserrat } from "@/app/fonts";
@@ -340,14 +341,7 @@ export default async function ContactPage() {
                     rel="noreferrer"
                     className="block transition hover:opacity-70"
                   >
-                    <Image
-                      src="/social_icons/social_svg/teazo_fb_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
+                    <SocialIcon src="/social_icons/social_svg/teazo_fb_icon.svg" />
                   </a>
                 )}
                 <a
@@ -357,14 +351,7 @@ export default async function ContactPage() {
                   rel={opensWebmail ? "noreferrer" : undefined}
                   className="block transition hover:opacity-70"
                 >
-                  <Image
-                    src="/social_icons/social_svg/teazo_email_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
+                  <SocialIcon src="/social_icons/social_svg/teazo_email_icon.svg" />
                 </a>
                 {isIgEnabled && (
                   <a
@@ -374,14 +361,7 @@ export default async function ContactPage() {
                     rel="noreferrer"
                     className="block transition hover:opacity-70"
                   >
-                    <Image
-                      src="/social_icons/social_svg/teazo_insta_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
+                    <SocialIcon src="/social_icons/social_svg/teazo_insta_icon.svg" />
                   </a>
                 )}
                 {isYelpEnabled && (
@@ -392,14 +372,7 @@ export default async function ContactPage() {
                     rel="noreferrer"
                     className="block transition hover:opacity-70"
                   >
-                    <Image
-                      src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
+                    <SocialIcon src="/social_icons/social_svg/teazo_yelp_icon.svg" />
                   </a>
                 )}
               </div>
