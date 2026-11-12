@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { getWebsiteContent } from "@/app/lib/website-content";
 import type { Metadata } from "next";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import StaticMenuContent from "./static-menu-content";
+import { montserrat400 } from "@/app/fonts";
 
 /* Sets the browser tab title and page description. */
 export const metadata: Metadata = {
@@ -19,11 +20,7 @@ const cabinSketch = Cabin_Sketch({
 });
 
 /* Font used for the supporting page text. */
-const montserrat = Montserrat({
-	preload: false, // preloading every font held back first paint on phones (TZ-515)
-	subsets: ["latin"],
-	weight: ["400"],
-});
+const montserrat = montserrat400;
 
 /* Static menu route page. */
 export default async function StaticMenuPage() {

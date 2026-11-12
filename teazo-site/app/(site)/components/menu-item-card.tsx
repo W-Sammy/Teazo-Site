@@ -2,17 +2,12 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Montserrat } from "next/font/google";
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
 import type { ModifierList, ItemVariation, CatalogAvailability } from "@/app/types/menu-item";
+import { montserrat } from "@/app/fonts";
 
 /* Core menu item shape for the UI. */
 export type MenuItem = {

@@ -11,7 +11,7 @@ import React, {
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import {
   useCart,
   recordPendingCheckoutOrder,
@@ -45,6 +45,7 @@ import type {
   PickupScheduleType,
 } from "@/app/types/checkout";
 import ItemCustomizerModal from "@/app/(site)/components/item-customizer-modal";
+import { montserrat } from "@/app/fonts";
 
 const SAVED_CONTACT_STORAGE_KEY = "teazo_saved_contact";
 
@@ -76,11 +77,6 @@ const FALLBACK_WEBSITE_CONTENT: WebsiteContent = {
   },
 };
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 const cabinSketch = Cabin_Sketch({
   preload: false, // preloading every font held back first paint on phones (TZ-515)

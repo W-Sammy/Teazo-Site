@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { availableMenuChoices } from "@/app/lib/storefront-catalog";
 import { checkCustomizerAvailability } from "@/app/lib/customizer-availability";
 import { defaultModifierSelections } from "@/app/lib/square-option-rules";
@@ -18,12 +18,8 @@ import type { ModifierList, ModifierOption } from "@/app/types/menu-item";
 import type { MenuItem } from "./menu-item-card";
 import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
 import { useCart, MIN_ITEM_QUANTITY, MAX_ITEM_QUANTITY } from "@/app/context/cart-context";
+import { montserrat } from "@/app/fonts";
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 const cabinSketch = Cabin_Sketch({
   preload: false, // preloading every font held back first paint on phones (TZ-515)

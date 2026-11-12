@@ -1,12 +1,8 @@
 "use client";
+import { montserrat500 } from "@/app/fonts";
 
-import { Montserrat } from "next/font/google";
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["500"],
-});
+const montserrat = montserrat500;
 
 export default function StaticFooter() {
   return (

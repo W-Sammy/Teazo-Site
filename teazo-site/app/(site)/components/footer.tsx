@@ -1,12 +1,8 @@
-import { Montserrat } from "next/font/google"; // font import
 import { getWebsiteContent } from "@/app/lib/website-content";
+import { montserrat500 } from "@/app/fonts";
 
 // font setup
-const montserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'], // reduce amount of imports to just letters, nums
-    weight: ['500'] // medium
-});
+const montserrat = montserrat500;
 
 // footer.
 export default async function Footer() {

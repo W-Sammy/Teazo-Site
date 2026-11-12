@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
@@ -8,6 +8,7 @@ import ContactForm from "./contact-form";
 import MapFrame from "./map-frame";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat } from "@/app/fonts";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -27,11 +28,6 @@ const cabinSketch = Cabin_Sketch({
   weight: ["400"],
 });
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 // Fine-tune day/hour positions independently in the hours rows.
 

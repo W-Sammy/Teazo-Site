@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
 import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
@@ -15,6 +15,7 @@ import { orderableMenuItem } from "@/app/lib/storefront-catalog";
 import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat } from "@/app/fonts";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -32,11 +33,6 @@ const cabinSketch = Cabin_Sketch({
   weight: ["400"],
 });
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 /* Group real catalog items into sections accepted by MenuItemsSection.
    The section ID identifies the group; every card keeps its real catalog ID. */

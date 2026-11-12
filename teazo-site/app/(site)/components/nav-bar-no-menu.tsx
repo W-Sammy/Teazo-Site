@@ -3,17 +3,14 @@
 "use client"; // import required for userPathname
 
 import Link from "next/link";
-import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
+import { Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 
 import type { MouseEvent } from "react"; // for mobile menu
+import { montserrat700 } from "@/app/fonts";
 
 // setup fonts
-const montserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'], // reduce amount of importing to just letters, nums
-    weight: ['700'] // bold
-});
+const montserrat = montserrat700;
 
 const cabinSketch = Cabin_Sketch({
     preload: false, // preloading every font held back first paint on phones (TZ-515)

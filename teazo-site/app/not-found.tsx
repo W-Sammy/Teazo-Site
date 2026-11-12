@@ -8,7 +8,8 @@ import { CartProvider } from "@/app/context/cart-context";
 import Image from "next/image";
 
 import { BubbleField } from "./components/bubble-field";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
+import { montserrat500, montserrat800 } from "@/app/fonts";
 
 // change browser tab name for the 404 page
 export const metadata: Metadata = {
@@ -26,18 +27,10 @@ const cabinSketch = Cabin_Sketch({
 });
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['800'] // extra bold
-});
+const boldMontserrat = montserrat800;
 
 // medium montserrat
-const mediumMontserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['500']
-});
+const mediumMontserrat = montserrat500;
 
 export default function NotFound() {
     return (

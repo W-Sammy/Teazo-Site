@@ -1,14 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Montserrat } from "next/font/google";
+import { montserrat500 } from "@/app/fonts";
 
 // medium montserrat
-const montserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['500']
-});
+const montserrat = montserrat500;
 
 const messages: Record<string, string> = {
   AccessDenied:

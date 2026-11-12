@@ -7,7 +7,7 @@ import Subtitle from "@/app/(site)/components/sub-title"
 import ImageCarousel from "@/app/(site)/components/image-carousel";
 
 // import font & bubbles
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "@/app/(site)/contact/contact-content";
 import GeneralButton from "@/app/components/general-button";
@@ -15,6 +15,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat, montserrat500, montserrat800 } from "@/app/fonts";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -34,25 +35,12 @@ const cabinSketch = Cabin_Sketch({
     weight: ['400'] // normal
 });
 
-const montserrat = Montserrat({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['800'] // extra bold
-});
+const boldMontserrat = montserrat800;
 
 // medium montserrat
-const mediumMontserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['500']
-});
+const mediumMontserrat = montserrat500;
 
 function MailIcon() {
   return (

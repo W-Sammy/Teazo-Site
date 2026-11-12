@@ -3,14 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Montserrat } from "next/font/google";
+import { montserrat700 } from "@/app/fonts";
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
-    subsets: ['latin'],
-    weight: ['700'] // extra bold
-});
+const boldMontserrat = montserrat700;
 
 type Purpose = "setup" | "reset";
 type View = "request" | "complete" | "success" | null;
