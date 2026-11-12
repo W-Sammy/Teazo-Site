@@ -2,16 +2,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Montserrat } from "next/font/google";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
 import type { ModifierList, ItemVariation, CatalogAvailability } from "@/app/types/menu-item";
+import { montserrat } from "@/app/fonts";
 
 /* Core menu item shape for the UI. */
 export type MenuItem = {
@@ -47,6 +44,8 @@ function formatPrice(priceCents: number, currency: string | null) {
    Clicking the card or the Order action opens the customization modal. */
 export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
   const [hasImageError, setHasImageError] = useState(false);
+  // The menu grid is below the fold, so its photos wait for the page to load (TZ-515).
+  const pageLoaded = usePageLoaded();
   const formattedPrice = formatPrice(item.priceCents, item.currency);
 
   const imageSrc = !hasImageError && item.imageUrl ? item.imageUrl : FALLBACK_IMAGE_SRC;
@@ -103,7 +102,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
 
       {/* The image keeps a fixed size so it does not overlap the text or price. */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
-        <Image
+        {pageLoaded && <Image
           key={item.imageUrl || "fallback"}
           src={imageSrc}
           alt={item.name}
@@ -112,7 +111,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
           sizes="(max-width: 640px) 96px, 112px"
           loading="lazy"
           onError={() => setHasImageError(true)}
-        />
+        />}
       </div>
     </article>
   );
