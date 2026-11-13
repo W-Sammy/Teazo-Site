@@ -97,6 +97,11 @@ export default function TurnstileWidget({
   }, [action]);
 
   useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) {
+      callbacks.current.onFailedChange?.(true);
+      return;
+    }
+
     // The script may still be downloading, for example on a quick return to this page.
     if (window.turnstile) renderWidget();
     else waitingForTurnstile.add(renderWidget);

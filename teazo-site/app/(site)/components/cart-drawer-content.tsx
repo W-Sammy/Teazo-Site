@@ -50,6 +50,145 @@ import { fetchItemAvailability, type ItemAvailabilitySnapshot } from "./customiz
 
 const SAVED_CONTACT_STORAGE_KEY = "teazo_saved_contact";
 
+export type CheckoutStatusKey =
+  | "submitting"
+  | "schedule_loading"
+  | "schedule_error"
+  | "ordering_paused"
+  | "pickup_no_times"
+  | "pickup_asap_unavailable"
+  | "pickup_select_time"
+  | "security_failed"
+  | "security_pending"
+  | "ready";
+
+export interface CheckoutStatus {
+  statusKey: CheckoutStatusKey;
+  label: string;
+  isPending: boolean;
+  isDisabled: boolean;
+}
+
+export function getCheckoutStatus({
+  isSubmitting,
+  scheduleStatus,
+  isOrderingPaused,
+  effectivePickupType,
+  isAsapAvailable,
+  pickupDaysCount,
+  availableSlotsCount,
+  hasActiveSlot,
+  turnstileToken,
+  botCheckFailed,
+}: {
+  isSubmitting: boolean;
+  scheduleStatus: "loading" | "ready" | "error";
+  isOrderingPaused: boolean;
+  effectivePickupType: PickupScheduleType;
+  isAsapAvailable: boolean;
+  pickupDaysCount: number;
+  availableSlotsCount: number;
+  hasActiveSlot: boolean;
+  turnstileToken: string | null;
+  botCheckFailed: boolean;
+}): CheckoutStatus {
+  if (isSubmitting) {
+    return {
+      statusKey: "submitting",
+      label: "Redirecting to Square...",
+      isPending: true,
+      isDisabled: true,
+    };
+  }
+
+  if (scheduleStatus === "loading") {
+    return {
+      statusKey: "schedule_loading",
+      label: "Loading pickup times...",
+      isPending: true,
+      isDisabled: true,
+    };
+  }
+
+  if (scheduleStatus === "error") {
+    return {
+      statusKey: "schedule_error",
+      label: "Pickup times unavailable",
+      isPending: false,
+      isDisabled: true,
+    };
+  }
+
+  if (isOrderingPaused) {
+    return {
+      statusKey: "ordering_paused",
+      label: "Online ordering paused",
+      isPending: false,
+      isDisabled: true,
+    };
+  }
+
+  if (effectivePickupType === "SCHEDULED") {
+    if (pickupDaysCount === 0 || availableSlotsCount === 0) {
+      return {
+        statusKey: "pickup_no_times",
+        label: "No pickup times available",
+        isPending: false,
+        isDisabled: true,
+      };
+    }
+    if (!hasActiveSlot) {
+      return {
+        statusKey: "pickup_select_time",
+        label: "Select a pickup time",
+        isPending: false,
+        isDisabled: true,
+      };
+    }
+  } else {
+    if (!isAsapAvailable) {
+      if (pickupDaysCount === 0) {
+        return {
+          statusKey: "pickup_no_times",
+          label: "No pickup times available",
+          isPending: false,
+          isDisabled: true,
+        };
+      }
+      return {
+        statusKey: "pickup_asap_unavailable",
+        label: "ASAP pickup unavailable",
+        isPending: false,
+        isDisabled: true,
+      };
+    }
+  }
+
+  if (!turnstileToken) {
+    if (botCheckFailed) {
+      return {
+        statusKey: "security_failed",
+        label: "Security check unavailable",
+        isPending: false,
+        isDisabled: true,
+      };
+    }
+    return {
+      statusKey: "security_pending",
+      label: "Checking security...",
+      isPending: true,
+      isDisabled: true,
+    };
+  }
+
+  return {
+    statusKey: "ready",
+    label: "Proceed to Checkout",
+    isPending: false,
+    isDisabled: false,
+  };
+}
+
 // Shows the pickup address before the real content loads. Its hours are never
 // used: pickup times wait for the real schedule.
 const FALLBACK_WEBSITE_CONTENT: WebsiteContent = {
@@ -567,14 +706,35 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
     }
   };
 
-  const isCheckoutDisabled =
-    isSubmitting ||
-    items.length === 0 ||
-    scheduleStatus !== "ready" ||
-    isOrderingPaused ||
-    !turnstileToken ||
-    (effectivePickupType === "ASAP" && !isAsapAvailable) ||
-    (effectivePickupType === "SCHEDULED" && (availableSlots.length === 0 || !activeSlot));
+  const checkoutStatus = useMemo(
+    () =>
+      getCheckoutStatus({
+        isSubmitting,
+        scheduleStatus,
+        isOrderingPaused,
+        effectivePickupType,
+        isAsapAvailable,
+        pickupDaysCount: pickupDays.length,
+        availableSlotsCount: availableSlots.length,
+        hasActiveSlot: Boolean(activeSlot),
+        turnstileToken,
+        botCheckFailed,
+      }),
+    [
+      isSubmitting,
+      scheduleStatus,
+      isOrderingPaused,
+      effectivePickupType,
+      isAsapAvailable,
+      pickupDays.length,
+      availableSlots.length,
+      activeSlot,
+      turnstileToken,
+      botCheckFailed,
+    ]
+  );
+
+  const isCheckoutDisabled = checkoutStatus.isDisabled;
 
   return (
     <div ref={contentContainerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -1087,31 +1247,48 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
             </p>
           </div>
 
+          {/* Accessible live status announcement */}
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="sr-only"
+            data-testid="checkout-status-announcement"
+          >
+            Checkout status: {checkoutStatus.label}
+          </div>
+
           {/* Proceed Button */}
           <button
             type="submit"
             form="checkout-contact-form"
             disabled={isCheckoutDisabled}
+            aria-busy={checkoutStatus.isPending ? "true" : undefined}
             className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 shadow-md ${
               isCheckoutDisabled
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : "bg-[#B28458] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
             }`}
           >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Redirecting to Square...
-              </>
-            ) : (
+            {checkoutStatus.isPending && (
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            )}
+            {checkoutStatus.statusKey === "ready" ? (
               <>
                 <span>Proceed to Checkout</span>
                 <span>•</span>
                 <span>{formatPrice(subtotalCents)}</span>
               </>
+            ) : (
+              <span>{checkoutStatus.label}</span>
             )}
           </button>
         </div>
