@@ -1,19 +1,18 @@
 "use client"; // import required for userPathname
 
 import Link from "next/link";
-import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
+import { Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/cart-context";
 
 import type { MouseEvent } from "react"; // for mobile menu
+import { montserrat700 } from "@/app/fonts";
 
 // setup fonts
-const montserrat = Montserrat({
-    subsets: ['latin'], // reduce amount of importing to just letters, nums
-    weight: ['700'] // bold
-});
+const montserrat = montserrat700;
 
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // same as above
     weight: ['400'] // normal
 });
@@ -92,7 +91,7 @@ export default function NavBar() {
                         type="button"
                         onClick={openCart}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
+                        className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
                     >
                         <svg
                             className="w-6 h-6 transition-transform group-hover:scale-105"
@@ -295,7 +294,7 @@ export default function NavBar() {
                         type="button"
                         onClick={openCart}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
+                        className="cursor-pointer relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
                     >
                         <svg
                             className="w-6 h-6 transition-transform group-hover:scale-105"

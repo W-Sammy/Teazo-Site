@@ -6,7 +6,11 @@ import { PATCH } from "@/app/api/website-content/route";
 import { revalidatePath } from "next/cache";
 
 vi.mock("@/app/lib/admin", () => ({ requireAdminApi: async () => ({ ok: true }) }));
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: ((fn: any) => fn) as any,
+}));
 
 const proxyFetch = vi.fn();
 beforeEach(() => {

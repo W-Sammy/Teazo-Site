@@ -16,6 +16,7 @@ export type GalleryImageRecord = {
   width: number | null;
   height: number | null;
   tags: string[];
+  mimeType: MediaType;
 };
 
 /** The most tags one image can have. Matches the admin gallery form. */
@@ -29,6 +30,7 @@ type ImageRow = {
   is_published: number;
   created_at: string;
   r2_key: string;
+  mime_type: MediaType;
   media_id: string;
   r2_bucket: string;
   width: number | null;
@@ -40,7 +42,7 @@ type ImageRow = {
 const IMAGE_SELECT = `
   SELECT g.id, g.name, g.caption, g.alt, g.is_published, g.created_at,
          g.media_id, m.r2_bucket,
-         m.r2_key, m.width, m.height,
+         m.r2_key, m.mime_type, m.width, m.height,
          (SELECT json_group_array(name) FROM (
             SELECT t.name
               FROM gallery_image_tag AS it
@@ -61,6 +63,7 @@ function toRecord(row: ImageRow): GalleryImageRecord {
     isPublished: row.is_published === 1,
     createdAt: row.created_at,
     r2Key: row.r2_key,
+    mimeType: row.mime_type,
     mediaId: row.media_id,
     r2Bucket: row.r2_bucket,
     width: row.width,
@@ -150,8 +153,8 @@ export async function recordGalleryImage(input: {
   mediaId: string;
   stored: StoredMedia;
   mimeType: MediaType;
-  width: number;
-  height: number;
+  width: number | null;
+  height: number | null;
   originalFilename: string;
   name: string;
   tags: string[];
@@ -292,8 +295,9 @@ export async function replaceGalleryImageMedia(input: {
   expectedMediaId: string;
   newMediaId: string;
   stored: StoredMedia;
-  width: number;
-  height: number;
+  mimeType: MediaType;
+  width: number | null;
+  height: number | null;
   originalFilename: string;
   adminId: string;
   name: string;
@@ -304,6 +308,7 @@ export async function replaceGalleryImageMedia(input: {
     expectedMediaId,
     newMediaId,
     stored,
+    mimeType,
     width,
     height,
     originalFilename,
@@ -329,7 +334,7 @@ export async function replaceGalleryImageMedia(input: {
       `INSERT INTO media_asset
          (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
           original_filename, purpose, uploaded_by)
-       SELECT ?1, ?2, ?3, 'image/webp', ?4, ?5, ?6, ?7, 'gallery', ?8
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'gallery', ?9
         WHERE EXISTS (
           SELECT 1
             FROM gallery_image AS g
@@ -343,6 +348,7 @@ export async function replaceGalleryImageMedia(input: {
       newMediaId,
       stored.bucket,
       stored.key,
+      mimeType,
       stored.size,
       width,
       height,

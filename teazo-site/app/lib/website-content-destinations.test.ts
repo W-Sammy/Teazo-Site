@@ -4,7 +4,11 @@ import { getWebsiteContent, updateWebsiteContent } from "./website-content";
 import { PATCH } from "@/app/api/website-content/route";
 
 vi.mock("@/app/lib/d1", async () => (await import("@/test/sqlite-d1")).sqliteD1.module);
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: ((fn: any) => fn) as any,
+}));
 vi.mock("@/app/lib/admin", () => ({
   requireAdminApi: vi.fn(async () => ({ ok: true, admin: { id: "test-admin", role_id: 1 } })),
 }));

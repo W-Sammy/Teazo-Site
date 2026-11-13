@@ -7,7 +7,7 @@ import Subtitle from "@/app/(site)/components/sub-title"
 import ImageCarousel from "@/app/(site)/components/image-carousel";
 
 // import font & bubbles
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import SocialLinks from "./components/social-links";
 import GeneralButton from "@/app/components/general-button";
@@ -15,6 +15,8 @@ import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat, montserrat500, montserrat800 } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -29,26 +31,17 @@ export const dynamic = "force-dynamic";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // import only letters, num
     weight: ['400'] // normal
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['800'] // extra bold
-});
+const boldMontserrat = montserrat800;
 
 // medium montserrat
-const mediumMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['500']
-});
+const mediumMontserrat = montserrat500;
 
 function MailIcon() {
   return (
@@ -74,7 +67,7 @@ export default async function Home() {
     // Events are optional: keep the homepage available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const [eventCategories, eventItems] = await Promise.all([
     getEventCategories(liveEvents).catch(() => []),
     getEventItems(liveEvents).catch(() => []),
@@ -90,9 +83,9 @@ export default async function Home() {
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
             </div>
-
+    
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
-
+            
             {/* logo */}
             <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 text-center sm:px-8 lg:px-10">
                 <Image
@@ -102,7 +95,8 @@ export default async function Home() {
                     width={389}
                     height={397}
                     className="h-[170px] w-auto sm:h-[195px]"
-                    priority
+                    priority={!logoSrc.startsWith("data:")}
+                    fetchPriority="high"
                     unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
 
@@ -125,22 +119,22 @@ export default async function Home() {
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
             <div className="mt-6 flex w-full items-center justify-center">
-                <GeneralButton text="ORDER NOW" href="/menu" />
+                <GeneralButton text="ORDER NOW" href="/menu" />    
                 </div>
         </section>
 
             {/*import image carousel*/}
                 <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
                 <ImageCarousel images={content.carouselImages ?? []} />
-            </div>
+            </div> 
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
             </div>
-
-
+      
+        
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]">
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -168,14 +162,13 @@ export default async function Home() {
                         Planning for a Crowd?
                       </h2>
                       <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                        Call us for group ordering and discounted pricing on larger
+                        Inquire about group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
-
                       <SocialLinks links={content.socialLinks} businessName={content.address.businessName}
                         email={content.address.email || "teazosf@hotmail.com"} />
                     </div>
-
+        
                     <a
                       href={emailHref}
                       className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"

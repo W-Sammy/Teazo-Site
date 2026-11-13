@@ -79,7 +79,7 @@ CREATE TABLE media_asset (
   -- stored absolute URL rots. Build the URL at render time from bucket + key.
   r2_key            TEXT NOT NULL,
   mime_type         TEXT NOT NULL
-                      CHECK (mime_type IN ('image/jpeg','image/png','image/webp','application/pdf')),
+                      CHECK (mime_type IN ('image/jpeg','image/png','image/webp','application/pdf', 'video/mp4', 'video/webm')),
   byte_size         INTEGER NOT NULL CHECK (byte_size > 0),
   width             INTEGER,             -- null for PDFs
   height            INTEGER,

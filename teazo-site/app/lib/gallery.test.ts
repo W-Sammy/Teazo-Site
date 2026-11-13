@@ -48,6 +48,13 @@ import {
 
 vi.mock("server-only", () => ({}));
 
+// The public gallery is cached (TZ-515). Pass the cache through so these tests
+// call the query directly, and stub the call that clears it after a save.
+vi.mock("next/cache", () => ({
+  revalidateTag: vi.fn(),
+  unstable_cache: (load: () => Promise<unknown>) => load,
+}));
+
 vi.mock("next/navigation", () => ({
   unstable_rethrow: vi.fn(),
 }));
@@ -109,6 +116,7 @@ function imageRecord(
     isPublished: true,
     createdAt: "2026-10-25T12:00:00.000Z",
     r2Key: "gallery/original.webp",
+    mimeType: "image/webp",
     mediaId: "media-original",
     r2Bucket: "Images",
     width: 800,
@@ -219,6 +227,7 @@ describe("Gallery service", () => {
         url: "https://media.example/gallery/original.webp",
         tags: ["Drinks"],
         createdAt: "2026-10-25T12:00:00.000Z",
+        mediaType: "image",
       },
     ]);
   });
@@ -278,7 +287,7 @@ describe("Gallery service", () => {
     ).rejects.toMatchObject({
       name: "GalleryInputError",
       status: 400,
-      message: "Give the image a name.",
+      message: "Give the item a name.",
     });
 
     expect(putMedia).not.toHaveBeenCalled();
@@ -324,7 +333,7 @@ describe("Gallery service", () => {
   it("rejects missing image files", async () => {
     await expect(
       saveGalleryImage(uploadInput({ file: null })),
-    ).rejects.toThrow("Choose an image to upload.");
+    ).rejects.toThrow("Choose an image or video to upload.");
   });
 
   it("rejects empty image files", async () => {
@@ -334,7 +343,7 @@ describe("Gallery service", () => {
           file: new File([], "empty.png", { type: "image/png" }),
         }),
       ),
-    ).rejects.toThrow("Choose an image to upload.");
+    ).rejects.toThrow("Choose an image or video to upload.");
   });
 
   it("rejects unsupported image MIME types", async () => {
@@ -344,7 +353,7 @@ describe("Gallery service", () => {
       ),
     ).rejects.toMatchObject({
       status: 415,
-      message: "Upload a JPEG, PNG or WebP image.",
+      message: "Upload a JPEG, PNG, WebP, MP4 or WebM file.",
     });
   });
 
@@ -359,7 +368,7 @@ describe("Gallery service", () => {
       saveGalleryImage(uploadInput({ file: oversized })),
     ).rejects.toMatchObject({
       status: 413,
-      message: "The image is over 10 MB.",
+      message: "The file is over 10 MB.",
     });
   });
 
@@ -442,6 +451,7 @@ describe("Gallery service", () => {
       url: "https://media.example/gallery/original.webp",
       tags: ["Drinks"],
       createdAt: "2026-10-25T12:00:00.000Z",
+      mediaType: "image",
     });
   });
 
@@ -662,7 +672,7 @@ describe("Gallery service", () => {
     ).rejects.toMatchObject({
       status: 409,
       message: expect.stringContaining(
-        "This image changed while you were editing.",
+        "This gallery item changed while you were editing.",
       ),
     });
 

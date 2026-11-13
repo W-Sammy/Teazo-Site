@@ -7,6 +7,11 @@ export async function getStorageUsage(): Promise<StorageUsage[]> {
 
   return [
     { service: "D1", currentBytes: usage.d1.bytes, maxBytes: usage.d1.limitBytes },
-    { service: "R2", currentBytes: usage.r2.bytes, maxBytes: usage.r2.limitBytes },
+    {
+      service: "R2",
+      currentBytes: usage.r2.bytes,
+      maxBytes: usage.r2.limitBytes,
+      fileCount: usage.r2.objects,
+    },
   ];
 }

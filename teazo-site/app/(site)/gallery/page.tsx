@@ -5,13 +5,20 @@ import { BubbleField } from "@/app/components/bubble-field";
 import GalleryGrid, { type GalleryImage } from "../components/gallery-grid";
 import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { getPublicGalleryImages } from "@/app/lib/gallery";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Photos of TEAZO drinks and the shop.",
 };
 
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
+
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -31,13 +38,17 @@ const mockImages: GalleryImage[] = [
 ];
 
 export default async function GalleryPage() {
-  const [content, galleryImages] = await Promise.all([
+  const [content, galleryImages, liveEvents] = await Promise.all([
     getPublicWebsiteContent(),
     getPublicGalleryImages(),
+    // Events are optional: keep the menu available if D1 cannot load them.
+    listActiveEvents().catch(() => []),
   ]);
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative z-0 min-h-screen bg-[#FFF8F9] text-stone-900">
       {/* bubble background */}
       <div className="">
@@ -55,7 +66,8 @@ export default async function GalleryPage() {
               width={389}
               height={397}
               className="h-[170px] w-auto sm:h-[195px]"
-              priority
+              priority={!logoSrc.startsWith("data:")}
+              fetchPriority="high"
               unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
           />
 
@@ -69,5 +81,6 @@ export default async function GalleryPage() {
         <GalleryGrid images={galleryImages?.length ? galleryImages : mockImages} />
       </div>
     </main>
+    </>
   );
 }

@@ -27,6 +27,7 @@ import {
 const mocks = vi.hoisted(() => ({
   recordCatalogRevision: vi.fn(),
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
 vi.mock("@/app/lib/queries/catalog-revision", () => ({
@@ -35,6 +36,7 @@ vi.mock("@/app/lib/queries/catalog-revision", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
+  revalidateTag: mocks.revalidateTag,
 }));
 
 const { POST } = await import("./route");
@@ -119,6 +121,7 @@ async function result(response: Response) {
 beforeEach(() => {
   mocks.recordCatalogRevision.mockReset();
   mocks.revalidatePath.mockReset();
+  mocks.revalidateTag.mockReset();
 
   vi.stubEnv(
     "SQUARE_WEBHOOK_SIGNATURE_KEY",

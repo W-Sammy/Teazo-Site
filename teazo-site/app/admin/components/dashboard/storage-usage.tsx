@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { StorageUsage } from "@/app/types/storage-usage";
 
 const WARNING_THRESHOLD = 0.8;
@@ -15,10 +18,23 @@ const STORAGE_DETAILS = {
   },
 } satisfies Record<StorageUsage["service"], { label: string; description: string; cleanup: string }>;
 
-function formatStorage(bytes: number, service: StorageUsage["service"]) {
-  const divisor = service === "D1" ? 1024 ** 2 : 1024 ** 3;
-  const unit = service === "D1" ? "MB" : "GB";
-  return `${(bytes / divisor).toFixed(1)} ${unit}`;
+// Picks the unit that fits, so a few small images read "403.9 KB" rather than
+// rounding down to "0.0 GB" and looking like nothing is stored.
+function formatStorage(bytes: number) {
+  const units = ["B", "KB", "MB", "GB"];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
+
+// "<1%" instead of "0%" when something is stored but too little to round up.
+function formatPercent(usage: StorageUsage) {
+  const percent = getUsagePercent(usage);
+  return usage.currentBytes > 0 && percent < 1 ? "<1%" : `${percent.toFixed(0)}%`;
 }
 
 function getUsagePercent(usage: StorageUsage) {
@@ -47,8 +63,49 @@ export function StorageWarnings({ usage }: { usage: StorageUsage[] }) {
 }
 
 export default function StorageUsage({ usage }: { usage: StorageUsage[] }) {
+  const [openTooltip, setOpenTooltip] = useState<StorageUsage["service"] | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        !sectionRef.current?.contains(target)
+      ) {
+        setOpenTooltip(null);
+        return;
+      }
+
+      if (
+        target instanceof Element &&
+        !target.closest("[data-storage-tooltip]")
+      ) {
+        setOpenTooltip(null);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpenTooltip(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
-    <section className="mt-8 rounded-2xl bg-white p-5 sm:p-7" aria-labelledby="storage-heading">
+    <section 
+    ref={sectionRef}
+    className="mt-8 rounded-2xl bg-white p-5 sm:p-7"
+    aria-labelledby="storage-heading">
       <div className="mb-6"><h2 id="storage-heading" className="text-lg font-bold text-[#374151]">Storage usage</h2><p className="mt-1 text-sm text-slate-400">Current usage compared with your service limits.</p></div>
       <div className="grid gap-6">
         {usage.map((item) => {
@@ -63,12 +120,17 @@ export default function StorageUsage({ usage }: { usage: StorageUsage[] }) {
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-slate-600">{details.label}</span>
-                  <div className="group relative flex items-center">
+                  <div data-storage-tooltip className="group relative flex items-center">
                     <button
                       type="button"
                       aria-label={`About ${details.label}`}
+                      aria-expanded={openTooltip === item.service}
                       aria-describedby={tooltipId}
-                      className="rounded-full p-1 text-slate-400 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                      onClick={() =>
+                        setOpenTooltip((current) =>
+                        current === item.service ? null : item.service
+                      )}
+                      className="cursor-pointer rounded-full p-1 text-slate-400 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                     >
                       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" />
@@ -79,20 +141,31 @@ export default function StorageUsage({ usage }: { usage: StorageUsage[] }) {
                     <span
                       id={tooltipId}
                       role="tooltip"
-                      className="invisible absolute -left-24 top-full z-10 w-60 rounded-lg bg-slate-800 px-3 py-2 text-xs font-normal leading-relaxed text-white opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 sm:left-0 sm:w-72"
+                      className={`pointer-events-none absolute -left-24 top-full z-10 w-60 rounded-lg bg-slate-800 px-3 py-2 text-xs font-normal leading-relaxed text-white transition-opacity sm:left-0 sm:w-72 ${
+                        openTooltip === item.service
+                          ? "visible opacity-100"
+                          : "invisible opacity-0"
+                      }`}
                     >
                       {details.description}
                     </span>
                   </div>
                 </div>
-                <span className="text-sm font-medium text-slate-400">{percentage.toFixed(0)}%</span>
+                <span className="text-sm font-medium text-slate-400">{formatPercent(item)}</span>
               </div>
               <div className={`h-4 overflow-hidden rounded-full ${trackColor}`}>
-                <div className={`h-full rounded-full ${color} transition-all duration-300`} style={{ width: `${percentage}%` }} />
+                <div className={`h-full rounded-full ${color} transition-all duration-300`} style={{ width: `${item.currentBytes > 0 ? Math.max(percentage, 1) : 0}%` }} />
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                <span className="font-semibold text-slate-600">{formatStorage(item.currentBytes, item.service)}</span>
-                <span className="text-slate-400">of {formatStorage(item.maxBytes, item.service)}</span>
+                <span className="font-semibold text-slate-600">
+                  {formatStorage(item.currentBytes)}
+                  {item.fileCount !== undefined && (
+                    <span className="font-normal text-slate-400">
+                      {" "}· {item.fileCount} {item.fileCount === 1 ? "file" : "files"}
+                    </span>
+                  )}
+                </span>
+                <span className="text-slate-400">of {formatStorage(item.maxBytes)}</span>
               </div>
             </div>
           );

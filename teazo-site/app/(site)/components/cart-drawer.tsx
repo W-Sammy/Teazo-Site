@@ -9,17 +9,14 @@ import React, {
   Suspense,
 } from "react";
 import { createPortal } from "react-dom";
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
+import { montserrat } from "@/app/fonts";
 import { useCart } from "@/app/context/cart-context";
 import CartDrawerSkeleton from "./cart-drawer-skeleton";
 import ChunkErrorBoundary from "./chunk-error-boundary";
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
