@@ -8,7 +8,7 @@
 
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor, act } from "@testing-library/react";
 import type { CartItem } from "@/app/types/checkout";
 
 const mockCartState = {
@@ -35,40 +35,40 @@ vi.mock("@/app/context/cart-context", () => ({
   MAX_ITEM_QUANTITY: 50,
 }));
 
+const skeletonRendered = vi.hoisted(() => vi.fn());
+
 vi.mock("./cart-drawer-skeleton", () => ({
-  default: () => <div data-testid="cart-skeleton">Loading skeleton...</div>,
+  default: () => {
+    skeletonRendered();
+    return <div data-testid="cart-skeleton">Loading skeleton...</div>;
+  },
 }));
 
-vi.mock("./payment-badges", () => ({
-  default: () => null,
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
 }));
 
-vi.mock("@/app/components/turnstile-widget", () => ({
-  TURNSTILE_SITE_KEY: "test-site-key",
-  default: () => <div data-testid="turnstile-widget" />,
+vi.mock("./item-customizer-modal", () => ({
+  default: () => <div data-testid="mocked-item-customizer-modal" />,
 }));
 
-vi.mock("@/app/lib/store-hours", () => ({
-  getPickupDays: () => [],
-  getPacificParts: () => ({ minuteOfDay: 720 }),
-  formatMinuteOfDay: () => "12:00 PM",
-  getStoreScheduleForDate: () => ({
-    closed: false,
-    openMinuteOfDay: 0,
-    closeMinuteOfDay: 1439,
-    cutoffMinuteOfDay: 1439,
-    openHour: 0,
-    closeHour: 24,
-  }),
-  MAX_SCHEDULE_DAYS_AHEAD: 7,
-  ONLINE_ORDERING_PAUSED_MESSAGE: "Online ordering paused",
-}));
+import CartDrawer, * as cartDrawerModule from "./cart-drawer";
+const { preloadCartInteriorModule, resetCartInteriorModule } = cartDrawerModule;
+import { preloadCustomizerModule } from "./lazy-customizer-modal";
+import NavBar from "./nav-bar";
 
-import CartDrawer from "./cart-drawer";
+type InteriorModule = Pick<typeof import("./cart-drawer-content"), "default">;
+function MockInterior() {
+  return <input aria-label="Checkout name" defaultValue="" />;
+}
+const interiorLoader = vi.fn<() => Promise<InteriorModule>>();
 
 describe("CartDrawer Shell & Loading Lifecycle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCartInteriorModule();
+    interiorLoader.mockReset().mockResolvedValue({ default: MockInterior });
+    vi.doMock("./cart-drawer-content", interiorLoader);
     mockCartState.isCartOpen = false;
     mockCartState.isHydrated = true;
     mockCartState.items = [];
@@ -76,8 +76,12 @@ describe("CartDrawer Shell & Loading Lifecycle", () => {
     mockCartState.subtotalCents = 0;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     cleanup();
+    vi.useRealTimers();
+    await vi.dynamicImportSettled();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("renders the outer shell in a closed painted state before first opening", () => {
@@ -188,5 +192,167 @@ describe("CartDrawer Shell & Loading Lifecycle", () => {
 
     // While loading interior chunk, skeleton is displayed
     expect(screen.getByTestId("cart-skeleton")).toBeTruthy();
+  });
+
+  describe("Cart Interior Chunk Pre-warming", () => {
+    it("defers loading until intent, deduplicates warming, and never renders a skeleton after warming", async () => {
+      const { rerender } = render(<CartDrawer />);
+      await vi.dynamicImportSettled();
+      expect(interiorLoader).not.toHaveBeenCalled();
+
+      preloadCartInteriorModule();
+      preloadCartInteriorModule();
+      await vi.dynamicImportSettled();
+      expect(interiorLoader).toHaveBeenCalledTimes(1);
+      expect(screen.queryByLabelText("Checkout name")).toBeNull();
+
+      mockCartState.isCartOpen = true;
+      rerender(<CartDrawer />);
+      expect(screen.getByLabelText("Checkout name")).toBeTruthy();
+      expect(skeletonRendered).not.toHaveBeenCalled();
+    });
+
+    it("preserves checkout state on updates and reopening after a cold load", async () => {
+      mockCartState.isCartOpen = true;
+      const { rerender } = render(<CartDrawer />);
+      const name = await screen.findByLabelText("Checkout name");
+      fireEvent.change(name, { target: { value: "Taylor" } });
+
+      mockCartState.totalCount = 2;
+      rerender(<CartDrawer />);
+      mockCartState.isCartOpen = false;
+      rerender(<CartDrawer />);
+      mockCartState.isCartOpen = true;
+      rerender(<CartDrawer />);
+
+      expect(screen.getByLabelText("Checkout name")).toBe(name);
+      expect((name as HTMLInputElement).value).toBe("Taylor");
+    });
+
+    it("renders the skeleton while a preload is still pending", async () => {
+      let resolve!: (module: InteriorModule) => void;
+      interiorLoader.mockReturnValue(new Promise((done) => { resolve = done; }));
+      preloadCartInteriorModule();
+      mockCartState.isCartOpen = true;
+      render(<CartDrawer />);
+      expect(screen.getByTestId("cart-skeleton")).toBeTruthy();
+
+      await act(async () => {
+        resolve({ default: MockInterior });
+        await vi.dynamicImportSettled();
+      });
+      expect(await screen.findByLabelText("Checkout name")).toBeTruthy();
+      expect(interiorLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it("can warm successfully after a rejected speculative load", async () => {
+      interiorLoader.mockRejectedValueOnce(new Error("offline"));
+      preloadCartInteriorModule();
+      await vi.dynamicImportSettled();
+      vi.doMock("./cart-drawer-content", interiorLoader);
+      preloadCartInteriorModule();
+      await vi.dynamicImportSettled();
+
+      mockCartState.isCartOpen = true;
+      render(<CartDrawer />);
+      expect(screen.getByLabelText("Checkout name")).toBeTruthy();
+      expect(skeletonRendered).not.toHaveBeenCalled();
+      expect(interiorLoader).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes an idle preload with a deadline and cancels it on unmount", async () => {
+      const requestIdleCallbackMock = vi.fn<typeof window.requestIdleCallback>(() => 123);
+      const cancelIdleCallbackMock = vi.fn();
+      vi.stubGlobal("requestIdleCallback", requestIdleCallbackMock);
+      vi.stubGlobal("cancelIdleCallback", cancelIdleCallbackMock);
+
+      mockCartState.totalCount = 3;
+      const { unmount } = render(<CartDrawer />);
+
+      expect(requestIdleCallbackMock).toHaveBeenCalledWith(expect.any(Function), { timeout: 1500 });
+      expect(interiorLoader).not.toHaveBeenCalled();
+      const callback = requestIdleCallbackMock.mock.calls[0][0];
+      callback({ didTimeout: false, timeRemaining: () => 50 });
+      await vi.dynamicImportSettled();
+      expect(interiorLoader).toHaveBeenCalledTimes(1);
+
+      unmount();
+      expect(cancelIdleCallbackMock).toHaveBeenCalledWith(123);
+
+    });
+
+    it("executes the fallback preload after one second", async () => {
+      vi.useFakeTimers();
+      vi.stubGlobal("requestIdleCallback", undefined);
+      mockCartState.totalCount = 2;
+      render(<CartDrawer />);
+      await vi.advanceTimersByTimeAsync(999);
+      expect(interiorLoader).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await vi.dynamicImportSettled();
+      expect(interiorLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it("cancels the fallback when unmounted or the cart becomes empty", async () => {
+      vi.useFakeTimers();
+      vi.stubGlobal("requestIdleCallback", undefined);
+      mockCartState.totalCount = 2;
+      const { unmount, rerender } = render(<CartDrawer />);
+      mockCartState.totalCount = 0;
+      rerender(<CartDrawer />);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(interiorLoader).not.toHaveBeenCalled();
+
+      mockCartState.totalCount = 1;
+      rerender(<CartDrawer />);
+      unmount();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(interiorLoader).not.toHaveBeenCalled();
+    });
+
+    it("does not schedule idle preload when totalCount is 0", () => {
+      const requestIdleCallbackMock = vi.fn();
+      vi.stubGlobal("requestIdleCallback", requestIdleCallbackMock);
+
+      mockCartState.totalCount = 0;
+      render(<CartDrawer />);
+
+      expect(requestIdleCallbackMock).not.toHaveBeenCalled();
+
+    });
+
+    it("warms the cart while the customizer chunk is still downloading", async () => {
+      let finishCustomizer!: (module: { default: () => null }) => void;
+      const customizerLoading = new Promise<{ default: () => null }>((resolve) => {
+        finishCustomizer = resolve;
+      });
+      vi.doMock("./item-customizer-modal", () => customizerLoading);
+      preloadCustomizerModule();
+      try {
+        await waitFor(() => expect(interiorLoader).toHaveBeenCalledTimes(1));
+      } finally {
+        finishCustomizer({ default: () => null });
+      }
+    });
+
+    it("preloads on hover and focus of both bag buttons without opening the cart", () => {
+      const preload = vi.spyOn(cartDrawerModule, "preloadCartInteriorModule");
+      render(<NavBar />);
+
+      const bagButtons = screen.getAllByRole("button", { name: /Open Cart/i });
+      expect(bagButtons.length).toBe(2);
+
+      for (const button of bagButtons) {
+        const calls = preload.mock.calls.length;
+        fireEvent.mouseEnter(button);
+        expect(preload).toHaveBeenCalledTimes(calls + 1);
+        button.focus();
+        expect(preload).toHaveBeenCalledTimes(calls + 2);
+        expect(document.activeElement).toBe(button);
+      }
+      expect(mockCartState.openCart).not.toHaveBeenCalled();
+      fireEvent.click(bagButtons[0]);
+      expect(mockCartState.openCart).toHaveBeenCalledTimes(1);
+    });
   });
 });

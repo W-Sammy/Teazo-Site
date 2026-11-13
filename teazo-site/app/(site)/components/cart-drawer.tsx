@@ -5,13 +5,13 @@ import React, {
   useEffect,
   useRef,
   useCallback,
-  lazy,
   Suspense,
 } from "react";
 import { createPortal } from "react-dom";
 import { Cabin_Sketch } from "next/font/google";
 import { montserrat } from "@/app/fonts";
 import { useCart } from "@/app/context/cart-context";
+import { createPreloadableComponent } from "@/app/lib/preloadable-component";
 import CartDrawerSkeleton from "./cart-drawer-skeleton";
 import ChunkErrorBoundary from "./chunk-error-boundary";
 
@@ -21,15 +21,18 @@ const cabinSketch = Cabin_Sketch({
   weight: ["400"],
 });
 
-let interiorModule = lazy(() => import("./cart-drawer-content"));
+const interiorModule = createPreloadableComponent<{ onClose: () => void }>(
+  () => import("./cart-drawer-content"),
+);
+const LazyCartDrawerContent = interiorModule.Content;
 
 export function resetCartInteriorModule(): void {
-  interiorModule = lazy(() => import("./cart-drawer-content"));
+  interiorModule.reset();
 }
 
-function LazyCartDrawerContent(props: { onClose: () => void }) {
-  const Component = interiorModule;
-  return <Component {...props} />;
+/** Starts downloading the cart interior chunk in the background without rendering it */
+export function preloadCartInteriorModule(): void {
+  interiorModule.preload();
 }
 
 export default function CartDrawer() {
@@ -115,6 +118,24 @@ export default function CartDrawer() {
       }
     }
   }, [isCartOpen, closeCart]);
+
+  // Idle Preload for Saved Carts: when client has items, warm the chunk during idle time
+  useEffect(() => {
+    if (totalCount > 0 && typeof window !== "undefined") {
+      const win = window;
+      if (typeof win.requestIdleCallback === "function") {
+        const id = win.requestIdleCallback(preloadCartInteriorModule, { timeout: 1500 });
+        return () => {
+          if (typeof win.cancelIdleCallback === "function") {
+            win.cancelIdleCallback(id);
+          }
+        };
+      } else {
+        const timer = setTimeout(preloadCartInteriorModule, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [totalCount]);
 
   // Keep unmounted until client hydration so SSR and hydration match cleanly
   if (!isHydrated || typeof document === "undefined") {

@@ -1,23 +1,26 @@
 "use client";
 
-import React, { lazy } from "react";
+import React from "react";
+import { createPreloadableComponent } from "@/app/lib/preloadable-component";
 import type { ItemCustomizerModalProps } from "./item-customizer-modal";
+import { preloadCartInteriorModule } from "./cart-drawer";
 
-let customizerModule = lazy(() => import("./item-customizer-modal"));
+const customizerModule = createPreloadableComponent<ItemCustomizerModalProps>(
+  () => import("./item-customizer-modal"),
+);
+const CustomizerContent = customizerModule.Content;
 
 /** Recreates the lazy import promise so a retry attempt re-triggers chunk fetching. */
 export function resetCustomizerModule(): void {
-  customizerModule = lazy(() => import("./item-customizer-modal"));
+  customizerModule.reset();
 }
 
-/** Starts fetching the customizer chunk without rendering it; lazy() reuses the same import. */
+/** Warm both chunks at customization intent, before the customizer can suspend. */
 export function preloadCustomizerModule(): void {
-  void import("./item-customizer-modal").catch(() => {
-    // A failed preload is surfaced by the lazy render and its retry boundary.
-  });
+  preloadCartInteriorModule();
+  customizerModule.preload();
 }
 
 export default function LazyCustomizerModal(props: ItemCustomizerModalProps) {
-  const Component = customizerModule;
-  return <Component {...props} />;
+  return <CustomizerContent {...props} />;
 }

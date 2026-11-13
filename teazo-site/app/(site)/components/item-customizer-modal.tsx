@@ -20,6 +20,7 @@ import { availabilityUrl, takePrefetchedAvailability } from "./customizer-availa
 import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
 import { useCart, MIN_ITEM_QUANTITY, MAX_ITEM_QUANTITY } from "@/app/context/cart-context";
 import { montserrat } from "@/app/fonts";
+import { preloadCartInteriorModule } from "./cart-drawer";
 
 
 const cabinSketch = Cabin_Sketch({
@@ -703,6 +704,10 @@ export default function ItemCustomizerModal({
   onClose,
 }: ItemCustomizerModalProps) {
   const isMounted = useSyncExternalStore(emptySubscribe, getClientMounted, getServerMounted);
+
+  useEffect(() => {
+    preloadCartInteriorModule();
+  }, []);
 
   if (!item || !isMounted || typeof document === "undefined") return null;
 

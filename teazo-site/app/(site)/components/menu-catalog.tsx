@@ -67,6 +67,12 @@ export default function MenuCatalog({
 
   const [customizerRetryKey, setCustomizerRetryKey] = useState(0);
 
+  // This parent commits even while the modal suspends. Also covers initial
+  // selection and browser history when this module was loaded on an earlier visit.
+  useEffect(() => {
+    if (selectedItem) preloadCustomizerModule();
+  }, [selectedItem]);
+
   const handleRetryCustomizer = useCallback(() => {
     resetCustomizerModule();
     setCustomizerRetryKey((k) => k + 1);
@@ -93,6 +99,7 @@ export default function MenuCatalog({
 
   // Open item customizer and sync to URL query (?item=id) without trapping browser back navigation
   const handleSelectItem = useCallback((item: MenuItem) => {
+    preloadCustomizerModule();
     setSelectedItem(item);
     void fetch("/api/analytics/menu-item-view", {
       method: "POST",

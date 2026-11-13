@@ -30,6 +30,12 @@ import {
 import type { MenuItem } from "./menu-item-card";
 import type { MenuSection } from "./menu-catalog";
 
+vi.mock("next/font/google", () => ({
+  Cabin_Sketch: () => ({ className: "test-cabin" }),
+}));
+
+vi.mock("./cart-drawer", () => ({ preloadCartInteriorModule: vi.fn() }));
+
 vi.mock("./menu-items-section", () => ({
   default: ({
     title,
@@ -82,6 +88,7 @@ vi.mock("./item-customizer-modal", () => ({
 
 import MenuCatalog from "./menu-catalog";
 import { resetCustomizerModule } from "./lazy-customizer-modal";
+import { preloadCartInteriorModule } from "./cart-drawer";
 
 const specialItem: MenuItem = {
   catalogObjectId: "SPECIAL-1",
@@ -251,6 +258,7 @@ describe("Public Menu catalog", () => {
           name: "Classic Milk Tea",
         }),
       ).toBeNull();
+      expect(preloadCartInteriorModule).not.toHaveBeenCalled();
     });
   });
 
@@ -290,6 +298,8 @@ describe("Public Menu catalog", () => {
           name: "Loading drink customizer",
         }),
       ).toBeTruthy();
+      // Warming must start before the lazy customizer commits its own effects.
+      expect(preloadCartInteriorModule).toHaveBeenCalled();
     });
 
     it("updates the URL with the selected catalog ID", () => {
@@ -313,6 +323,7 @@ describe("Public Menu catalog", () => {
 
       renderCatalog("SPECIAL-1");
 
+      expect(preloadCartInteriorModule).toHaveBeenCalled();
       expect(
         await screen.findByText(
           "Selected item: SPECIAL-1",
@@ -467,6 +478,7 @@ describe("Public Menu catalog", () => {
 
       fireEvent.popState(window);
 
+      expect(preloadCartInteriorModule).toHaveBeenCalled();
       expect(
         await screen.findByText("Selected item: MILK-1"),
       ).toBeTruthy();

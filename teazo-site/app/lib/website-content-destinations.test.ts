@@ -7,7 +7,7 @@ vi.mock("@/app/lib/d1", async () => (await import("@/test/sqlite-d1")).sqliteD1.
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
-  unstable_cache: ((fn: any) => fn) as any,
+  unstable_cache: (<T>(fn: T): T => fn) satisfies typeof import("next/cache").unstable_cache,
 }));
 vi.mock("@/app/lib/admin", () => ({
   requireAdminApi: vi.fn(async () => ({ ok: true, admin: { id: "test-admin", role_id: 1 } })),

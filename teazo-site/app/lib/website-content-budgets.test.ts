@@ -9,7 +9,7 @@ vi.mock("@/app/lib/admin", () => ({ requireAdminApi: async () => ({ ok: true }) 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
-  unstable_cache: ((fn: any) => fn) as any,
+  unstable_cache: (<T>(fn: T): T => fn) satisfies typeof import("next/cache").unstable_cache,
 }));
 
 const proxyFetch = vi.fn();

@@ -19,7 +19,10 @@ const mocks = vi.hoisted(() => ({
   addItem: vi.fn(),
   openCart: vi.fn(),
   fetch: vi.fn(),
+  preloadCartInteriorModule: vi.fn(),
 }));
+
+vi.mock("./cart-drawer", () => ({ preloadCartInteriorModule: mocks.preloadCartInteriorModule }));
 
 vi.mock("@/app/context/cart-context", () => ({
   useCart: () => ({ addItem: mocks.addItem, updateItem: vi.fn(), openCart: mocks.openCart }),
@@ -98,6 +101,7 @@ describe("customizer background availability", () => {
   it("lets customers choose options before the fresh check returns", async () => {
     holdAvailability();
     renderCustomizer();
+    expect(mocks.preloadCartInteriorModule).toHaveBeenCalledTimes(1);
 
     const fullSweet = await screen.findByRole("radio", { name: /Full sweet/ });
     expect((fullSweet as HTMLButtonElement).disabled).toBe(false);
