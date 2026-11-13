@@ -19,6 +19,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { MenuCatalogProps } from "../components/menu-catalog";
 import MenuPage from "./page";
+import { getMenuDisplayState, initializeMenuDisplayItems } from "@/app/lib/queries/menu-display";
+
+vi.mock("@/app/lib/queries/menu-display", () => ({ getMenuDisplayState: vi.fn(), initializeMenuDisplayItems: vi.fn() }));
 
 vi.mock("next/font/google", () => ({
   Cabin_Sketch: () => ({ className: "mock-cabin" }),
@@ -71,15 +74,14 @@ vi.mock("../components/sub-title", () => ({
 // separately tested client-side MenuCatalog component.
 vi.mock("../components/menu-catalog", () => ({
   default: ({
-    specialSections,
-    menuSections,
+    sections,
     initialItemId,
   }: MenuCatalogProps) => (
     <div
       data-testid="public-menu-catalog"
       data-initial-item={initialItemId ?? ""}
     >
-      {[...specialSections, ...menuSections].map((section) => (
+      {sections.map((section) => (
         <section
           key={section.id}
           data-testid={`section-${section.id}`}
@@ -243,6 +245,15 @@ function expectEmptyState() {
 
 beforeEach(() => {
   fetchMock.mockReset();
+  vi.mocked(initializeMenuDisplayItems).mockReset().mockResolvedValue(undefined);
+  // Mapping tests use categories the admin has already published.
+  vi.mocked(getMenuDisplayState).mockReset().mockResolvedValue({
+    sections: ["milk-tea", "specials", "snack", "category-a", "category-b"].map((id) => ({
+      id: `category:${id}`, squareCategoryId: id, title: id, sectionType: "square",
+      sortOrder: 0, isPublished: true, defaultItemVisible: true, itemIds: [],
+    })),
+    items: [],
+  });
 
   vi.stubGlobal("fetch", fetchMock);
 
@@ -267,6 +278,100 @@ afterEach(() => {
 });
 
 describe("Public Menu catalog loading", () => {
+  it("keeps unconfigured new Square categories off the public menu", async () => {
+    vi.mocked(getMenuDisplayState).mockResolvedValue({ sections: [], items: [] });
+    returnCatalog([catalogItem()]);
+    await renderPage();
+    expectEmptyState();
+  });
+
+  it("keeps a hidden category off the public menu even if an item is explicitly visible", async () => {
+    vi.mocked(getMenuDisplayState).mockResolvedValue({
+      sections: [], items: [{ squareCatalogObjectId: "tea-1", visible: true }],
+    });
+    returnCatalog([catalogItem()]);
+    await renderPage();
+    expectEmptyState();
+  });
+  it("shows an unavailable menu when display settings fail, including uncategorized items", async () => {
+    vi.mocked(getMenuDisplayState).mockRejectedValue(new Error("Settings unavailable"));
+    returnCatalog([catalogItem({ categories: [] })]);
+    await renderPage();
+    expectUnavailableState();
+    expect(screen.queryByText("Milk Tea")).toBeNull();
+  });
+
+  it("initializes newly seen items before rendering and uses their persisted visibility", async () => {
+    const state = await vi.mocked(getMenuDisplayState)();
+    vi.mocked(getMenuDisplayState)
+      .mockResolvedValueOnce(state)
+      .mockResolvedValue({ ...state, items: [{ squareCatalogObjectId: "tea-1", visible: false }] });
+    returnCatalog([catalogItem()]);
+    await renderPage();
+    expect(initializeMenuDisplayItems).toHaveBeenCalledWith(
+      [catalogItem()], state.sections,
+    );
+    expectEmptyState();
+  });
+
+  it("does not reinitialize existing explicit item settings", async () => {
+    const state = await vi.mocked(getMenuDisplayState)();
+    vi.mocked(getMenuDisplayState).mockResolvedValue({
+      ...state, items: [{ squareCatalogObjectId: "tea-1", visible: true }],
+    });
+    returnCatalog([catalogItem()]);
+    await renderPage();
+    expect(initializeMenuDisplayItems).not.toHaveBeenCalled();
+    expect(card("category:milk-tea", "tea-1")).toBeTruthy();
+  });
+
+  it("does not publish items if their initial display settings cannot be saved", async () => {
+    vi.mocked(initializeMenuDisplayItems).mockRejectedValue(new Error("Write failed"));
+    returnCatalog([catalogItem()]);
+    await renderPage();
+    expectUnavailableState();
+  });
+
+  it.each([
+    { visible: true, published: true, availableItem: true, expected: true },
+    { visible: false, published: true, availableItem: true, expected: false },
+    { visible: true, published: false, availableItem: true, expected: false },
+    { visible: true, published: true, availableItem: false, expected: false },
+  ])("respects custom category/item visibility and availability: %j", async ({ visible, published, availableItem, expected }) => {
+    vi.mocked(getMenuDisplayState).mockResolvedValue({
+      sections: [{
+        id: "custom", squareCategoryId: null, title: "Favorites", sectionType: "custom",
+        sortOrder: 0, isPublished: published, defaultItemVisible: true, itemIds: ["deleted-id", "tea-1"],
+      }],
+      items: [{ squareCatalogObjectId: "tea-1", visible }],
+    });
+    returnCatalog([catalogItem(availableItem ? {} : {
+      availability: unavailable,
+      variations: [{ id: "variation-1", name: "Regular", priceCents: 575, availability: unavailable }],
+    })]);
+    await renderPage();
+    if (expected) {
+      expect(card("custom:custom", "tea-1")).toBeTruthy();
+      expect(screen.queryByTestId("section-category:milk-tea")).toBeNull();
+      expect(within(section("custom:custom")).getAllByRole("article")).toHaveLength(1);
+    } else {
+      expectEmptyState();
+    }
+  });
+
+  it.each([false, true])("honors saved Uncategorized category visibility %s", async (published) => {
+    vi.mocked(getMenuDisplayState).mockResolvedValue({
+      sections: [{
+        id: "category:sandbox:uncategorized", squareCategoryId: null, title: "Uncategorized", sectionType: "uncategorized",
+        sortOrder: 0, isPublished: published, defaultItemVisible: true, itemIds: [],
+      }], items: [{ squareCatalogObjectId: "tea-1", visible: true }],
+    });
+    returnCatalog([catalogItem({ categories: [] })]);
+    await renderPage();
+    if (published) expect(card("uncategorized", "tea-1")).toBeTruthy();
+    else expectEmptyState();
+  });
+
   describe("Catalog request configuration", () => {
     it("fetches the configured Square products endpoint with the 60-second catalog cache", async () => {
       returnCatalog([catalogItem()]);
@@ -493,7 +598,49 @@ describe("Public Menu catalog loading", () => {
   });
 
   describe("Square category and item mapping", () => {
-    it("separates TEAZO specials from regular categories", async () => {
+    it.each([
+      ["milk-tea", "specials", "uncategorized", "custom-picks"],
+      ["custom-picks", "uncategorized", "milk-tea", "specials"],
+      ["specials", "milk-tea", "custom-picks", "uncategorized"],
+    ])("uses saved category order %j / %j / %j / %j", async (...order) => {
+      const titles: Record<string, string> = {
+        "milk-tea": "Milk Tea",
+        specials: "TEAZO Special",
+        uncategorized: "Other Menu Items",
+        "custom-picks": "Custom Picks",
+      };
+      vi.mocked(getMenuDisplayState).mockResolvedValue({
+        // Saved Square IDs differ from both the raw Square category IDs and
+        // the rendered section IDs, just as they do in the database.
+        sections: ["milk-tea", "specials", "uncategorized", "custom-picks"].map((id) => ({
+          id: id === "custom-picks" ? id : `category:sandbox:${id}`,
+          squareCategoryId: id === "milk-tea" || id === "specials" ? id : null,
+          title: titles[id],
+          sectionType: id === "custom-picks" ? "custom" : id === "uncategorized" ? "uncategorized" : "square",
+          sortOrder: order.indexOf(id),
+          isPublished: true,
+          defaultItemVisible: true,
+          itemIds: id === "custom-picks" ? ["tea-1"] : [],
+        })),
+        items: [],
+      });
+      returnCatalog([
+        catalogItem(),
+        catalogItem({
+          catalogObjectId: "special",
+          categories: [{ id: "specials", name: "TEAZO Special" }],
+        }),
+        catalogItem({ catalogObjectId: "uncategorized-item", categories: [] }),
+      ]);
+
+      await renderPage();
+
+      expect(within(catalog()).getAllByRole("heading", { level: 2 })
+        .map((heading) => heading.textContent))
+        .toEqual(order.map((id) => titles[id]));
+    });
+
+    it("keeps TEAZO specials and regular categories distinct", async () => {
       returnCatalog([
         catalogItem({
           catalogObjectId: "regular",
@@ -515,7 +662,7 @@ describe("Public Menu catalog loading", () => {
       );
 
       expect(sections.map((heading) => heading.textContent))
-        .toEqual(["TEAZO Special", "Milk Tea"]);
+        .toEqual(["Milk Tea", "TEAZO Special"]);
 
       expect(
         card("category:specials", "special"),
