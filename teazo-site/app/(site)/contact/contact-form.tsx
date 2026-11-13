@@ -94,6 +94,7 @@ export default function ContactForm({ fallbackEmail }: { fallbackEmail: string }
         resetKey={state}
         onFailedChange={setCheckFailed}
         className="min-h-[65px]"
+        afterPageLoad
       />
       {checkFailed && (
         <p className="max-w-[640px] text-center text-sm font-semibold tracking-[0.04em] text-[#b4531f]">
