@@ -3,7 +3,7 @@
 import MenulessNavBar from "@/app/(site)/components/nav-bar-no-menu";
 
 // Import font and bubbles.
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import PasswordFlow from "./password-flow";
 import { BubbleField } from "@/app/components/bubble-field";
 
@@ -12,22 +12,18 @@ import { signIn } from "next-auth/react";
 import { Suspense, useState } from "react";
 import type { SubmitEvent, ReactNode } from "react";
 import AuthMessage from "./auth-message";
+import { montserrat500, montserrat700 } from "@/app/fonts";
 
 // Setup fonts.
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
-const boldMontserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["700"],
-});
+const boldMontserrat = montserrat700;
 
-const mediumMontserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["500"],
-});
+const mediumMontserrat = montserrat500;
 
 // Only permit a destination for the ownership-transfer
 // workflow. Never redirect to arbitrary URLs supplied

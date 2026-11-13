@@ -329,21 +329,19 @@ export function isStoreOpenForOrders(
 
 /**
  * Validates requested pickup timing (ASAP or SCHEDULED) against database store hours
- * and holiday exceptions. Automatically queries `getWebsiteContent()` if not provided.
+ * and holiday exceptions. The caller passes the content from `getWebsiteContent()`:
+ * this file is also used by the cart drawer in the browser, so it must not import
+ * the server-only website-content module.
  */
 export async function validatePickupTiming(
   timing: PickupTiming,
-  options?: {
-    content?: WebsiteContent;
+  options: {
+    content: WebsiteContent;
     referenceNow?: Date;
   },
 ): Promise<TimeValidationResult> {
-  const referenceNow = options?.referenceNow ?? new Date();
-  let content = options?.content;
-  if (!content) {
-    const { getWebsiteContent } = await import("@/app/lib/website-content");
-    content = await getWebsiteContent();
-  }
+  const referenceNow = options.referenceNow ?? new Date();
+  const { content } = options;
   const nowParts = getPacificParts(referenceNow);
   const todaySchedule = getStoreScheduleForDate(referenceNow, content);
 

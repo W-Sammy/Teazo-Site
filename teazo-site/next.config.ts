@@ -29,7 +29,24 @@ const r2ImagePattern = (() => {
   }
 })();
 
+// Files in public/ keep the same name when replaced, so browsers keep them for
+// a day and refresh them in the background for a week after that (TZ-515).
+const PUBLIC_ASSET_CACHE = "public, max-age=86400, stale-while-revalidate=604800";
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      "/TEAZO_logo.svg",
+      "/pink_scribble.svg",
+      "/social_icons/:path*",
+      "/carousel_images/:path*",
+      "/menu_items/:path*",
+    ].map((source) => ({
+      source,
+      headers: [{ key: "Cache-Control", value: PUBLIC_ASSET_CACHE }],
+    }));
+  },
+
   /*
    * Allows configured tunnels and other devices on the local network to access
    * Next.js development assets and endpoints.
