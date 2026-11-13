@@ -383,6 +383,24 @@ export function BubbleField({
     let width = container.clientWidth;
     let height = container.clientHeight;
 
+    // Size, opacity, blur and color only change when the particles are created or
+    // rescaled, so they are set once there. Setting them on every frame made the
+    // browser recheck and repaint every bubble 60 times a second.
+    const styleParticle = (particle: Particle) => {
+      const element = bubbleRefs.current[particle.id];
+
+      if (!element) {
+        return;
+      }
+
+      element.style.width = `${particle.radius * 2}px`;
+      element.style.height = `${particle.radius * 2}px`;
+      element.style.opacity = `${0.8 + particle.depth * 0.18}`;
+      element.style.filter = `blur(${(1 - particle.depth) * 0.18}px)`;
+      element.style.backgroundColor = particle.tint;
+    };
+
+    // Runs every frame: only the position and wobble move.
     const paintParticle = (particle: Particle, time: number) => {
       const element = bubbleRefs.current[particle.id];
 
@@ -396,14 +414,9 @@ export function BubbleField({
       const stretchY =
         1 + Math.cos(time * 0.00056 * particle.wobble + particle.phase) * 0.05;
 
-      element.style.width = `${particle.radius * 2}px`;
-      element.style.height = `${particle.radius * 2}px`;
       element.style.transform = `translate3d(${particle.x - particle.radius}px, ${
         particle.y - particle.radius
       }px, 0) scale(${stretchX}, ${stretchY})`;
-      element.style.opacity = `${0.8 + particle.depth * 0.18}`;
-      element.style.filter = `blur(${(1 - particle.depth) * 0.18}px)`;
-      element.style.backgroundColor = particle.tint;
     };
 
     const initializeParticles = () => {
@@ -467,6 +480,7 @@ export function BubbleField({
       const initialPaintTime = window.performance.now();
 
       for (const particle of particlesRef.current) {
+        styleParticle(particle);
         paintParticle(particle, initialPaintTime);
       }
     };

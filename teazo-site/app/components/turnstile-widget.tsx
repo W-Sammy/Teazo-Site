@@ -2,6 +2,7 @@
 
 import Script from "next/script";
 import { useCallback, useEffect, useRef } from "react";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
 /**
  * Cloudflare Turnstile, the bot check (see app/lib/turnstile.ts). With no key
@@ -50,6 +51,7 @@ export default function TurnstileWidget({
   onExpire,
   onFailedChange,
   className,
+  afterPageLoad = false,
 }: {
   /** Shown in the Turnstile dashboard, e.g. "contact" or "checkout". */
   action: string;
@@ -59,7 +61,16 @@ export default function TurnstileWidget({
   /** true when the check can't load or run, false once it passes. */
   onFailedChange?: (failed: boolean) => void;
   className?: string;
+  /**
+   * Start the script once the page has loaded instead of with it, so it doesn't
+   * hold back the page on phones (TZ-515). For forms below the fold: the check
+   * still finishes long before anyone can fill the form in.
+   */
+  afterPageLoad?: boolean;
 }) {
+  const pageLoaded = usePageLoaded();
+  const loadScript = !afterPageLoad || pageLoaded;
+
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
   const callbacks = useRef({ onToken, onExpire, onFailedChange });
@@ -106,11 +117,13 @@ export default function TurnstileWidget({
 
   return (
     <>
-      <Script
-        src={TURNSTILE_SCRIPT}
-        strategy="afterInteractive"
-        onError={() => callbacks.current.onFailedChange?.(true)}
-      />
+      {loadScript && (
+        <Script
+          src={TURNSTILE_SCRIPT}
+          strategy="afterInteractive"
+          onError={() => callbacks.current.onFailedChange?.(true)}
+        />
+      )}
       <div ref={container} className={className} />
     </>
   );

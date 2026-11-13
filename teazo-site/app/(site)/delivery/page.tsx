@@ -1,32 +1,29 @@
 import Image from "next/image";
 
 // import font & bubbles
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 import { getWebsiteContent } from "@/app/lib/website-content";
+import { montserrat500, montserrat800 } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // import only letters, num
     weight: ['400'] // normal
 });
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['800'] // extra bold
-});
+const boldMontserrat = montserrat800;
 
 // medium montserrat
-const mediumMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['500']
-});
+const mediumMontserrat = montserrat500;
 
 export default async function Delivery() {
   const content = await getWebsiteContent();
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const deliveryLinks = (content.deliveryLinks ?? []).filter(
     (link) => link.enabled && link.label.trim() && link.url.trim(),
   );
@@ -52,7 +49,8 @@ export default async function Delivery() {
                     width={389}
                     height={397}
                     className="h-[170px] w-auto sm:h-[195px]"
-                    priority
+                    priority={!logoSrc.startsWith("data:")}
+                    fetchPriority="high"
                     unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
 

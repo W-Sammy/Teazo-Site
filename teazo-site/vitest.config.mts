@@ -11,6 +11,8 @@ export default defineConfig({
       // "server-only" throws outside a Next.js server build. Tests run server
       // code directly, so it is swapped for an empty module here.
       { find: /^server-only$/, replacement: fromRoot("./test/server-only.ts") },
+      // "next/font/local" only works inside a Next.js build (app/fonts.ts uses it).
+      { find: /^next\/font\/local$/, replacement: fromRoot("./test/next-font-local.ts") },
     ],
   },
   test: {

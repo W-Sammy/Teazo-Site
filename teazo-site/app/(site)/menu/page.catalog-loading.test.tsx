@@ -373,7 +373,7 @@ describe("Public Menu catalog loading", () => {
   });
 
   describe("Catalog request configuration", () => {
-    it("fetches the configured Square products endpoint without caching", async () => {
+    it("fetches the configured Square products endpoint with the 60-second catalog cache", async () => {
       returnCatalog([catalogItem()]);
 
       await renderPage();
@@ -389,7 +389,7 @@ describe("Public Menu catalog loading", () => {
       expect(options).toEqual(
         expect.objectContaining({
           method: "GET",
-          cache: "no-store",
+          next: { revalidate: 60, tags: ["square-catalog"] },
           credentials: "omit",
           redirect: "error",
           headers: {

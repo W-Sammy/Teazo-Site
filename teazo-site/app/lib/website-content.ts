@@ -12,6 +12,8 @@ import { prepare, batch } from "@/app/lib/d1";
 import { toPublicUrl } from "@/app/lib/media";
 
 import { unstable_rethrow } from "next/navigation";
+import { revalidateTag, unstable_cache } from "next/cache";
+import { cache } from "react";
 import {
   isValidPhone,
   isValidEmail,
@@ -120,12 +122,6 @@ function hourToTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function normalizeHolidayDate(date: string): string {
-  // The editor stores recurring holidays as MM-DD; accept legacy/full ISO
-  // values from the database as well.
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(5) : date;
-}
-
 function isSavedCarouselImage(value: unknown): value is CarouselImage {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 
@@ -137,57 +133,60 @@ function isSavedCarouselImage(value: unknown): value is CarouselImage {
     typeof image.alt === "string" && typeof image.enabled === "boolean";
 }
 
+/** Cache tag for everything getWebsiteContent() returns. Clear it after any write to these tables. */
+export const WEBSITE_CONTENT_TAG = "website-content";
+
 /**
- * Loads current website content from D1 if configured, otherwise falls back to memory.
+ * Clears the cached website content. Call after saving business_profile,
+ * business_hours, site_link, hours_exception or content_block. With
+ * `expire: 0` the next request reads the saved values, never a stale copy:
+ * store hours and the online ordering switch must take effect at once.
  */
-export async function getWebsiteContent(): Promise<WebsiteContent> {
+export function revalidateWebsiteContent(): void {
+  try {
+    revalidateTag(WEBSITE_CONTENT_TAG, { expire: 0 });
+  } catch (error) {
+    console.error("Could not clear the cached website content:", error);
+  }
+}
+
+type ProfileRow = {
+  business_name: string;
+  street_address: string;
+  locality: string;
+  phone: string | null;
+  email: string | null;
+  map_query: string;
+  contact_form_enabled?: number;
+};
+
+async function loadProfile(): Promise<ProfileRow | null> {
+  try {
+    return await prepare(
+      `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
+         FROM business_profile WHERE id = 1`
+    ).first<ProfileRow>();
+  } catch (error) {
+    unstable_rethrow(error);
+    // Fallback query if contact_form_enabled column does not exist yet in database
+    return prepare(
+      `SELECT business_name, street_address, locality, phone, email, map_query
+         FROM business_profile WHERE id = 1`
+    ).first<ProfileRow>();
+  }
+}
+
+/**
+ * Reads website content straight from D1. Throws when D1 can't be read, so a
+ * failure is never cached; getWebsiteContent() falls back to memory instead.
+ */
+async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
   const content = cloneDefaultWebsiteContent();
 
-  if (!isD1Configured()) {
-    return inMemoryContent;
-  }
-
-  try {
-    let profile: {
-      business_name: string;
-      street_address: string;
-      locality: string;
-      phone: string | null;
-      email: string | null;
-      map_query: string;
-      contact_form_enabled?: number;
-    } | null = null;
-
-    try {
-      profile = await prepare(
-        `SELECT business_name, street_address, locality, phone, email, map_query, contact_form_enabled
-           FROM business_profile WHERE id = 1`
-      ).first<{
-        business_name: string;
-        street_address: string;
-        locality: string;
-        phone: string | null;
-        email: string | null;
-        map_query: string;
-        contact_form_enabled: number;
-      }>();
-    } catch (error) {
-      unstable_rethrow(error);
-      // Fallback query if contact_form_enabled column does not exist yet in database
-      profile = await prepare(
-        `SELECT business_name, street_address, locality, phone, email, map_query
-           FROM business_profile WHERE id = 1`
-      ).first<{
-        business_name: string;
-        street_address: string;
-        locality: string;
-        phone: string | null;
-        email: string | null;
-        map_query: string;
-      }>();
-    }
-
-    const d1Hours = await prepare(
+  // The five reads are independent, so they run at once instead of one after another.
+  const [profile, d1Hours, d1Links, d1Copy, d1Holidays] = await Promise.all([
+    loadProfile(),
+    prepare(
       `SELECT day_of_week, display_text, opens_at, closes_at, is_closed
          FROM business_hours ORDER BY day_of_week`
     ).all<{
@@ -196,9 +195,8 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       opens_at: string | null;
       closes_at: string | null;
       is_closed: number;
-    }>();
-
-    const d1Links = await prepare(
+    }>(),
+    prepare(
       `SELECT key, link_group, label, url, aria_label, sort_order, is_active
          FROM site_link ORDER BY sort_order, key`
     ).all<{
@@ -209,136 +207,161 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
       aria_label: string | null;
       sort_order: number;
       is_active: number;
-    }>();
-
-    const d1Copy = await prepare(
+    }>(),
+    prepare(
       `SELECT key, value FROM content_block WHERE key IN ('home.story', 'site.logo', 'home.carousel', ?1)`
-    ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>();
-
-    const d1Holidays = await prepare(
+    ).bind(ONLINE_ORDERING_KEY).all<{ key: string; value: string | null }>(),
+    prepare(
       `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`
-    ).all<{ date: string; is_closed: number; display_text: string | null; note: string | null }>();
+    ).all<{ date: string; is_closed: number; display_text: string | null; note: string | null }>(),
+  ]);
 
-    if (profile) {
-      content.address = {
-        businessName: (profile.business_name && isNonEmpty(profile.business_name))
-          ? profile.business_name
-          : content.address.businessName,
-        streetAddress: (profile.street_address && isNonEmpty(profile.street_address))
-          ? profile.street_address
-          : content.address.streetAddress,
-        locality: (profile.locality && isNonEmpty(profile.locality))
-          ? profile.locality
-          : content.address.locality,
-        phone: (profile.phone && isValidPhone(profile.phone))
-          ? formatPhoneNumber(profile.phone)
-          : content.address.phone,
-        email: (profile.email && isValidEmail(profile.email))
-          ? profile.email
-          : content.address.email,
-        mapQuery: profile.map_query || content.address.mapQuery,
+  if (profile) {
+    content.address = {
+      businessName: (profile.business_name && isNonEmpty(profile.business_name))
+        ? profile.business_name
+        : content.address.businessName,
+      streetAddress: (profile.street_address && isNonEmpty(profile.street_address))
+        ? profile.street_address
+        : content.address.streetAddress,
+      locality: (profile.locality && isNonEmpty(profile.locality))
+        ? profile.locality
+        : content.address.locality,
+      phone: (profile.phone && isValidPhone(profile.phone))
+        ? formatPhoneNumber(profile.phone)
+        : content.address.phone,
+      email: (profile.email && isValidEmail(profile.email))
+        ? profile.email
+        : content.address.email,
+      mapQuery: profile.map_query || content.address.mapQuery,
+    };
+    if (profile.contact_form_enabled !== undefined && profile.contact_form_enabled !== null) {
+      content.contactFormEnabled = profile.contact_form_enabled === 1;
+    }
+  }
+
+  if (d1Hours.results.length === 7) {
+    // D1 is 0=Monday .. 6=Sunday. Admin UI expects 0=Sunday .. 6=Saturday.
+    const mappedHours: DayHours[] = WEEKDAY_ABBRS_FROM_SUNDAY.map((abbr, jsDay) => {
+      const d1Day = (jsDay + 6) % 7;
+      const row = d1Hours.results.find((r) => r.day_of_week === d1Day);
+      if (!row) return content.hours[jsDay];
+      return {
+        day: abbr,
+        start: parseTimeToHour(row.opens_at),
+        end: parseTimeToHour(row.closes_at),
+        closed: row.is_closed === 1,
       };
-      if (profile.contact_form_enabled !== undefined && profile.contact_form_enabled !== null) {
-        content.contactFormEnabled = profile.contact_form_enabled === 1;
-      }
-    }
+    });
+    content.hours = mappedHours;
+  }
 
-    if (d1Hours.results.length === 7) {
-      // D1 is 0=Monday .. 6=Sunday. Admin UI expects 0=Sunday .. 6=Saturday.
-      const mappedHours: DayHours[] = WEEKDAY_ABBRS_FROM_SUNDAY.map((abbr, jsDay) => {
-        const d1Day = (jsDay + 6) % 7;
-        const row = d1Hours.results.find((r) => r.day_of_week === d1Day);
-        if (!row) return content.hours[jsDay];
-        return {
-          day: abbr,
-          start: parseTimeToHour(row.opens_at),
-          end: parseTimeToHour(row.closes_at),
-          closed: row.is_closed === 1,
-        };
-      });
-      content.hours = mappedHours;
-    }
-
-    if (d1Links.results.length > 0) {
-      const socials = d1Links.results
-        .filter((l) => l.link_group === "social" && l.key !== "email")
-        .map((l) => ({
-          id: l.key,
-          label: l.label,
-          icon: `/social_icons/social_svg/teazo_${l.key}_icon.svg`,
-          url: l.url,
-          enabled: l.is_active === 1,
-        }));
-      if (socials.length > 0) content.socialLinks = socials;
-    }
-
-    content.deliveryLinks = d1Links.results
-      .filter((link) => link.link_group === "delivery")
-      .map((link): DeliveryLink => ({
-        id: link.key,
-        label: link.label,
-        icon: "",
-        url: link.url,
-        enabled: link.is_active === 1,
+  if (d1Links.results.length > 0) {
+    const socials = d1Links.results
+      .filter((l) => l.link_group === "social" && l.key !== "email")
+      .map((l) => ({
+        id: l.key,
+        label: l.label,
+        icon: `/social_icons/social_svg/teazo_${l.key}_icon.svg`,
+        url: l.url,
+        enabled: l.is_active === 1,
       }));
+    if (socials.length > 0) content.socialLinks = socials;
 
-    if (d1Copy.results.length > 0) {
-      for (const block of d1Copy.results) {
-        if (block.key === "home.carousel") {
-          try {
-            const savedImages: unknown = block.value === null ? [] : JSON.parse(block.value);
-            if (!Array.isArray(savedImages)) {
-              throw new Error("Saved carousel settings must be an array.");
-            }
+  }
 
-            const validImages = savedImages.filter(isSavedCarouselImage);
-            if (validImages.length !== savedImages.length) {
-              console.error("Skipped invalid entries in saved carousel settings.");
-            }
-            content.carouselImages = validImages.map((image) => ({
-              ...image,
-              src: image.src.startsWith("/carousel_images/") ? image.src : toPublicUrl(image.src),
-            }));
+  content.deliveryLinks = d1Links.results
+    .filter((link) => link.link_group === "delivery")
+    .map((link): DeliveryLink => ({
+      id: link.key,
+      label: link.label,
+      icon: "",
+      url: link.url,
+      enabled: link.is_active === 1,
+    }));
 
-          } catch (error) {
-            console.error("Could not load saved carousel images:", error);
+  if (d1Copy.results.length > 0) {
+    for (const block of d1Copy.results) {
+      if (block.key === "home.carousel") {
+        try {
+          const savedImages: unknown = block.value === null ? [] : JSON.parse(block.value);
+          if (!Array.isArray(savedImages)) {
+            throw new Error("Saved carousel settings must be an array.");
           }
-        }
 
-        if (block.key === "home.story" && block.value) {
-          content.story = block.value;
-        } else if (block.key === "site.logo" && block.value) {
-          content.logo = block.value;
-        } else if (block.key === ONLINE_ORDERING_KEY) {
-          content.onlineOrderingEnabled = block.value !== "off";
+          const validImages = savedImages.filter(isSavedCarouselImage);
+          if (validImages.length !== savedImages.length) {
+            console.error("Skipped invalid entries in saved carousel settings.");
+          }
+          content.carouselImages = validImages.map((image) => ({
+            ...image,
+            src: image.src.startsWith("/carousel_images/") ? image.src : toPublicUrl(image.src),
+          }));
+
+        } catch (error) {
+          console.error("Could not load saved carousel images:", error);
         }
       }
-    }
 
-    if (d1Holidays.results.length > 0) {
-      content.holidays = d1Holidays.results.map((h, i) => {
-        const timeRange = parseDisplayTextRange(h.display_text);
-        return {
-          id: `holiday-${h.date || i}`,
-          name: h.note || `Holiday`,
-          // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
-          date: h.date,
-          closed: h.is_closed === 1,
-          start: timeRange.start,
-          end: timeRange.end,
-          displayText: h.display_text || undefined,
-        };
-      });
+      if (block.key === "home.story" && block.value) {
+        content.story = block.value;
+      } else if (block.key === "site.logo" && block.value) {
+        content.logo = block.value;
+      } else if (block.key === ONLINE_ORDERING_KEY) {
+        content.onlineOrderingEnabled = block.value !== "off";
+      }
     }
+  }
 
+  if (d1Holidays.results.length > 0) {
+    content.holidays = d1Holidays.results.map((h, i) => {
+      const timeRange = parseDisplayTextRange(h.display_text);
+      return {
+        id: `holiday-${h.date || i}`,
+        name: h.note || `Holiday`,
+        // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+        date: h.date,
+        closed: h.is_closed === 1,
+        start: timeRange.start,
+        end: timeRange.end,
+        displayText: h.display_text || undefined,
+      };
+    });
+  }
+
+  return content;
+}
+
+/**
+ * Shared across requests and server instances until revalidateWebsiteContent()
+ * (or a matching revalidatePath) clears it. The hour limit only matters for
+ * changes made outside the app, such as SQL run by hand.
+ */
+const loadCachedWebsiteContent = unstable_cache(loadWebsiteContentFromD1, ["website-content"], {
+  tags: [WEBSITE_CONTENT_TAG],
+  revalidate: 3600,
+});
+
+/**
+ * Loads current website content from D1 if configured, otherwise falls back to memory.
+ * Cached (see loadCachedWebsiteContent), and read once per request even when a
+ * page and its layout both ask for it.
+ */
+export const getWebsiteContent = cache(async (): Promise<WebsiteContent> => {
+  if (!isD1Configured()) {
+    return inMemoryContent;
+  }
+
+  try {
+    const content = await loadCachedWebsiteContent();
     inMemoryContent = { ...content };
     return content;
   } catch (error) {
-    unstable_rethrow(error)
+    unstable_rethrow(error);
     console.error("Failed to fetch website content from D1:", error);
     return inMemoryContent;
   }
-}
+});
 
 /**
  * Updates website content with the provided partial values and persists to D1.
@@ -351,7 +374,16 @@ export async function updateWebsiteContent(
     throw new Error(`Invalid website content: ${validation.errors.join("; ")}`);
   }
 
-  const current = await getWebsiteContent();
+  // Read past the cache: a save is built on top of what is in D1 right now.
+  let current = inMemoryContent;
+  if (isD1Configured()) {
+    try {
+      current = await loadWebsiteContentFromD1();
+    } catch (error) {
+      unstable_rethrow(error);
+      console.error("Failed to read website content from D1 before saving:", error);
+    }
+  }
 
   const formattedAddress = patch.address
     ? {
@@ -546,6 +578,7 @@ export async function updateWebsiteContent(
     throw err;
   }
 
+  revalidateWebsiteContent();
   return nextContent;
 }
 

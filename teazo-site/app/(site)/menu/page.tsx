@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
 import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
@@ -13,8 +13,11 @@ import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
 import { getMenuDisplayState, initializeMenuDisplayItems } from "@/app/lib/queries/menu-display";
+import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -27,14 +30,11 @@ export const dynamic = "force-dynamic";
 
 
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 /* Group real catalog items into sections accepted by MenuItemsSection.
    The section ID identifies the group; every card keeps its real catalog ID. */
@@ -320,7 +320,9 @@ async function loadMenu(): Promise<MenuLoadResult> {
       headers: {
         Accept: "application/json",
       },
-      cache: "no-store",
+      // Shared by every visitor for up to 60 seconds; the Square catalog
+      // webhook clears it as soon as the catalog changes (SQUARE_CATALOG_TAG).
+      next: { revalidate: 60, tags: [SQUARE_CATALOG_TAG] },
       credentials: "omit",
       redirect: "error",
       signal: AbortSignal.timeout(20_000),
@@ -441,20 +443,24 @@ export default async function MenuPage({
 }: {
   searchParams?: Promise<{ item?: string }>;
 }) {
+  // Events and website content don't depend on the catalog, so they start right
+  // away instead of waiting for the revision check (TZ-515).
+  // Events are optional: keep the menu available if D1 cannot load them.
+  const liveEventsRequest = listActiveEvents().catch(() => []);
+  const contentRequest = getWebsiteContent();
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
   searchParams ? searchParams : Promise.resolve(undefined),
-  getWebsiteContent(),
+  contentRequest,
   loadMenu(),
-  // Events are optional: keep the menu available if D1 cannot load them.
-  listActiveEvents().catch(() => []),
+  liveEventsRequest,
 ]);
 
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
 
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const sections = menuResult.ok ? menuResult.sections : [];
 
   return (
@@ -475,7 +481,8 @@ export default async function MenuPage({
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
-            priority
+            priority={!logoSrc.startsWith("data:")}
+            fetchPriority="high"
             unoptimized={
               logoSrc.startsWith("data:") ||
               logoSrc.startsWith("http")
