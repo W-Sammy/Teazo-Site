@@ -16,7 +16,10 @@ import { defaultModifierSelections } from "@/app/lib/square-option-rules";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import type { ModifierList, ModifierOption } from "@/app/types/menu-item";
 import type { MenuItem } from "./menu-item-card";
-import { availabilityUrl, takePrefetchedAvailability } from "./customizer-availability-prefetch";
+import {
+  availabilityUrl, takePrefetchedAvailability, readItemAvailability, isFreshItemAvailability,
+  type ItemAvailabilitySnapshot,
+} from "./customizer-availability-prefetch";
 import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
 import { useCart, MIN_ITEM_QUANTITY, MAX_ITEM_QUANTITY } from "@/app/context/cart-context";
 import { montserrat } from "@/app/fonts";
@@ -41,6 +44,8 @@ function formatCurrency(cents: number): string {
 export interface ItemCustomizerModalProps {
   item: MenuItem | null;
   initialCartItem?: CartItem | null;
+  initialAvailability?: ItemAvailabilitySnapshot | null;
+  onAvailabilityConfirmed?: (snapshot: ItemAvailabilitySnapshot) => void;
   onClose: () => void;
 }
 
@@ -78,7 +83,7 @@ function ItemCustomizerModalContent({
   const hasMultipleVariations = variations.length > 1;
 
   const [selectedVariationId, setSelectedVariationId] = useState<string>(() => {
-    return variations.find((variation) => variation.id === initialCartItem?.variationId)?.id || item.variationId || variations[0]?.id || "";
+    return initialCartItem?.variationId || item.variationId || variations[0]?.id || "";
   });
 
   const selectedVariation = variations.find((v) => v.id === selectedVariationId);
@@ -642,9 +647,11 @@ function ItemCustomizerModalContent({
 }
 
 /** Mounted afresh for every opening; preserve the form while availability refreshes. */
-function FreshItemCustomizer({ item, initialCartItem, onClose }: {
+function FreshItemCustomizer({ item, initialCartItem, initialAvailability, onAvailabilityConfirmed, onClose }: {
   item: MenuItem;
   initialCartItem?: CartItem | null;
+  initialAvailability?: ItemAvailabilitySnapshot | null;
+  onAvailabilityConfirmed?: (snapshot: ItemAvailabilitySnapshot) => void;
   onClose: () => void;
 }) {
   const [result, setResult] = useState<{ item: ApiMenuItem | null; error?: string } | null>(null);
@@ -653,18 +660,23 @@ function FreshItemCustomizer({ item, initialCartItem, onClose }: {
     const controller = new AbortController();
     void (async () => {
       try {
-        const response = await (takePrefetchedAvailability(item.catalogObjectId)
-          ?? fetch(availabilityUrl(item.catalogObjectId), { cache: "no-store", signal: controller.signal }));
-        if (!response.ok) throw new Error("Catalog unavailable");
-        const fresh: ApiMenuItem = await response.json();
-        const choices = availableMenuChoices(fresh);
-        if (!controller.signal.aborted) setResult({ item: choices });
+        const snapshot = retry === 0 && isFreshItemAvailability(initialAvailability, item.catalogObjectId)
+          ? initialAvailability
+          : await readItemAvailability(item.catalogObjectId, await (
+            (retry === 0 ? takePrefetchedAvailability(item.catalogObjectId) : null)
+            ?? fetch(availabilityUrl(item.catalogObjectId), { cache: "no-store", signal: controller.signal })
+          ));
+        const choices = availableMenuChoices(snapshot.item);
+        if (!controller.signal.aborted) {
+          setResult({ item: choices });
+          onAvailabilityConfirmed?.(snapshot);
+        }
       } catch {
         if (!controller.signal.aborted) setResult({ item: null, error: "Could not confirm availability. Please try again." });
       }
     })();
     return () => controller.abort();
-  }, [item.catalogObjectId, retry]);
+  }, [item.catalogObjectId, retry, initialAvailability, onAvailabilityConfirmed]);
 
   const fresh = result?.item;
   return <ItemCustomizerModalContent
@@ -701,6 +713,8 @@ function getServerMounted() {
 export default function ItemCustomizerModal({
   item,
   initialCartItem,
+  initialAvailability,
+  onAvailabilityConfirmed,
   onClose,
 }: ItemCustomizerModalProps) {
   const isMounted = useSyncExternalStore(emptySubscribe, getClientMounted, getServerMounted);
@@ -716,6 +730,8 @@ export default function ItemCustomizerModal({
       key={initialCartItem ? initialCartItem.cartItemId : item.catalogObjectId}
       item={item}
       initialCartItem={initialCartItem}
+      initialAvailability={initialAvailability}
+      onAvailabilityConfirmed={onAvailabilityConfirmed}
       onClose={onClose}
     />,
     document.body

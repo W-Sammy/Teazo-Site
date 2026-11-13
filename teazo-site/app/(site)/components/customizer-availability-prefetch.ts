@@ -1,5 +1,38 @@
-// Deep links start the availability request while the page hydrates; the customizer consumes it once.
+import type { MenuItem } from "@/app/types/menu-item";
+
+// Also bounds reuse of a cart Edit response on subsequent openings.
 const PREFETCH_TTL_MS = 10_000;
+
+export interface ItemAvailabilitySnapshot {
+  item: MenuItem;
+  fetchedAt: number;
+}
+
+export function isFreshItemAvailability(
+  snapshot: ItemAvailabilitySnapshot | null | undefined,
+  catalogObjectId: string,
+): snapshot is ItemAvailabilitySnapshot {
+  const age = snapshot ? Date.now() - snapshot.fetchedAt : NaN;
+  return snapshot?.item.catalogObjectId === catalogObjectId && age >= 0 && age <= PREFETCH_TTL_MS;
+}
+
+/** Parse once; both the cart and customizer use the resulting data, never a shared body. */
+export async function readItemAvailability(
+  catalogObjectId: string,
+  response: Response,
+): Promise<ItemAvailabilitySnapshot> {
+  if (!response.ok) throw new Error("Unable to load drink options from Square.");
+  const item: MenuItem = await response.json();
+  if (item.catalogObjectId !== catalogObjectId) throw new Error("Square returned a different drink. Please try again.");
+  return { item, fetchedAt: Date.now() };
+}
+
+export async function fetchItemAvailability(
+  catalogObjectId: string,
+  signal: AbortSignal,
+): Promise<ItemAvailabilitySnapshot> {
+  return readItemAvailability(catalogObjectId, await fetch(availabilityUrl(catalogObjectId), { cache: "no-store", signal }));
+}
 
 const pending = new Map<string, { response: Promise<Response>; startedAt: number }>();
 

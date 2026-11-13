@@ -45,7 +45,8 @@ import type {
 } from "@/app/types/checkout";
 import CustomizerLoadingModal from "./customizer-loading-modal";
 import ChunkErrorBoundary from "./chunk-error-boundary";
-import LazyCustomizerModal, { resetCustomizerModule } from "./lazy-customizer-modal";
+import LazyCustomizerModal, { preloadCustomizerModule, resetCustomizerModule } from "./lazy-customizer-modal";
+import { fetchItemAvailability, type ItemAvailabilitySnapshot } from "./customizer-availability-prefetch";
 
 const SAVED_CONTACT_STORAGE_KEY = "teazo_saved_contact";
 
@@ -198,7 +199,10 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
   const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [customizerRetryKey, setCustomizerRetryKey] = useState(0);
 
-  const menuItemCacheRef = useRef<Record<string, MenuItem>>({});
+  // Keep only the last drink, local to this bag. Older data is provisional on reopening.
+  const lastAvailabilityRef = useRef<ItemAvailabilitySnapshot | null>(null);
+  const [editingAvailability, setEditingAvailability] = useState<ItemAvailabilitySnapshot | null>(null);
+  const editControllerRef = useRef<AbortController | null>(null);
   const editRequestIdRef = useRef(0);
   const isMountedRef = useRef(true);
 
@@ -206,7 +210,23 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      editControllerRef.current?.abort();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!isCartOpen) return;
+    const requestIdRef = editRequestIdRef;
+    return () => {
+      ++requestIdRef.current;
+      editControllerRef.current?.abort();
+      editControllerRef.current = null;
+      if (isMountedRef.current) setEditingLoadingId(null);
+    };
+  }, [isCartOpen]);
+
+  const rememberAvailability = React.useCallback((snapshot: ItemAvailabilitySnapshot) => {
+    lastAvailabilityRef.current = snapshot;
   }, []);
 
   const handleRetryEditCustomizer = React.useCallback(() => {
@@ -495,53 +515,47 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
 
   // Concurrent cart edit flow: pre-warms customizer chunk while fetching product data
   const handleEditCartItem = async (cartItem: CartItem) => {
+    editControllerRef.current?.abort();
+    const controller = new AbortController();
+    editControllerRef.current = controller;
     setEditingLoadingId(cartItem.cartItemId);
     setErrorMessage(null);
     const requestId = ++editRequestIdRef.current;
 
     try {
-      const fetchCatalogItem = async (): Promise<MenuItem> => {
-        const cached = menuItemCacheRef.current[cartItem.catalogObjectId];
-        if (cached) return cached;
+      // Start the chunk and product together. Cached data opens immediately;
+      // the customizer independently checks its age before confirming availability.
+      preloadCustomizerModule();
+      const cached = lastAvailabilityRef.current;
+      const snapshot = cached?.item.catalogObjectId === cartItem.catalogObjectId
+        ? cached
+        : await fetchItemAvailability(cartItem.catalogObjectId, controller.signal);
 
-        const res = await fetch(`/api/square/products/${encodeURIComponent(cartItem.catalogObjectId)}`);
-        if (!res.ok) {
-          throw new Error("Unable to load drink options from Square.");
-        }
-        const apiItem = await res.json();
-        const mappedItem: MenuItem = {
-          catalogObjectId: apiItem.catalogObjectId,
-          name: apiItem.name?.trim() || cartItem.name,
-          variationId: apiItem.variationId || null,
-          priceCents: apiItem.priceCents,
-          currency: apiItem.currency || "USD",
-          imageUrl: apiItem.imageUrl || cartItem.imageUrl || null,
-          categoryId: apiItem.categories?.[0]?.id || null,
-          categoryName: apiItem.categories?.[0]?.name || null,
-          description: apiItem.description,
-          modifiers: apiItem.modifiers || [],
-          variations: apiItem.variations || [],
-        };
-        menuItemCacheRef.current[cartItem.catalogObjectId] = mappedItem;
-        return mappedItem;
+      if (controller.signal.aborted || requestId !== editRequestIdRef.current || !isMountedRef.current) return;
+      lastAvailabilityRef.current = snapshot;
+      const apiItem = snapshot.item;
+      const mappedItem: MenuItem = {
+        availability: apiItem.availability,
+        catalogObjectId: apiItem.catalogObjectId,
+        name: apiItem.name?.trim() || cartItem.name,
+        variationId: apiItem.variationId || null,
+        priceCents: apiItem.priceCents,
+        currency: apiItem.currency || "USD",
+        imageUrl: apiItem.imageUrl || cartItem.imageUrl || null,
+        categoryId: apiItem.categories?.[0]?.id || null,
+        categoryName: apiItem.categories?.[0]?.name || null,
+        description: apiItem.description,
+        modifiers: apiItem.modifiers || [],
+        variations: apiItem.variations || [],
       };
 
-      // Concurrent fetch: catalog API + customizer chunk
-      const [menuItem] = await Promise.all([
-        fetchCatalogItem(),
-        import("@/app/(site)/components/item-customizer-modal"),
-      ]);
-
-      // Cancellation check: ignore if superseded or unmounted
-      if (requestId !== editRequestIdRef.current || !isMountedRef.current) {
-        return;
-      }
-
       setEditingCartItem(cartItem);
-      setEditingMenuItem(menuItem);
+      setEditingMenuItem(mappedItem);
+      setEditingAvailability(snapshot);
+      editControllerRef.current = null;
       closeCart();
     } catch (err) {
-      if (requestId !== editRequestIdRef.current || !isMountedRef.current) return;
+      if (controller.signal.aborted || requestId !== editRequestIdRef.current || !isMountedRef.current) return;
       console.error("Failed to load item for editing:", err);
       setErrorMessage(
         err instanceof Error ? err.message : "Could not load customization options for this drink."
@@ -1129,6 +1143,8 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
               key={`edit-modal-${customizerRetryKey}-${editingMenuItem.catalogObjectId}`}
               item={editingMenuItem}
               initialCartItem={editingCartItem}
+              initialAvailability={editingAvailability}
+              onAvailabilityConfirmed={rememberAvailability}
               onClose={() => {
                 setEditingCartItem(null);
                 setEditingMenuItem(null);

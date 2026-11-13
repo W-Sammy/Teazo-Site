@@ -186,4 +186,23 @@ describe("customizer background availability", () => {
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
     expect(mocks.addItem).not.toHaveBeenCalled();
   });
+  it.each(["expired", "different product", "future timestamp"])("does not confirm availability from a snapshot with %s", async (kind) => {
+    const check = holdAvailability();
+    const snapshotItem = makeApiItem();
+    if (kind === "different product") snapshotItem.catalogObjectId = "OTHER";
+    const fetchedAt = Date.now() + (kind === "future timestamp" ? 60_000 : kind === "expired" ? -10_001 : 0);
+    render(<ItemCustomizerModal
+      item={pageItem}
+      initialAvailability={{ item: snapshotItem, fetchedAt }}
+      onClose={vi.fn()}
+    />);
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    fireEvent.click(await screen.findByRole("radio", { name: "Full sweet" }));
+    fireEvent.click(addButton());
+    expect(mocks.addItem).not.toHaveBeenCalled();
+    await check.respondWith(makeApiItem(unavailable));
+    expect(addButton().disabled).toBe(true);
+    expect(mocks.addItem).not.toHaveBeenCalled();
+  });
+
 });
