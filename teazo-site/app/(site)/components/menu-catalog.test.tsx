@@ -146,8 +146,7 @@ const menuSections: MenuSection[] = [
 function renderCatalog(initialItemId?: string) {
   return render(
     <MenuCatalog
-      specialSections={specialSections}
-      menuSections={menuSections}
+      sections={[...specialSections, ...menuSections]}
       initialItemId={initialItemId}
       headingClassName="test-heading"
       bodyClassName="test-body"
@@ -200,6 +199,20 @@ describe("Public Menu catalog", () => {
       ).toBeTruthy();
     });
 
+    it("renders sections in the supplied order, including specials", () => {
+      render(
+        <MenuCatalog
+          sections={[menuSections[0], specialSections[0], menuSections[1]]}
+          headingClassName="test-heading"
+          bodyClassName="test-body"
+        />,
+      );
+
+      expect(screen.getAllByRole("heading", { level: 2 })
+        .map((heading) => heading.textContent))
+        .toEqual(["Milk Tea", "TEAZO Special", "Fresh Fruit Tea"]);
+    });
+
     it("preserves each section's catalog items", () => {
       renderCatalog();
 
@@ -233,8 +246,7 @@ describe("Public Menu catalog", () => {
     it("renders an empty catalog without an item dialog", () => {
       render(
         <MenuCatalog
-          specialSections={[]}
-          menuSections={[]}
+          sections={[]}
           headingClassName="test-heading"
           bodyClassName="test-body"
         />,

@@ -12,6 +12,7 @@ import { getWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { getMenuDisplayState, initializeMenuDisplayItems } from "@/app/lib/queries/menu-display";
 import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
@@ -341,13 +342,94 @@ async function loadMenu(): Promise<MenuLoadResult> {
       );
     }
 
-    return {
-      ok: true,
-      sections: buildMenuSections(data.flatMap((item) => {
+    // Website display controls are a local overlay on top of Square's catalog.
+    // Unconfigured Square categories stay hidden until an admin publishes them.
+    // A failed settings read must not accidentally publish hidden categories.
+    let displayState = await getMenuDisplayState();
+    const initializedItemIds = new Set(
+      displayState.items.map((item) => item.squareCatalogObjectId),
+    );
+    if (data.some((item) => !initializedItemIds.has(item.catalogObjectId))) {
+      // Freeze defaults when the website first sees an item, even if no admin
+      // has visited Display Categories since it was added to Square.
+      await initializeMenuDisplayItems(data, displayState.sections);
+      displayState = await getMenuDisplayState();
+    }
+
+    const itemSettings = new Map(
+      displayState.items.map((item) => [item.squareCatalogObjectId, item.visible]),
+    );
+    const sectionSettings = new Map(
+      displayState.sections.map((section) => [section.squareCategoryId, section]),
+    );
+    const uncategorizedSettings = displayState.sections.find(
+      (section) => section.sectionType === "uncategorized",
+    );
+
+    const visibleItems = data.flatMap((item) => {
         const orderable = orderableMenuItem(item);
-        return orderable ? [orderable] : [];
-      })),
-    };
+        if (!orderable) return [];
+
+        const explicitVisibility = itemSettings.get(item.catalogObjectId);
+        const defaultVisible = item.categories.length === 0
+          ? uncategorizedSettings?.defaultItemVisible ?? true
+          : item.categories.some(
+              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? false,
+            );
+
+        return explicitVisibility ?? defaultVisible ? [orderable] : [];
+      });
+
+    const sections = buildMenuSections(visibleItems).filter((section) => {
+        if (section.id === uncategorizedSectionId) {
+          return uncategorizedSettings?.isPublished ?? true;
+        }
+
+        const categoryId = section.id.startsWith("category:")
+          ? section.id.slice("category:".length)
+          : null;
+        return categoryId
+          ? sectionSettings.get(categoryId)?.isPublished ?? false
+          : true;
+      });
+
+    const visibleItemById = new Map(
+      visibleItems.map((item) => [item.catalogObjectId, item]),
+    );
+    for (const custom of displayState.sections.filter(
+      (section) => section.sectionType === "custom" && section.isPublished,
+    )) {
+      const customItems = custom.itemIds
+        .map((itemId) => visibleItemById.get(itemId))
+        .filter((item): item is CatalogMenuItem => Boolean(item));
+      if (customItems.length > 0) {
+        sections.push({
+          id: `custom:${custom.id}`,
+          title: custom.title,
+          items: customItems.map((item) => toCardItem(item, null, custom.title)),
+        });
+      }
+    }
+
+    // Match each rendered section to its saved identity before sorting all
+    // Square, custom, and uncategorized sections together.
+    const sectionOrder = new Map(
+      displayState.sections.map((section) => {
+        const renderedId = section.sectionType === "custom"
+          ? `custom:${section.id}`
+          : section.sectionType === "uncategorized"
+            ? uncategorizedSectionId
+            : `category:${section.squareCategoryId}`;
+        return [renderedId, section.sortOrder];
+      }),
+    );
+    sections.sort((a, b) =>
+      (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) ||
+      a.title.localeCompare(b.title),
+    );
+
+    return { ok: true, sections };
   } catch (error) {
     console.error("Public menu catalog loading failed:", error);
 
@@ -380,18 +462,6 @@ export default async function MenuPage({
 
   const logoSrc = heroLogoSrc(content.logo);
   const sections = menuResult.ok ? menuResult.sections : [];
-
-  // TEAZO Special is shown only when real items have that actual category.
-  // Keep distinct category IDs separate, even when their display names match.
-  const specialSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) === "teazo special",
-  );
-
-  const menuSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) !== "teazo special",
-  );
 
   return (
     <>
@@ -505,8 +575,7 @@ export default async function MenuPage({
           </section>
         ) : (
           <MenuCatalog
-            specialSections={specialSections}
-            menuSections={menuSections}
+            sections={sections}
             initialItemId={initialItemId}
             headingClassName={cabinSketch.className}
             bodyClassName={montserrat.className}
