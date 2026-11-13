@@ -12,6 +12,8 @@ const baseButtonStyles =
   "cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60";
 
 export const adminButtonStyles = {
+  navigation:
+    "cursor-pointer rounded-lg border border-[#dbb082] bg-[#fffaf6] px-4 py-2 text-sm font-semibold text-[#704b2d] hover:bg-[#f5e6d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#dbb082] focus-visible:ring-offset-2",
   // Primary actions: Create, Add, Upload, Save, etc.
   primary:
     `${baseButtonStyles} bg-black hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-600 disabled:hover:bg-gray-300`,
