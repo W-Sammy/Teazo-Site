@@ -9,9 +9,9 @@
  * order, and other non-catalog events, which are acknowledged
  * without updating payment or fulfillment state.
  *
- * Catalog revision storage and Next.js cache operations are
- * mocked. No production Square, database, or storage services
- * are accessed.
+ * Catalog revision storage, category synchronization, and Next.js
+ * cache operations are mocked. No production Square, database,
+ * or storage services are accessed.
  */
 
 import { createHmac } from "node:crypto";
@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   recordCatalogRevision: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  syncSquareMenuCategories: vi.fn(),
 }));
 
 vi.mock("@/app/lib/queries/catalog-revision", () => ({
@@ -37,6 +38,12 @@ vi.mock("@/app/lib/queries/catalog-revision", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
+}));
+
+// The webhook now synchronizes Square categories before recording revisions.
+// Mock the operation to avoid external Square calls or D1 writes in these tests.
+vi.mock("@/app/lib/sync-menu-categories", () => ({
+  syncSquareMenuCategories: mocks.syncSquareMenuCategories,
 }));
 
 const { POST } = await import("./route");
@@ -122,6 +129,8 @@ beforeEach(() => {
   mocks.recordCatalogRevision.mockReset();
   mocks.revalidatePath.mockReset();
   mocks.revalidateTag.mockReset();
+  mocks.syncSquareMenuCategories.mockReset();
+  mocks.syncSquareMenuCategories.mockResolvedValue(undefined);
 
   vi.stubEnv(
     "SQUARE_WEBHOOK_SIGNATURE_KEY",
@@ -390,8 +399,12 @@ describe("Square webhook endpoint", () => {
       );
 
       expect(
+        mocks.syncSquareMenuCategories,
+      ).toHaveBeenCalledOnce();
+
+      expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(2);
+      ).toHaveBeenCalledTimes(3);
 
       expect(
         mocks.revalidatePath,
@@ -405,6 +418,13 @@ describe("Square webhook endpoint", () => {
       ).toHaveBeenNthCalledWith(
         2,
         "/admin/menu",
+      );
+
+      expect(
+        mocks.revalidatePath,
+      ).toHaveBeenNthCalledWith(
+        3,
+        "/admin/menu/display-categories",
       );
     });
 
@@ -440,8 +460,13 @@ describe("Square webhook endpoint", () => {
       );
 
       expect(
+        mocks.syncSquareMenuCategories,
+      ).toHaveBeenCalledTimes(2);
+
+      // Every delivery invalidates the public Menu and both admin Menu pages.
+      expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(4);
+      ).toHaveBeenCalledTimes(6);
     });
 
     it("accepts out-of-order catalog events without inventing an event-ordering check", async () => {
@@ -515,7 +540,7 @@ describe("Square webhook endpoint", () => {
 
       expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(2);
+      ).toHaveBeenCalledTimes(3);
     });
 
     it("returns 500 when cache revalidation fails", async () => {
