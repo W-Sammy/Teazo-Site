@@ -487,9 +487,15 @@ export function BubbleField({
       }
     };
 
+    const isBodyOverflowHidden = () =>
+      typeof document !== "undefined" &&
+      document.body?.style?.overflow === "hidden";
+
+    let isPaused = isBodyOverflowHidden();
+
     const step = (time: number) => {
       frameRef.current = null;
-      if (isReducedMotion) return;
+      if (isReducedMotion || isPaused || isBodyOverflowHidden()) return;
 
       const particles = particlesRef.current;
 
@@ -678,11 +684,45 @@ export function BubbleField({
     };
 
     const startAnimation = () => {
-      if (!isReducedMotion && frameRef.current === null) {
+      if (!isReducedMotion && !isPaused && !isBodyOverflowHidden() && frameRef.current === null) {
         lastTimeRef.current = 0;
         frameRef.current = window.requestAnimationFrame(step);
       }
     };
+
+    const updatePausedState = () => {
+      isPaused = isBodyOverflowHidden();
+
+      if (isPaused) {
+        if (frameRef.current !== null) {
+          window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+      } else {
+        startAnimation();
+      }
+    };
+
+    let bodyObserver: MutationObserver | null = null;
+    let overflowPoll: number | null = null;
+    if (
+      typeof MutationObserver !== "undefined" &&
+      typeof document !== "undefined" &&
+      document.body
+    ) {
+      bodyObserver = new MutationObserver(() => {
+        updatePausedState();
+      });
+
+      bodyObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    } else if (typeof document !== "undefined" && document.body) {
+      // Keep modal pause/resume working without MutationObserver. Reconcile even
+      // unchanged overflow: step() may have stopped before a short lock ended.
+      overflowPoll = window.setInterval(updatePausedState, 250);
+    }
 
     const handleMotionChange = (event: MediaQueryListEvent) => {
       isReducedMotion = event.matches;
@@ -711,6 +751,12 @@ export function BubbleField({
     startAnimation();
 
     return () => {
+      if (bodyObserver) {
+        bodyObserver.disconnect();
+      }
+      if (overflowPoll !== null) {
+        window.clearInterval(overflowPoll);
+      }
       resizeObserver.disconnect();
       motionQuery.removeEventListener("change", handleMotionChange);
 

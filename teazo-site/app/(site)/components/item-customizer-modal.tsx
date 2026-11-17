@@ -6,6 +6,9 @@ import React, {
   useEffect,
   useId,
   useSyncExternalStore,
+  useCallback,
+  useMemo,
+  useReducer,
 } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -41,6 +44,245 @@ function formatCurrency(cents: number): string {
     currency: "USD",
   }).format(cents / 100);
 }
+
+const EMPTY_OPTION_IDS: string[] = [];
+
+type ModifierState = {
+  modifierChoices: Record<string, string[]>;
+  validationError: string | null;
+};
+
+type ModifierAction =
+  | { type: "toggle"; modifierList: ModifierList; optionId: string; defaultOptionIds: string[] }
+  | { type: "replace"; modifierChoices: Record<string, string[]> }
+  | { type: "validation"; message: string | null };
+
+function initialModifierState(initialCartItem: CartItem | null | undefined): ModifierState {
+  const modifierChoices: Record<string, string[]> = {};
+  for (const mod of initialCartItem?.selectedModifiers ?? []) {
+    (modifierChoices[mod.modifierListId] ??= []).push(mod.optionId);
+  }
+  return { modifierChoices, validationError: null };
+}
+
+function modifierReducer(state: ModifierState, action: ModifierAction): ModifierState {
+  if (action.type === "validation") {
+    return state.validationError === action.message
+      ? state
+      : { ...state, validationError: action.message };
+  }
+  if (action.type === "replace") {
+    return { modifierChoices: action.modifierChoices, validationError: null };
+  }
+
+  const { modifierList, optionId, defaultOptionIds } = action;
+  const current = state.modifierChoices[modifierList.id] ?? defaultOptionIds;
+  const isSelected = current.includes(optionId);
+  const maxAllowed = modifierList.maxSelectedModifiers;
+  const isSingle = maxAllowed === 1;
+
+  if (!isSingle && !isSelected && maxAllowed && maxAllowed > 0 && current.length >= maxAllowed) {
+    return {
+      ...state,
+      validationError: `You can select up to ${maxAllowed} options for this customization.`,
+    };
+  }
+  const next = isSingle
+    ? (isSelected && (modifierList.minSelectedModifiers ?? 0) === 0 ? [] : [optionId])
+    : (isSelected ? current.filter((id) => id !== optionId) : [...current, optionId]);
+  return {
+    modifierChoices: { ...state.modifierChoices, [modifierList.id]: next },
+    validationError: null,
+  };
+}
+
+export interface ModifierOptionButtonProps {
+  option: ModifierOption;
+  isSingle: boolean;
+  isSelected: boolean;
+  isDisabled: boolean;
+  onSelect: () => void;
+}
+
+export const ModifierOptionButton = React.memo(
+  function ModifierOptionButton({
+    option,
+    isSingle,
+    isSelected,
+    isDisabled,
+    onSelect,
+  }: ModifierOptionButtonProps) {
+    return (
+      <button
+        type="button"
+        role={isSingle ? "radio" : "checkbox"}
+        aria-checked={isSelected}
+        disabled={isDisabled}
+        onClick={onSelect}
+        className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
+          isSelected
+            ? "border-stone-900 bg-stone-900 text-white shadow-sm"
+            : "border-stone-200 bg-white text-stone-800 hover:border-stone-400"
+        }`}
+      >
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+          <span
+            className={`flex h-4.5 w-4.5 flex-shrink-0 items-center justify-center ${
+              isSingle ? "rounded-full" : "rounded-md"
+            } border transition-colors duration-150 ${
+              isSelected
+                ? "border-white bg-white text-stone-900"
+                : "border-stone-300 bg-stone-50 group-hover:border-stone-400"
+            }`}
+          >
+            {isSelected && (
+              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </span>
+          <span className={`${montserrat.className} text-xs font-semibold truncate`}>
+            {option.name || "Option"}
+          </span>
+        </div>
+
+        {option.priceCents > 0 && (
+          <span
+            className={`text-xs font-medium whitespace-nowrap ${
+              isSelected ? "text-[#DBAF82]" : "text-[#8E5629]"
+            }`}
+          >
+            +{formatCurrency(option.priceCents)}
+          </span>
+        )}
+      </button>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.isDisabled === nextProps.isDisabled &&
+      prevProps.onSelect === nextProps.onSelect &&
+      prevProps.isSingle === nextProps.isSingle &&
+      prevProps.option.id === nextProps.option.id &&
+      prevProps.option.name === nextProps.option.name &&
+      prevProps.option.priceCents === nextProps.option.priceCents
+    );
+  }
+);
+
+export interface ModifierGroupSectionProps {
+  modifierList: ModifierList;
+  selectedOptionIds: string[];
+  onOptionToggle: (modifierList: ModifierList, optionId: string) => void;
+}
+
+export const ModifierGroupSection = React.memo(
+  function ModifierGroupSection({
+    modifierList,
+    selectedOptionIds,
+    onOptionToggle,
+  }: ModifierGroupSectionProps) {
+    const isSingle = modifierList.maxSelectedModifiers === 1;
+    const minRequired = modifierList.minSelectedModifiers ?? 0;
+    const maxAllowed = modifierList.maxSelectedModifiers;
+    const isSatisfied =
+      selectedOptionIds.length >= minRequired &&
+      (!maxAllowed || selectedOptionIds.length <= maxAllowed);
+
+    const availableOptions = useMemo(
+      () => modifierList.options.filter((option) => option.availability?.available),
+      [modifierList.options]
+    );
+
+    const optionCallbacks = useMemo(() => {
+      const map: Record<string, () => void> = {};
+      for (const option of availableOptions) {
+        map[option.id] = () => onOptionToggle(modifierList, option.id);
+      }
+      return map;
+    }, [availableOptions, modifierList, onOptionToggle]);
+
+    return (
+      <fieldset className="space-y-3">
+        <div className="flex items-center justify-between">
+          <legend
+            className={`${montserrat.className} text-sm font-bold uppercase tracking-wider text-stone-900`}
+          >
+            {modifierList.name || "Customization"}
+          </legend>
+
+          <div className="flex items-center gap-1.5">
+            {minRequired > 0 ? (
+              <span
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                  isSatisfied
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                Required (min {minRequired})
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
+                Optional
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-stone-500">
+          {maxAllowed && maxAllowed > 0
+            ? `Choose up to ${maxAllowed}.`
+            : "No selection limit."}
+        </p>
+
+        {/* Options Grid */}
+        <div
+          role={isSingle ? "radiogroup" : "group"}
+          aria-label={modifierList.name || "Customization options"}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+        >
+          {availableOptions.map((option) => {
+            const isOptionSelected = selectedOptionIds.includes(option.id);
+            const isOptionDisabled =
+              !isSingle &&
+              !isOptionSelected &&
+              !!maxAllowed &&
+              selectedOptionIds.length >= maxAllowed;
+
+            return (
+              <ModifierOptionButton
+                key={option.id}
+                option={option}
+                isSingle={isSingle}
+                isSelected={isOptionSelected}
+                isDisabled={isOptionDisabled}
+                onSelect={optionCallbacks[option.id]}
+              />
+            );
+          })}
+        </div>
+      </fieldset>
+    );
+  },
+  (prevProps, nextProps) => {
+    if (prevProps.modifierList !== nextProps.modifierList) return false;
+    if (prevProps.onOptionToggle !== nextProps.onOptionToggle) return false;
+    if (prevProps.selectedOptionIds === nextProps.selectedOptionIds) return true;
+    if (prevProps.selectedOptionIds.length !== nextProps.selectedOptionIds.length) {
+      return false;
+    }
+    return prevProps.selectedOptionIds.every(
+      (id, index) => id === nextProps.selectedOptionIds[index]
+    );
+  }
+);
+
+export const ModifierSection = ModifierGroupSection;
 
 export interface ItemCustomizerModalProps {
   item: MenuItem | null;
@@ -92,30 +334,29 @@ function ItemCustomizerModalContent({
   const basePriceCents = selectedVariation?.priceCents ?? item.priceCents;
 
   // Selected modifier options: listId -> optionId[]
-  const [modifierChoices, setModifierChoices] = useState<Record<string, string[]>>(() => {
-    const initial: Record<string, string[]> = {};
-    if (initialCartItem) {
-      for (const mod of initialCartItem.selectedModifiers) {
-        if (!initial[mod.modifierListId]) {
-          initial[mod.modifierListId] = [];
-        }
-        initial[mod.modifierListId].push(mod.optionId);
-      }
-    }
-    return initial;
-  });
+  const [{ modifierChoices, validationError }, dispatchModifier] = useReducer(
+    modifierReducer,
+    initialCartItem,
+    initialModifierState,
+  );
   // Recompute untouched defaults when the fresh catalog arrives. Explicit choices
   // (including an empty selection in an edited cart line) are never overwritten.
-  const selectedModifiers = {
-    ...(initialCartItem ? {} : defaultModifierSelections(item.modifiers ?? [])),
-    ...modifierChoices,
-  };
+  const defaultModifiers = useMemo(
+    () => (initialCartItem ? {} : defaultModifierSelections(item.modifiers ?? [])),
+    [initialCartItem, item.modifiers]
+  );
+  const selectedModifiers = useMemo(
+    () => ({
+      ...defaultModifiers,
+      ...modifierChoices,
+    }),
+    [defaultModifiers, modifierChoices]
+  );
 
   // Special instructions (max 150 characters)
   const [notes, setNotes] = useState<string>(() => initialCartItem?.notes ?? "");
 
   // Validation / Feedback banner
-  const [validationError, setValidationError] = useState<string | null>(null);
   const availability = checkCustomizerAvailability(
     item, availabilityChecked, selectedVariationId, selectedModifiers, availabilityError,
   );
@@ -125,11 +366,13 @@ function ItemCustomizerModalContent({
   const isAddPending = addRequested && !availability.confirmed && !availabilityError;
 
   const removeUnavailableOptions = () => {
-    setModifierChoices(Object.fromEntries(Object.entries(selectedModifiers).map(([listId, ids]) => [
-      listId,
-      ids.filter((id) => item.modifiers?.some((group) => group.enabled !== false && group.id === listId && group.options.some((option) => option.id === id && option.availability?.available))),
-    ])));
-    setValidationError(null);
+    dispatchModifier({
+      type: "replace",
+      modifierChoices: Object.fromEntries(Object.entries(selectedModifiers).map(([listId, ids]) => [
+        listId,
+        ids.filter((id) => item.modifiers?.some((group) => group.enabled !== false && group.id === listId && group.options.some((option) => option.id === id && option.availability?.available))),
+      ])),
+    });
   };
 
   // Compute live price
@@ -148,28 +391,18 @@ function ItemCustomizerModalContent({
   const unitPriceCents = basePriceCents + modifiersAddOnCents;
   const totalPriceCents = unitPriceCents * quantity;
 
-  // Modifier selection handlers
-  const handleSingleSelect = (listId: string, optionId: string) => {
-    setModifierChoices((prev) => ({
-      ...prev,
-      [listId]: [optionId],
-    }));
-    setValidationError(null);
-  };
-
-  const handleMultiToggle = (listId: string, optionId: string, max?: number) => {
-    const current = selectedModifiers[listId] || [];
-    const exists = current.includes(optionId);
-    if (!exists && max && max > 0 && current.length >= max) {
-      setValidationError(`You can select up to ${max} option${max === 1 ? "" : "s"} for this customization.`);
-      return;
-    }
-    setValidationError(null);
-    setModifierChoices((prev) => ({
-      ...prev,
-      [listId]: exists ? current.filter((id) => id !== optionId) : [...current, optionId],
-    }));
-  };
+  // Unchanged groups retain their selections and callbacks across toggles.
+  const handleOptionToggle = useCallback(
+    (modifierList: ModifierList, optionId: string) => {
+      dispatchModifier({
+        type: "toggle",
+        modifierList,
+        optionId,
+        defaultOptionIds: defaultModifiers[modifierList.id] ?? EMPTY_OPTION_IDS,
+      });
+    },
+    [defaultModifiers]
+  );
 
   // Quantity stepper
   const handleDecreaseQuantity = () => {
@@ -194,7 +427,7 @@ function ItemCustomizerModalContent({
   const commitAdd = () => {
     const effectiveVariationId = selectedVariationId || item.variationId;
     if (!effectiveVariationId) {
-      setValidationError("Unable to customize this drink: Missing size variation.");
+      dispatchModifier({ type: "validation", message: "Unable to customize this drink: Missing size variation." });
       return;
     }
 
@@ -430,9 +663,9 @@ function ItemCustomizerModalContent({
                         aria-checked={isSelected}
                         onClick={() => {
                           setSelectedVariationId(v.id);
-                          setValidationError(null);
+                          dispatchModifier({ type: "validation", message: null });
                         }}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all ${
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-colors duration-150 ${
                           isSelected
                             ? "border-stone-900 bg-stone-900 text-white shadow-sm"
                             : "border-stone-200 bg-white text-stone-800 hover:border-stone-400"
@@ -454,119 +687,16 @@ function ItemCustomizerModalContent({
             {/* Modifier Lists (Sweetness, Ice Level, Toppings, etc.) */}
             {item.modifiers && item.modifiers.length > 0 && (
               <div className="space-y-6">
-                {item.modifiers.filter((group) => group.enabled !== false).map((modifierList: ModifierList) => {
-                  const isSingle =
-                    modifierList.maxSelectedModifiers === 1;
-                  const minRequired =
-                    modifierList.minSelectedModifiers ?? 0;
-                  const maxAllowed = modifierList.maxSelectedModifiers;
-                  const currentSelected = selectedModifiers[modifierList.id] || [];
-                  const isSatisfied = currentSelected.length >= minRequired && (!maxAllowed || currentSelected.length <= maxAllowed);
-
-                  return (
-                    <fieldset key={modifierList.id} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <legend className={`${montserrat.className} text-sm font-bold uppercase tracking-wider text-stone-900`}>
-                          {modifierList.name || "Customization"}
-                        </legend>
-
-                        <div className="flex items-center gap-1.5">
-                          {minRequired > 0 ? (
-                            <span
-                              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                isSatisfied
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-rose-50 text-rose-700"
-                              }`}
-                            >
-                              Required (min {minRequired})
-                            </span>
-                          ) : (
-                            <span className="text-[11px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                              Optional
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-stone-500">
-                        {maxAllowed && maxAllowed > 0 ? `Choose up to ${maxAllowed}.` : "No selection limit."}
-                      </p>
-
-                      {/* Options Grid */}
-                      <div
-                        role={isSingle ? "radiogroup" : "group"}
-                        aria-label={modifierList.name || "Customization options"}
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-2"
-                      >
-                        {modifierList.options.filter((option) => option.availability?.available).map((option: ModifierOption) => {
-                          const isOptionSelected = currentSelected.includes(option.id);
-
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              role={isSingle ? "radio" : "checkbox"}
-                              aria-checked={isOptionSelected}
-                              disabled={(!isSingle && !isOptionSelected && !!maxAllowed && currentSelected.length >= maxAllowed)}
-                              onClick={() => {
-                                if (isSingle) {
-                                  if (minRequired === 0 && isOptionSelected) {
-                                    setModifierChoices((prev) => ({ ...prev, [modifierList.id]: [] }));
-                                    setValidationError(null);
-                                  } else {
-                                    handleSingleSelect(modifierList.id, option.id);
-                                  }
-                                } else {
-                                  handleMultiToggle(modifierList.id, option.id, maxAllowed);
-                                }
-                              }}
-                              className={`group flex items-center justify-between p-3 rounded-xl border text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                                isOptionSelected
-                                  ? "border-stone-900 bg-stone-900 text-white shadow-sm"
-                                  : "border-stone-200 bg-white text-stone-800 hover:border-stone-400"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                <span
-                                  className={`flex h-4.5 w-4.5 flex-shrink-0 items-center justify-center ${
-                                    isSingle ? "rounded-full" : "rounded-md"
-                                  } border transition-colors ${
-                                    isOptionSelected
-                                      ? "border-white bg-white text-stone-900"
-                                      : "border-stone-300 bg-stone-50 group-hover:border-stone-400"
-                                  }`}
-                                >
-                                  {isOptionSelected && (
-                                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  )}
-                                </span>
-                                <span className={`${montserrat.className} text-xs font-semibold truncate`}>
-                                  {option.name || "Option"}
-                                </span>
-                              </div>
-
-                              {option.priceCents > 0 && (
-                                <span
-                                  className={`text-xs font-medium whitespace-nowrap ${
-                                    isOptionSelected ? "text-[#DBAF82]" : "text-[#8E5629]"
-                                  }`}
-                                >
-                                  +{formatCurrency(option.priceCents)}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                  );
-                })}
+                {item.modifiers
+                  .filter((group) => group.enabled !== false)
+                  .map((modifierList: ModifierList) => (
+                    <ModifierGroupSection
+                      key={modifierList.id}
+                      modifierList={modifierList}
+                      selectedOptionIds={selectedModifiers[modifierList.id] ?? EMPTY_OPTION_IDS}
+                      onOptionToggle={handleOptionToggle}
+                    />
+                  ))}
               </div>
             )}
 
@@ -731,14 +861,16 @@ export default function ItemCustomizerModal({
   if (!item || !isMounted || typeof document === "undefined") return null;
 
   return createPortal(
-    <FreshItemCustomizer
-      key={initialCartItem ? initialCartItem.cartItemId : item.catalogObjectId}
-      item={item}
-      initialCartItem={initialCartItem}
-      initialAvailability={initialAvailability}
-      onAvailabilityConfirmed={onAvailabilityConfirmed}
-      onClose={onClose}
-    />,
+    <>
+      <FreshItemCustomizer
+        key={initialCartItem ? initialCartItem.cartItemId : item.catalogObjectId}
+        item={item}
+        initialCartItem={initialCartItem}
+        initialAvailability={initialAvailability}
+        onAvailabilityConfirmed={onAvailabilityConfirmed}
+        onClose={onClose}
+      />
+    </>,
     document.body
   );
 }

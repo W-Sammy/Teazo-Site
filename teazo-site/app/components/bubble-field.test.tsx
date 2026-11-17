@@ -58,8 +58,10 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  document.body.style.overflow = "";
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe("BubbleField motion preference", () => {
@@ -105,8 +107,10 @@ describe("BubbleField motion preference", () => {
   });
 
   it("cleans up after starting reduced and later enabling motion, including Strict Mode remounts", () => {
+    const observerDisconnect = vi.spyOn(MutationObserver.prototype, "disconnect");
     reducedMotion = true;
     const { unmount } = render(<StrictMode><BubbleField /></StrictMode>);
+    expect(observerDisconnect).toHaveBeenCalledTimes(1);
     expect(frames.size).toBe(0);
     expect(listeners.size).toBe(1);
     changeMotion(false);
@@ -115,5 +119,134 @@ describe("BubbleField motion preference", () => {
     expect(frames.size).toBe(0);
     expect(listeners.size).toBe(0);
     expect(disconnect).toHaveBeenCalledTimes(2);
+    expect(observerDisconnect).toHaveBeenCalledTimes(2);
+  });
+
+  it("freezes ongoing motion while document.body overflow is hidden and resumes when restored", async () => {
+    const { container, unmount } = render(<BubbleField />);
+    expect(frames.size).toBe(1);
+    const pendingFrame = [...frames.values()][0];
+    const bubble = container.firstElementChild!.firstElementChild as HTMLElement;
+    const originalTransform = bubble.style.transform;
+
+    act(() => {
+      document.body.style.overflow = "hidden";
+    });
+
+    // Wait for the MutationObserver microtask to pause the loop
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(frames.size).toBe(0);
+    expect(window.cancelAnimationFrame).toHaveBeenCalled();
+    // A callback captured before cancellation must not paint or start a new loop.
+    act(() => pendingFrame(5000));
+    expect(bubble.style.transform).toBe(originalTransform);
+    expect(frames.size).toBe(0);
+
+    act(() => {
+      document.body.style.overflow = "";
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(frames.size).toBe(1);
+
+    unmount();
+    expect(frames.size).toBe(0);
+  });
+
+  it("does not start animation if mounted while modal has overflow hidden", async () => {
+    document.body.style.overflow = "hidden";
+    const { unmount } = render(<BubbleField />);
+    expect(frames.size).toBe(0);
+
+    act(() => {
+      document.body.style.overflow = "";
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(frames.size).toBe(1);
+
+    unmount();
+    expect(frames.size).toBe(0);
+  });
+
+  it("resets the time delta after a long modal pause", async () => {
+    // One bubble isolates movement from overlap separation between particles.
+    const { container } = render(<BubbleField count={1} />);
+    runFrame(1000);
+    runFrame(1017);
+    const bubble = container.firstElementChild!.firstElementChild as HTMLElement;
+    const position = bubble.style.transform.split(" scale(")[0];
+    document.body.style.overflow = "hidden";
+    await act(async () => { await Promise.resolve(); });
+    document.body.style.overflow = "";
+    await act(async () => { await Promise.resolve(); });
+
+    runFrame(120000);
+    expect(bubble.style.transform.split(" scale(")[0]).toBe(position);
+    runFrame(120017);
+    expect(bubble.style.transform.split(" scale(")[0]).not.toBe(position);
+  });
+
+  it("respects reduced motion when the modal closes and keeps a single loop", async () => {
+    render(<BubbleField />);
+    document.body.style.overflow = "hidden";
+    await act(async () => { await Promise.resolve(); });
+    changeMotion(true);
+    document.body.style.overflow = "";
+    await act(async () => { await Promise.resolve(); });
+    expect(frames.size).toBe(0);
+
+    changeMotion(false);
+    document.body.style.color = "red";
+    await act(async () => { await Promise.resolve(); });
+    document.body.style.removeProperty("color");
+    await act(async () => { await Promise.resolve(); });
+    expect(frames.size).toBe(1);
+  });
+
+  it.each([false, true])("polls overflow without MutationObserver (initially hidden: %s)", (initiallyHidden) => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    vi.stubGlobal("MutationObserver", undefined);
+    document.body.style.overflow = initiallyHidden ? "hidden" : "";
+    const { unmount } = render(<StrictMode><BubbleField /></StrictMode>);
+    expect(vi.getTimerCount()).toBe(1);
+    expect(frames.size).toBe(initiallyHidden ? 0 : 1);
+
+    document.body.style.overflow = "hidden";
+    act(() => vi.advanceTimersByTime(250));
+    expect(frames.size).toBe(0);
+    document.body.style.overflow = "";
+    act(() => vi.advanceTimersByTime(500));
+    expect(frames.size).toBe(1);
+
+    changeMotion(true);
+    act(() => vi.advanceTimersByTime(500));
+    expect(frames.size).toBe(0);
+    changeMotion(false);
+    expect(frames.size).toBe(1);
+    unmount();
+    expect(frames.size).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("resumes if a frame encounters a lock that ends before the next overflow poll", () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    vi.stubGlobal("MutationObserver", undefined);
+    render(<BubbleField />);
+    document.body.style.overflow = "hidden";
+    runFrame(1000);
+    expect(frames.size).toBe(0);
+    document.body.style.overflow = "";
+    act(() => vi.advanceTimersByTime(250));
+    expect(frames.size).toBe(1);
   });
 });
