@@ -24,6 +24,7 @@ import type { CartItem, CartModifierChoice } from "@/app/types/checkout";
 import { useCart, MIN_ITEM_QUANTITY, MAX_ITEM_QUANTITY } from "@/app/context/cart-context";
 import { montserrat } from "@/app/fonts";
 import { preloadCartInteriorModule } from "./cart-drawer";
+import { useCheckoutChallengeOpen, getCheckoutSecuritySnapshot } from "@/app/lib/checkout-security";
 
 
 const cabinSketch = Cabin_Sketch({
@@ -72,6 +73,7 @@ function ItemCustomizerModalContent({
   const { addItem, updateItem, openCart } = useCart();
   const modalRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const challengeOpen = useCheckoutChallengeOpen();
 
   // Quantity state
   const [quantity, setQuantity] = useState<number>(() => {
@@ -272,9 +274,10 @@ function ItemCustomizerModalContent({
     document.body.style.overflow = "hidden";
 
     // Focus the first interactive element or dialog
-    modalRef.current?.focus();
+    if (!getCheckoutSecuritySnapshot().isInteractive) modalRef.current?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (getCheckoutSecuritySnapshot().isInteractive) return;
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
@@ -305,7 +308,7 @@ function ItemCustomizerModalContent({
     return () => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", handleKeyDown);
-      if (previousActiveElement instanceof HTMLElement) {
+      if (!getCheckoutSecuritySnapshot().isInteractive && previousActiveElement instanceof HTMLElement) {
         previousActiveElement.focus();
       }
     };
@@ -315,7 +318,9 @@ function ItemCustomizerModalContent({
     <div
       className="fixed inset-0 z-[10060] overflow-y-auto"
       role="dialog"
-      aria-modal="true"
+      data-checkout-dialog="customizer"
+      aria-modal={!challengeOpen}
+      aria-hidden={challengeOpen || undefined}
       aria-labelledby={titleId}
     >
       {/* Dimmed backdrop */}

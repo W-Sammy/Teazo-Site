@@ -15,7 +15,7 @@ export function resetCustomizerModule(): void {
   customizerModule.reset();
 }
 
-/** Warm both chunks at customization intent, before the customizer can suspend. */
+/** Download chunks without claiming that a customizer is open. */
 export function preloadCustomizerModule(): void {
   preloadCartInteriorModule();
   customizerModule.preload();

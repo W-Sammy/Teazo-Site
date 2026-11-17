@@ -33,7 +33,13 @@ import {
   readCartIssue,
   type CartIssue,
 } from "@/app/lib/cart-issues";
-import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/app/components/turnstile-widget";
+import {
+  useCheckoutSecurity,
+  setOrderingPaused,
+  resetCheckoutSecurity,
+  consumeCheckoutToken,
+  setCustomizerState,
+} from "@/app/lib/checkout-security";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { MenuItem } from "@/app/(site)/components/menu-item-card";
 import type {
@@ -59,6 +65,7 @@ export type CheckoutStatusKey =
   | "pickup_asap_unavailable"
   | "pickup_select_time"
   | "security_failed"
+  | "security_expired"
   | "security_pending"
   | "ready";
 
@@ -80,6 +87,7 @@ export function getCheckoutStatus({
   hasActiveSlot,
   turnstileToken,
   botCheckFailed,
+  securityExpired = false,
 }: {
   isSubmitting: boolean;
   scheduleStatus: "loading" | "ready" | "error";
@@ -91,6 +99,7 @@ export function getCheckoutStatus({
   hasActiveSlot: boolean;
   turnstileToken: string | null;
   botCheckFailed: boolean;
+  securityExpired?: boolean;
 }): CheckoutStatus {
   if (isSubmitting) {
     return {
@@ -165,6 +174,14 @@ export function getCheckoutStatus({
   }
 
   if (!turnstileToken) {
+    if (securityExpired) {
+      return {
+        statusKey: "security_expired",
+        label: "Security verification expired",
+        isPending: false,
+        isDisabled: true,
+      };
+    }
     if (botCheckFailed) {
       return {
         statusKey: "security_failed",
@@ -255,9 +272,10 @@ function getServerContactSnapshot(): string {
 
 export interface CartDrawerContentProps {
   onClose: () => void;
+  onSecuritySlot?: (element: HTMLDivElement | null) => void;
 }
 
-export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
+export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawerContentProps) {
   const {
     items,
     totalCount,
@@ -307,10 +325,12 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
   const clockOffsetMsRef = useRef(0);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
-  // Bot check. A token works once, so each failed attempt bumps the reset key for a new one.
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [botCheckFailed, setBotCheckFailed] = useState(!TURNSTILE_SITE_KEY);
-  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  // Bot check via persistent checkout security session.
+  const {
+    token: turnstileToken,
+    failed: botCheckFailed,
+    status: securityStatus,
+  } = useCheckoutSecurity();
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -335,6 +355,11 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
   // Editing state for line items
   const [editingCartItem, setEditingCartItem] = useState<CartItem | null>(null);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
+  useEffect(() => {
+    if (!editingMenuItem) return;
+    setCustomizerState(true);
+    return () => setCustomizerState(false);
+  }, [editingMenuItem]);
   const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [customizerRetryKey, setCustomizerRetryKey] = useState(0);
 
@@ -426,18 +451,6 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
     };
   }, [isCartOpen, hasItems]); // hasItems, not totalCount: quantity taps must not refetch
 
-  // Turnstile token lifecycle:
-  // When bag opens (or re-opens after being closed), ensure token is refreshed if expired or null
-  const prevIsCartOpenRef = useRef(isCartOpen);
-  useEffect(() => {
-    const justOpened = isCartOpen && !prevIsCartOpenRef.current;
-    prevIsCartOpenRef.current = isCartOpen;
-
-    if (justOpened && !turnstileToken) {
-      setTurnstileResetKey((k) => k + 1);
-    }
-  }, [isCartOpen, turnstileToken]);
-
   // Periodically refresh current time every 30s while drawer is open to eliminate time-drift
   useEffect(() => {
     if (!isCartOpen) return;
@@ -459,6 +472,11 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
 
   // The owner can pause online ordering from the admin. Checkout refuses orders then too.
   const isOrderingPaused = scheduleStatus === "ready" && !websiteContent.onlineOrderingEnabled;
+
+  // Sync ordering paused status to checkout security lifecycle
+  useEffect(() => {
+    setOrderingPaused(isOrderingPaused);
+  }, [isOrderingPaused]);
 
   const activeDay = pickupDays.find((day) => day.date === userSelectedDay) ?? pickupDays[0];
   const availableSlots = useMemo(() => activeDay?.slots ?? [], [activeDay]);
@@ -638,6 +656,9 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
         recordPendingCheckoutOrder(data.orderId);
       }
 
+      // Single-use token has been submitted to server
+      consumeCheckoutToken();
+
       // Redirect customer to Square Hosted Checkout
       window.location.href = data.checkoutUrl;
     } catch (err) {
@@ -646,8 +667,7 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
         err instanceof Error ? err.message : "An unexpected error occurred during checkout."
       );
       // The server may have used up the token, so get a fresh one for the next try.
-      setTurnstileToken(null);
-      setTurnstileResetKey((key) => key + 1);
+      resetCheckoutSecurity();
       setIsSubmitting(false);
     }
   };
@@ -719,6 +739,7 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
         hasActiveSlot: Boolean(activeSlot),
         turnstileToken,
         botCheckFailed,
+        securityExpired: securityStatus === "expired",
       }),
     [
       isSubmitting,
@@ -731,6 +752,7 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
       activeSlot,
       turnstileToken,
       botCheckFailed,
+      securityStatus,
     ]
   );
 
@@ -1197,22 +1219,20 @@ export default function CartDrawerContent({ onClose }: CartDrawerContentProps) {
       {/* Footer & Checkout CTA */}
       {items.length > 0 && (
         <div className="p-6 border-t border-gray-100 bg-white space-y-3">
-          {/* Bot check. Stays mounted while the bag has items so its token never goes stale unseen. */}
-          {!isOrderingPaused && (
-            <TurnstileWidget
-              action="checkout"
-              resetKey={turnstileResetKey}
-              onToken={setTurnstileToken}
-              onExpire={() => setTurnstileToken(null)}
-              onFailedChange={setBotCheckFailed}
-              className="flex justify-center min-h-[65px]"
-            />
+          {!isOrderingPaused && (securityStatus === "pending" || securityStatus === "ready") && (
+            <div ref={onSecuritySlot} data-testid="checkout-security-slot" aria-hidden="true" className="min-h-[65px]" />
           )}
+          {/* Security check fallback banner if bot check could not load */}
           {!isOrderingPaused && botCheckFailed && (
             <p className="text-[11px] text-amber-700 leading-relaxed">
               The security check couldn&apos;t load, so checkout is unavailable right now. Please
               try again later, or call us at {websiteContent.address.phone} to order.
             </p>
+          )}
+          {!isOrderingPaused && (botCheckFailed || securityStatus === "expired") && (
+            <button type="button" onClick={resetCheckoutSecurity} className="text-xs underline text-amber-800">
+              Retry security verification
+            </button>
           )}
 
           {/* Error Banner */}

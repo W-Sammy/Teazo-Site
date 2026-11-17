@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { useCheckoutChallengeOpen, getCheckoutSecuritySnapshot } from "@/app/lib/checkout-security";
 
 export interface CustomizerLoadingModalProps {
   onDismiss?: () => void;
 }
 
 export default function CustomizerLoadingModal({ onDismiss }: CustomizerLoadingModalProps) {
+  const challengeOpen = useCheckoutChallengeOpen();
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
@@ -18,6 +20,7 @@ export default function CustomizerLoadingModal({ onDismiss }: CustomizerLoadingM
 
     // Set initial focus to the cancel button or dialog
     const focusTimer = setTimeout(() => {
+      if (getCheckoutSecuritySnapshot().isInteractive) return;
       if (cancelButtonRef.current) {
         cancelButtonRef.current.focus();
       } else {
@@ -26,6 +29,7 @@ export default function CustomizerLoadingModal({ onDismiss }: CustomizerLoadingM
     }, 10);
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (getCheckoutSecuritySnapshot().isInteractive) return;
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
@@ -61,7 +65,7 @@ export default function CustomizerLoadingModal({ onDismiss }: CustomizerLoadingM
       clearTimeout(focusTimer);
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", handleKeyDown);
-      if (previousActiveElementRef.current && document.contains(previousActiveElementRef.current)) {
+      if (!getCheckoutSecuritySnapshot().isInteractive && previousActiveElementRef.current && document.contains(previousActiveElementRef.current)) {
         previousActiveElementRef.current.focus();
       }
     };
@@ -70,7 +74,9 @@ export default function CustomizerLoadingModal({ onDismiss }: CustomizerLoadingM
   return (
     <div
       role="dialog"
-      aria-modal="true"
+      data-checkout-dialog="customizer"
+      aria-modal={!challengeOpen}
+      aria-hidden={challengeOpen || undefined}
       aria-busy="true"
       aria-label="Loading drink customizer"
       ref={dialogRef}

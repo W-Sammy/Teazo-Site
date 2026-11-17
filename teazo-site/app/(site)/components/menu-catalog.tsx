@@ -7,6 +7,7 @@ import CustomizerLoadingModal from "./customizer-loading-modal";
 import ChunkErrorBoundary from "./chunk-error-boundary";
 import { prefetchItemAvailability } from "./customizer-availability-prefetch";
 import LazyCustomizerModal, { preloadCustomizerModule, resetCustomizerModule } from "./lazy-customizer-modal";
+import { setCustomizerState } from "@/app/lib/checkout-security";
 
 // Deep link: fetch the customizer chunk and availability while the page hydrates instead of after it.
 const deepLinkItemId =
@@ -70,7 +71,11 @@ export default function MenuCatalog({
   // This parent commits even while the modal suspends. Also covers initial
   // selection and browser history when this module was loaded on an earlier visit.
   useEffect(() => {
-    if (selectedItem) preloadCustomizerModule();
+    if (selectedItem) {
+      preloadCustomizerModule();
+      setCustomizerState(true);
+      return () => setCustomizerState(false);
+    }
   }, [selectedItem]);
 
   const handleRetryCustomizer = useCallback(() => {
