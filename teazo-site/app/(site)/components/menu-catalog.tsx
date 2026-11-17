@@ -25,31 +25,22 @@ export interface MenuSection {
 }
 
 export interface MenuCatalogProps {
-  specialSections: MenuSection[];
-  menuSections: MenuSection[];
+  sections: MenuSection[];
   initialItemId?: string;
   headingClassName: string;
   bodyClassName: string;
 }
 
 export default function MenuCatalog({
-  specialSections,
-  menuSections,
+  sections,
   initialItemId,
   headingClassName,
   bodyClassName,
 }: MenuCatalogProps) {
   // Memoize all catalog items across sections for quick lookup
   const allItems = useMemo(() => {
-    const list: MenuItem[] = [];
-    for (const s of specialSections) {
-      list.push(...s.items);
-    }
-    for (const s of menuSections) {
-      list.push(...s.items);
-    }
-    return list;
-  }, [specialSections, menuSections]);
+    return sections.flatMap((section) => section.items);
+  }, [sections]);
 
   // Establish URL/selection consistency:
   // On client, check window.location.search first. If query param does not contain `item`,
@@ -137,24 +128,9 @@ export default function MenuCatalog({
 
   return (
     <>
-      {/* Featured / Special Categories */}
-      {specialSections.map((section) => (
-        <MenuItemsSection
-          key={section.id}
-          title={section.title}
-          subtitle={section.subtitle}
-          items={section.items}
-          className="mx-auto mt-12 max-w-[1320px] lg:mt-20"
-          headingClassName={headingClassName}
-          bodyClassName={bodyClassName}
-          onCustomizeItem={handleSelectItem}
-        />
-      ))}
-
-      {/* Main Menu Categories */}
-      {menuSections.length > 0 && (
+      {sections.length > 0 && (
         <div className="mx-auto mt-16 grid max-w-[1320px] grid-cols-1 gap-6 lg:mt-20 lg:gap-8">
-          {menuSections.map((section) => (
+          {sections.map((section) => (
             <MenuItemsSection
               key={section.id}
               title={section.title}

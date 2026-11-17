@@ -3,6 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
 import { recordCatalogRevision } from "@/app/lib/queries/catalog-revision";
 
+import { syncSquareMenuCategories } from "@/app/lib/sync-menu-categories";
+
 export const runtime = "nodejs";
 
 // Square signs the exact notification URL followed by the unmodified body.
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await syncSquareMenuCategories();
     await recordCatalogRevision(event.created_at, event.event_id);
     // The public menu caches the catalog for up to 60 seconds under
     // SQUARE_CATALOG_TAG; clearing it makes the next render fetch Square again.
@@ -70,6 +73,7 @@ export async function POST(request: Request) {
     revalidateTag(SQUARE_CATALOG_TAG, { expire: 0 });
     revalidatePath("/menu");
     revalidatePath("/admin/menu");
+    revalidatePath("/admin/menu/display-categories");
     console.info("Square catalog invalidated:", event.event_id);
     return Response.json({ received: true });
   } catch (error) {
