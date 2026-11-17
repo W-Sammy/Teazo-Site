@@ -245,7 +245,7 @@ async function loadRevision(): Promise<number> {
     "SELECT revision FROM website_content_revision WHERE id = 1",
   ).first<{ revision: number }>();
   if (!revision) {
-    throw new WebsiteContentUnavailableError("Website content revision is unavailable. Apply migration 0012.");
+    throw new WebsiteContentUnavailableError("Website content revision is unavailable. Apply migration 0013.");
   }
   return revision.revision;
 }

@@ -65,7 +65,7 @@ function BagControl() {
   return <button onClick={openCart}>Open bag</button>;
 }
 function Catalog() {
-  return <MenuCatalog specialSections={[]} menuSections={[{ id: "tea", title: "Teas", items: [item] }]}
+  return <MenuCatalog sections={[{ id: "tea", title: "Teas", items: [item] }]}
     headingClassName="" bodyClassName="" />;
 }
 function Storefront({ showCatalog = true, initialOpen = false }: { showCatalog?: boolean; initialOpen?: boolean }) {

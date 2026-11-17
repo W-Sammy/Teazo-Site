@@ -55,7 +55,7 @@ describe("Website content availability and storage failure policy (Phase 2)", ()
       await expect(getWebsiteContent()).rejects.toBeInstanceOf(WebsiteContentUnavailableError);
     });
 
-    it("throws WebsiteContentUnavailableError when migration 0012 revision row is missing", async () => {
+    it("throws WebsiteContentUnavailableError when migration 0013 revision row is missing", async () => {
       sqliteD1.db.exec("DELETE FROM website_content_revision WHERE id = 1");
       await expect(getWebsiteContent()).rejects.toBeInstanceOf(WebsiteContentUnavailableError);
       await expect(getWebsiteContent()).rejects.toThrow("revision is unavailable");

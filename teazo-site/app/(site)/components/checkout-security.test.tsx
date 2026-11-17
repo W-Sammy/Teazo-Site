@@ -171,8 +171,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         headingClassName=""
         bodyClassName=""
       />,
@@ -189,8 +188,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         headingClassName=""
         bodyClassName=""
       />,
@@ -214,8 +212,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         initialItemId={testItem.catalogObjectId}
         headingClassName=""
         bodyClassName=""
@@ -234,8 +231,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         headingClassName=""
         bodyClassName=""
       />,
@@ -264,8 +260,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     const { rerender } = render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         headingClassName=""
         bodyClassName=""
       />,
@@ -312,8 +307,7 @@ describe("Checkout Security Verification Lifecycle", () => {
     const { rerender } = render(<CartDrawer />);
     render(
       <MenuCatalog
-        specialSections={[]}
-        menuSections={[{ id: "s1", title: "Teas", items: [testItem] }]}
+        sections={[{ id: "s1", title: "Teas", items: [testItem] }]}
         headingClassName=""
         bodyClassName=""
       />,

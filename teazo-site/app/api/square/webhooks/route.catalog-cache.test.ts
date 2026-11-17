@@ -6,10 +6,12 @@ const mocks = vi.hoisted(() => ({
   revalidateTag: vi.fn(),
   revalidatePath: vi.fn(),
   recordCatalogRevision: vi.fn(),
+  syncSquareMenuCategories: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({ revalidateTag: mocks.revalidateTag, revalidatePath: mocks.revalidatePath }));
 vi.mock("@/app/lib/queries/catalog-revision", () => ({ recordCatalogRevision: mocks.recordCatalogRevision }));
+vi.mock("@/app/lib/sync-menu-categories", () => ({ syncSquareMenuCategories: mocks.syncSquareMenuCategories }));
 
 const { POST } = await import("@/app/api/square/webhooks/route");
 
@@ -28,6 +30,7 @@ beforeEach(() => {
   process.env.SQUARE_WEBHOOK_SIGNATURE_KEY = KEY;
   process.env.SQUARE_WEBHOOK_NOTIFICATION_URL = URL;
   mocks.recordCatalogRevision.mockResolvedValue(undefined);
+  mocks.syncSquareMenuCategories.mockResolvedValue(undefined);
 });
 
 afterEach(() => vi.clearAllMocks());
