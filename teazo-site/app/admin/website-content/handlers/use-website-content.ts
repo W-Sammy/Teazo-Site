@@ -51,6 +51,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const pendingPatchRef = useRef<Partial<WebsiteContent>>({});
+  // A failed save must not be silently resubmitted when the page unloads.
+  const failedSaveRef = useRef(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const savedTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isSavingRef = useRef<boolean>(false);
@@ -73,6 +75,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       debounceTimerRef.current = null;
     }
     if (immediatePatch) {
+      // An explicit new action is allowed to initiate another save.
+      failedSaveRef.current = false;
       pendingPatchRef.current = {
         ...pendingPatchRef.current,
         ...immediatePatch,
@@ -145,6 +149,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
             throw error;
           }
         }
+        failedSaveRef.current = false;
         setSaveStatus("saved");
         setErrorMessage("");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -153,6 +158,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
         }, 3000);
         return true;
       } catch (error) {
+        failedSaveRef.current = true;
         setSaveStatus("error");
         setErrorMessage(reconciliationRef.current ||
           (error instanceof Error ? error.message : "Failed to save changes. Please try again."));
@@ -179,6 +185,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       return;
     }
 
+    // A new valid edit may be saved normally, even after an earlier failure.
+    failedSaveRef.current = false;
     setSaveStatus((current) => current === "saving" ? "saving" : "unsaved");
 
     pendingPatchRef.current = {
@@ -204,7 +212,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (!isSavingRef.current && !deletePendingRef.current && !reconciliationRef.current && Object.keys(pendingPatchRef.current).length > 0) {
+      if (!isSavingRef.current && !failedSaveRef.current && !deletePendingRef.current && !reconciliationRef.current && Object.keys(pendingPatchRef.current).length > 0) {
         const validation = validateWebsiteContentPatch(pendingPatchRef.current);
         if (validation.valid) {
           // Use the same submission bookkeeping even if navigation is canceled:

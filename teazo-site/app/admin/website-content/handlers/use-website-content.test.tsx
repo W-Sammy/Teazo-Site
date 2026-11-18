@@ -438,6 +438,60 @@ describe("Website Content save handling", () => {
     ).toBe(true);
   });
 
+  it("does not resubmit a failed save when the page unloads", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementation(async (url: string) => {
+      if (url === "/api/website-content") {
+        return { ok: false, status: 503, json: async () => ({ error: "Service unavailable" }) };
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    act(() => { result.current.updateStory("Failed story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    expect(savedPatches()).toHaveLength(1);
+    expect(result.current.hasUnsavedEdits).toBe(true);
+
+    act(() => { window.dispatchEvent(new Event("beforeunload")); });
+    expect(savedPatches()).toHaveLength(1);
+    expect(result.current.saveStatus).toBe("error");
+  });
+
+  it("allows an explicit retry after a failed save", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementationOnce(async () => ({
+      ok: false, status: 503, json: async () => ({ error: "Service unavailable" }),
+    }));
+
+    act(() => { result.current.updateStory("Retry this story"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    expect(savedPatches()).toHaveLength(1);
+
+    await act(async () => { expect(await result.current.flushPatch()).toBe(true); });
+    expect(savedPatches()).toEqual([
+      { story: "Retry this story" },
+      { story: "Retry this story" },
+    ]);
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("allows a new valid edit to save after a previous failure", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementationOnce(async () => ({
+      ok: false, status: 503, json: async () => ({ error: "Service unavailable" }),
+    }));
+
+    act(() => { result.current.updateStory("First story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    act(() => { result.current.updateStory("Revised story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
+    expect(savedPatches()).toEqual([
+      { story: "First story edit" },
+      { story: "Revised story edit" },
+    ]);
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
   it("updates local logo state from confirmed upload without triggering redundant general PATCH", async () => {
     const { result } = await renderContentHook();
 
