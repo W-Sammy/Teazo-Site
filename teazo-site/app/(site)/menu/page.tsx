@@ -8,7 +8,7 @@ import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 import Subtitle from "../components/sub-title";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
@@ -447,15 +447,15 @@ export default async function MenuPage({
   // away instead of waiting for the revision check (TZ-515).
   // Events are optional: keep the menu available if D1 cannot load them.
   const liveEventsRequest = listActiveEvents().catch(() => []);
-  const contentRequest = getWebsiteContent();
+  const contentRequest = getPublicWebsiteContent();
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
   const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
-  searchParams ? searchParams : Promise.resolve(undefined),
-  contentRequest,
-  loadMenu(),
-  liveEventsRequest,
-]);
+    searchParams ? searchParams : Promise.resolve(undefined),
+    contentRequest,
+    loadMenu(),
+    liveEventsRequest,
+  ]);
 
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;

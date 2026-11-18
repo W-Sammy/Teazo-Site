@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import type { Metadata } from "next";
 import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
@@ -25,7 +25,7 @@ const montserrat = montserrat400;
 
 /* Static menu route page. */
 export default async function StaticMenuPage() {
-	const content = await getWebsiteContent();
+	const content = await getPublicWebsiteContent();
 	const logoSrc = heroLogoSrc(content.logo);
 
 	return (

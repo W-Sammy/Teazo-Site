@@ -28,10 +28,15 @@ const mocks = vi.hoisted(() => ({
   recordCatalogRevision: vi.fn(),
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  syncSquareMenuCategories: vi.fn(),
 }));
 
 vi.mock("@/app/lib/queries/catalog-revision", () => ({
   recordCatalogRevision: mocks.recordCatalogRevision,
+}));
+
+vi.mock("@/app/lib/sync-menu-categories", () => ({
+  syncSquareMenuCategories: mocks.syncSquareMenuCategories,
 }));
 
 vi.mock("next/cache", () => ({
@@ -122,6 +127,8 @@ beforeEach(() => {
   mocks.recordCatalogRevision.mockReset();
   mocks.revalidatePath.mockReset();
   mocks.revalidateTag.mockReset();
+  mocks.syncSquareMenuCategories.mockReset();
+  mocks.syncSquareMenuCategories.mockResolvedValue(undefined);
 
   vi.stubEnv(
     "SQUARE_WEBHOOK_SIGNATURE_KEY",
@@ -374,6 +381,19 @@ describe("Square webhook endpoint", () => {
   });
 
   describe("Catalog update processing", () => {
+    it("returns 500 without recording a revision when category sync fails", async () => {
+      mocks.syncSquareMenuCategories.mockRejectedValueOnce(new Error("Square unavailable"));
+
+      const response = await deliver(catalogEvent());
+
+      expect(await result(response)).toEqual({
+        status: 500,
+        body: { error: "Catalog refresh failed." },
+      });
+      expect(mocks.recordCatalogRevision).not.toHaveBeenCalled();
+      expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    });
+
     it("records a valid catalog event and revalidates public and admin Menu pages", async () => {
       const response = await deliver(catalogEvent());
 
@@ -391,7 +411,7 @@ describe("Square webhook endpoint", () => {
 
       expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(2);
+      ).toHaveBeenCalledTimes(3);
 
       expect(
         mocks.revalidatePath,
@@ -406,6 +426,8 @@ describe("Square webhook endpoint", () => {
         2,
         "/admin/menu",
       );
+
+      expect(mocks.revalidatePath).toHaveBeenNthCalledWith(3, "/admin/menu/display-categories");
     });
 
     it("characterizes duplicate catalog-event delivery without claiming endpoint-level deduplication", async () => {
@@ -441,7 +463,7 @@ describe("Square webhook endpoint", () => {
 
       expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(4);
+      ).toHaveBeenCalledTimes(6);
     });
 
     it("accepts out-of-order catalog events without inventing an event-ordering check", async () => {
@@ -515,7 +537,7 @@ describe("Square webhook endpoint", () => {
 
       expect(
         mocks.revalidatePath,
-      ).toHaveBeenCalledTimes(2);
+      ).toHaveBeenCalledTimes(3);
     });
 
     it("returns 500 when cache revalidation fails", async () => {

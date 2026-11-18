@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeD1 } from "@/test/fake-d1";
 import {
+  getPublicWebsiteContent,
   getWebsiteContent,
   updateWebsiteContent,
   WEBSITE_CONTENT_TAG,
@@ -30,6 +31,7 @@ beforeEach(() => {
   process.env.D1_PROXY_URL = "http://d1.test";
   process.env.PROXY_TOKEN = "test-token";
   db().reset();
+  db().tables.website_content_revision = [{ revision: 0 }];
   cacheMocks.revalidateTag.mockClear();
   cacheMocks.staleCopy = null;
 });
@@ -54,20 +56,20 @@ describe("caching (TZ-515)", () => {
     expect(saved.story).toBe("Story saved in D1");
   });
 
-  it("serves the fallback when D1 fails, then the real content once D1 is back", async () => {
+  it("serves the fallback on public pages when D1 fails, then the real content once D1 is back", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     db().tables.content_block = [{ key: "home.story", value: "From D1" }];
     db().state.failReads = true;
-    const duringOutage = await getWebsiteContent();
+    const duringOutage = await getPublicWebsiteContent();
     expect(duringOutage.story).not.toBe("From D1");
 
     db().state.failReads = false;
-    expect((await getWebsiteContent()).story).toBe("From D1");
+    expect((await getPublicWebsiteContent()).story).toBe("From D1");
   });
 
-  it("reads all five tables for one load", async () => {
+  it("reads all tables for one load", async () => {
     await getWebsiteContent();
-    expect(db().state.reads).toBe(5);
+    expect(db().state.reads).toBe(6);
   });
 });
 
@@ -112,6 +114,7 @@ describe("holiday dates from D1", () => {
 
   it("save one-time dates with their year", async () => {
     await updateWebsiteContent({
+      collectionsRevision: 0,
       holidays: [{ id: "t", name: "Thanksgiving", date: "2026-11-26", closed: true }],
     });
     const insert = db().batches.flat().find((w) => w.sql.includes("INSERT INTO hours_exception"));
