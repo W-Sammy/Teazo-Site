@@ -1,3 +1,4 @@
+
 /**
  * Tests customer-facing website content rendering.
  *
@@ -125,6 +126,7 @@ vi.mock("@/app/(site)/contact/contact-form", () => ({
 
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: mocks.getWebsiteContent,
+  getPublicWebsiteContent: mocks.getWebsiteContent,
 }));
 
 vi.mock(
@@ -244,7 +246,7 @@ async function renderDelivery() {
 
 describe("Public website content rendering", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     mocks.getWebsiteContent.mockResolvedValue(
       makeWebsiteContent(),
@@ -356,17 +358,17 @@ describe("Public website content rendering", () => {
       ).toBe("mailto:original@example.invalid");
     });
 
-    it("hides social links disabled in contact settings", async () => {
-      const contact = makeContactContent();
+    it("hides disabled administrator-managed social links", async () => {
+      const content = makeWebsiteContent();
 
-      contact.socialLinks =
-        contact.socialLinks?.map((link) => ({
+      content.socialLinks =
+        content.socialLinks.map((link) => ({
           ...link,
           enabled: false,
         }));
 
-      mocks.getContactContent.mockResolvedValueOnce(
-        contact,
+      mocks.getWebsiteContent.mockResolvedValueOnce(
+        content,
       );
 
       await renderHome();
@@ -550,76 +552,41 @@ describe("Public website content rendering", () => {
       );
     });
 
-    // Missing delivery settings must not display hardcoded
+    // Missing delivery settings must not insert hardcoded
     // fallback providers that administrators did not configure.
-    it("shows no delivery links when delivery settings are missing", async () => {
+    it("keeps an empty delivery collection empty", async () => {
       const content = makeWebsiteContent();
-
       content.deliveryLinks = [];
-
-      mocks.getWebsiteContent.mockResolvedValueOnce(
-        content,
-      );
-
+      mocks.getWebsiteContent.mockResolvedValueOnce(content);
       await renderDelivery();
 
       expect(
-        screen.getByRole("heading", {
-          name: "DELIVERY",
-        }),
+        screen.getByRole("heading", { name: "DELIVERY" }),
       ).toBeTruthy();
 
-      expect(
-        screen.queryByRole("link", {
-          name: "UBER EATS",
-        }),
-      ).toBeNull();
-
-      expect(
-        screen.queryByRole("link", {
-          name: "DOORDASH",
-        }),
-      ).toBeNull();
-
-      expect(
-        screen.queryByRole("link", {
-          name: "POSTMATES",
-        }),
-      ).toBeNull();
+      for (const name of ["UBER EATS", "DOORDASH", "POSTMATES"]) {
+        expect(screen.queryByRole("link", { name })).toBeNull();
+      }
     });
 
     it("hides disabled delivery providers", async () => {
       const content = makeWebsiteContent();
-
-    content.deliveryLinks = (content.deliveryLinks ?? []).map(
-      (link) => ({
+      content.deliveryLinks = (content.deliveryLinks ?? []).map((link) => ({
         ...link,
         enabled: link.id !== "ubereats",
-      }),
-    );
+      }));
 
-      mocks.getWebsiteContent.mockResolvedValueOnce(
-        content,
-      );
-
+      mocks.getWebsiteContent.mockResolvedValueOnce(content);
       await renderDelivery();
 
       expect(
-        screen.queryByRole("link", {
-          name: "UBER EATS",
-        }),
+        screen.queryByRole("link", { name: "UBER EATS" }),
       ).toBeNull();
-
       expect(
-        screen.getByRole("link", {
-          name: "DOORDASH",
-        }),
+        screen.getByRole("link", { name: "DOORDASH" }),
       ).toBeTruthy();
-
       expect(
-        screen.getByRole("link", {
-          name: "POSTMATES",
-        }),
+        screen.getByRole("link", { name: "POSTMATES" }),
       ).toBeTruthy();
     });
   });

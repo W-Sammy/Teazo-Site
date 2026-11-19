@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type * as PdfjsLib from "pdfjs-dist";
 
 /* Props for the PDF preview component. */
 type PdfPreviewProps = {
@@ -36,7 +37,7 @@ export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 			try {
 				/* Load PDF.js from the public folder at runtime. */
 				const pdfjsPath = "/pdfjs/pdf.min.mjs";
-				const pdfjsLib = (await import(/* webpackIgnore: true */ pdfjsPath)) as any;
+				const pdfjsLib = (await import(/* webpackIgnore: true */ pdfjsPath)) as typeof PdfjsLib;
 
 				/* Stop if this render is outdated. */
 				if (unmounted || renderId !== renderIdRef.current) return;
@@ -46,7 +47,7 @@ export default function PdfPreview({ fileUrl }: PdfPreviewProps) {
 					"/pdfjs/pdf.worker.min.mjs";
 
 				/* Load the PDF file. */
-				const loadingTask = pdfjsLib.getDocument(fileUrl);
+				const loadingTask = pdfjsLib.getDocument({ url: fileUrl });
 				const pdf = await loadingTask.promise;
 
 				/* Stop if this render is outdated. */

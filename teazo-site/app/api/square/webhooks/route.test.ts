@@ -35,6 +35,10 @@ vi.mock("@/app/lib/queries/catalog-revision", () => ({
   recordCatalogRevision: mocks.recordCatalogRevision,
 }));
 
+vi.mock("@/app/lib/sync-menu-categories", () => ({
+  syncSquareMenuCategories: mocks.syncSquareMenuCategories,
+}));
+
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
@@ -383,6 +387,19 @@ describe("Square webhook endpoint", () => {
   });
 
   describe("Catalog update processing", () => {
+    it("returns 500 without recording a revision when category sync fails", async () => {
+      mocks.syncSquareMenuCategories.mockRejectedValueOnce(new Error("Square unavailable"));
+
+      const response = await deliver(catalogEvent());
+
+      expect(await result(response)).toEqual({
+        status: 500,
+        body: { error: "Catalog refresh failed." },
+      });
+      expect(mocks.recordCatalogRevision).not.toHaveBeenCalled();
+      expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    });
+
     it("records a valid catalog event and revalidates public and admin Menu pages", async () => {
       const response = await deliver(catalogEvent());
 

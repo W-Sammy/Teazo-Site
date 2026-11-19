@@ -10,6 +10,7 @@
  * named NEXT_PUBLIC_ or reach the browser.
  */
 import { unstable_rethrow } from "next/navigation";
+import { getD1BatchBody } from "@/app/lib/d1-batch";
 
 /** Thrown for transport failures and for anything the database rejects. */
 export class D1Error extends Error {
@@ -136,7 +137,7 @@ export function prepare(sql: string) {
  */
 export async function batch(
   statements: Array<{ toStmt(): Stmt }>,
-): Promise<{ results: unknown[] }> {
+): Promise<{ results: D1Result<Record<string, unknown>>[] }> {
   if (statements.length === 0) {
     throw new D1Error("batch() needs at least one statement");
   }
@@ -145,7 +146,5 @@ export async function batch(
       `batch() takes at most ${MAX_STATEMENTS} statements, received ${statements.length}`,
     );
   }
-  return post<{ results: unknown[] }>("/batch", {
-    statements: statements.map((s) => s.toStmt()),
-  });
+  return post<{ results: D1Result<Record<string, unknown>>[] }>("/batch", getD1BatchBody(statements));
 }

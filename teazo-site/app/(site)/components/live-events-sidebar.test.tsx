@@ -79,30 +79,26 @@ const eventTwo: AdminEvent = {
 
 const events = [eventOne, eventTwo];
 
-// Supply catalog data so selected-item details can be
-// verified against the modal's actual rendering behavior.
-const categories: EventCategory[] = [
-  {
-    id: "milk-tea",
-    name: "Milk Tea",
-  },
+// Supply catalog target names for the selected-event modal test.
+const eventCategories: EventCategory[] = [
+  { id: "milk-tea", name: "Milk Tea" },
 ];
-
-const items: EventItem[] = [
-  {
-    id: "item-1",
-    name: "Classic Milk Tea",
-  },
+const eventItems: EventItem[] = [
+  { id: "item-1", name: "Brown Sugar Milk Tea" },
 ];
 
 function renderSidebar(
   suppliedEvents: AdminEvent[] = events,
+  targets: {
+    categories?: EventCategory[];
+    items?: EventItem[];
+  } = {},
 ) {
   return render(
     <LiveEventsSidebar
       events={suppliedEvents}
-      categories={categories}
-      items={items}
+      categories={targets.categories}
+      items={targets.items}
     />,
   );
 }
@@ -275,6 +271,34 @@ describe("Public Events sidebar", () => {
     );
   });
 
+  it("does not render event thumbnails until the sidebar is first opened", () => {
+    const { container } = renderSidebar();
+
+    const eventImages = () =>
+      Array.from(
+        container.querySelectorAll(
+          "[data-testid='event-test-image']",
+        ),
+      ).filter((image) =>
+        [eventOne.imageUrl, eventTwo.imageUrl].includes(
+          image.getAttribute("data-src") ?? "",
+        ),
+      );
+
+    expect(eventImages()).toHaveLength(0);
+
+    openSidebar();
+    expect(eventImages()).toHaveLength(2);
+
+    // Closing keeps the thumbnails so reopening does not reload them.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Close live events",
+      }),
+    );
+    expect(eventImages()).toHaveLength(2);
+  });
+
   it("closes and reopens the sidebar with its toggle", () => {
     renderSidebar();
 
@@ -347,7 +371,7 @@ describe("Public Events sidebar", () => {
   });
 
   it("uses fallback text for events without descriptions", () => {
-    renderSidebar();
+    renderSidebar(events, { categories: eventCategories, items: eventItems });
 
     openSidebar();
     selectEvent("Milk Tea Promotion");
@@ -367,25 +391,25 @@ describe("Public Events sidebar", () => {
       ),
     ).toBeTruthy();
 
-    // Targeted events now show the specific category
-    // and item names instead of a generic message.
-    const includedCategories = within(dialog).getByRole(
-      "list",
-      { name: "Included categories" },
-    );
+    // Targeted events list the selected category and item by name.
+    const includedCategories = within(dialog).getByRole("list", {
+      name: "Included categories",
+    });
+    expect(within(includedCategories).getByText("Milk Tea")).toBeTruthy();
 
     expect(
-      within(includedCategories).getByText("Milk Tea"),
+      within(
+        within(dialog).getByRole("list", {
+          name: "Included items",
+        }),
+      ).getByText("Brown Sugar Milk Tea"),
     ).toBeTruthy();
-
-    const includedItems = within(dialog).getByRole(
-      "list",
-      { name: "Included items" },
-    );
 
     expect(
-      within(includedItems).getByText("Classic Milk Tea"),
-    ).toBeTruthy();
+      within(dialog).queryByText(
+        "All menu items are included in this event.",
+      ),
+    ).toBeNull();
 
     expect(
       within(dialog)

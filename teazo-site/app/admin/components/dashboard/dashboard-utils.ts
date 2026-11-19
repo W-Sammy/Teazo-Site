@@ -27,11 +27,13 @@ export function isEventActive(event: AdminEvent) {
   return new Date(event.startAt).getTime() <= now && now <= new Date(event.endAt).getTime();
 }
 
-export function getTodayHours(content: WebsiteContent) {
+export function getTodayHours(content?: WebsiteContent | null) {
+  if (!content?.hours?.length) return undefined;
   return content.hours[shopToday().dayIndex] ?? content.hours[0];
 }
 
-export function getTodayHoliday(content: WebsiteContent) {
+export function getTodayHoliday(content?: WebsiteContent | null) {
+  if (!content?.holidays) return undefined;
   return content.holidays.find((holiday) => holiday.date === shopToday().monthDay);
 }
 

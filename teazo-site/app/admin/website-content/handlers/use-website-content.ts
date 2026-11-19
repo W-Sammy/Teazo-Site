@@ -16,9 +16,19 @@ import {
   validateSocialLinks,
   validateStory,
   validateWebsiteContentPatch,
+  MAX_SOCIAL_LINKS,
+  MAX_HOLIDAYS,
+  MAX_DELIVERY_LINKS,
 } from "@/app/lib/website-content-validators";
 
-export type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type SaveStatus = "idle" | "unsaved" | "saving" | "saved" | "error";
+
+const UNCERTAIN_SAVE = "The save could not be confirmed. Reload this page to check current content before trying again.";
+const UNCERTAIN_DELETE = "The deletion could not be confirmed. Reload this page to check current content before trying again.";
+
+function requireReloadMessage(message: string) {
+  return /reload/i.test(message) ? message : `${message} Reload this page before making more changes.`;
+}
 
 function createTemporaryId(prefix: string) {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -34,95 +44,133 @@ function createTemporaryId(prefix: string) {
  */
 export function useWebsiteContent(initialContent: WebsiteContent) {
   const [content, setContent] = useState<WebsiteContent>(initialContent);
+  // Validation may keep local edits out of the save queue. Only a confirmed
+  // write changes this snapshot, so incomplete edits and drafts stay dirty.
+  const [savedContent, setSavedContent] = useState<WebsiteContent>(initialContent);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const pendingPatchRef = useRef<Partial<WebsiteContent>>({});
+  // A failed save must not be silently resubmitted when the page unloads.
+  const failedSaveRef = useRef(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const savedTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isSavingRef = useRef<boolean>(false);
-  const hasPendingDuringSaveRef = useRef<boolean>(false);
+  const saveOperationRef = useRef<Promise<boolean> | null>(null);
+  const revisionRef = useRef(initialContent.collectionsRevision ?? 0);
+  const reconciliationRef = useRef<string | null>(null);
+  const deletePendingRef = useRef(false);
+  // IDs are not a persistence signal: saved holidays also use "holiday-".
+  const draftIdsRef = useRef({ socialLinks: new Set<string>(), holidays: new Set<string>() });
+  const savedCollectionsRef = useRef({ socialLinks: initialContent.socialLinks, holidays: initialContent.holidays });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const flushPatch = async (
     immediatePatch?: Partial<WebsiteContent>,
     validationError?: string,
-  ) => {
+    options: { forDeletion?: boolean; keepalive?: boolean } = {},
+  ): Promise<boolean> => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-
-    if (validationError) {
-      setSaveStatus("error");
-      setErrorMessage(validationError);
-      return;
-    }
-
     if (immediatePatch) {
+      // An explicit new action is allowed to initiate another save.
+      failedSaveRef.current = false;
       pendingPatchRef.current = {
         ...pendingPatchRef.current,
         ...immediatePatch,
-        ...(immediatePatch.address
-          ? {
-              address: {
-                ...(pendingPatchRef.current.address ?? {}),
-                ...immediatePatch.address,
-              },
-            }
-          : {}),
+        ...(immediatePatch.address ? { address: {
+          ...pendingPatchRef.current.address, ...immediatePatch.address,
+        } } : {}),
       };
     }
-
-    if (Object.keys(pendingPatchRef.current).length === 0) {
-      return;
-    }
-
-    // Guard: Validate the patch before sending to the server
-    const validation = validateWebsiteContentPatch(pendingPatchRef.current);
-    if (!validation.valid) {
+    // Blur/debounce saves must not race the DELETE after its queue is drained.
+    if (deletePendingRef.current && !options.forDeletion) return false;
+    if (validationError || reconciliationRef.current) {
       setSaveStatus("error");
-      setErrorMessage(validation.errors[0] || "Please fix formatting errors before saving.");
-      return;
+      setErrorMessage(reconciliationRef.current || validationError!);
+      return false;
     }
-
-    if (isSavingRef.current) {
-      hasPendingDuringSaveRef.current = true;
-      return;
-    }
-
-    const payload = { ...pendingPatchRef.current };
-    pendingPatchRef.current = {};
+    if (saveOperationRef.current) return saveOperationRef.current;
+    if (Object.keys(pendingPatchRef.current).length === 0) return true;
 
     isSavingRef.current = true;
-    setSaveStatus("saving");
-
+    const operation = (async () => {
+      try {
+        while (Object.keys(pendingPatchRef.current).length > 0) {
+          const validation = validateWebsiteContentPatch(pendingPatchRef.current);
+          if (!validation.valid) throw new Error(validation.errors[0]);
+          const payload = { ...pendingPatchRef.current };
+          pendingPatchRef.current = {};
+          setSaveStatus("saving");
+          let responseReceived = false;
+          try {
+            const changesCollections = payload.socialLinks !== undefined || payload.holidays !== undefined;
+            // Once submitted, a draft might have committed even if the response
+            // is lost. Its removal must follow the persisted-entry path.
+            payload.socialLinks?.filter((entry) => entry.url).forEach((entry) => draftIdsRef.current.socialLinks.delete(entry.id));
+            payload.holidays?.filter((entry) => entry.date).forEach((entry) => draftIdsRef.current.holidays.delete(entry.id));
+            const res = await fetch("/api/website-content", {
+              method: "PATCH",
+              keepalive: options.keepalive,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload,
+                ...(changesCollections ? { collectionsRevision: revisionRef.current } : {}),
+              }),
+            });
+            responseReceived = true;
+            const result = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              if (res.status === 409 || result.requiresReload) {
+                reconciliationRef.current = requireReloadMessage(result.error || UNCERTAIN_SAVE);
+              }
+              throw new Error(result.error || `Server returned ${res.status}`);
+            }
+            if (changesCollections) {
+              if (result.collectionsRevision !== revisionRef.current + 1) {
+                reconciliationRef.current = UNCERTAIN_SAVE;
+                throw new Error(UNCERTAIN_SAVE);
+              }
+              revisionRef.current = result.collectionsRevision;
+              if (payload.socialLinks) savedCollectionsRef.current.socialLinks = payload.socialLinks;
+              if (payload.holidays) savedCollectionsRef.current.holidays = payload.holidays;
+            }
+            setSavedContent((previous) => ({
+              ...previous,
+              ...payload,
+              address: { ...previous.address, ...payload.address },
+            }));
+          } catch (error) {
+            // A transport failure may hide a committed collection replacement.
+            if (!responseReceived) reconciliationRef.current = UNCERTAIN_SAVE;
+            // Keep the failed save for an explicit retry; newer edits win.
+            pendingPatchRef.current = { ...payload, ...pendingPatchRef.current };
+            throw error;
+          }
+        }
+        failedSaveRef.current = false;
+        setSaveStatus("saved");
+        setErrorMessage("");
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => {
+          setSaveStatus((current) => current === "saved" ? "idle" : current);
+        }, 3000);
+        return true;
+      } catch (error) {
+        failedSaveRef.current = true;
+        setSaveStatus("error");
+        setErrorMessage(reconciliationRef.current ||
+          (error instanceof Error ? error.message : "Failed to save changes. Please try again."));
+        return false;
+      }
+    })();
+    saveOperationRef.current = operation;
     try {
-      const res = await fetch("/api/website-content", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errorData.error || `Server returned ${res.status}`);
-      }
-
-      setSaveStatus("saved");
-      setErrorMessage("");
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => {
-        setSaveStatus((current) => (current === "saved" ? "idle" : current));
-      }, 3000);
-    } catch (err: unknown) {
-      setSaveStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Failed to save changes. Please try again.");
+      return await operation;
     } finally {
+      saveOperationRef.current = null;
       isSavingRef.current = false;
-      if (hasPendingDuringSaveRef.current || Object.keys(pendingPatchRef.current).length > 0) {
-        hasPendingDuringSaveRef.current = false;
-        flushPatch();
-      }
     }
   };
 
@@ -136,6 +184,10 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       }
       return;
     }
+
+    // A new valid edit may be saved normally, even after an earlier failure.
+    failedSaveRef.current = false;
+    setSaveStatus((current) => current === "saving" ? "saving" : "unsaved");
 
     pendingPatchRef.current = {
       ...pendingPatchRef.current,
@@ -160,15 +212,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (Object.keys(pendingPatchRef.current).length > 0) {
+      if (!isSavingRef.current && !failedSaveRef.current && !deletePendingRef.current && !reconciliationRef.current && Object.keys(pendingPatchRef.current).length > 0) {
         const validation = validateWebsiteContentPatch(pendingPatchRef.current);
         if (validation.valid) {
-          fetch("/api/website-content", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pendingPatchRef.current),
-            keepalive: true,
-          }).catch(() => {});
+          // Use the same submission bookkeeping even if navigation is canceled:
+          // a submitted draft must never become a local-only discard again.
+          void flushPatch(undefined, undefined, { keepalive: true });
         }
       }
     };
@@ -182,16 +231,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     };
   }, []);
 
-  function updateLogo(dataUrl: string) {
+  function updateLogo(url: string) {
     setErrorMessage("");
-    try {
-      setContent((prev) => ({ ...prev, logo: dataUrl }));
-      flushPatch({ logo: dataUrl });
-      return true;
-    } catch {
-      setErrorMessage("Failed to update the logo.");
-      return false;
-    }
+    setContent((prev) => ({ ...prev, logo: url }));
+    // The upload endpoint has already confirmed persistence before this callback.
+    setSavedContent((prev) => ({ ...prev, logo: url }));
+    return true;
   }
 
   function updateStory(story: string) {
@@ -598,10 +643,15 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   // keep empty new items on screen until refresh or name & link have been entered
   function addDeliveryLink() {
     setErrorMessage("");
+    if ((content.deliveryLinks ?? []).length >= MAX_DELIVERY_LINKS) {
+      setErrorMessage(`Maximum limit of ${MAX_DELIVERY_LINKS} delivery links reached.`);
+      return false;
+    }
     const link: SocialLink = {
       id: createTemporaryId("delivery"), label: "", icon: "", url: "", enabled: true,
     };
     setContent((previous) => ({ ...previous, deliveryLinks: [...(previous.deliveryLinks ?? []), link] }));
+    return true;
   }
 
   // show edits immediately, then save complete links
@@ -609,10 +659,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setContent((previous) => ({ ...previous, deliveryLinks: links }));
     // leave blank items out of the save; keep hidden links in the saved list
     const savedLinks = links.filter((link) => link.label.trim() || link.url.trim());
-    const { valid } = validateSocialLinks(savedLinks);
-    if (!valid) {
+    const validation = validateWebsiteContentPatch({ deliveryLinks: savedLinks });
+    if (!validation.valid) {
       // discard older waiting delivery save without cancelling other sections' saves
       delete pendingPatchRef.current.deliveryLinks;
+      setErrorMessage(validation.errors[0]);
+      setSaveStatus("error");
       return;
     }
     setErrorMessage("");
@@ -640,7 +692,12 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   function addSocialLink() {
     setErrorMessage("");
     try {
+      if (content.socialLinks.length >= MAX_SOCIAL_LINKS) {
+        setErrorMessage(`Maximum limit of ${MAX_SOCIAL_LINKS} social links reached.`);
+        return false;
+      }
       const id = createTemporaryId("social");
+      draftIdsRef.current.socialLinks.add(id);
       const updatedLinks = [
         ...content.socialLinks,
         { id, label: "", icon: "", url: "", enabled: true },
@@ -683,23 +740,108 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
-  function removeSocialLink(id: string) {
-    setErrorMessage("");
-    try {
-      const updatedLinks = content.socialLinks.filter((link) => link.id !== id);
-      setContent((prev) => ({ ...prev, socialLinks: updatedLinks }));
-      flushPatch({ socialLinks: updatedLinks });
-      return true;
-    } catch {
-      setErrorMessage("Failed to remove the social link.");
-      return false;
+  async function removeEntry(collection: "socialLinks" | "holidays", id: string): Promise<string | null> {
+    if (deletePendingRef.current) return "A deletion is already in progress.";
+    if (draftIdsRef.current[collection].has(id)) {
+      draftIdsRef.current[collection].delete(id);
+      // Remove queued copies too, so debounce/unload cannot save a discarded draft.
+      if (collection === "socialLinks" && pendingPatchRef.current.socialLinks) {
+        const remaining = pendingPatchRef.current.socialLinks.filter((entry) => entry.id !== id);
+        if (JSON.stringify(remaining) === JSON.stringify(savedCollectionsRef.current.socialLinks)) {
+          delete pendingPatchRef.current.socialLinks;
+        } else pendingPatchRef.current.socialLinks = remaining;
+      }
+      if (collection === "holidays" && pendingPatchRef.current.holidays) {
+        const remaining = pendingPatchRef.current.holidays.filter((entry) => entry.id !== id);
+        if (JSON.stringify(remaining) === JSON.stringify(savedCollectionsRef.current.holidays)) {
+          delete pendingPatchRef.current.holidays;
+        } else pendingPatchRef.current.holidays = remaining;
+      }
+      setContent((previous) => ({ ...previous,
+        ...(collection === "socialLinks"
+          ? { socialLinks: previous.socialLinks.filter((entry) => entry.id !== id) }
+          : { holidays: previous.holidays.filter((entry) => entry.id !== id) }),
+      }));
+      setErrorMessage("");
+      return null;
     }
+    deletePendingRef.current = true;
+    setIsDeleting(true);
+    let deletionConfirmed = false;
+    try {
+      // Finish earlier saves before claiming the revision for this deletion.
+      if (!await flushPatch(undefined, undefined, { forDeletion: true })) return "Save pending changes successfully before deleting, or reload this page.";
+      // Client IDs stay stable while dates are edited. Resolve the storage key
+      // from the latest confirmed payload, after any in-flight save finishes.
+      const savedEntry = savedCollectionsRef.current[collection].find((entry) => entry.id === id);
+      if (!savedEntry) {
+        reconciliationRef.current = "The saved entry could not be found. Reload this page before making more changes.";
+        return reconciliationRef.current;
+      }
+      const persistedId = "date" in savedEntry ? savedEntry.date : savedEntry.id;
+      const response = await fetch("/api/website-content", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collection, id: persistedId, revision: revisionRef.current }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 409 || result.requiresReload) {
+          reconciliationRef.current = requireReloadMessage(result.error || UNCERTAIN_DELETE);
+          return reconciliationRef.current;
+        }
+        return result.error || "The entry could not be deleted. Please try again.";
+      }
+      if (result.collectionsRevision !== revisionRef.current + 1) {
+        reconciliationRef.current = UNCERTAIN_DELETE;
+        return reconciliationRef.current;
+      }
+      revisionRef.current = result.collectionsRevision;
+      if (collection === "socialLinks") {
+        savedCollectionsRef.current.socialLinks = savedCollectionsRef.current.socialLinks.filter((entry) => entry.id !== id);
+        if (pendingPatchRef.current.socialLinks) pendingPatchRef.current.socialLinks = pendingPatchRef.current.socialLinks.filter((entry) => entry.id !== id);
+      } else {
+        savedCollectionsRef.current.holidays = savedCollectionsRef.current.holidays.filter((entry) => entry.id !== id);
+        if (pendingPatchRef.current.holidays) pendingPatchRef.current.holidays = pendingPatchRef.current.holidays.filter((entry) => entry.id !== id);
+      }
+      setContent((previous) => ({ ...previous,
+        collectionsRevision: result.collectionsRevision,
+        ...(collection === "socialLinks"
+          ? { socialLinks: previous.socialLinks.filter((entry) => entry.id !== id) }
+          : { holidays: previous.holidays.filter((entry) => entry.id !== id) }),
+      }));
+      setSavedContent((previous) => ({ ...previous,
+        collectionsRevision: result.collectionsRevision,
+        ...(collection === "socialLinks"
+          ? { socialLinks: previous.socialLinks.filter((entry) => entry.id !== id) }
+          : { holidays: previous.holidays.filter((entry) => entry.id !== id) }),
+      }));
+      setErrorMessage("");
+      deletionConfirmed = true;
+      return null;
+    } catch {
+      reconciliationRef.current = UNCERTAIN_DELETE;
+      return reconciliationRef.current;
+    } finally {
+      deletePendingRef.current = false;
+      setIsDeleting(false);
+      if (deletionConfirmed && Object.keys(pendingPatchRef.current).length > 0) void flushPatch();
+    }
+  }
+
+  function removeSocialLink(id: string) {
+    return removeEntry("socialLinks", id);
   }
 
   function addHoliday() {
     setErrorMessage("");
     try {
+      if (content.holidays.length >= MAX_HOLIDAYS) {
+        setErrorMessage(`Maximum limit of ${MAX_HOLIDAYS} holiday exceptions reached.`);
+        return false;
+      }
       const id = createTemporaryId("holiday");
+      draftIdsRef.current.holidays.add(id);
       const updatedHolidays = [
         ...content.holidays,
         { id, name: "", date: "", closed: true },
@@ -743,16 +885,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   }
 
   function removeHoliday(id: string) {
-    setErrorMessage("");
-    try {
-      const updatedHolidays = content.holidays.filter((holiday) => holiday.id !== id);
-      setContent((prev) => ({ ...prev, holidays: updatedHolidays }));
-      flushPatch({ holidays: updatedHolidays });
-      return true;
-    } catch {
-      setErrorMessage("Failed to remove the holiday.");
-      return false;
-    }
+    return removeEntry("holidays", id);
   }
 
   function updateContactFormEnabled(enabled: boolean) {
@@ -767,12 +900,25 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     }
   }
 
-  // handle save status for carousel --shows an error even when other sections are successful
+  const editableFields = [
+    "logo", "story", "address", "hours", "socialLinks", "deliveryLinks",
+    "holidays", "contactFormEnabled", "onlineOrderingEnabled",
+  ] as const;
+  const hasLocalEdits = editableFields.some((field) =>
+    JSON.stringify(content[field]) !== JSON.stringify(savedContent[field]));
+  const hasUnsavedEdits = hasLocalEdits ||
+    Object.keys(pendingPatchRef.current).length > 0 || isSavingRef.current ||
+    carouselHasSaving || carouselHasAnyError ||
+    carouselImages.some((image) => !image.src);
+
+  // A successful save in one section must not hide incomplete edits elsewhere.
   let sharedSaveStatus: SaveStatus = "idle";
   if (saveStatus === "error" || carouselSaveStatus === "error")
     sharedSaveStatus = "error";
   else if (saveStatus === "saving" || carouselSaveStatus === "saving")
     sharedSaveStatus = "saving";
+  else if (hasUnsavedEdits)
+    sharedSaveStatus = "unsaved";
   else if (saveStatus === "saved" || carouselSaveStatus === "saved")
     sharedSaveStatus = "saved";
 
@@ -790,7 +936,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
 
   return {
     content: { ...content, carouselImages },
+    isDeleting,
     saveStatus: sharedSaveStatus,
+    hasUnsavedEdits,
     errorMessage,
     setErrorMessage,
     flushPatch,

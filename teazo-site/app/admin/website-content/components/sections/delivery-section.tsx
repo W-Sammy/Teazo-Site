@@ -5,7 +5,7 @@ import { AccordionItem } from "../section-shell";
 import { IconDelivery } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
 import type { SocialLink } from "@/app/types/website-content";
-import { isValidUrl } from "../validators";
+import { isValidUrl, MAX_DELIVERY_LINKS } from "../validators";
 
 // delivery links use the same name/url/visibility fields as social links
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -138,10 +138,16 @@ export default function DeliverySection({
             <button
                 type="button"
                 onClick={onAddLink}
+                disabled={deliveryLinks.length >= MAX_DELIVERY_LINKS}
                 className="mt-4 min-h-11 w-full cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7] sm:min-h-0 sm:w-auto"
             >
                 New Delivery Link +
             </button>
+            {deliveryLinks.length >= MAX_DELIVERY_LINKS && (
+                <p className="mt-2 text-xs text-amber-700">
+                    Maximum limit of {MAX_DELIVERY_LINKS} delivery links reached. Delete an existing link to add another.
+                </p>
+            )}
         </AccordionItem>
     );
 }
