@@ -1,4 +1,6 @@
 import "server-only";
+import { applicationUrl } from "./site-url";
+export { applicationUrl } from "./site-url";
 
 import { normalizeEmail } from "./admin-whitelist";
 import { prepare } from "./d1";
@@ -14,35 +16,6 @@ type PasswordEmailAdmin = {
   role_id: 1 | 2;
   needs_password_setup: 0 | 1;
 };
-
-export function applicationUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_BASE_URL;
-
-  if (!configured) {
-    if (process.env.NODE_ENV === "development") {
-      return "http://localhost:3000";
-    }
-
-    throw new Error("NEXT_PUBLIC_BASE_URL is required.");
-  }
-
-  const url = new URL(configured);
-
-  const localDevelopment =
-    process.env.NODE_ENV === "development" &&
-    ["localhost", "127.0.0.1"].includes(url.hostname);
-
-  if (
-    (url.protocol !== "https:" &&
-      !(localDevelopment && url.protocol === "http:")) ||
-    url.username ||
-    url.password
-  ) {
-    throw new Error("Invalid application URL.");
-  }
-
-  return url.origin;
-}
 
 function escapeHtml(value: string): string {
   return value

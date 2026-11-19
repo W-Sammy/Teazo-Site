@@ -125,6 +125,7 @@ vi.mock("@/app/(site)/contact/contact-form", () => ({
 
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: mocks.getWebsiteContent,
+  getPublicWebsiteContent: mocks.getWebsiteContent,
 }));
 
 vi.mock(
@@ -244,7 +245,7 @@ async function renderDelivery() {
 
 describe("Public website content rendering", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     mocks.getWebsiteContent.mockResolvedValue(
       makeWebsiteContent(),
@@ -356,17 +357,17 @@ describe("Public website content rendering", () => {
       ).toBe("mailto:original@example.invalid");
     });
 
-    it("hides social links disabled in contact settings", async () => {
-      const contact = makeContactContent();
+    it("hides disabled administrator-managed social links", async () => {
+      const content = makeWebsiteContent();
 
-      contact.socialLinks =
-        contact.socialLinks?.map((link) => ({
+      content.socialLinks =
+        content.socialLinks.map((link) => ({
           ...link,
           enabled: false,
         }));
 
-      mocks.getContactContent.mockResolvedValueOnce(
-        contact,
+      mocks.getWebsiteContent.mockResolvedValueOnce(
+        content,
       );
 
       await renderHome();
@@ -550,34 +551,14 @@ describe("Public website content rendering", () => {
       );
     });
 
-    it("uses the existing fallback links when delivery settings are missing", async () => {
+    it("keeps an empty delivery collection empty", async () => {
       const content = makeWebsiteContent();
-
       content.deliveryLinks = [];
-
-      mocks.getWebsiteContent.mockResolvedValueOnce(
-        content,
-      );
-
+      mocks.getWebsiteContent.mockResolvedValueOnce(content);
       await renderDelivery();
-
-      expect(
-        screen.getByRole("link", {
-          name: "UBER EATS",
-        }).getAttribute("href"),
-      ).toContain("ubereats.com");
-
-      expect(
-        screen.getByRole("link", {
-          name: "DOORDASH",
-        }).getAttribute("href"),
-      ).toContain("doordash.com");
-
-      expect(
-        screen.getByRole("link", {
-          name: "POSTMATES",
-        }).getAttribute("href"),
-      ).toContain("postmates.com");
+      for (const name of ["UBER EATS", "DOORDASH", "POSTMATES"]) {
+        expect(screen.queryByRole("link", { name })).toBeNull();
+      }
     });
   });
 });

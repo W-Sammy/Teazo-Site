@@ -236,11 +236,11 @@ This project is currently developed for academic and client demonstration purpos
 
 # Links
 
+## Website
+https://teazous.com
+
 ## GitHub Repository
 https://github.com/W-Sammy/Teazo-Site
-
-## Vercel
-https://teazo-site.vercel.app
 
 ---
 

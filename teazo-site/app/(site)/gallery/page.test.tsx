@@ -63,6 +63,7 @@ vi.mock("@/app/components/bubble-field", () => ({
 
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: mocks.getWebsiteContent,
+  getPublicWebsiteContent: mocks.getWebsiteContent,
 }));
 
 vi.mock("@/app/lib/gallery", () => ({

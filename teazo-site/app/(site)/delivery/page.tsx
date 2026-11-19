@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { montserrat500, montserrat800 } from "@/app/fonts";
 import { heroLogoSrc } from "@/app/lib/default-logo";
 
@@ -22,7 +22,7 @@ const boldMontserrat = montserrat800;
 const mediumMontserrat = montserrat500;
 
 export default async function Delivery() {
-  const content = await getWebsiteContent();
+  const content = await getPublicWebsiteContent();
   const logoSrc = heroLogoSrc(content.logo);
   const deliveryLinks = (content.deliveryLinks ?? []).filter(
     (link) => link.enabled && link.label.trim() && link.url.trim(),
@@ -73,7 +73,7 @@ export default async function Delivery() {
             
             <div className="relative z-20 flex flex-col md:flex-row md:flex-wrap items-center justify-center gap-6 md:gap-12 w-full mt-19">
                 {deliveryLinks.map((link) => (
-                    <GeneralButton key={link.id} text={link.label.toUpperCase()} href={link.url} />
+                    <GeneralButton key={link.id} text={link.label.toUpperCase()} href={link.url.trim()} />
                 ))}
             </div>
         </div>

@@ -8,6 +8,7 @@ import { verifyTurnstile } from "@/app/lib/turnstile";
 import { ONLINE_ORDER_METADATA } from "@/app/lib/online-orders";
 import { CHECKOUT_RATE_LIMIT, consumeRateLimit } from "@/app/lib/queries/rate-limit";
 import { validateCartAgainstCatalog } from "@/app/lib/catalog-validation";
+import { applicationUrl } from "@/app/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -21,21 +22,6 @@ const BOT_CHECK_MESSAGES = {
 function visitorIp(request: Request): string | undefined {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return forwarded && /^[0-9a-fA-F:.]{3,45}$/.test(forwarded) ? forwarded : undefined;
-}
-
-/**
- * Returns the canonical base URL for post-payment redirects.
- */
-function getSiteBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/+$/, "");
-  }
-  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
-  if (vercelUrl) {
-    return `https://${vercelUrl}`;
-  }
-  return "http://localhost:3000";
 }
 
 /**
@@ -97,8 +83,21 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Refuse orders while the owner has paused online ordering
-  const content = await getWebsiteContent();
+  // 3. Refuse orders while the owner has paused online ordering or settings cannot be verified
+  let content;
+  try {
+    content = await getWebsiteContent();
+  } catch (error) {
+    console.error("[checkout] Could not load authoritative website content:", error);
+    return Response.json(
+      {
+        error: "Checkout is temporarily unavailable. Please try again in a few moments.",
+        code: "STORAGE_UNAVAILABLE",
+      },
+      { status: 503 },
+    );
+  }
+
   if (!content.onlineOrderingEnabled) {
     return Response.json(
       { error: ONLINE_ORDERING_PAUSED_MESSAGE, code: "ORDERING_PAUSED" },
@@ -128,7 +127,13 @@ export async function POST(request: Request) {
   }
 
   // 6. Construct Order and create Square Payment Link
-  const baseUrl = getSiteBaseUrl();
+  let baseUrl: string;
+  try {
+    baseUrl = applicationUrl();
+  } catch (error) {
+    console.error("[checkout] Invalid return URL configuration:", error);
+    return Response.json({ error: "Checkout is temporarily unavailable. Please try again later." }, { status: 503 });
+  }
   // Square automatically appends ?orderId=...&transactionId=... to the redirectUrl upon successful payment
   const redirectUrl = `${baseUrl}/order/confirmation`;
 

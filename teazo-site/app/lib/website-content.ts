@@ -9,6 +9,7 @@ import type {
 } from "@/app/types/website-content";
 import { getWeeklyCustomerHours, parseDisplayTextRange } from "@/app/lib/store-hours";
 import { prepare, batch } from "@/app/lib/d1";
+import { getD1BatchBody } from "@/app/lib/d1-batch";
 import { toPublicUrl } from "@/app/lib/media";
 
 import { unstable_rethrow } from "next/navigation";
@@ -20,11 +21,15 @@ import {
   isNonEmpty,
   formatPhoneNumber,
   validateWebsiteContentPatch,
+  parseAndNormalizeDestination,
+  MAX_D1_STATEMENTS,
+  MAX_WEBSITE_CONTENT_PAYLOAD_BYTES,
 } from "@/app/lib/website-content-validators";
 
 export type { ContactHour, ContactContent, SocialLink, DeliveryLink };
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
+  collectionsRevision: 0,
   logo: "/TEAZO_logo.svg",
   story:
     "TEAZO is specializing in bringing you high qualities drink, snack and dessert. We provide premium tea leaves from Taiwan tea farmer directly, all of our products come with a guarantee of the finest ingredients are being used. From our team to yours, we pay careful attention to each item. We hope you enjoy our products as much as we enjoy bringing it to you!",
@@ -68,8 +73,60 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
 // paused; any other value, or no row, means orders are open.
 const ONLINE_ORDERING_KEY = "site.online_ordering";
 
+export class WebsiteContentUnavailableError extends Error {
+  constructor(message = "Website content storage is unavailable.", public readonly cause?: unknown) {
+    super(message);
+    this.name = "WebsiteContentUnavailableError";
+    Object.setPrototypeOf(this, WebsiteContentUnavailableError.prototype);
+  }
+}
+
+export function getOutageFallbackWebsiteContent(): WebsiteContent {
+  return {
+    collectionsRevision: 0,
+    logo: DEFAULT_WEBSITE_CONTENT.logo,
+    story: DEFAULT_WEBSITE_CONTENT.story,
+    socialLinks: [],
+    deliveryLinks: [],
+    address: { ...DEFAULT_WEBSITE_CONTENT.address },
+    hours: [],
+    holidays: [],
+    carouselImages: [],
+    contactFormEnabled: false,
+    onlineOrderingEnabled: false,
+  };
+}
+
+export function getOutageContactContent(): ContactContent {
+  return {
+    logo: DEFAULT_WEBSITE_CONTENT.logo,
+    location: {
+      businessName: DEFAULT_WEBSITE_CONTENT.address.businessName,
+      streetAddress: DEFAULT_WEBSITE_CONTENT.address.streetAddress,
+      locality: DEFAULT_WEBSITE_CONTENT.address.locality,
+      phone: DEFAULT_WEBSITE_CONTENT.address.phone,
+      email: DEFAULT_WEBSITE_CONTENT.address.email,
+      mapQuery:
+        DEFAULT_WEBSITE_CONTENT.address.mapQuery ||
+        `${DEFAULT_WEBSITE_CONTENT.address.streetAddress}, ${DEFAULT_WEBSITE_CONTENT.address.locality}`,
+    },
+    hours: [
+      { day: "Monday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Tuesday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Wednesday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Thursday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Friday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Saturday", hours: "Temporarily unavailable", isHoliday: false },
+      { day: "Sunday", hours: "Temporarily unavailable", isHoliday: false },
+    ],
+    socialLinks: [],
+    contactFormEnabled: false,
+  };
+}
+
 function cloneDefaultWebsiteContent(): WebsiteContent {
   return {
+    collectionsRevision: 0,
     logo: DEFAULT_WEBSITE_CONTENT.logo,
     story: DEFAULT_WEBSITE_CONTENT.story,
     socialLinks: DEFAULT_WEBSITE_CONTENT.socialLinks.map((s) => ({ ...s })),
@@ -83,12 +140,9 @@ function cloneDefaultWebsiteContent(): WebsiteContent {
   };
 }
 
-let inMemoryContent: WebsiteContent = cloneDefaultWebsiteContent();
-
 function isD1Configured(): boolean {
   return Boolean(process.env.D1_PROXY_URL && process.env.PROXY_TOKEN);
 }
-
 
 const WEEKDAY_ABBRS_FROM_SUNDAY = [
   "Sun",
@@ -133,6 +187,16 @@ function isSavedCarouselImage(value: unknown): value is CarouselImage {
     typeof image.alt === "string" && typeof image.enabled === "boolean";
 }
 
+export async function getPublicWebsiteContent(): Promise<WebsiteContent> {
+  try {
+    return await getWebsiteContent();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Website content storage is unavailable for public page:", error);
+    return getOutageFallbackWebsiteContent();
+  }
+}
+
 /** Cache tag for everything getWebsiteContent() returns. Clear it after any write to these tables. */
 export const WEBSITE_CONTENT_TAG = "website-content";
 
@@ -157,7 +221,7 @@ type ProfileRow = {
   phone: string | null;
   email: string | null;
   map_query: string;
-  contact_form_enabled?: number;
+  contact_form_enabled?: number | null;
 };
 
 async function loadProfile(): Promise<ProfileRow | null> {
@@ -176,15 +240,26 @@ async function loadProfile(): Promise<ProfileRow | null> {
   }
 }
 
+async function loadRevision(): Promise<number> {
+  const revision = await prepare(
+    "SELECT revision FROM website_content_revision WHERE id = 1",
+  ).first<{ revision: number }>();
+  if (!revision) {
+    throw new WebsiteContentUnavailableError("Website content revision is unavailable. Apply migration 0013.");
+  }
+  return revision.revision;
+}
+
 /**
  * Reads website content straight from D1. Throws when D1 can't be read, so a
- * failure is never cached; getWebsiteContent() falls back to memory instead.
+ * failure is never cached; getWebsiteContent() throws or falls back instead.
  */
 async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
   const content = cloneDefaultWebsiteContent();
 
-  // The five reads are independent, so they run at once instead of one after another.
-  const [profile, d1Hours, d1Links, d1Copy, d1Holidays] = await Promise.all([
+  // The independent reads run at once instead of one after another.
+  const [revision, profile, d1Hours, d1Links, d1Copy, d1Holidays] = await Promise.all([
+    loadRevision(),
     loadProfile(),
     prepare(
       `SELECT day_of_week, display_text, opens_at, closes_at, is_closed
@@ -215,6 +290,8 @@ async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
       `SELECT date, is_closed, display_text, note FROM hours_exception ORDER BY date`
     ).all<{ date: string; is_closed: number; display_text: string | null; note: string | null }>(),
   ]);
+
+  content.collectionsRevision = revision;
 
   if (profile) {
     content.address = {
@@ -259,15 +336,21 @@ async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
   if (d1Links.results.length > 0) {
     const socials = d1Links.results
       .filter((l) => l.link_group === "social" && l.key !== "email")
-      .map((l) => ({
-        id: l.key,
-        label: l.label,
-        icon: `/social_icons/social_svg/teazo_${l.key}_icon.svg`,
-        url: l.url,
-        enabled: l.is_active === 1,
-      }));
-    if (socials.length > 0) content.socialLinks = socials;
-
+      .map((l) => {
+        const parsed = parseAndNormalizeDestination(l.url);
+        return {
+          id: l.key,
+          label: l.label,
+          icon: ({ facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
+            instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
+            yelp: "/social_icons/social_svg/teazo_yelp_icon.svg" } as Record<string, string>)[l.key] || "",
+          url: parsed.ok ? parsed.destination : l.url,
+          enabled: l.is_active === 1,
+        };
+      });
+    content.socialLinks = socials;
+  } else {
+    content.socialLinks = [];
   }
 
   content.deliveryLinks = d1Links.results
@@ -297,7 +380,6 @@ async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
             ...image,
             src: image.src.startsWith("/carousel_images/") ? image.src : toPublicUrl(image.src),
           }));
-
         } catch (error) {
           console.error("Could not load saved carousel images:", error);
         }
@@ -306,28 +388,28 @@ async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
       if (block.key === "home.story" && block.value) {
         content.story = block.value;
       } else if (block.key === "site.logo" && block.value) {
-        content.logo = block.value;
+        content.logo = block.value.startsWith("data:")
+          ? DEFAULT_WEBSITE_CONTENT.logo
+          : block.value;
       } else if (block.key === ONLINE_ORDERING_KEY) {
         content.onlineOrderingEnabled = block.value !== "off";
       }
     }
   }
 
-  if (d1Holidays.results.length > 0) {
-    content.holidays = d1Holidays.results.map((h, i) => {
-      const timeRange = parseDisplayTextRange(h.display_text);
-      return {
-        id: `holiday-${h.date || i}`,
-        name: h.note || `Holiday`,
-        // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
-        date: h.date,
-        closed: h.is_closed === 1,
-        start: timeRange.start,
-        end: timeRange.end,
-        displayText: h.display_text || undefined,
-      };
-    });
-  }
+  content.holidays = d1Holidays.results.map((h, i) => {
+    const timeRange = parseDisplayTextRange(h.display_text);
+    return {
+      id: `holiday-${h.date || i}`,
+      name: h.note || `Holiday`,
+      // "MM-DD" repeats every year, "YYYY-MM-DD" is that day only.
+      date: h.date,
+      closed: h.is_closed === 1,
+      start: timeRange.start,
+      end: timeRange.end,
+      displayText: h.display_text || undefined,
+    };
+  });
 
   return content;
 }
@@ -337,31 +419,50 @@ async function loadWebsiteContentFromD1(): Promise<WebsiteContent> {
  * (or a matching revalidatePath) clears it. The hour limit only matters for
  * changes made outside the app, such as SQL run by hand.
  */
-const loadCachedWebsiteContent = unstable_cache(loadWebsiteContentFromD1, ["website-content"], {
+const cachedWebsiteContent = unstable_cache(loadWebsiteContentFromD1, ["website-content"], {
   tags: [WEBSITE_CONTENT_TAG],
   revalidate: 3600,
 });
 
-/**
- * Loads current website content from D1 if configured, otherwise falls back to memory.
- * Cached (see loadCachedWebsiteContent), and read once per request even when a
- * page and its layout both ask for it.
- */
-export const getWebsiteContent = cache(async (): Promise<WebsiteContent> => {
+async function loadCachedWebsiteContent(): Promise<WebsiteContent> {
+  try {
+    return await cachedWebsiteContent();
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("incrementalCache missing")) {
+      return await loadWebsiteContentFromD1();
+    }
+    throw err;
+  }
+}
+
+async function fetchWebsiteContent(options?: { allowOutageFallback?: boolean }): Promise<WebsiteContent> {
+  if (options?.allowOutageFallback) {
+    return getPublicWebsiteContent();
+  }
+
   if (!isD1Configured()) {
-    return inMemoryContent;
+    throw new WebsiteContentUnavailableError("Website content storage is unconfigured.");
   }
 
   try {
     const content = await loadCachedWebsiteContent();
-    inMemoryContent = { ...content };
     return content;
   } catch (error) {
     unstable_rethrow(error);
+    if (error instanceof WebsiteContentUnavailableError || (error as Error)?.name === "WebsiteContentUnavailableError") {
+      throw error;
+    }
     console.error("Failed to fetch website content from D1:", error);
-    return inMemoryContent;
+    throw new WebsiteContentUnavailableError("Failed to fetch website content from D1.", error);
   }
-});
+}
+
+export const getWebsiteContent =
+  typeof process !== "undefined" && process.env.NODE_ENV === "test"
+    ? fetchWebsiteContent
+    : cache(fetchWebsiteContent);
+
+export const getAuthoritativeWebsiteContent = getWebsiteContent;
 
 /**
  * Updates website content with the provided partial values and persists to D1.
@@ -371,19 +472,15 @@ export async function updateWebsiteContent(
 ): Promise<WebsiteContent> {
   const validation = validateWebsiteContentPatch(patch);
   if (!validation.valid) {
-    throw new Error(`Invalid website content: ${validation.errors.join("; ")}`);
+    throw new WebsiteContentValidationError(`Invalid website content: ${validation.errors.join("; ")}`);
   }
 
-  // Read past the cache: a save is built on top of what is in D1 right now.
-  let current = inMemoryContent;
-  if (isD1Configured()) {
-    try {
-      current = await loadWebsiteContentFromD1();
-    } catch (error) {
-      unstable_rethrow(error);
-      console.error("Failed to read website content from D1 before saving:", error);
-    }
-  }
+  // Reads may use a fallback, but an admin write must never report a
+  // successful save that disappears when the server restarts.
+  if (!isD1Configured()) throw new WebsiteContentUnavailableError("Website content storage is unavailable.");
+  const current = await loadWebsiteContentFromD1();
+  const changesCollections = patch.socialLinks !== undefined || patch.holidays !== undefined;
+  if (changesCollections) assertCollectionWrite(patch.collectionsRevision);
 
   const formattedAddress = patch.address
     ? {
@@ -392,23 +489,30 @@ export async function updateWebsiteContent(
       }
     : undefined;
 
+  const normalizedSocialLinks = patch.socialLinks?.map((link) => {
+    const parsed = parseAndNormalizeDestination(link.url);
+    return {
+      ...link,
+      url: parsed.ok ? parsed.destination : link.url.trim(),
+    };
+  });
+
   const nextContent: WebsiteContent = {
     ...current,
     ...patch,
+    ...(normalizedSocialLinks ? { socialLinks: normalizedSocialLinks } : {}),
     address: {
       ...current.address,
       ...(formattedAddress ?? {}),
     },
   };
 
-  inMemoryContent = { ...nextContent };
-
-  if (!isD1Configured()) {
-    return nextContent;
-  }
-
   try {
     const stmts: Array<{ toStmt(): { sql: string; params: unknown[] } }> = [];
+    if (changesCollections) {
+      stmts.push(claimCollectionsRevision(patch.collectionsRevision!));
+      nextContent.collectionsRevision = patch.collectionsRevision! + 1;
+    }
     const hasAddressUpdate = patch.address !== undefined;
     const hasFormToggleUpdate = patch.contactFormEnabled !== undefined;
 
@@ -485,10 +589,10 @@ export async function updateWebsiteContent(
       });
     }
 
-    if (patch.socialLinks) {
+    if (normalizedSocialLinks) {
       stmts.push(prepare(`DELETE FROM site_link WHERE link_group = 'social'`));
-      for (let i = 0; i < patch.socialLinks.length; i++) {
-        const link = patch.socialLinks[i];
+      for (let i = 0; i < normalizedSocialLinks.length; i++) {
+        const link = normalizedSocialLinks[i];
         if (!link.id || !link.url) continue;
         stmts.push(
           prepare(
@@ -537,6 +641,20 @@ export async function updateWebsiteContent(
       }
     }
 
+    if (stmts.length > MAX_D1_STATEMENTS) {
+      throw new WebsiteContentValidationError(
+        `Update generated ${stmts.length} database statements, exceeding the maximum budget of ${MAX_D1_STATEMENTS}.`,
+      );
+    }
+    // The proxy caps its SQL request, which includes the statement envelope,
+    // SQL text, normalized destinations, and values merged from stored content.
+    const batchBytes = Buffer.byteLength(JSON.stringify(getD1BatchBody(stmts)), "utf8");
+    if (batchBytes > MAX_WEBSITE_CONTENT_PAYLOAD_BYTES) {
+      throw new WebsiteContentValidationError(
+        `Content update requires ${batchBytes} bytes in the database request, exceeding the maximum of ${MAX_WEBSITE_CONTENT_PAYLOAD_BYTES} bytes. Reduce the content size and try again.`,
+      );
+    }
+
     if (stmts.length > 0) {
       try {
         await batch(stmts);
@@ -574,6 +692,8 @@ export async function updateWebsiteContent(
     }
   } catch (err) {
     unstable_rethrow(err);
+    if (err instanceof WebsiteContentValidationError) throw err;
+    if (String(err).includes("website_content_conflict")) throw new WebsiteContentConflictError();
     console.error("Failed to update website content in D1:", err);
     throw err;
   }
@@ -582,29 +702,102 @@ export async function updateWebsiteContent(
   return nextContent;
 }
 
+/** A preflight rejection: no write was sent and reconciliation is unnecessary. */
+export class WebsiteContentValidationError extends Error {}
+
+export class WebsiteContentConflictError extends Error {
+  constructor() {
+    super("Website content changed in another session. Reload this page before making more changes.");
+  }
+}
+
+export class WebsiteContentNotFoundError extends Error {
+  constructor() {
+    super("This entry no longer exists. Reload this page before making more changes.");
+  }
+}
+
+function assertCollectionWrite(revision: unknown): asserts revision is number {
+  if (!isD1Configured()) throw new WebsiteContentUnavailableError("Website content storage is unavailable.");
+  if (!Number.isSafeInteger(revision) || (revision as number) < 0) {
+    throw new WebsiteContentConflictError();
+  }
+}
+
+function claimCollectionsRevision(revision: number) {
+  return prepare(
+    "UPDATE website_content_revision SET revision = ?1 WHERE id = 1",
+  ).bind(revision + 1);
+}
+
+/** Claim only if the target exists; the revision trigger rejects stale writers.
+ * D1's batch is atomic and returns each statement's meta.changes through the proxy.
+ * A missing target changes neither the revision nor the collection.
+ */
+export async function deleteWebsiteContentEntry(
+  collection: "socialLinks" | "holidays",
+  id: string,
+  revision: number,
+): Promise<number> {
+  assertCollectionWrite(revision);
+  const target = collection === "socialLinks"
+    ? "site_link WHERE link_group = 'social' AND key = ?2"
+    : "hours_exception WHERE date = ?2";
+  const claim = prepare(
+    `UPDATE website_content_revision SET revision = ?1
+     WHERE id = 1 AND EXISTS (SELECT 1 FROM ${target})`,
+  ).bind(revision + 1, id);
+  const statement = prepare(
+    `DELETE FROM ${target}
+     AND EXISTS (SELECT 1 FROM website_content_revision WHERE id = 1 AND revision = ?1)`,
+  ).bind(revision + 1, id);
+  try {
+    const { results } = await batch([claim, statement]);
+    const [claimed, deleted] = results;
+    if (results.length !== 2 || claimed?.success !== true || deleted?.success !== true) {
+      throw new Error("Deletion result is unavailable.");
+    }
+    if (claimed.meta.changes === 0 && deleted.meta.changes === 0) throw new WebsiteContentNotFoundError();
+    if (claimed.meta.changes !== 1 || deleted.meta.changes !== 1) {
+      throw new Error("Deletion could not be confirmed.");
+    }
+  } catch (error) {
+    if (String(error).includes("website_content_conflict")) throw new WebsiteContentConflictError();
+    throw error;
+  }
+  revalidateWebsiteContent();
+  return revision + 1;
+}
+
 /**
  * Returns formatted ContactContent preserving the exact shape expected by the frontend contact route.
  */
 export async function getContactContent(): Promise<ContactContent> {
-  const content = await getWebsiteContent();
-  const hours = getWeeklyCustomerHours(content);
+  try {
+    const content = await getWebsiteContent();
+    const hours = getWeeklyCustomerHours(content);
 
-  return {
-    logo: content.logo,
-    location: {
-      businessName: content.address.businessName,
-      streetAddress: content.address.streetAddress,
-      locality: content.address.locality,
-      phone: content.address.phone,
-      email: content.address.email,
-      mapQuery:
-        content.address.mapQuery ||
-        `${content.address.streetAddress}, ${content.address.locality}`,
-    },
-    hours,
-    socialLinks: content.socialLinks,
-    contactFormEnabled: content.contactFormEnabled,
-  };
+    return {
+      logo: content.logo,
+      location: {
+        businessName: content.address.businessName,
+        streetAddress: content.address.streetAddress,
+        locality: content.address.locality,
+        phone: content.address.phone,
+        email: content.address.email,
+        mapQuery:
+          content.address.mapQuery ||
+          `${content.address.streetAddress}, ${content.address.locality}`,
+      },
+      hours,
+      socialLinks: content.socialLinks,
+      contactFormEnabled: content.contactFormEnabled,
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("Website content storage is unavailable for contact page:", error);
+    return getOutageContactContent();
+  }
 }
 
 /**

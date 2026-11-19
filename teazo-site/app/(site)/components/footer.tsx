@@ -1,4 +1,4 @@
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { montserrat500 } from "@/app/fonts";
 
 // font setup
@@ -6,7 +6,7 @@ const montserrat = montserrat500;
 
 // footer.
 export default async function Footer() {
-    const content = await getWebsiteContent();
+    const content = await getPublicWebsiteContent();
     const email = content.address.email || "teazosf@hotmail.com";
 
     return (

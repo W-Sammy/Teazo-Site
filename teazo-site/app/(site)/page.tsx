@@ -9,9 +9,9 @@ import ImageCarousel from "@/app/(site)/components/image-carousel";
 // import font & bubbles
 import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
-import { getContactContent } from "@/app/(site)/contact/contact-content";
+import SocialLinks from "./components/social-links";
 import GeneralButton from "@/app/components/general-button";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
 import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
@@ -63,7 +63,7 @@ function MailIcon() {
 
 export default async function Home() {
   const [content, liveEvents] = await Promise.all([
-    getWebsiteContent(),
+    getPublicWebsiteContent(),
     // Events are optional: keep the homepage available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);
@@ -72,24 +72,7 @@ export default async function Home() {
     getEventCategories(liveEvents).catch(() => []),
     getEventItems(liveEvents).catch(() => []),
   ]);
-  const contactData = await getContactContent();
-  const {
-    location,
-    hours,
-    contactFormEnabled,
-    logo,
-    socialLinks: dynamicSocialLinks,
-  } = contactData;
-  const fbLink = content.socialLinks.find((l) => l.id === "facebook" && l.enabled)?.url || "https://www.facebook.com/people/TEAZO/100063111166083";
-  const igLink = content.socialLinks.find((l) => l.id === "instagram" && l.enabled)?.url || "https://www.instagram.com/teazosf/";
-  const yelpLink = content.socialLinks.find((l) => l.id === "yelp" && l.enabled)?.url || "https://www.yelp.com/biz/teazo-san-francisco";
   const emailHref = `mailto:${content.address.email || "teazosf@hotmail.com"}`;
-  const opensWebmail = false;
-  const phoneDigits = location.phone.replace(/[^\d+]/g, "");
-  const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
-  const isYelpEnabled = dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
-  const isFbEnabled = dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
-  const isIgEnabled = dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
@@ -182,79 +165,8 @@ export default async function Home() {
                         Inquire about group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
-        
-                      <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                        {isFbEnabled && (
-                          <a
-                            href={fbLink}
-                            aria-label={`${location.businessName} on Facebook`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_fb_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                        <a
-                          href={emailHref}
-                          aria-label={`Email ${location.businessName}`}
-                          target={opensWebmail ? "_blank" : undefined}
-                          rel={opensWebmail ? "noreferrer" : undefined}
-                          className="block transition hover:opacity-70"
-                        >
-                          <Image
-                            src="/social_icons/social_svg/teazo_email_icon.svg"
-                            alt=""
-                            aria-hidden="true"
-                            width={64}
-                            height={64}
-                            className="h-12 w-12 object-contain"
-                          />
-                        </a>
-                        {isIgEnabled && (
-                          <a
-                            href={igLink}
-                            aria-label={`${location.businessName} on Instagram`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_insta_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                        {isYelpEnabled && (
-                          <a
-                            href={yelpLink}
-                            aria-label={`${location.businessName} on Yelp`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                      </div>
+                      <SocialLinks links={content.socialLinks} businessName={content.address.businessName}
+                        email={content.address.email || "teazosf@hotmail.com"} />
                     </div>
         
                     <a

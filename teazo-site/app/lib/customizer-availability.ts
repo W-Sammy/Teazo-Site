@@ -7,6 +7,11 @@ interface CustomizerCatalog {
   modifiers?: ModifierList[];
 }
 
+/**
+ * Until the fresh catalog check returns (`checked` false), the page's own item data is evaluated
+ * provisionally so customers can start choosing; `confirmed` tells the caller which case it got.
+ * A failed check always blocks.
+ */
 export function checkCustomizerAvailability(
   item: CustomizerCatalog,
   checked: boolean,
@@ -14,7 +19,16 @@ export function checkCustomizerAvailability(
   selectedModifiers: Record<string, string[]>,
   error?: string,
 ) {
-  if (!checked || error) return { canAdd: false, message: error, unavailableModifiers: false };
+  if (error) return { canAdd: false, message: error, unavailableModifiers: false, confirmed: false };
+  const result = evaluateAvailability(item, selectedVariationId, selectedModifiers);
+  return { ...result, confirmed: checked };
+}
+
+function evaluateAvailability(
+  item: CustomizerCatalog,
+  selectedVariationId: string,
+  selectedModifiers: Record<string, string[]>,
+) {
   const configurationProblem = item.availability?.reasons.some((reason) =>
     reason.code.startsWith("UNSUPPORTED_") || reason.code === "INVALID_MODIFIER_LIMITS" || reason.code === "MISSING_MODIFIER_LIST",
   );
