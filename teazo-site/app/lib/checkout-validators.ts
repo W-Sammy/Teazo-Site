@@ -106,7 +106,8 @@ export function validateCustomerContact(
 
 /**
  * Validates pickup timing format (type and presence/format of pickupAt).
- * Note: Business hours, cutoff, and lead time are verified via `validatePickupTiming` in store-hours.ts.
+ * Note: Business hours, cutoff, and lead time are verified via
+ * validatePickupTiming in store-hours.ts.
  */
 export function validatePickupTimingRequest(
   value: unknown,
@@ -249,7 +250,8 @@ export function validateCheckoutItem(
 }
 
 /**
- * Validates the full checkout request payload before resolving Square locations or checking store hours.
+ * Validates the full checkout request payload before resolving Square
+ * locations or checking store hours.
  */
 export function validateCheckoutRequestBody(
   value: unknown,
@@ -258,6 +260,22 @@ export function validateCheckoutRequestBody(
     return {
       ok: false,
       error: "Request body must be a JSON object.",
+    };
+  }
+
+  // A checkout attempt needs a stable UUID for persistent idempotency.
+  const checkoutAttemptId =
+    typeof value.checkoutAttemptId === "string"
+      ? value.checkoutAttemptId.trim()
+      : "";
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (!uuidPattern.test(checkoutAttemptId)) {
+    return {
+      ok: false,
+      error: "A valid checkout attempt ID is required.",
     };
   }
 
@@ -300,6 +318,7 @@ export function validateCheckoutRequestBody(
   return {
     ok: true,
     data: {
+      checkoutAttemptId,
       customer: customerResult.data,
       pickupTiming: timingResult.data,
       items: validatedItems,

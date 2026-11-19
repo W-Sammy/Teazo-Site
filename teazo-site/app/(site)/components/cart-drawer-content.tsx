@@ -28,6 +28,10 @@ import {
 } from "@/app/lib/store-hours";
 import { toE164Phone } from "@/app/lib/checkout-validators";
 import {
+  getOrCreateCheckoutAttemptId,
+  rememberCheckoutAttemptOrder,
+} from "@/app/lib/checkout-attempt-storage";
+import {
   cartIssueMessage,
   cartItemsWithIssue,
   readCartIssue,
@@ -51,8 +55,14 @@ import type {
 } from "@/app/types/checkout";
 import CustomizerLoadingModal from "./customizer-loading-modal";
 import ChunkErrorBoundary from "./chunk-error-boundary";
-import LazyCustomizerModal, { preloadCustomizerModule, resetCustomizerModule } from "./lazy-customizer-modal";
-import { fetchItemAvailability, type ItemAvailabilitySnapshot } from "./customizer-availability-prefetch";
+import LazyCustomizerModal, {
+  preloadCustomizerModule,
+  resetCustomizerModule,
+} from "./lazy-customizer-modal";
+import {
+  fetchItemAvailability,
+  type ItemAvailabilitySnapshot,
+} from "./customizer-availability-prefetch";
 
 const SAVED_CONTACT_STORAGE_KEY = "teazo_saved_contact";
 
@@ -275,7 +285,10 @@ export interface CartDrawerContentProps {
   onSecuritySlot?: (element: HTMLDivElement | null) => void;
 }
 
-export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawerContentProps) {
+export default function CartDrawerContent({
+  onClose,
+  onSecuritySlot,
+}: CartDrawerContentProps) {
   const {
     items,
     totalCount,
@@ -289,7 +302,8 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     clearCart,
   } = useCart();
 
-  // Contact form state loaded seamlessly via external store to avoid setState-in-effect violations
+  // Contact form state loaded seamlessly via external store to avoid
+  // setState-in-effect violations.
   const savedContactJson = useSyncExternalStore(
     subscribeContactStorage,
     getContactSnapshot,
@@ -308,20 +322,28 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
   const [userEditedPhone, setUserEditedPhone] = useState<string | null>(null);
   const [userEditedEmail, setUserEditedEmail] = useState<string | null>(null);
 
-  const customerName = userEditedName !== null ? userEditedName : (savedContact.name ?? "");
-  const customerPhone = userEditedPhone !== null ? userEditedPhone : (savedContact.phone ?? "");
-  const customerEmail = userEditedEmail !== null ? userEditedEmail : (savedContact.email ?? "");
+  const customerName =
+    userEditedName !== null ? userEditedName : (savedContact.name ?? "");
+  const customerPhone =
+    userEditedPhone !== null ? userEditedPhone : (savedContact.phone ?? "");
+  const customerEmail =
+    userEditedEmail !== null ? userEditedEmail : (savedContact.email ?? "");
 
   // Timing state
-  const [userSelectedPickupType, setUserSelectedPickupType] = useState<PickupScheduleType | null>(null);
+  const [userSelectedPickupType, setUserSelectedPickupType] =
+    useState<PickupScheduleType | null>(null);
   const [userSelectedDay, setUserSelectedDay] = useState<string>("");
   const [userSelectedSlot, setUserSelectedSlot] = useState<string>("");
 
   // The fallback only fills in the pickup address. Pickup times wait for the
   // real hours and holidays instead of guessing from it.
-  const [websiteContent, setWebsiteContent] = useState<WebsiteContent>(FALLBACK_WEBSITE_CONTENT);
-  const [scheduleStatus, setScheduleStatus] = useState<"loading" | "ready" | "error">("loading");
-  // Time slots follow the server's clock, since the customer's device clock may be wrong.
+  const [websiteContent, setWebsiteContent] =
+    useState<WebsiteContent>(FALLBACK_WEBSITE_CONTENT);
+  const [scheduleStatus, setScheduleStatus] =
+    useState<"loading" | "ready" | "error">("loading");
+
+  // Time slots follow the server's clock, since the customer's device clock
+  // may be wrong.
   const clockOffsetMsRef = useRef(0);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
@@ -334,17 +356,31 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // React state updates asynchronously; this ref blocks immediate duplicate
+  // form submissions.
+  const checkoutInFlightRef = useRef(false);
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  // Cart lines the last checkout attempt refused (sold out, or options that no longer fit)
+
+  // Cart lines the last checkout attempt refused (sold out, or options that
+  // no longer fit).
   const [cartIssue, setCartIssue] = useState<CartIssue | null>(null);
-  const flaggedItems = useMemo(() => cartItemsWithIssue(items, cartIssue), [items, cartIssue]);
-  const flaggedItemIds = useMemo(() => new Set(flaggedItems.map((it) => it.cartItemId)), [flaggedItems]);
+  const flaggedItems = useMemo(
+    () => cartItemsWithIssue(items, cartIssue),
+    [items, cartIssue]
+  );
+  const flaggedItemIds = useMemo(
+    () => new Set(flaggedItems.map((it) => it.cartItemId)),
+    [flaggedItems]
+  );
 
   const removeFlaggedItems = () => {
     for (const it of flaggedItems) removeItem(it.cartItemId);
     setCartIssue(null);
     setErrorMessage(null);
   };
+
   const [formErrors, setFormErrors] = useState<{
     name?: string;
     phone?: string;
@@ -355,17 +391,21 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
   // Editing state for line items
   const [editingCartItem, setEditingCartItem] = useState<CartItem | null>(null);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
+
   useEffect(() => {
     if (!editingMenuItem) return;
     setCustomizerState(true);
     return () => setCustomizerState(false);
   }, [editingMenuItem]);
+
   const [editingLoadingId, setEditingLoadingId] = useState<string | null>(null);
   const [customizerRetryKey, setCustomizerRetryKey] = useState(0);
 
-  // Keep only the last drink, local to this bag. Older data is provisional on reopening.
+  // Keep only the last drink, local to this bag. Older data is provisional
+  // on reopening.
   const lastAvailabilityRef = useRef<ItemAvailabilitySnapshot | null>(null);
-  const [editingAvailability, setEditingAvailability] = useState<ItemAvailabilitySnapshot | null>(null);
+  const [editingAvailability, setEditingAvailability] =
+    useState<ItemAvailabilitySnapshot | null>(null);
   const editControllerRef = useRef<AbortController | null>(null);
   const editRequestIdRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -389,9 +429,12 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     };
   }, [isCartOpen]);
 
-  const rememberAvailability = React.useCallback((snapshot: ItemAvailabilitySnapshot) => {
-    lastAvailabilityRef.current = snapshot;
-  }, []);
+  const rememberAvailability = React.useCallback(
+    (snapshot: ItemAvailabilitySnapshot) => {
+      lastAvailabilityRef.current = snapshot;
+    },
+    []
+  );
 
   const handleRetryEditCustomizer = React.useCallback(() => {
     resetCustomizerModule();
@@ -406,12 +449,20 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
   const daySelectId = useId();
   const slotSelectId = useId();
 
-  const saveContactToStorage = (name: string, phone: string, email: string) => {
+  const saveContactToStorage = (
+    name: string,
+    phone: string,
+    email: string
+  ) => {
     if (typeof window === "undefined") return;
     try {
       localStorage.setItem(
         SAVED_CONTACT_STORAGE_KEY,
-        JSON.stringify({ name: name.trim(), phone: phone.trim(), email: email.trim() })
+        JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+        })
       );
       window.dispatchEvent(new Event("teazo_contact_sync"));
     } catch (err) {
@@ -419,27 +470,44 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     }
   };
 
-  // Fetch live website content for database-backed schedule & holiday exceptions.
-  // Runs again each time the bag opens, which also brings the clock up to date.
-  // When the interior content is mounted, fetch when cart is open or has items
+  // Fetch live website content for database-backed schedule & holiday
+  // exceptions. Runs again each time the bag opens, which also brings
+  // the clock up to date.
   const hasItems = totalCount > 0;
+
   useEffect(() => {
     if (!isCartOpen && !hasItems) return;
     let isMounted = true;
+
     async function loadContent() {
       try {
-        const res = await fetch("/api/website-content", { cache: "no-store" });
-        if (!res.ok) throw new Error(`Store hours request failed with status ${res.status}`);
+        const res = await fetch("/api/website-content", {
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          throw new Error(
+            `Store hours request failed with status ${res.status}`
+          );
+        }
+
         const data: WebsiteContent = await res.json();
         const serverNow = Date.parse(res.headers.get("date") ?? "");
-        if (!Number.isNaN(serverNow)) clockOffsetMsRef.current = serverNow - Date.now();
+        if (!Number.isNaN(serverNow)) {
+          clockOffsetMsRef.current = serverNow - Date.now();
+        }
         if (!isMounted) return;
+
         setWebsiteContent(data);
-        setCurrentTime(new Date(Date.now() + clockOffsetMsRef.current));
+        setCurrentTime(
+          new Date(Date.now() + clockOffsetMsRef.current)
+        );
         setScheduleStatus("ready");
       } catch (err) {
-        console.error("Failed to fetch store schedule in CartDrawer:", err);
-        // Do not preserve stale "ready" status across failed refreshes; invalidate availability on outage
+        console.error(
+          "Failed to fetch store schedule in CartDrawer:",
+          err
+        );
+        // Do not preserve stale "ready" status across failed refreshes.
         if (isMounted) setScheduleStatus("error");
       }
     }
@@ -449,18 +517,21 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     return () => {
       isMounted = false;
     };
-  }, [isCartOpen, hasItems]); // hasItems, not totalCount: quantity taps must not refetch
+  }, [isCartOpen, hasItems]);
 
-  // Periodically refresh current time every 30s while drawer is open to eliminate time-drift
+  // Periodically refresh current time every 30s while drawer is open.
   useEffect(() => {
     if (!isCartOpen) return;
     const interval = setInterval(() => {
-      setCurrentTime(new Date(Date.now() + clockOffsetMsRef.current));
+      setCurrentTime(
+        new Date(Date.now() + clockOffsetMsRef.current)
+      );
     }, 30000);
     return () => clearInterval(interval);
   }, [isCartOpen]);
 
-  // Days from today through MAX_SCHEDULE_DAYS_AHEAD that still have 15-minute pickup slots
+  // Days from today through MAX_SCHEDULE_DAYS_AHEAD that still have
+  // 15-minute pickup slots.
   const pickupDays = useMemo(() => {
     if (scheduleStatus !== "ready") return [];
     try {
@@ -470,18 +541,22 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     }
   }, [scheduleStatus, websiteContent, currentTime]);
 
-  // The owner can pause online ordering from the admin. Checkout refuses orders then too.
-  const isOrderingPaused = scheduleStatus === "ready" && !websiteContent.onlineOrderingEnabled;
+  // The owner can pause online ordering from the admin.
+  const isOrderingPaused =
+    scheduleStatus === "ready" && !websiteContent.onlineOrderingEnabled;
 
-  // Sync ordering paused status to checkout security lifecycle
   useEffect(() => {
     setOrderingPaused(isOrderingPaused);
   }, [isOrderingPaused]);
 
-  const activeDay = pickupDays.find((day) => day.date === userSelectedDay) ?? pickupDays[0];
-  const availableSlots = useMemo(() => activeDay?.slots ?? [], [activeDay]);
+  const activeDay =
+    pickupDays.find((day) => day.date === userSelectedDay) ??
+    pickupDays[0];
+  const availableSlots = useMemo(
+    () => activeDay?.slots ?? [],
+    [activeDay]
+  );
 
-  // Today's schedule status
   const todaySchedule: DaySchedule | null = useMemo(() => {
     try {
       return getStoreScheduleForDate(currentTime, websiteContent);
@@ -490,9 +565,15 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     }
   }, [websiteContent, currentTime]);
 
-  // Evaluate whether ASAP ordering is currently open
   const isAsapAvailable = useMemo(() => {
-    if (scheduleStatus !== "ready" || !todaySchedule || todaySchedule.closed) return false;
+    if (
+      scheduleStatus !== "ready" ||
+      !todaySchedule ||
+      todaySchedule.closed
+    ) {
+      return false;
+    }
+
     const nowParts = getPacificParts(currentTime);
     return (
       nowParts.minuteOfDay >= todaySchedule.openMinuteOfDay &&
@@ -500,27 +581,38 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     );
   }, [scheduleStatus, todaySchedule, currentTime]);
 
-  // Derive effective pickup type gracefully: if ASAP is closed but scheduled slots exist, default to SCHEDULED
+  // If ASAP is closed but scheduled slots exist, default to SCHEDULED.
   const effectivePickupType: PickupScheduleType = useMemo(() => {
     if (userSelectedPickupType === "SCHEDULED") return "SCHEDULED";
-    if (userSelectedPickupType === "ASAP" && isAsapAvailable) return "ASAP";
-    if (!isAsapAvailable && pickupDays.length > 0) return "SCHEDULED";
+    if (
+      userSelectedPickupType === "ASAP" &&
+      isAsapAvailable
+    ) {
+      return "ASAP";
+    }
+    if (!isAsapAvailable && pickupDays.length > 0) {
+      return "SCHEDULED";
+    }
     return "ASAP";
   }, [userSelectedPickupType, isAsapAvailable, pickupDays.length]);
 
-  // Derive active scheduled slot without cascading render effect
   const activeSlot = useMemo(() => {
-    if (userSelectedSlot && availableSlots.includes(userSelectedSlot)) {
+    if (
+      userSelectedSlot &&
+      availableSlots.includes(userSelectedSlot)
+    ) {
       return userSelectedSlot;
     }
     return availableSlots[0] ?? "";
   }, [userSelectedSlot, availableSlots]);
 
-  // Dynamic store address
   const storeAddressDisplay = useMemo(() => {
-    const biz = websiteContent?.address?.businessName || "TEAZO";
-    const street = websiteContent?.address?.streetAddress || "1050 Taraval St";
-    const loc = websiteContent?.address?.locality || "San Francisco, CA 94116";
+    const biz =
+      websiteContent?.address?.businessName || "TEAZO";
+    const street =
+      websiteContent?.address?.streetAddress || "1050 Taraval St";
+    const loc =
+      websiteContent?.address?.locality || "San Francisco, CA 94116";
     return `${biz} — ${street}, ${loc}`;
   }, [websiteContent]);
 
@@ -541,9 +633,11 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     }
 
     if (!customerPhone.trim()) {
-      errors.phone = "Phone number is required for SMS order alerts";
+      errors.phone =
+        "Phone number is required for SMS order alerts";
     } else if (!toE164Phone(customerPhone)) {
-      errors.phone = "Please enter a valid phone number, such as (415) 555-0199";
+      errors.phone =
+        "Please enter a valid phone number, such as (415) 555-0199";
     }
 
     const cleanEmail = customerEmail.trim();
@@ -558,20 +652,32 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
       errors.timing = "Pickup times haven't loaded yet.";
     } else if (isOrderingPaused) {
       errors.timing = ONLINE_ORDERING_PAUSED_MESSAGE;
-    } else if (effectivePickupType === "ASAP" && !isAsapAvailable) {
+    } else if (
+      effectivePickupType === "ASAP" &&
+      !isAsapAvailable
+    ) {
       errors.timing = "Store is currently closed for ASAP orders.";
     }
 
-    if (scheduleStatus === "ready" && effectivePickupType === "SCHEDULED") {
+    if (
+      scheduleStatus === "ready" &&
+      effectivePickupType === "SCHEDULED"
+    ) {
       if (availableSlots.length === 0) {
-        errors.timing = `No pickup times are available in the next ${MAX_SCHEDULE_DAYS_AHEAD} days.`;
+        errors.timing =
+          `No pickup times are available in the next ${MAX_SCHEDULE_DAYS_AHEAD} days.`;
       } else if (!activeSlot) {
         errors.timing = "Please select a pickup time.";
       } else {
         const slotTimeMs = new Date(activeSlot).getTime();
-        // Ensure slot has not slipped past minimum 22-minute buffer (25m lead time - 3m grace)
-        if (slotTimeMs < Date.now() + clockOffsetMsRef.current + 22 * 60 * 1000) {
-          errors.timing = "Selected pickup time has expired. Please select an updated slot.";
+        if (
+          slotTimeMs <
+          Date.now() +
+            clockOffsetMsRef.current +
+            22 * 60 * 1000
+        ) {
+          errors.timing =
+            "Selected pickup time has expired. Please select an updated slot.";
         }
       }
     }
@@ -583,20 +689,34 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
   // Submit checkout
   const handleProceedToCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Direct form submits can bypass a disabled button before React rerenders.
+    if (checkoutInFlightRef.current) return;
+
     setErrorMessage(null);
     setCartIssue(null);
 
     if (items.length === 0) {
-      setErrorMessage("Your cart is empty. Add drinks to proceed.");
+      setErrorMessage(
+        "Your cart is empty. Add drinks to proceed."
+      );
       return;
     }
 
     if (!validateForm()) {
-      // Prevent mobile dead-button feeling by displaying visible alert and scrolling to error
-      setErrorMessage("Please complete the required contact and pickup details above.");
+      setErrorMessage(
+        "Please complete the required contact and pickup details above."
+      );
+
       setTimeout(() => {
-        const firstErrorField = contentContainerRef.current?.querySelector('[aria-invalid="true"]');
-        firstErrorField?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const firstErrorField =
+          contentContainerRef.current?.querySelector(
+            '[aria-invalid="true"]'
+          );
+        firstErrorField?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
         if (firstErrorField instanceof HTMLElement) {
           firstErrorField.focus();
         }
@@ -604,14 +724,18 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
       return;
     }
 
-    // Persist contact details for returning visits
-    saveContactToStorage(customerName, customerPhone, customerEmail);
+    saveContactToStorage(
+      customerName,
+      customerPhone,
+      customerEmail
+    );
 
+    // Lock synchronously before starting the network request.
+    checkoutInFlightRef.current = true;
     setIsSubmitting(true);
 
     try {
-      // The server turns the phone number into E.164 for Square.
-      const body: CheckoutRequestBody = {
+      const payload = {
         customer: {
           displayName: customerName.trim(),
           email: customerEmail.trim(),
@@ -626,8 +750,19 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
           quantity: it.quantity,
           notes: it.notes?.trim() || undefined,
           catalogObjectId: it.catalogObjectId,
-          modifierOptionIds: it.selectedModifiers.map((m) => m.optionId),
+          modifierOptionIds: it.selectedModifiers.map(
+            (m) => m.optionId
+          ),
         })),
+      } satisfies Omit<
+        CheckoutRequestBody,
+        "checkoutAttemptId" | "turnstileToken"
+      >;
+
+      const body: CheckoutRequestBody = {
+        ...payload,
+        checkoutAttemptId:
+          getOrCreateCheckoutAttemptId(payload),
         turnstileToken: turnstileToken ?? undefined,
       };
 
@@ -638,41 +773,54 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
       });
 
       if (!res.ok) {
-        const errorData: CheckoutErrorResponse = await res.json().catch(() => ({
-          error: "Checkout service returned an error. Please try again.",
-        }));
-        // Items that are sold out or whose options no longer fit get marked in the bag.
+        const errorData: CheckoutErrorResponse = await res
+          .json()
+          .catch(() => ({
+            error:
+              "Checkout service returned an error. Please try again.",
+          }));
         setCartIssue(readCartIssue(errorData));
-        throw new Error(errorData.error || "Failed to create checkout session.");
+        throw new Error(
+          errorData.error ||
+            "Failed to create checkout session."
+        );
       }
 
       const data: CheckoutSuccessResponse = await res.json();
       if (!data.checkoutUrl) {
-        throw new Error("Missing checkout URL from server.");
+        throw new Error(
+          "Missing checkout URL from server."
+        );
       }
 
-      // Record pending order ID in case customer completes payment but closes tab before redirecting back
+      // Associate the Square order with the checkout attempt.
       if (data.orderId) {
+        rememberCheckoutAttemptOrder(
+          body.checkoutAttemptId,
+          data.orderId
+        );
         recordPendingCheckoutOrder(data.orderId);
       }
 
-      // Single-use token has been submitted to server
       consumeCheckoutToken();
 
-      // Redirect customer to Square Hosted Checkout
+      // Keep the submission locked while redirecting to Square.
       window.location.href = data.checkoutUrl;
     } catch (err) {
       console.error("Checkout submission failed:", err);
       setErrorMessage(
-        err instanceof Error ? err.message : "An unexpected error occurred during checkout."
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during checkout."
       );
-      // The server may have used up the token, so get a fresh one for the next try.
       resetCheckoutSecurity();
+      checkoutInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
 
-  // Concurrent cart edit flow: pre-warms customizer chunk while fetching product data
+  // Concurrent cart edit flow: pre-warms the customizer chunk while
+  // fetching product data.
   const handleEditCartItem = async (cartItem: CartItem) => {
     editControllerRef.current?.abort();
     const controller = new AbortController();
@@ -682,17 +830,27 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
     const requestId = ++editRequestIdRef.current;
 
     try {
-      // Start the chunk and product together. Cached data opens immediately;
-      // the customizer independently checks its age before confirming availability.
       preloadCustomizerModule();
       const cached = lastAvailabilityRef.current;
-      const snapshot = cached?.item.catalogObjectId === cartItem.catalogObjectId
-        ? cached
-        : await fetchItemAvailability(cartItem.catalogObjectId, controller.signal);
+      const snapshot =
+        cached?.item.catalogObjectId === cartItem.catalogObjectId
+          ? cached
+          : await fetchItemAvailability(
+              cartItem.catalogObjectId,
+              controller.signal
+            );
 
-      if (controller.signal.aborted || requestId !== editRequestIdRef.current || !isMountedRef.current) return;
+      if (
+        controller.signal.aborted ||
+        requestId !== editRequestIdRef.current ||
+        !isMountedRef.current
+      ) {
+        return;
+      }
+
       lastAvailabilityRef.current = snapshot;
       const apiItem = snapshot.item;
+
       const mappedItem: MenuItem = {
         availability: apiItem.availability,
         catalogObjectId: apiItem.catalogObjectId,
@@ -714,13 +872,27 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
       editControllerRef.current = null;
       closeCart();
     } catch (err) {
-      if (controller.signal.aborted || requestId !== editRequestIdRef.current || !isMountedRef.current) return;
-      console.error("Failed to load item for editing:", err);
+      if (
+        controller.signal.aborted ||
+        requestId !== editRequestIdRef.current ||
+        !isMountedRef.current
+      ) {
+        return;
+      }
+      console.error(
+        "Failed to load item for editing:",
+        err
+      );
       setErrorMessage(
-        err instanceof Error ? err.message : "Could not load customization options for this drink."
+        err instanceof Error
+          ? err.message
+          : "Could not load customization options for this drink."
       );
     } finally {
-      if (requestId === editRequestIdRef.current && isMountedRef.current) {
+      if (
+        requestId === editRequestIdRef.current &&
+        isMountedRef.current
+      ) {
         setEditingLoadingId(null);
       }
     }
@@ -759,14 +931,22 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
   const isCheckoutDisabled = checkoutStatus.isDisabled;
 
   return (
-    <div ref={contentContainerRef} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div
+      ref={contentContainerRef}
+      className="flex-1 flex flex-col min-h-0 overflow-hidden"
+    >
       {/* Scrollable Body */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {/* Empty State */}
         {isHydrated && items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-[#FBF4EE] flex items-center justify-center text-[#B28458]">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -776,9 +956,12 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-900">Your bag is currently empty</h3>
+              <h3 className="text-base font-bold text-gray-900">
+                Your bag is currently empty
+              </h3>
               <p className="text-xs text-gray-500 mt-1 max-w-xs">
-                Explore our hand-crafted milk teas, fruit blends, and fresh toppings.
+                Explore our hand-crafted milk teas, fruit blends, and fresh
+                toppings.
               </p>
             </div>
             <div className="flex flex-col gap-2 w-full max-w-xs mt-2">
@@ -818,14 +1001,18 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                         : ""
                     }`}
                   >
-                    {cartIssue && flaggedItemIds.has(item.cartItemId) && (
-                      <p role="alert" className="text-[11px] font-semibold text-red-600">
-                        {cartIssueMessage(cartIssue.code)}
-                      </p>
-                    )}
+                    {cartIssue &&
+                      flaggedItemIds.has(item.cartItemId) && (
+                        <p
+                          role="alert"
+                          className="text-[11px] font-semibold text-red-600"
+                        >
+                          {cartIssueMessage(cartIssue.code)}
+                        </p>
+                      )}
+
                     {/* Title, Thumbnail & Price */}
                     <div className="flex items-start gap-3">
-                      {/* Drink Thumbnail */}
                       {item.imageUrl ? (
                         <Image
                           src={item.imageUrl}
@@ -842,7 +1029,6 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                       )}
 
                       <div className="flex-1 min-w-0">
-                        {/* Drink Name & Variation Size */}
                         <div className="flex items-baseline gap-1.5 flex-wrap">
                           <h4 className="text-sm font-bold text-gray-900 leading-snug">
                             {item.name}
@@ -854,7 +1040,6 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                           )}
                         </div>
 
-                        {/* Modifiers Chips */}
                         {item.selectedModifiers.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {item.selectedModifiers.map((mod) => (
@@ -873,7 +1058,6 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                           </div>
                         )}
 
-                        {/* Special Instructions */}
                         {item.notes && (
                           <p className="text-[11px] text-gray-500 italic bg-gray-50 px-2 py-0.5 rounded mt-1">
                             Note: &ldquo;{item.notes}&rdquo;
@@ -881,14 +1065,18 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                         )}
                       </div>
 
-                      {/* Price Breakdown */}
                       <div className="text-right shrink-0">
                         <span className="text-sm font-bold text-gray-900 block whitespace-nowrap">
                           {formatPrice(item.itemTotalCents)}
                         </span>
                         {item.quantity > 1 && (
                           <span className="text-[10px] text-gray-400 block whitespace-nowrap">
-                            {formatPrice(Math.round(item.itemTotalCents / item.quantity))} each
+                            {formatPrice(
+                              Math.round(
+                                item.itemTotalCents / item.quantity
+                              )
+                            )}{" "}
+                            each
                           </span>
                         )}
                       </div>
@@ -907,11 +1095,25 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                             }
                           }}
                           className="w-9 h-9 flex items-center justify-center text-sm font-bold transition select-none text-gray-600 hover:text-black hover:bg-gray-50"
-                          aria-label={item.quantity <= 1 ? "Remove item" : "Decrease quantity"}
+                          aria-label={
+                            item.quantity <= 1
+                              ? "Remove item"
+                              : "Decrease quantity"
+                          }
                         >
                           {item.quantity <= 1 ? (
-                            <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 transition-colors"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                           ) : (
                             "-"
@@ -922,8 +1124,12 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                         </span>
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.cartItemId, 1)}
-                          disabled={item.quantity >= MAX_ITEM_QUANTITY}
+                          onClick={() =>
+                            updateQuantity(item.cartItemId, 1)
+                          }
+                          disabled={
+                            item.quantity >= MAX_ITEM_QUANTITY
+                          }
                           className={`w-9 h-9 flex items-center justify-center text-sm font-bold transition select-none ${
                             item.quantity >= MAX_ITEM_QUANTITY
                               ? "text-gray-300 cursor-not-allowed bg-gray-50"
@@ -938,16 +1144,23 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => handleEditCartItem(item)}
-                          disabled={editingLoadingId === item.cartItemId}
+                          onClick={() =>
+                            handleEditCartItem(item)
+                          }
+                          disabled={
+                            editingLoadingId === item.cartItemId
+                          }
                           className="text-[11px] font-semibold text-[#c68f5d] hover:text-[#a06b3a] transition underline disabled:opacity-50"
                         >
-                          {editingLoadingId === item.cartItemId ? "Loading..." : "Edit"}
+                          {editingLoadingId === item.cartItemId
+                            ? "Loading..."
+                            : "Edit"}
                         </button>
-
                         <button
                           type="button"
-                          onClick={() => removeItem(item.cartItemId)}
+                          onClick={() =>
+                            removeItem(item.cartItemId)
+                          }
                           className="text-[11px] font-medium text-gray-400 hover:text-red-500 transition"
                         >
                           Remove
@@ -982,12 +1195,15 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
               </label>
 
               {scheduleStatus === "loading" && (
-                <p className="text-xs text-gray-500">Loading pickup times...</p>
+                <p className="text-xs text-gray-500">
+                  Loading pickup times...
+                </p>
               )}
 
               {scheduleStatus === "error" && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
-                  We couldn&apos;t load pickup times. Close the bag and open it again to retry.
+                  We couldn&apos;t load pickup times. Close the bag
+                  and open it again to retry.
                 </div>
               )}
 
@@ -996,139 +1212,186 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                   role="status"
                   className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-1"
                 >
-                  <div className="font-bold">Online Ordering Paused</div>
+                  <div className="font-bold">
+                    Online Ordering Paused
+                  </div>
                   <p className="text-[11px] text-amber-700 leading-relaxed">
                     {ONLINE_ORDERING_PAUSED_MESSAGE}
                   </p>
                 </div>
               )}
 
-              {scheduleStatus === "ready" && !isOrderingPaused && (
-                <>
-                  {/* ASAP vs Scheduled Segmented Buttons */}
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
-                    <button
-                      type="button"
-                      disabled={!isAsapAvailable}
-                      onClick={() => {
-                        setUserSelectedPickupType("ASAP");
-                        setFormErrors((prev) => ({ ...prev, timing: undefined }));
-                      }}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold tracking-tight transition ${
-                        effectivePickupType === "ASAP"
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : isAsapAvailable
-                          ? "text-gray-500 hover:text-gray-900"
-                          : "text-gray-400 opacity-60 cursor-not-allowed"
-                      }`}
-                    >
-                      {isAsapAvailable ? "ASAP (~20–25m)" : "ASAP (Closed)"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserSelectedPickupType("SCHEDULED");
-                        setFormErrors((prev) => ({ ...prev, timing: undefined }));
-                      }}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold tracking-tight transition ${
-                        effectivePickupType === "SCHEDULED"
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      Schedule Later
-                    </button>
-                  </div>
+              {scheduleStatus === "ready" &&
+                !isOrderingPaused && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+                      <button
+                        type="button"
+                        disabled={!isAsapAvailable}
+                        onClick={() => {
+                          setUserSelectedPickupType("ASAP");
+                          setFormErrors((prev) => ({
+                            ...prev,
+                            timing: undefined,
+                          }));
+                        }}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold tracking-tight transition ${
+                          effectivePickupType === "ASAP"
+                            ? "bg-white text-gray-900 shadow-sm"
+                            : isAsapAvailable
+                              ? "text-gray-500 hover:text-gray-900"
+                              : "text-gray-400 opacity-60 cursor-not-allowed"
+                        }`}
+                      >
+                        {isAsapAvailable
+                          ? "ASAP (~20–25m)"
+                          : "ASAP (Closed)"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserSelectedPickupType("SCHEDULED");
+                          setFormErrors((prev) => ({
+                            ...prev,
+                            timing: undefined,
+                          }));
+                        }}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold tracking-tight transition ${
+                          effectivePickupType === "SCHEDULED"
+                            ? "bg-white text-gray-900 shadow-sm"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        Schedule Later
+                      </button>
+                    </div>
 
-                  {/* Store Closed for ASAP Alert */}
-                  {!isAsapAvailable && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-1">
-                      <div className="font-bold flex items-center gap-1.5">
-                        <span>⏰ Store Currently Closed for ASAP Orders</span>
+                    {!isAsapAvailable && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs space-y-1">
+                        <div className="font-bold flex items-center gap-1.5">
+                          <span>
+                            ⏰ Store Currently Closed for ASAP Orders
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-amber-700 leading-relaxed">
+                          {todaySchedule?.closed
+                            ? "The store is closed today."
+                            : todaySchedule
+                              ? `ASAP orders are accepted ${formatMinuteOfDay(
+                                  todaySchedule.openMinuteOfDay
+                                )} – ${formatMinuteOfDay(
+                                  todaySchedule.cutoffMinuteOfDay
+                                )} PT today.`
+                              : "Store is currently closed."}
+                          {pickupDays.length > 0 &&
+                            " You can schedule a pickup for later instead."}
+                        </p>
                       </div>
-                      <p className="text-[11px] text-amber-700 leading-relaxed">
-                        {todaySchedule?.closed
-                          ? "The store is closed today."
-                          : todaySchedule
-                          ? `ASAP orders are accepted ${formatMinuteOfDay(todaySchedule.openMinuteOfDay)} – ${formatMinuteOfDay(todaySchedule.cutoffMinuteOfDay)} PT today.`
-                          : "Store is currently closed."}
-                        {pickupDays.length > 0 && " You can schedule a pickup for later instead."}
-                      </p>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Scheduled Day and Time Dropdowns */}
-                  {effectivePickupType === "SCHEDULED" && (
-                    <div className="space-y-1.5 animate-fadeIn">
-                      {pickupDays.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <label htmlFor={daySelectId} className="text-[11px] font-semibold text-gray-600 block">
-                              Pickup Day
-                            </label>
-                            <select
-                              id={daySelectId}
-                              value={activeDay?.date ?? ""}
-                              onChange={(e) => {
-                                setUserSelectedDay(e.target.value);
-                                setUserSelectedSlot("");
-                                setFormErrors((prev) => ({ ...prev, timing: undefined }));
-                              }}
-                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
-                            >
-                              {pickupDays.map((day) => (
-                                <option key={day.date} value={day.date}>
-                                  {day.label}
-                                </option>
-                              ))}
-                            </select>
+                    {effectivePickupType === "SCHEDULED" && (
+                      <div className="space-y-1.5 animate-fadeIn">
+                        {pickupDays.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <label
+                                htmlFor={daySelectId}
+                                className="text-[11px] font-semibold text-gray-600 block"
+                              >
+                                Pickup Day
+                              </label>
+                              <select
+                                id={daySelectId}
+                                value={activeDay?.date ?? ""}
+                                onChange={(e) => {
+                                  setUserSelectedDay(
+                                    e.target.value
+                                  );
+                                  setUserSelectedSlot("");
+                                  setFormErrors((prev) => ({
+                                    ...prev,
+                                    timing: undefined,
+                                  }));
+                                }}
+                                className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
+                              >
+                                {pickupDays.map((day) => (
+                                  <option
+                                    key={day.date}
+                                    value={day.date}
+                                  >
+                                    {day.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label
+                                htmlFor={slotSelectId}
+                                className="text-[11px] font-semibold text-gray-600 block"
+                              >
+                                Pickup Time (PT)
+                              </label>
+                              <select
+                                id={slotSelectId}
+                                value={activeSlot}
+                                onChange={(e) => {
+                                  setUserSelectedSlot(
+                                    e.target.value
+                                  );
+                                  setFormErrors((prev) => ({
+                                    ...prev,
+                                    timing: undefined,
+                                  }));
+                                }}
+                                className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
+                              >
+                                {availableSlots.map((slot) => (
+                                  <option
+                                    key={slot}
+                                    value={slot}
+                                  >
+                                    {formatSlotDisplay(slot)}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <label htmlFor={slotSelectId} className="text-[11px] font-semibold text-gray-600 block">
-                              Pickup Time (PT)
-                            </label>
-                            <select
-                              id={slotSelectId}
-                              value={activeSlot}
-                              onChange={(e) => {
-                                setUserSelectedSlot(e.target.value);
-                                setFormErrors((prev) => ({ ...prev, timing: undefined }));
-                              }}
-                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
-                            >
-                              {availableSlots.map((slot) => (
-                                <option key={slot} value={slot}>
-                                  {formatSlotDisplay(slot)}
-                                </option>
-                              ))}
-                            </select>
+                        ) : (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
+                            No pickup times are available in the next{" "}
+                            {MAX_SCHEDULE_DAYS_AHEAD} days.
                           </div>
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
-                          No pickup times are available in the next {MAX_SCHEDULE_DAYS_AHEAD} days.
-                        </div>
-                      )}
-                      {formErrors.timing && (
-                        <p className="text-[11px] text-red-500 font-medium">{formErrors.timing}</p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
+                        )}
+                        {formErrors.timing && (
+                          <p className="text-[11px] text-red-500 font-medium">
+                            {formErrors.timing}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
             </div>
 
             {/* Customer Details Form */}
-            <form id="checkout-contact-form" onSubmit={handleProceedToCheckout} className="space-y-3 pt-2 border-t border-gray-100">
+            <form
+              id="checkout-contact-form"
+              onSubmit={handleProceedToCheckout}
+              className="space-y-3 pt-2 border-t border-gray-100"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">
                   Contact & Receipt Info
                 </span>
               </div>
 
-              {/* Full Name */}
               <div className="space-y-1">
-                <label htmlFor={nameInputId} className="text-[11px] font-semibold text-stone-800 flex justify-between">
+                <label
+                  htmlFor={nameInputId}
+                  className="text-[11px] font-semibold text-stone-800 flex justify-between"
+                >
                   <span>Full Name</span>
                   <span className="text-stone-400">*</span>
                 </label>
@@ -1141,22 +1404,41 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                   aria-invalid={Boolean(formErrors.name)}
                   onChange={(e) => {
                     setUserEditedName(e.target.value);
-                    if (formErrors.name) setFormErrors((p) => ({ ...p, name: undefined }));
+                    if (formErrors.name) {
+                      setFormErrors((p) => ({
+                        ...p,
+                        name: undefined,
+                      }));
+                    }
                   }}
-                  onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
+                  onBlur={() =>
+                    saveContactToStorage(
+                      customerName,
+                      customerPhone,
+                      customerEmail
+                    )
+                  }
                   className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
-                    formErrors.name ? "border-red-400 bg-red-50/20" : "border-stone-200"
+                    formErrors.name
+                      ? "border-red-400 bg-red-50/20"
+                      : "border-stone-200"
                   }`}
                 />
                 {formErrors.name && (
-                  <p className="text-[10px] text-red-500 font-medium">{formErrors.name}</p>
+                  <p className="text-[10px] text-red-500 font-medium">
+                    {formErrors.name}
+                  </p>
                 )}
               </div>
 
-              {/* Phone */}
               <div className="space-y-1">
-                <label htmlFor={phoneInputId} className="text-[11px] font-semibold text-stone-800 flex justify-between">
-                  <span>Mobile Phone (for SMS order ready alert)</span>
+                <label
+                  htmlFor={phoneInputId}
+                  className="text-[11px] font-semibold text-stone-800 flex justify-between"
+                >
+                  <span>
+                    Mobile Phone (for SMS order ready alert)
+                  </span>
                   <span className="text-stone-400">*</span>
                 </label>
                 <input
@@ -1168,21 +1450,38 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                   aria-invalid={Boolean(formErrors.phone)}
                   onChange={(e) => {
                     setUserEditedPhone(e.target.value);
-                    if (formErrors.phone) setFormErrors((p) => ({ ...p, phone: undefined }));
+                    if (formErrors.phone) {
+                      setFormErrors((p) => ({
+                        ...p,
+                        phone: undefined,
+                      }));
+                    }
                   }}
-                  onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
+                  onBlur={() =>
+                    saveContactToStorage(
+                      customerName,
+                      customerPhone,
+                      customerEmail
+                    )
+                  }
                   className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
-                    formErrors.phone ? "border-red-400 bg-red-50/20" : "border-stone-200"
+                    formErrors.phone
+                      ? "border-red-400 bg-red-50/20"
+                      : "border-stone-200"
                   }`}
                 />
                 {formErrors.phone && (
-                  <p className="text-[10px] text-red-500 font-medium">{formErrors.phone}</p>
+                  <p className="text-[10px] text-red-500 font-medium">
+                    {formErrors.phone}
+                  </p>
                 )}
               </div>
 
-              {/* Email */}
               <div className="space-y-1">
-                <label htmlFor={emailInputId} className="text-[11px] font-semibold text-stone-800 flex justify-between">
+                <label
+                  htmlFor={emailInputId}
+                  className="text-[11px] font-semibold text-stone-800 flex justify-between"
+                >
                   <span>Email Address (for receipt)</span>
                   <span className="text-stone-400">*</span>
                 </label>
@@ -1195,20 +1494,34 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                   aria-invalid={Boolean(formErrors.email)}
                   onChange={(e) => {
                     setUserEditedEmail(e.target.value);
-                    if (formErrors.email) setFormErrors((p) => ({ ...p, email: undefined }));
+                    if (formErrors.email) {
+                      setFormErrors((p) => ({
+                        ...p,
+                        email: undefined,
+                      }));
+                    }
                   }}
-                  onBlur={() => saveContactToStorage(customerName, customerPhone, customerEmail)}
+                  onBlur={() =>
+                    saveContactToStorage(
+                      customerName,
+                      customerPhone,
+                      customerEmail
+                    )
+                  }
                   className={`w-full px-3 py-2 text-xs font-medium text-stone-900 bg-white placeholder:text-stone-400 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] transition ${
-                    formErrors.email ? "border-red-400 bg-red-50/20" : "border-stone-200"
+                    formErrors.email
+                      ? "border-red-400 bg-red-50/20"
+                      : "border-stone-200"
                   }`}
                 />
                 {formErrors.email && (
-                  <p className="text-[10px] text-red-500 font-medium">{formErrors.email}</p>
+                  <p className="text-[10px] text-red-500 font-medium">
+                    {formErrors.email}
+                  </p>
                 )}
               </div>
             </form>
 
-            {/* Payment Badges */}
             <div className="pt-2 border-t border-gray-100">
               <PaymentBadges />
             </div>
@@ -1219,27 +1532,52 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
       {/* Footer & Checkout CTA */}
       {items.length > 0 && (
         <div className="p-6 border-t border-gray-100 bg-white space-y-3">
-          {!isOrderingPaused && (securityStatus === "pending" || securityStatus === "ready") && (
-            <div ref={onSecuritySlot} data-testid="checkout-security-slot" aria-hidden="true" className="min-h-[65px]" />
-          )}
-          {/* Security check fallback banner if bot check could not load */}
+          {!isOrderingPaused &&
+            (securityStatus === "pending" ||
+              securityStatus === "ready") && (
+              <div
+                ref={onSecuritySlot}
+                data-testid="checkout-security-slot"
+                aria-hidden="true"
+                className="min-h-[65px]"
+              />
+            )}
+
           {!isOrderingPaused && botCheckFailed && (
             <p className="text-[11px] text-amber-700 leading-relaxed">
-              The security check couldn&apos;t load, so checkout is unavailable right now. Please
-              try again later, or call us at {websiteContent.address.phone} to order.
+              The security check couldn&apos;t load, so checkout
+              is unavailable right now. Please try again later,
+              or call us at {websiteContent.address.phone} to
+              order.
             </p>
           )}
-          {!isOrderingPaused && (botCheckFailed || securityStatus === "expired") && (
-            <button type="button" onClick={resetCheckoutSecurity} className="text-xs underline text-amber-800">
-              Retry security verification
-            </button>
-          )}
 
-          {/* Error Banner */}
+          {!isOrderingPaused &&
+            (botCheckFailed ||
+              securityStatus === "expired") && (
+              <button
+                type="button"
+                onClick={resetCheckoutSecurity}
+                className="text-xs underline text-amber-800"
+              >
+                Retry security verification
+              </button>
+            )}
+
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-start gap-2">
-              <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div className="space-y-2">
                 <span className="block">{errorMessage}</span>
@@ -1249,25 +1587,31 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                     onClick={removeFlaggedItems}
                     className="inline-flex items-center px-3 py-1 rounded-full border border-red-300 bg-white text-red-700 font-semibold hover:bg-red-100 transition"
                   >
-                    Remove {flaggedItems.length === 1 ? "this item" : `these ${flaggedItems.length} items`}
+                    Remove{" "}
+                    {flaggedItems.length === 1
+                      ? "this item"
+                      : `these ${flaggedItems.length} items`}
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* Subtotal Breakdown */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Subtotal ({totalCount} items)</span>
-              <span className="font-bold text-gray-900">{formatPrice(subtotalCents)}</span>
+              <span className="text-gray-500">
+                Subtotal ({totalCount} items)
+              </span>
+              <span className="font-bold text-gray-900">
+                {formatPrice(subtotalCents)}
+              </span>
             </div>
             <p className="text-[11px] text-gray-400 leading-tight">
-              Taxes & optional tips calculated securely by Square during payment.
+              Taxes & optional tips calculated securely by Square
+              during payment.
             </p>
           </div>
 
-          {/* Accessible live status announcement */}
           <div
             role="status"
             aria-live="polite"
@@ -1278,12 +1622,13 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
             Checkout status: {checkoutStatus.label}
           </div>
 
-          {/* Proceed Button */}
           <button
             type="submit"
             form="checkout-contact-form"
             disabled={isCheckoutDisabled}
-            aria-busy={checkoutStatus.isPending ? "true" : undefined}
+            aria-busy={
+              checkoutStatus.isPending ? "true" : undefined
+            }
             className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 shadow-md ${
               isCheckoutDisabled
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -1297,10 +1642,22 @@ export default function CartDrawerContent({ onClose, onSecuritySlot }: CartDrawe
                 viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                />
               </svg>
             )}
+
             {checkoutStatus.statusKey === "ready" ? (
               <>
                 <span>Proceed to Checkout</span>
