@@ -15,9 +15,13 @@ import { montserrat } from "@/app/fonts";
 import {
   clearPaidCheckoutAttempt,
 } from "@/app/lib/checkout-attempt-storage";
+import {
+  clearPendingCheckoutIfMatching,
+  paidOrderOwnsCurrentCart,
+} from "@/app/lib/cart-payment-ownership";
 
 const cabinSketch = Cabin_Sketch({
-  preload: false, // Preloading every font held back first paint on phones (TZ-515).
+  preload: false, // Preloading every font held back first paint on phones.
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -359,10 +363,8 @@ function OrderConfirmationContent() {
 
         setOrder(latest);
 
-        // Only a paid order empties the bag.
-        // An unpaid order keeps its contents for another try.
         if (latest.isPaid) {
-          // Preserve the confirmed order reference for receipt refreshes.
+          // Preserve the verified order reference for receipt refreshes.
           try {
             sessionStorage.setItem(
               "teazo_confirmed_order_id",
@@ -372,12 +374,24 @@ function OrderConfirmationContent() {
             // Browser storage may be unavailable.
           }
 
-          // Only clear the checkout attempt that belongs to
-          // this specific paid Square order.
-          // An older receipt must not erase a newer attempt.
-          clearPaidCheckoutAttempt(validOrderId);
+          // Verify ownership before removing the matching pending record.
+          // Older receipts must never empty a newer or modified cart.
+          const ownsCart =
+            paidOrderOwnsCurrentCart(
+              validOrderId
+            );
 
-          clearCart();
+          clearPaidCheckoutAttempt(
+            validOrderId
+          );
+
+          if (ownsCart) {
+            clearCart();
+          }
+
+          clearPendingCheckoutIfMatching(
+            validOrderId
+          );
         }
       } catch (err) {
         if (isMounted) {
@@ -447,7 +461,7 @@ function OrderConfirmationContent() {
     return (
       <ConfirmationShell centered>
         <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mx-auto">
+          <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-2xl">
             ⚠️
           </div>
 

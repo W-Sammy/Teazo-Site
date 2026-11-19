@@ -1,13 +1,18 @@
 /**
  * Client-side checkout attempt persistence.
  *
- * A checkout attempt retains its UUID across retries of the same
- * purchase. Once Square returns an order ID, that ID is attached
- * to the attempt so a confirmed payment can clear only its own
- * checkout state.
+ * An attempt retains its ID across retries of the same
+ * purchase. The cart revision is captured before submitting
+ * to Square, so later cart changes do not change which
+ * shopping bag belonged to that payment attempt.
  *
- * Storage failures never throw into the checkout flow.
+ * Completed payments clear only their matching attempt.
  */
+
+import {
+  getCartRevision,
+  seedCartRevisionIfMissing,
+} from "@/app/lib/cart-payment-ownership";
 
 export const CHECKOUT_ATTEMPT_STORAGE_KEY =
   "teazo_checkout_attempt_v1";
@@ -15,6 +20,7 @@ export const CHECKOUT_ATTEMPT_STORAGE_KEY =
 interface StoredCheckoutAttempt {
   fingerprint: string;
   attemptId: string;
+  cartRevision?: string;
   orderId?: string;
 }
 
@@ -42,6 +48,14 @@ function readAttempt(): StoredCheckoutAttempt | null {
     }
 
     if (
+      "cartRevision" in parsed &&
+      parsed.cartRevision !== undefined &&
+      typeof parsed.cartRevision !== "string"
+    ) {
+      return null;
+    }
+
+    if (
       "orderId" in parsed &&
       parsed.orderId !== undefined &&
       typeof parsed.orderId !== "string"
@@ -55,51 +69,86 @@ function readAttempt(): StoredCheckoutAttempt | null {
   }
 }
 
-function writeAttempt(attempt: StoredCheckoutAttempt): void {
-  if (typeof window === "undefined") return;
+function writeAttempt(attempt: StoredCheckoutAttempt): boolean {
+  if (typeof window === "undefined") return false;
 
   try {
     sessionStorage.setItem(
       CHECKOUT_ATTEMPT_STORAGE_KEY,
       JSON.stringify(attempt),
     );
+
+    const saved = readAttempt();
+
+    return (
+      saved?.attemptId === attempt.attemptId &&
+      saved.cartRevision === attempt.cartRevision
+    );
   } catch {
-    // Browsers may disable session storage.
+    return false;
   }
 }
 
 /**
- * Reuses an attempt ID for an unchanged checkout payload.
- * A changed payload receives a fresh UUID.
+ * Reuses an attempt ID only when both the checkout payload
+ * and cart revision remain unchanged.
  *
- * The payload must not contain the single-use Turnstile token.
+ * This also prevents a modified cart that is later restored
+ * to identical contents from reusing an older attempt ID.
+ *
+ * The Turnstile token must not be included in the payload.
  */
 export function getOrCreateCheckoutAttemptId(
   payload: object,
 ): string {
   const fingerprint = JSON.stringify(payload);
   const existing = readAttempt();
+  const currentRevision = getCartRevision();
 
   if (existing?.fingerprint === fingerprint) {
-    return existing.attemptId;
+    if (!existing.cartRevision || !currentRevision) {
+      throw new Error(
+        "The previous checkout attempt cannot be safely resumed. Please reload and contact the store if payment may have completed.",
+      );
+    }
+
+    if (existing.cartRevision === currentRevision) {
+      return existing.attemptId;
+    }
   }
 
   const attemptId = crypto.randomUUID();
 
-  writeAttempt({
-    fingerprint,
-    attemptId,
-  });
+  const cartRevision =
+    currentRevision ??
+    seedCartRevisionIfMissing(attemptId);
+
+  if (!cartRevision) {
+    throw new Error(
+      "Checkout storage is unavailable. Please enable browser storage and try again.",
+    );
+  }
+
+  if (
+    !writeAttempt({
+      fingerprint,
+      attemptId,
+      cartRevision,
+    })
+  ) {
+    throw new Error(
+      "Unable to save your checkout attempt. Please enable browser storage and try again.",
+    );
+  }
 
   return attemptId;
 }
 
 /**
- * Associates a successful Square checkout-session response
- * with the attempt that initiated it.
+ * Associates a successful Square response with its attempt.
  *
- * If another attempt has replaced the stored attempt,
- * leave that newer attempt untouched.
+ * A response for an older attempt must not overwrite a newer
+ * attempt that the customer has already started.
  */
 export function rememberCheckoutAttemptOrder(
   attemptId: string,
@@ -120,10 +169,33 @@ export function rememberCheckoutAttemptOrder(
 }
 
 /**
- * Clears the checkout attempt only when its stored Square
- * order ID matches the order that Square confirms as paid.
+ * Returns the revision captured when the matching checkout
+ * attempt was first submitted.
  *
- * Unpaid or canceled orders must never call this function.
+ * The cart context uses this when recording a pending order,
+ * rather than reading the current revision after Square responds.
+ */
+export function getCheckoutAttemptCartRevisionForOrder(
+  orderId: string,
+): string | null {
+  if (!orderId) return null;
+
+  const existing = readAttempt();
+
+  if (
+    !existing ||
+    existing.orderId !== orderId ||
+    !existing.cartRevision
+  ) {
+    return null;
+  }
+
+  return existing.cartRevision;
+}
+
+/**
+ * Clears the attempt only when Square confirms payment for
+ * the exact order associated with that attempt.
  */
 export function clearPaidCheckoutAttempt(
   confirmedOrderId: string,
@@ -132,12 +204,17 @@ export function clearPaidCheckoutAttempt(
 
   const existing = readAttempt();
 
-  if (!existing || existing.orderId !== confirmedOrderId) {
+  if (
+    !existing ||
+    existing.orderId !== confirmedOrderId
+  ) {
     return false;
   }
 
   try {
-    sessionStorage.removeItem(CHECKOUT_ATTEMPT_STORAGE_KEY);
+    sessionStorage.removeItem(
+      CHECKOUT_ATTEMPT_STORAGE_KEY,
+    );
     return true;
   } catch {
     return false;
