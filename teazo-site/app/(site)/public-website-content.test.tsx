@@ -1,3 +1,4 @@
+
 /**
  * Tests customer-facing website content rendering.
  *
@@ -463,14 +464,14 @@ describe("Public website content rendering", () => {
 
       await renderContact();
 
+      // The locality text now links directly to Google Maps.
       expect(
         screen.getByRole("link", {
-          name: "Get Directions",
+          name: contact.location.locality,
         }).getAttribute("href"),
-      ).toContain(
-        encodeURIComponent(
-          "123 Updated Street, San Francisco",
-        ),
+      ).toBe(
+        "https://www.google.com/maps/dir/?api=1&destination=" +
+          encodeURIComponent(contact.location.mapQuery),
       );
 
       expect(
@@ -551,14 +552,42 @@ describe("Public website content rendering", () => {
       );
     });
 
+    // Missing delivery settings must not insert hardcoded
+    // fallback providers that administrators did not configure.
     it("keeps an empty delivery collection empty", async () => {
       const content = makeWebsiteContent();
       content.deliveryLinks = [];
       mocks.getWebsiteContent.mockResolvedValueOnce(content);
       await renderDelivery();
+
+      expect(
+        screen.getByRole("heading", { name: "DELIVERY" }),
+      ).toBeTruthy();
+
       for (const name of ["UBER EATS", "DOORDASH", "POSTMATES"]) {
         expect(screen.queryByRole("link", { name })).toBeNull();
       }
+    });
+
+    it("hides disabled delivery providers", async () => {
+      const content = makeWebsiteContent();
+      content.deliveryLinks = (content.deliveryLinks ?? []).map((link) => ({
+        ...link,
+        enabled: link.id !== "ubereats",
+      }));
+
+      mocks.getWebsiteContent.mockResolvedValueOnce(content);
+      await renderDelivery();
+
+      expect(
+        screen.queryByRole("link", { name: "UBER EATS" }),
+      ).toBeNull();
+      expect(
+        screen.getByRole("link", { name: "DOORDASH" }),
+      ).toBeTruthy();
+      expect(
+        screen.getByRole("link", { name: "POSTMATES" }),
+      ).toBeTruthy();
     });
   });
 });

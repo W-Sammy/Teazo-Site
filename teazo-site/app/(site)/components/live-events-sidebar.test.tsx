@@ -28,6 +28,8 @@ import {
 
 import type {
   AdminEvent,
+  EventCategory,
+  EventItem,
 } from "@/app/types/admin-event";
 
 vi.mock("next/image", () => ({
@@ -77,14 +79,19 @@ const eventTwo: AdminEvent = {
 
 const events = [eventOne, eventTwo];
 
-const eventCategories = [{ id: "milk-tea", name: "Milk Tea" }];
-const eventItems = [{ id: "item-1", name: "Brown Sugar Milk Tea" }];
+// Supply catalog target names for the selected-event modal test.
+const eventCategories: EventCategory[] = [
+  { id: "milk-tea", name: "Milk Tea" },
+];
+const eventItems: EventItem[] = [
+  { id: "item-1", name: "Brown Sugar Milk Tea" },
+];
 
 function renderSidebar(
   suppliedEvents: AdminEvent[] = events,
   targets: {
-    categories?: typeof eventCategories;
-    items?: typeof eventItems;
+    categories?: EventCategory[];
+    items?: EventItem[];
   } = {},
 ) {
   return render(
@@ -384,14 +391,11 @@ describe("Public Events sidebar", () => {
       ),
     ).toBeTruthy();
 
-    // Selected targets are listed by name instead of the all-items message.
-    expect(
-      within(
-        within(dialog).getByRole("list", {
-          name: "Included categories",
-        }),
-      ).getByText("Milk Tea"),
-    ).toBeTruthy();
+    // Targeted events list the selected category and item by name.
+    const includedCategories = within(dialog).getByRole("list", {
+      name: "Included categories",
+    });
+    expect(within(includedCategories).getByText("Milk Tea")).toBeTruthy();
 
     expect(
       within(

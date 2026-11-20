@@ -9,9 +9,9 @@
  * order, and other non-catalog events, which are acknowledged
  * without updating payment or fulfillment state.
  *
- * Catalog revision storage and Next.js cache operations are
- * mocked. No production Square, database, or storage services
- * are accessed.
+ * Catalog revision storage, category synchronization, and Next.js
+ * cache operations are mocked. No production Square, database,
+ * or storage services are accessed.
  */
 
 import { createHmac } from "node:crypto";
@@ -42,6 +42,12 @@ vi.mock("@/app/lib/sync-menu-categories", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
   revalidateTag: mocks.revalidateTag,
+}));
+
+// The webhook now synchronizes Square categories before recording revisions.
+// Mock the operation to avoid external Square calls or D1 writes in these tests.
+vi.mock("@/app/lib/sync-menu-categories", () => ({
+  syncSquareMenuCategories: mocks.syncSquareMenuCategories,
 }));
 
 const { POST } = await import("./route");
@@ -410,6 +416,10 @@ describe("Square webhook endpoint", () => {
       );
 
       expect(
+        mocks.syncSquareMenuCategories,
+      ).toHaveBeenCalledOnce();
+
+      expect(
         mocks.revalidatePath,
       ).toHaveBeenCalledTimes(3);
 
@@ -427,7 +437,12 @@ describe("Square webhook endpoint", () => {
         "/admin/menu",
       );
 
-      expect(mocks.revalidatePath).toHaveBeenNthCalledWith(3, "/admin/menu/display-categories");
+      expect(
+        mocks.revalidatePath,
+      ).toHaveBeenNthCalledWith(
+        3,
+        "/admin/menu/display-categories",
+      );
     });
 
     it("characterizes duplicate catalog-event delivery without claiming endpoint-level deduplication", async () => {
@@ -461,6 +476,11 @@ describe("Square webhook endpoint", () => {
         "repeated-event",
       );
 
+      expect(
+        mocks.syncSquareMenuCategories,
+      ).toHaveBeenCalledTimes(2);
+
+      // Every delivery invalidates the public Menu and both admin Menu pages.
       expect(
         mocks.revalidatePath,
       ).toHaveBeenCalledTimes(6);
