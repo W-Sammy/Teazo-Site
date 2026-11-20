@@ -281,7 +281,7 @@ function OrderConfirmationContent() {
   if (isLoading) {
     return (
       <ConfirmationShell centered>
-        <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-4 border-[#B28458] border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-stone-600 font-medium text-sm">Verifying your order with Square...</p>
       </ConfirmationShell>
     );
@@ -302,7 +302,7 @@ function OrderConfirmationContent() {
           <div className="pt-2">
             <Link
               href="/menu"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
             >
               EXPLORE MENU
             </Link>
@@ -326,7 +326,7 @@ function OrderConfirmationContent() {
           <div className="pt-2">
             <Link
               href="/menu"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
             >
               BACK TO MENU
             </Link>
@@ -352,14 +352,14 @@ function OrderConfirmationContent() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-[#DBAF82] text-[#c69a6d] font-bold text-xs tracking-wider hover:bg-[#FAF7F2] transition"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-[#B28458] text-[#c69a6d] font-bold text-xs tracking-wider hover:bg-[#FAF7F2] transition"
             >
               CHECK AGAIN
             </button>
             <button
               type="button"
               onClick={openCart}
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
             >
               BACK TO YOUR BAG
             </button>
@@ -384,7 +384,7 @@ function OrderConfirmationContent() {
             </svg>
           </div>
 
-          <h1 className={`${cabinSketch.className} text-4xl sm:text-5xl font-bold text-[#DBAF82] mb-1`}>
+          <h1 className={`${cabinSketch.className} text-4xl sm:text-5xl font-bold text-[#B28458] mb-1 uppercase`}>
             Order Confirmed!
           </h1>
           <p className="text-sm text-gray-600">
@@ -532,7 +532,7 @@ function OrderConfirmationContent() {
             )}
             <div className="flex justify-between text-sm font-bold text-gray-900 pt-2 border-t border-gray-100">
               <span>Total Paid</span>
-              <span className="text-base text-[#DBAF82] font-extrabold">{formatMoney(order.totalMoney?.amount)}</span>
+              <span className="text-base text-[#8E5629] font-extrabold">{formatMoney(order.totalMoney?.amount)}</span>
             </div>
           </div>
         </div>
@@ -541,7 +541,7 @@ function OrderConfirmationContent() {
         <div className="text-center pt-2">
           <Link
             href="/menu"
-            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-md"
+            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-md"
           >
             ORDER AGAIN / BACK TO MENU
           </Link>
@@ -556,7 +556,7 @@ export default function OrderConfirmationPage() {
     <Suspense
       fallback={
         <ConfirmationShell centered>
-          <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
+          <div className="w-12 h-12 border-4 border-[#B28458] border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-stone-600 font-medium text-sm">Loading order confirmation...</p>
         </ConfirmationShell>
       }

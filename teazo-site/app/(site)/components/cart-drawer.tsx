@@ -778,7 +778,7 @@ export default function CartDrawer() {
                             <button
                               type="button"
                               onClick={() => handleEditCartItem(item)}
-                              className="text-[11px] font-semibold text-[#c68f5d] hover:text-[#a06b3a] transition underline disabled:opacity-50"
+                              className="text-[11px] font-semibold text-[#8E5629] hover:text-[#a06b3a] transition underline disabled:opacity-50"
                             >
                               Edit
                             </button>
@@ -932,7 +932,7 @@ export default function CartDrawer() {
                                 setUserSelectedSlot(e.target.value);
                                 setFormErrors((prev) => ({ ...prev, timing: undefined }));
                               }}
-                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#B28458] focus:border-[#B28458] bg-white font-medium text-stone-900"
+                              className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8E5629] focus:border-[#B28458] bg-white font-medium text-stone-900"
                             >
                               {availableSlots.map((slot) => (
                                 <option key={slot} value={slot}>
@@ -1115,7 +1115,7 @@ export default function CartDrawer() {
                 className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 shadow-md ${
                   isCheckoutDisabled
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-[#B28458] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
+                    : "bg-[#8E5629] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
                 }`}
               >
                 {isSubmitting ? (
