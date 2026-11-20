@@ -169,7 +169,7 @@ function createMockMedia() {
     get: vi.fn().mockImplementation(
       async () => createStoredObject(),
     ),
-    head: vi.fn().mockResolvedValue(null),
+    head: vi.fn().mockResolvedValue(createStoredObject()),
     put: vi.fn().mockResolvedValue({
       key: MEDIA_KEY,
       size: MEDIA_SIZE,
@@ -360,7 +360,7 @@ describe("Cloudflare Worker R2 media endpoints", () => {
       expect(await response.text()).toBe(MEDIA_BODY);
 
       expect(media.get).toHaveBeenCalledOnce();
-      expect(media.get).toHaveBeenCalledWith(MEDIA_KEY);
+      expect(media.get).toHaveBeenCalledWith(MEDIA_KEY, undefined);
 
       expect(db.prepare).not.toHaveBeenCalled();
     });
@@ -403,12 +403,12 @@ describe("Cloudflare Worker R2 media endpoints", () => {
         '"synthetic-r2-etag"',
       );
 
-      expect(media.get).toHaveBeenCalledWith(MEDIA_KEY);
+      expect(media.get).toHaveBeenCalledWith(MEDIA_KEY, undefined);
       expect(db.prepare).not.toHaveBeenCalled();
     });
 
     it("returns 404 when an R2 object does not exist", async () => {
-      media.get.mockResolvedValueOnce(null);
+      media.head.mockResolvedValueOnce(null);
 
       const response = await send(
         "GET",
