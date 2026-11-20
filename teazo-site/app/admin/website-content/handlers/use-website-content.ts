@@ -609,7 +609,9 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     setContent((previous) => ({ ...previous, deliveryLinks: links }));
     // leave blank items out of the save; keep hidden links in the saved list
     const savedLinks = links.filter((link) => link.label.trim() || link.url.trim());
-    const { valid } = validateSocialLinks(savedLinks);
+    // check delivery rules so invalid URLs clear older waiting saves
+    const { valid } = validateWebsiteContentPatch({ deliveryLinks: savedLinks });
+    
     if (!valid) {
       // discard older waiting delivery save without cancelling other sections' saves
       delete pendingPatchRef.current.deliveryLinks;

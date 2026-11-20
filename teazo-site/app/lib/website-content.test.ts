@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"; // afterEach restores console spies used by error tests
 import { fakeD1 } from "@/test/fake-d1";
 import {
   getWebsiteContent,
@@ -117,4 +117,109 @@ describe("holiday dates from D1", () => {
     const insert = db().batches.flat().find((w) => w.sql.includes("INSERT INTO hours_exception"));
     expect(insert?.params[0]).toBe("2026-11-26");
   });
+});
+
+// delivery tests
+afterEach(() => vi.restoreAllMocks());
+
+describe("delivery links with fake D1", () => {
+    const first = {
+        id: "delivery-test-one", label: "First Delivery", icon: "",
+        url: "https://example.com/first", enabled: true,
+    };
+    const second = {
+        ...first, id: "delivery-test-two", label: "Second Delivery",
+        url: "https://example.com/second", enabled: false,
+    };
+
+    // inspect the values sent for delivery inserts without pretending the database saved them
+    function deliveryInserts() {
+        return db().batches.flat().filter((statement) =>
+            statement.sql.includes("INSERT INTO site_link") && statement.sql.includes("'delivery'"),
+        );
+    }
+
+    it("reads visible and hidden delivery entries without including social links", async () => {
+        // these rows stand in for the response from the database's site_link query
+        db().tables.site_link = [
+            { key: first.id, link_group: "delivery", label: first.label, url: first.url, aria_label: null, sort_order: 1, is_active: 1 },
+            { key: second.id, link_group: "delivery", label: second.label, url: second.url, aria_label: null, sort_order: 2, is_active: 0 },
+            { key: "delivery-test-social", link_group: "social", label: "Social", url: "https://example.com/social", aria_label: null, sort_order: 3, is_active: 1 },
+        ];
+
+        const content = await getWebsiteContent();
+        expect(content.deliveryLinks).toEqual([first, second]);
+        expect(db().batches).toHaveLength(0);
+    });
+
+    it("submits each platform's name, URL, order, and visibility when saving", async () => {
+        await updateWebsiteContent({ deliveryLinks: [first, second] });
+
+        // is_active uses 1 for shown and 0 for hidden; sort_order follows the list order
+        expect(deliveryInserts().map((statement) => statement.params)).toEqual([
+            [first.id, first.label, first.url, 1, 1],
+            [second.id, second.label, second.url, 2, 0],
+        ]);
+    });
+
+    it("limits the replacement delete to delivery links and groups it with the inserts", async () => {
+        await updateWebsiteContent({ deliveryLinks: [first, second] });
+
+        // one batch keeps the replacement statements together; actual transaction behavior needs a SQL test
+        expect(db().batches).toHaveLength(1);
+        const deletes = db().batches[0].filter((statement) => /DELETE\s+FROM\s+site_link/i.test(statement.sql));
+        expect(deletes).toHaveLength(1);
+        expect(deletes[0].sql).toContain("WHERE link_group = 'delivery'");
+        expect(db().batches[0].filter((statement) => statement.sql.includes("INSERT INTO site_link"))).toHaveLength(2);
+    });
+
+    it("submits an edited platform while keeping the other platform's values", async () => {
+        const edited = { ...first, label: "Updated", url: "https://example.com/updated" };
+        await updateWebsiteContent({ deliveryLinks: [edited, second] });
+
+        expect(deliveryInserts().map((statement) => statement.params)).toEqual([
+            [edited.id, edited.label, edited.url, 1, 1],
+            [second.id, second.label, second.url, 2, 0],
+        ]);
+    });
+
+    it("submits a delivery-only delete with no inserts when the final platform is removed", async () => {
+        const content = await updateWebsiteContent({ deliveryLinks: [] });
+        const deletes = db().batches.flat().filter((statement) => /DELETE\s+FROM\s+site_link/i.test(statement.sql));
+
+        expect(deletes).toHaveLength(1);
+        expect(deletes[0].sql).toContain("WHERE link_group = 'delivery'");
+        expect(deliveryInserts()).toHaveLength(0);
+        expect(content.deliveryLinks).toEqual([]);
+    });
+
+    it("does not submit site_link changes when only the story is edited", async () => {
+        await updateWebsiteContent({ story: "A different section was edited." });
+
+        // save for another section must not replace either delivery or social links
+        const linkWrites = db().batches.flat().filter((statement) => statement.sql.includes("site_link"));
+        expect(linkWrites).toEqual([]);
+    });
+
+    it("rejects an invalid delivery URL without submitting writes or clearing the cache", async () => {
+        await expect(updateWebsiteContent({ deliveryLinks: [{ ...first, url: "tea@example.com" }] }))
+            .rejects.toThrow("Invalid website content");
+
+        expect(db().batches).toHaveLength(0);
+        expect(cacheMocks.revalidateTag).not.toHaveBeenCalled();
+    });
+
+    it("reports a failed delivery batch without clearing the cache", async () => {
+        db().state.batchError = new Error("Delivery save refused");
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        await expect(updateWebsiteContent({ deliveryLinks: [first] })).rejects.toThrow("Delivery save refused");
+        // this fake failure checks error handling
+        expect(cacheMocks.revalidateTag).not.toHaveBeenCalled();
+    });
+
+    it("clears the content cache after the fake database accepts a delivery save", async () => {
+        await updateWebsiteContent({ deliveryLinks: [first] });
+        expect(cacheMocks.revalidateTag).toHaveBeenCalledWith(WEBSITE_CONTENT_TAG, { expire: 0 });
+    });
 });

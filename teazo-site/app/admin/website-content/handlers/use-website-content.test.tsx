@@ -435,3 +435,232 @@ describe("Website Content save handling", () => {
     ).toBe(true);
   });
 });
+
+// delivery tests
+describe("delivery hook tests", () => {
+  const platform = {
+      id: "delivery-one", label: "First Delivery", icon: "",
+      url: "https://example.com/first", enabled: true,
+  };
+  const secondPlatform = {
+      ...platform, id: "delivery-two", label: "Second Delivery", url: "https://example.com/second",
+  };
+
+  // use the real validators, but replace fetch so no actual settings or database records change
+  const fetchMock = vi.fn<typeof fetch>();
+  // reuse fixture above, adding only delivery platforms needed
+  function makeDeliveryContent(): WebsiteContent {
+      return { ...makeContent(), deliveryLinks: [{ ...platform }, { ...secondPlatform }] };
+  }
+
+  // ignore separate carousel request; return only website content save payloads
+  function savedPatches(): Partial<WebsiteContent>[] {
+      return fetchMock.mock.calls
+          .filter(([url]) => url === "/api/website-content")
+          .map(([, options]) => JSON.parse(String(options?.body)) as Partial<WebsiteContent>);
+  }
+
+  async function setup() {
+      const hook = renderHook(() => useWebsiteContent(makeDeliveryContent()));
+      // wait for existing carousel initialization before testing delivery
+      await waitFor(() => expect(hook.result.current.carousel.carouselReady).toBe(true));
+      // fake timers let us check the typing delay without waiting in real time
+      vi.useFakeTimers();
+      return hook;
+  }
+
+  async function advance(ms: number) {
+      // lets react finish updates caused by timers and resolved requests
+      await act(async () => { await vi.advanceTimersByTimeAsync(ms); });
+  }
+
+  beforeEach(() => {
+      fetchMock.mockReset();
+      fetchMock.mockImplementation(async (url) => {
+          if (url === "/api/admin/website-content/carousel") {
+              return Response.json({ success: true, images: [] });
+          }
+          if (url === "/api/website-content") {
+              return Response.json({ success: true });
+          }
+          throw new Error(`Unexpected request: ${String(url)}`);
+      });
+      vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+      cleanup();
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+  });
+
+  describe("delivery save handling", () => {
+      it("loads delivery links without submitting a save", async () => {
+          const { result } = await setup();
+          expect(result.current.content.deliveryLinks).toEqual([platform, secondPlatform]);
+          expect(savedPatches()).toEqual([]);
+      });
+
+      it("keeps a new blank platform local without saving it", async () => {
+          const { result } = await setup();
+          act(() => result.current.addDeliveryLink());
+          await advance(1000);
+
+          expect(result.current.content.deliveryLinks).toHaveLength(3);
+          expect(result.current.content.deliveryLinks?.[2]).toMatchObject({ label: "", url: "" });
+          expect(savedPatches()).toEqual([]);
+      });
+
+      it("waits for the typing delay and saves only the latest edit", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "First Edit" }));
+          await advance(300);
+
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Latest Edit" }));
+          await advance(599);
+
+          expect(savedPatches()).toEqual([]);
+          await advance(1);
+          expect(savedPatches()).toEqual([{
+              deliveryLinks: [{ ...platform, label: "Latest Edit" }, secondPlatform],
+          }]);
+      });
+
+      it("saves visibility immediately and preserves the other platform", async () => {
+          const { result } = await setup();
+          await act(async () => result.current.updateDeliveryLink(secondPlatform.id, { enabled: false }));
+          expect(savedPatches()).toEqual([{
+              deliveryLinks: [platform, { ...secondPlatform, enabled: false }],
+          }]);
+          expect(result.current.content.deliveryLinks).toHaveLength(2);
+      });
+
+      it("removes only the selected platform and saves immediately", async () => {
+          const { result } = await setup();
+          await act(async () => result.current.removeDeliveryLink(secondPlatform.id));
+          expect(savedPatches()).toEqual([{ deliveryLinks: [platform] }]);
+          expect(result.current.content.deliveryLinks).toEqual([platform]);
+      });
+
+      it("saves an empty list after the final platform is removed", async () => {
+          const { result } = await setup();
+          await act(async () => result.current.removeDeliveryLink(secondPlatform.id));
+          await act(async () => result.current.removeDeliveryLink(platform.id));
+          expect(savedPatches().at(-1)).toEqual({ deliveryLinks: [] });
+      });
+
+      it.each([
+          { label: "" }, { label: "   " }, { url: "" },
+          { url: "tea@example.com" }, { url: "example.com" },
+      ])("does not submit an invalid delivery edit: %j", async (patch) => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, patch));
+          await advance(1000);
+          expect(savedPatches()).toEqual([]);
+      });
+
+      it("leaves a blank draft out when another platform is saved", async () => {
+          const { result } = await setup();
+          act(() => result.current.addDeliveryLink());
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Updated" }));
+          await advance(600);
+          expect(savedPatches()).toEqual([{
+              deliveryLinks: [{ ...platform, label: "Updated" }, secondPlatform],
+          }]);
+          expect(result.current.content.deliveryLinks).toHaveLength(3);
+      });
+
+      it("shows saving while a request is pending, then saved after success", async () => {
+          const { result } = await setup();
+          let finish!: (response: Response) => void;
+          fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => { finish = resolve; }));
+          act(() => result.current.updateDeliveryLink(platform.id, { enabled: false }));
+          expect(result.current.saveStatus).toBe("saving");
+          await act(async () => { finish(Response.json({ success: true })); });
+          expect(result.current.saveStatus).toBe("saved");
+          expect(result.current.errorMessage).toBe("");
+      });
+
+      it("shows an error instead of saved when the API rejects the save", async () => {
+          const { result } = await setup();
+          fetchMock.mockResolvedValueOnce(Response.json({ error: "Delivery save unavailable" }, { status: 503 }));
+          await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: false }));
+          expect(result.current.saveStatus).toBe("error");
+          expect(result.current.errorMessage).toBe("Delivery save unavailable");
+      });
+
+      it("shows a network error and allows a fresh edit to save successfully", async () => {
+          const { result } = await setup();
+          fetchMock.mockRejectedValueOnce(new Error("Connection lost"));
+          await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: false }));
+
+          expect(result.current.saveStatus).toBe("error");
+          expect(result.current.errorMessage).toBe("Connection lost");
+          
+          await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: true }));
+          expect(result.current.saveStatus).toBe("saved");
+          expect(result.current.errorMessage).toBe("");
+      });
+
+      it("flushes a waiting valid edit on blur without sending the timer save twice", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Edited" }));
+
+          await act(async () => { await result.current.flushPatch(); });
+          expect(savedPatches()).toHaveLength(1);
+
+          await advance(1000);
+          expect(savedPatches()).toHaveLength(1);
+      });
+
+      // catch an older valid edit being saved after the current input becomes invalid
+      it("discards a waiting delivery save when its URL becomes an email and the field loses focus", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Edited" }));
+          act(() => result.current.updateDeliveryLink(platform.id, { url: "tea@example.com" }));
+
+          // the section calls flushPatch after leaving the field
+          await act(async () => { await result.current.flushPatch(); });
+          await advance(1000);
+          expect(savedPatches()).toEqual([]);
+      });
+
+      // make sure delivery shares the save queue safely with other sections
+      it("keeps another section's waiting save when an invalid delivery edit clears its own save", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateStory("This story should still save."));
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Updated" }));
+          act(() => result.current.updateDeliveryLink(platform.id, { url: "tea@example.com" }));
+
+          await act(async () => { await result.current.flushPatch(); });
+          await advance(1000);
+
+          // discard only invalid delivery data, rather than emptying the whole shared queue
+          expect(savedPatches()).toEqual([{ story: "This story should still save." }]);
+      });
+
+      it("does not bring a removed platform back through an older waiting save", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, { label: "Waiting Edit" }));
+          await act(async () => result.current.removeDeliveryLink(platform.id));
+          await advance(1000);
+
+          expect(savedPatches()).toEqual([{ deliveryLinks: [secondPlatform] }]);
+          expect(result.current.content.deliveryLinks).toEqual([secondPlatform]);
+      });
+
+      it("saves the corrected URL after an invalid edit without reusing the older URL", async () => {
+          const { result } = await setup();
+          act(() => result.current.updateDeliveryLink(platform.id, { url: "tea@example.com" }));
+          await advance(1000);
+          expect(savedPatches()).toEqual([]);
+
+          act(() => result.current.updateDeliveryLink(platform.id, { url: "https://example.com/corrected" }));
+          await advance(600);
+
+          expect(savedPatches()).toEqual([{
+              deliveryLinks: [{ ...platform, url: "https://example.com/corrected" }, secondPlatform],
+          }]);
+      });
+  });
+});

@@ -294,14 +294,35 @@ export function validateWebsiteContentPatch(
   }
 
   if (patch.deliveryLinks !== undefined) {
-    const { valid, errors: deliveryErrors } = validateSocialLinks(patch.deliveryLinks);
-    if (!valid) 
-      errors.push(...deliveryErrors);
+    if (!Array.isArray(patch.deliveryLinks))
+      errors.push("Delivery links must be a list");
+    
+    else {
+      for (const link of patch.deliveryLinks) {
+        // check the entry before reading its fields so null or malformed data cannot crash validation
+        if (
+          !link || typeof link !== "object" || Array.isArray(link) ||
+          typeof link.label !== "string" || typeof link.url !== "string" ||
+          typeof link.enabled !== "boolean"
+        ) {
+          errors.push("Each delivery link needs a text name, a text URL, and true or false visibility");
+          continue;
+        }
 
-    // delivery buttons need links, even though social links can use emails
-    for (const link of patch.deliveryLinks)
-      if (isNonEmpty(link.url) && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url)))
-        errors.push(`Enter a valid http:// or https:// link for "${link.label || link.id}"`);
+        // enforce the same name limit as the editor, including for hidden items
+        if (!withinMaxLength(link.label, 16))
+          errors.push("Delivery platform names must be 16 characters or fewer");
+        
+        const { valid, errors: deliveryErrors } = validateSocialLinks([link]);
+        if (!valid) 
+          errors.push(...deliveryErrors);
+
+        // delivery buttons need links, even though social links can use emails
+        if (isNonEmpty(link.url) && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url)))
+          errors.push(`Enter a valid http:// or https:// link for "${link.label || link.id}"`);
+        
+      }
+    }
   }
 
   if (patch.holidays !== undefined) {

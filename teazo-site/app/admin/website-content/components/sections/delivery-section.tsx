@@ -41,8 +41,10 @@ export default function DeliverySection({
         const fields = touched[link.id] ?? {};
         const hasName = Boolean(link.label.trim());
         const hasUrl = Boolean(link.url.trim());
-        const labelError = fields.label && !hasName && hasUrl ? "A platform name is required*" : "";
+        // show the missing name error whenever a link exists without a name
+        const labelError = !hasName && hasUrl ? "A platform name is required*" : "";
         let urlError = "";
+        
         if (fields.url) {
             if (!hasUrl && hasName) 
                 urlError = "A link is required*";

@@ -4,6 +4,7 @@ import {
   isValidHolidayDate,
   parseHolidayDate,
   validateHolidays,
+  validateWebsiteContentPatch,
 } from "@/app/lib/website-content-validators";
 
 describe("holiday dates", () => {
@@ -52,5 +53,66 @@ describe("validateHolidays", () => {
   it("refuses an impossible date and a missing name", () => {
     expect(validateHolidays([holiday("2027-02-29")]).valid).toBe(false);
     expect(validateHolidays([holiday("12-25", " ")]).valid).toBe(false);
+  });
+});
+
+// delivery tests
+describe("delivery link validation", () => {
+  const platform = {
+    id: "delivery-test", label: "Test Delivery", icon: "",
+    url: "https://example.com/order", enabled: true,
+  };
+
+  function validateDelivery(deliveryLinks: unknown) {
+    // deliberately allow malformed values here to test what an actual request could contain
+    return validateWebsiteContentPatch({ deliveryLinks } as Parameters<typeof validateWebsiteContentPatch>[0]);
+  }
+
+  it.each(["http://example.com/order", "https://example.com/order"])("accepts a complete platform with %s", (url) => {
+    expect(validateDelivery([{ ...platform, url }]).valid).toBe(true);
+  });
+
+  it("accepts an empty list so the final platform can be removed", () => {
+    expect(validateDelivery([]).valid).toBe(true);
+  });
+
+  it("accepts a complete hidden platform", () => {
+    expect(validateDelivery([{ ...platform, enabled: false }]).valid).toBe(true);
+  });
+
+  it("accepts exactly 16 name characters", () => {
+    expect(validateDelivery([{ ...platform, label: "abcdefghijklmnop" }]).valid).toBe(true);
+  });
+
+  it.each([true, false])("rejects a 17 character name when visibility is %s", (enabled) => {
+    expect(validateDelivery([{ ...platform, label: "abcdefghijklmnopq", enabled }]).valid).toBe(false);
+  });
+
+  it.each([
+    { name: "null list", value: null },
+    { name: "string list", value: "not a list" },
+    { name: "object list", value: {} },
+    { name: "null entry", value: [null] },
+    { name: "numeric entry", value: [42] },
+    { name: "array entry", value: [[]] },
+    { name: "numeric name", value: [{ ...platform, label: 123 }] },
+    { name: "numeric URL", value: [{ ...platform, url: 123 }] },
+    { name: "string visibility", value: [{ ...platform, enabled: "false" }] },
+    { name: "missing visibility", value: [{ id: platform.id, label: platform.label, url: platform.url }] },
+  ])("returns validation errors without throwing for $name", ({ value }) => {
+    const result = validateDelivery(value);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("still rejects email destinations on hidden delivery items", () => {
+    expect(validateDelivery([{ ...platform, url: "tea@example.com", enabled: false }]).valid).toBe(false);
+  });
+
+  it("continues allowing email destinations and longer names for social links", () => {
+    const result = validateWebsiteContentPatch({
+      socialLinks: [{ ...platform, label: "A longer social platform name", url: "tea@example.com" }],
+    });
+    expect(result.valid).toBe(true);
   });
 });
