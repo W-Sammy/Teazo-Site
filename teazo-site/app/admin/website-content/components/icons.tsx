@@ -38,6 +38,16 @@ export function IconSocial() {
   );
 }
 
+export function IconDelivery() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-[17px] w-[17px]">
+      <path d="M2 5h10v9H2V5zM12 8h3l3 3v3h-6" />
+      <circle cx="5.5" cy="14.5" r="1.5" />
+      <circle cx="14.5" cy="14.5" r="1.5" />
+    </svg>
+  );
+}
+
 export function IconContact() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-[17px] w-[17px]">

@@ -1,46 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Montserrat } from "next/font/google";
+import { useSyncExternalStore } from "react";
 import PdfPreview from "@/app/components/pdf-preview";
 import GeneralButton from "@/app/components/general-button";
 import { CURRENT_MENU_PDF_URL } from "@/app/lib/menu-upload";
+import { montserrat400 } from "@/app/fonts";
 
 /* Font used for the button and helper text. */
-const montserrat = Montserrat({
-	subsets: ["latin"],
-	weight: ["400", "700"],
-});
+const montserrat = montserrat400;
+
+function subscribe(callback: () => void) {
+	window.addEventListener("resize", callback);
+	return () => window.removeEventListener("resize", callback);
+}
+
+function getSnapshot(): boolean {
+	/* Disable preview on small screens. */
+	const isMobile = window.innerWidth < 640;
+
+	/* Used to detect browsers with preview issues. */
+	const userAgent = navigator.userAgent;
+
+	/* Detect Safari while excluding Chrome, Edge, and Android. */
+	const isSafari =
+		/Safari/i.test(userAgent) &&
+		!/Chrome/i.test(userAgent) &&
+		!/CriOS/i.test(userAgent) &&
+		!/Edg/i.test(userAgent) &&
+		!/Android/i.test(userAgent);
+
+	return !isMobile && !isSafari;
+}
+
+function getServerSnapshot(): boolean {
+	return false;
+}
 
 /* Handles the PDF button and optional preview. */
 export default function StaticMenuContent() {
 	/* Controls whether the PDF preview appears. */
-	const [shouldRenderPreview, setShouldRenderPreview] = useState(false);
-
-	useEffect(() => {
-		/* Disable preview on small screens. */
-		const isMobile = window.innerWidth < 640;
-
-		/* Used to detect browsers with preview issues. */
-		const userAgent = navigator.userAgent;
-
-		/* Detect Safari while excluding Chrome, Edge, and Android. */
-		const isSafari =
-			/Safari/i.test(userAgent) &&
-			!/Chrome/i.test(userAgent) &&
-			!/CriOS/i.test(userAgent) &&
-			!/Edg/i.test(userAgent) &&
-			!/Android/i.test(userAgent);
-
-		/* Use the PDF button only on mobile and Safari. */
-		if (isMobile || isSafari) {
-			setShouldRenderPreview(false);
-			return;
-		}
-
-		/* Enable preview for supported desktop browsers. */
-		setShouldRenderPreview(true);
-	}, []);
+	const shouldRenderPreview = useSyncExternalStore(
+		subscribe,
+		getSnapshot,
+		getServerSnapshot,
+	);
 
 	return (
 		<>
@@ -51,7 +54,7 @@ export default function StaticMenuContent() {
 
 			{/* Simple helper message for the PDF button. */}
 			<p
-				className={`${montserrat.className} mt-5 text-center text-sm leading-6 text-stone-600`}
+				className={`${montserrat.className} mt-5 text-center text-[18px] text-sm leading-6 text-stone-600`}
 			>
 				Use the button above to open our menu.
 			</p>

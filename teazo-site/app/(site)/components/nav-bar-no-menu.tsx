@@ -3,18 +3,17 @@
 "use client"; // import required for userPathname
 
 import Link from "next/link";
-import { Montserrat, Cabin_Sketch } from "next/font/google"; // import fonts
+import { Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 
 import type { MouseEvent } from "react"; // for mobile menu
+import { montserrat700 } from "@/app/fonts";
 
 // setup fonts
-const montserrat = Montserrat({
-    subsets: ['latin'], // reduce amount of importing to just letters, nums
-    weight: ['700'] // bold
-});
+const montserrat = montserrat700;
 
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // same as above
     weight: ['400'] // normal
 });
@@ -82,7 +81,7 @@ export default function NavBar() {
                         left on desktop, centered on mobile */}
                     <Link 
                         href="/" 
-                        className={`${cabinSketch.className} border-b-2 border-[#DBAF82] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#DBAF82] md:text-[64px]`}
+                        className={`${cabinSketch.className} border-b-2 border-[#B28458] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#B28458] md:text-[64px]`}
                     >
                         TEAZO
                     </Link>

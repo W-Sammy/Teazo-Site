@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { Montserrat } from "next/font/google"; // import fonts
+import { montserrat600 } from "@/app/fonts";
 
 // setup fonts
-const montserrat = Montserrat({
-    subsets: ['latin'], // reduce amount of importing to just letters & nums
-    weight: ['600'] // semibold
-});
+const montserrat = montserrat600;
 
 // allow pages to edit the text & hyperlinks
 interface Editables {

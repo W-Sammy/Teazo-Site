@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
-import { isValidImageFile, isValidUrlOrEmail } from "../validators";
+import { parseAndNormalizeDestination, MAX_SOCIAL_LINKS } from "../validators";
 import type { SocialLink } from "@/app/types/website-content";
 
 type FieldTouch = { label?: boolean; url?: boolean };
@@ -29,7 +29,6 @@ export default function SocialSection({
   onBlur?: () => void;
 }) {
   const [touched, setTouched] = useState<Record<string, FieldTouch>>({});
-  const [iconErrors, setIconErrors] = useState<Record<string, string>>({});
 
   function markTouched(id: string, field: keyof FieldTouch) {
     setTouched((prev) => ({
@@ -56,44 +55,15 @@ export default function SocialSection({
     if (t.url) {
       if (urlEmpty && !labelEmpty) {
         urlError = "Link required";
-      } else if (!urlEmpty && !isValidUrlOrEmail(link.url)) {
-        urlError = "Enter a valid link or email";
+      } else if (!urlEmpty) {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          urlError = dest.error;
+        }
       }
     }
 
     return { labelError, urlError };
-  }
-
-  function handleIconFile(id: string, file: File | undefined) {
-    if (!file) return;
-
-    const check = isValidImageFile(file);
-
-    if (!check.valid) {
-      setIconErrors((prev) => ({
-        ...prev,
-        [id]: check.error ?? "Invalid image file",
-      }));
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setIconErrors((prev) => ({ ...prev, [id]: "" }));
-        onUpdateLink(id, { icon: reader.result });
-      }
-    };
-
-    reader.onerror = () => {
-      setIconErrors((prev) => ({
-        ...prev,
-        [id]: "Couldn't read that image file",
-      }));
-    };
-
-    reader.readAsDataURL(file);
   }
 
   return (
@@ -106,13 +76,12 @@ export default function SocialSection({
       setRef={setRef}
     >
       <p className="mb-1 text-xs text-gray-400">
-        Links shown as icons in the site footer.
+        Links shown as icons in the site footer. Supported platforms (Facebook, Instagram, Yelp) automatically display their official brand icons; other destinations use a generic link icon. Custom icon uploads are not supported.
       </p>
 
       <div className="flex min-w-0 flex-col divide-y divide-[#f3ece4]">
         {socialLinks.map((link) => {
           const { labelError, urlError } = fieldErrors(link);
-          const iconError = iconErrors[link.id];
 
           return (
             <div
@@ -121,42 +90,39 @@ export default function SocialSection({
             >
               {/* Mobile: icon/actions, platform, then URL. Desktop: one row. */}
               <div className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 lg:grid-cols-[40px_96px_minmax(0,1fr)_auto] lg:gap-x-4">
-                <label
-                  htmlFor={`social-icon-${link.id}`}
-                  title="Change social media icon"
-                  className="group relative col-start-1 row-start-1 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#fbf3ea]"
+                <div
+                  title={link.label ? `${link.label} icon` : "Social media icon"}
+                  className="col-start-1 row-start-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fbf3ea]"
                 >
                   {link.icon ? (
                     <img
                       src={link.icon}
-                      alt={link.label}
+                      alt={link.label || "Platform icon"}
                       className="h-6 w-6 object-contain"
+                      onError={(e) => {
+                        const fallbackIcons: Record<string, string> = {
+                          facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
+                          instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
+                          yelp: "/social_icons/social_svg/teazo_yelp_icon.svg",
+                        };
+
+                        const fallback = fallbackIcons[link.id.toLowerCase()];
+
+                        if (fallback && e.currentTarget.src !== new URL(fallback, window.location.origin).href) {
+                          e.currentTarget.src = fallback;
+                        }
+                      }}
                     />
                   ) : (
                     <span className="text-[#a99584]">
                       <img
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
-                        alt="Default Icon"
+                        alt="Generic Link"
                         className="h-6 w-6 object-contain"
                       /> 
                     </span>
                   )}
-
-                  <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[9px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    Edit
-                  </span>
-
-                  {/* visually hidden; the styled label above is the actual click target that opens the file picker */}
-                  <input
-                    id={`social-icon-${link.id}`}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      handleIconFile(link.id, e.target.files?.[0])
-                    }
-                    className="hidden"
-                  />
-                </label>
+                </div>
 
                 <input
                   type="text"
@@ -178,7 +144,13 @@ export default function SocialSection({
                   onChange={(e) =>
                     onUpdateLink(link.id, { url: e.target.value })
                   }
-                  onBlur={() => markTouched(link.id, "url")}
+                  onBlur={() => {
+                    markTouched(link.id, "url");
+                    const parsed = parseAndNormalizeDestination(link.url);
+                    if (parsed.ok && parsed.destination !== link.url) {
+                      onUpdateLink(link.id, { url: parsed.destination });
+                    }
+                  }}
                   placeholder={link.label ? `${link.label} link` : "Link"}
                   aria-label={
                     link.label ? `${link.label} link` : "Social media link"
@@ -238,13 +210,24 @@ export default function SocialSection({
                 </div>
               </div>
 
-              {(labelError || urlError || iconError) && (
-                <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
-                  {iconError && <ErrorText>{iconError}</ErrorText>}
-                  {labelError && <ErrorText>{labelError}</ErrorText>}
-                  {urlError && <ErrorText>{urlError}</ErrorText>}
-                </div>
-              )}
+              {(() => {
+                const parsed = link.url.trim() ? parseAndNormalizeDestination(link.url) : null;
+                const showPreview = parsed?.ok && parsed.destination !== link.url.trim();
+
+                if (!labelError && !urlError && !showPreview) return null;
+
+                return (
+                  <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
+                    {labelError && <ErrorText>{labelError}</ErrorText>}
+                    {urlError && <ErrorText>{urlError}</ErrorText>}
+                    {showPreview && (
+                      <span className="text-[11px] text-[#8c6b47]">
+                        Will save as: <span className="font-mono">{parsed.destination}</span>
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
@@ -253,10 +236,16 @@ export default function SocialSection({
       <button
         type="button"
         onClick={onAddLink}
+        disabled={socialLinks.length >= MAX_SOCIAL_LINKS}
         className="mt-4 min-h-11 w-full cursor-pointer rounded-2xl bg-[#F59AA3] px-[18px] py-2 text-[13px] font-semibold text-white transition-colors enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-[#FFBDC7] sm:min-h-0 sm:w-auto"
       >
         New Social Media +
       </button>
+      {socialLinks.length >= MAX_SOCIAL_LINKS && (
+        <p className="mt-2 text-xs text-amber-700">
+          Maximum limit of {MAX_SOCIAL_LINKS} social links reached. Delete an existing link to add another.
+        </p>
+      )}
     </AccordionItem>
   );
-} 
+}

@@ -25,6 +25,8 @@ export type EventCategory = {
   name: string;
 };
 
+export type EventItem = Pick<EventCatalogItem, "id" | "name">;
+
 export type EventSortOption =
   | "name-asc"
   | "name-desc"

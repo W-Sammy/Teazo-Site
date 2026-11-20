@@ -8,7 +8,7 @@ export function Chevron({ open }: { open: boolean }) {
     <span
       aria-hidden="true"
       className={`inline-block h-2 w-2 shrink-0 border-r-[1.6px] border-b-[1.6px] border-[#a99584] transition-transform duration-150 ${
-        open ? "rotate-[135deg]" : "-rotate-45"
+        open ? "rotate-45" : "-rotate-45"
       }`}
     />
   );

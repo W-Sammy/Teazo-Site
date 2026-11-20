@@ -2,16 +2,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Montserrat } from "next/font/google";
+import { usePageLoaded } from "@/app/lib/use-page-loaded";
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 const FALLBACK_IMAGE_SRC = "/TEAZO_logo.svg";
 
 import type { ModifierList, ItemVariation, CatalogAvailability } from "@/app/types/menu-item";
+import { montserrat } from "@/app/fonts";
 
 /* Core menu item shape for the UI. */
 export type MenuItem = {
@@ -47,6 +44,8 @@ function formatPrice(priceCents: number, currency: string | null) {
    Clicking the card or the Order action opens the customization modal. */
 export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
   const [hasImageError, setHasImageError] = useState(false);
+  // The menu grid is below the fold, so its photos wait for the page to load (TZ-515).
+  const pageLoaded = usePageLoaded();
   const formattedPrice = formatPrice(item.priceCents, item.currency);
 
   const imageSrc = !hasImageError && item.imageUrl ? item.imageUrl : FALLBACK_IMAGE_SRC;
@@ -70,7 +69,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
       role={onCustomize ? "button" : undefined}
       tabIndex={onCustomize ? 0 : undefined}
       aria-label={onCustomize ? `Customize ${item.name}` : undefined}
-      className={`group flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#fcfaf7] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`group flex min-h-[180px] items-start gap-4 rounded-2xl border border-stone-200 bg-[#FBF4EE] px-5 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         onCustomize ? "cursor-pointer active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#DBAF82]" : ""
       }`}
     >
@@ -79,13 +78,13 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
         {/* Stacking the name and price on mobile prevents the price from being covered by the image. */}
         <div className="flex flex-col gap-1">
           <h4
-            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 group-hover:text-[#c68f5d] transition-colors sm:text-[1.05rem]`}
+            className={`${montserrat.className} break-words text-[1rem] font-bold uppercase leading-snug tracking-[0.03em] text-stone-900 group-hover:text-[#8E5629] transition-colors sm:text-[1.05rem]`}
           >
             {item.name}
           </h4>
 
           <span
-            className={`${montserrat.className} text-[0.95rem] font-bold text-[#c68f5d]`}
+            className={`${montserrat.className} text-[0.95rem] font-bold text-[#8E5629]`}
           >
             {formattedPrice}
           </span>
@@ -103,7 +102,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
 
       {/* The image keeps a fixed size so it does not overlap the text or price. */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-[#f3ece6] sm:h-28 sm:w-28">
-        <Image
+        {pageLoaded && <Image
           key={item.imageUrl || "fallback"}
           src={imageSrc}
           alt={item.name}
@@ -112,7 +111,7 @@ export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
           sizes="(max-width: 640px) 96px, 112px"
           loading="lazy"
           onError={() => setHasImageError(true)}
-        />
+        />}
       </div>
     </article>
   );

@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
-import { headers } from "next/headers";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
 import { getContactContent } from "./contact-content";
 import Subtitle from "../components/sub-title";
 import ContactForm from "./contact-form";
+import SocialLinks from "../components/social-links";
+import MapFrame from "./map-frame";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // Keep route metadata local to the contact page so the rest of the site can
 // evolve independently without coupling page-specific SEO copy together.
@@ -14,25 +19,19 @@ export const metadata: Metadata = {
   description: "Visit TEAZO in San Francisco and check the latest store hours.",
 };
 
-const MOBILE_USER_AGENT_REGEX =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+// Live-event visibility must be evaluated for each request as events start and end.
+export const dynamic = "force-dynamic";
 
 // Cabin Sketch is the approved display face for the hand-drawn headings on this
 // route. Reuse this instance instead of re-declaring font config inline.
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 // Fine-tune day/hour positions independently in the hours rows.
-const HOURS_TIME_COLUMN_MIN_WIDTH = "10.5rem";
-const HOURS_DAY_SHIFT_PX = 10;
-const HOURS_TIME_SHIFT_PX = -28;
 
 function PinIcon() {
   return (
@@ -124,9 +123,10 @@ function ClockIcon() {
 }
 
 export default async function ContactPage() {
-  const requestHeaders = await headers();
-  const userAgent = requestHeaders.get("user-agent") ?? "";
-  const contactData = await getContactContent();
+  const [contactData, liveEvents] = await Promise.all([
+    getContactContent(),
+    listActiveEvents().catch(() => []),
+  ]);
   const {
     location,
     hours,
@@ -134,30 +134,9 @@ export default async function ContactPage() {
     logo,
     socialLinks: dynamicSocialLinks,
   } = contactData;
-  const logoSrc = logo || "/TEAZO_logo.svg";
-  const fbLink =
-    dynamicSocialLinks?.find((l) => l.id === "facebook" && l.enabled)?.url ||
-    "https://www.facebook.com/people/TEAZO/100063111166083";
-  const igLink =
-    dynamicSocialLinks?.find((l) => l.id === "instagram" && l.enabled)?.url ||
-    "https://www.instagram.com/teazosf/";
-  const yelpLink =
-    dynamicSocialLinks?.find((l) => l.id === "yelp" && l.enabled)?.url ||
-    "https://www.yelp.com/biz/teazo-san-francisco";
-  const isFbEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
-  const isIgEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
-  const isYelpEnabled =
-    dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
+  const logoSrc = heroLogoSrc(logo);
   const phoneDigits = location.phone.replace(/[^\d+]/g, "");
   const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
-  const isMobileRequest = MOBILE_USER_AGENT_REGEX.test(userAgent);
-  const hoursDayShiftPx = isMobileRequest ? 0 : HOURS_DAY_SHIFT_PX;
-  const hoursTimeShiftPx = isMobileRequest ? 0 : HOURS_TIME_SHIFT_PX;
-  const hoursTimeMinWidth = isMobileRequest
-    ? "auto"
-    : HOURS_TIME_COLUMN_MIN_WIDTH;
   const emailHref = `mailto:${location.email || "teazosf@hotmail.com"}`;
   const opensWebmail = false;
   const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(
@@ -168,6 +147,8 @@ export default async function ContactPage() {
   )}`;
 
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative isolate min-h-screen scroll-smooth overflow-hidden bg-[#FFF8F9] text-stone-900">
       {/* Shared so other pages can reuse the same motion treatment without
           copying contact-specific files. */}
@@ -184,13 +165,14 @@ export default async function ContactPage() {
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
-            priority
+            priority={!logoSrc.startsWith("data:")}
+            fetchPriority="high"
             unoptimized={
               logoSrc.startsWith("data:") || logoSrc.startsWith("http")
             }
           />
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             CONTACT
           </h1>
@@ -208,16 +190,14 @@ export default async function ContactPage() {
           <div className="grid gap-6 lg:grid-cols-[1.03fr_0.97fr]">
             <div>
               <div className="overflow-hidden rounded-[16px] border border-[#e6ddd8] bg-[#efe7e0]">
-                <iframe
+                <MapFrame
                   title={`${location.businessName} map`}
                   src={embedSrc}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
                   className="h-[320px] w-full border-0 sm:h-[380px] lg:h-[430px]"
                 />
               </div>
 
-              <div className="mt-4 rounded-[16px] border border-[#eadfd9] bg-[#faf6f3] p-4 sm:p-5">
+              <div className="mt-4 rounded-[16px] border border-[#eadfd9] bg-[#FBF4EE] p-4 sm:p-5">
                 <div className="grid gap-x-8 gap-y-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 shrink-0 text-[#cd8f84]">
@@ -227,9 +207,14 @@ export default async function ContactPage() {
                       <p className="text-[1.01rem] font-semibold text-stone-900">
                         {location.streetAddress}
                       </p>
-                      <p className="mt-1 text-[1rem] font-medium text-stone-700">
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 text-[1rem] font-medium text-stone-700"
+                      >
                         {location.locality}
-                      </p>
+                      </a>
                     </div>
                   </div>
 
@@ -258,25 +243,16 @@ export default async function ContactPage() {
                       {location.email}
                     </a>
                   </div>
-
                   <div className="flex items-start justify-start sm:justify-end sm:pr-16">
-                    <a
-                      href={directionsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block whitespace-nowrap text-sm font-semibold uppercase tracking-[0.08em] text-[#cd8f84] transition hover:opacity-70"
-                    >
-                      Get Directions
-                    </a>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-[#eadfd9] bg-[#faf6f3] p-5 sm:p-6">
+            <div className="rounded-[16px] border border-[#eadfd9] bg-[#FBF4EE] p-5 sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-[1.35rem] font-bold uppercase tracking-[0.06em] text-[#cd8f84] sm:text-[1.5rem]">
+                  <h3 className="text-[1.35rem] font-bold uppercase tracking-[0.06em] text-[#B28458] sm:text-[1.5rem]">
                     Hours of Operation
                   </h3>
                   <span className="mt-3 block h-[2px] w-24 bg-[#e3bfb4]" />
@@ -297,8 +273,7 @@ export default async function ContactPage() {
                       <CalendarIcon />
                     </span>
                     <dt
-                      className="text-[0.98rem] font-semibold uppercase tracking-[0.04em] text-stone-700 sm:text-[1rem]"
-                      style={{ transform: `translateX(${hoursDayShiftPx}px)` }}
+                      className="text-[0.98rem] font-semibold uppercase tracking-[0.04em] text-stone-700 sm:text-[1rem] pointer-fine:translate-x-[10px]"
                     >
                       <span>{entry.day}</span>
                       {entry.holidayName && (
@@ -308,11 +283,7 @@ export default async function ContactPage() {
                       )}
                     </dt>
                     <dd
-                      className="col-start-2 row-start-2 justify-self-start whitespace-nowrap text-left text-[0.95rem] font-semibold text-stone-700 sm:col-start-3 sm:row-start-1 sm:justify-self-end sm:text-right sm:text-[1rem]"
-                      style={{
-                        minWidth: hoursTimeMinWidth,
-                        transform: `translateX(${hoursTimeShiftPx}px)`,
-                      }}
+                      className="col-start-2 row-start-2 justify-self-start whitespace-nowrap text-left text-[0.95rem] font-semibold text-stone-700 sm:col-start-3 sm:row-start-1 sm:justify-self-end sm:text-right sm:text-[1rem] pointer-fine:min-w-[10.5rem] pointer-fine:translate-x-[-28px]"
                     >
                       {entry.hours}
                     </dd>
@@ -329,95 +300,25 @@ export default async function ContactPage() {
         </section>
 
         <section
-          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+          className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#FBF4EE] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
         >
           <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
             <div className="max-w-3xl">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#8E5629]">
                 Group Orders
               </p>
               <h2
-                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#B28458] sm:text-[3.5rem]`}
               >
                 Planning for a Crowd?
               </h2>
               <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                Call us for group ordering and discounted pricing on larger
+                Inquire about group ordering and discounted pricing on larger
                 drink, snack, and dessert orders.
               </p>
 
-              <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                {isFbEnabled && (
-                  <a
-                    href={fbLink}
-                    aria-label={`${location.businessName} on Facebook`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_fb_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-                <a
-                  href={emailHref}
-                  aria-label={`Email ${location.businessName}`}
-                  target={opensWebmail ? "_blank" : undefined}
-                  rel={opensWebmail ? "noreferrer" : undefined}
-                  className="block transition hover:opacity-70"
-                >
-                  <Image
-                    src="/social_icons/social_svg/teazo_email_icon.svg"
-                    alt=""
-                    aria-hidden="true"
-                    width={64}
-                    height={64}
-                    className="h-12 w-12 object-contain"
-                  />
-                </a>
-                {isIgEnabled && (
-                  <a
-                    href={igLink}
-                    aria-label={`${location.businessName} on Instagram`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_insta_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-                {isYelpEnabled && (
-                  <a
-                    href={yelpLink}
-                    aria-label={`${location.businessName} on Yelp`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block transition hover:opacity-70"
-                  >
-                    <Image
-                      src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                      alt=""
-                      aria-hidden="true"
-                      width={64}
-                      height={64}
-                      className="h-12 w-12 object-contain"
-                    />
-                  </a>
-                )}
-              </div>
+              <SocialLinks links={dynamicSocialLinks} businessName={location.businessName}
+                email={location.email || "teazosf@hotmail.com"} />
             </div>
 
             <a
@@ -432,7 +333,7 @@ export default async function ContactPage() {
         {/* Hidden when business_profile.contact_form_enabled is 0. */}
         {contactFormEnabled && (
           <>
-            <div
+            <div 
               id="contact-us"
               className="relative mt-14 flex items-center justify-center sm:mt-16"
             >
@@ -448,5 +349,6 @@ export default async function ContactPage() {
         )}
       </div>
     </main>
+    </>
   );
 }

@@ -380,9 +380,29 @@ export function BubbleField({
       return;
     }
 
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let isReducedMotion = motionQuery.matches;
     let width = container.clientWidth;
     let height = container.clientHeight;
 
+    // Size, opacity, blur and color only change when the particles are created or
+    // rescaled, so they are set once there. Setting them on every frame made the
+    // browser recheck and repaint every bubble 60 times a second.
+    const styleParticle = (particle: Particle) => {
+      const element = bubbleRefs.current[particle.id];
+
+      if (!element) {
+        return;
+      }
+
+      element.style.width = `${particle.radius * 2}px`;
+      element.style.height = `${particle.radius * 2}px`;
+      element.style.opacity = `${0.8 + particle.depth * 0.18}`;
+      element.style.filter = `blur(${(1 - particle.depth) * 0.18}px)`;
+      element.style.backgroundColor = particle.tint;
+    };
+
+    // Runs every frame: only the position and wobble move.
     const paintParticle = (particle: Particle, time: number) => {
       const element = bubbleRefs.current[particle.id];
 
@@ -396,14 +416,9 @@ export function BubbleField({
       const stretchY =
         1 + Math.cos(time * 0.00056 * particle.wobble + particle.phase) * 0.05;
 
-      element.style.width = `${particle.radius * 2}px`;
-      element.style.height = `${particle.radius * 2}px`;
       element.style.transform = `translate3d(${particle.x - particle.radius}px, ${
         particle.y - particle.radius
       }px, 0) scale(${stretchX}, ${stretchY})`;
-      element.style.opacity = `${0.8 + particle.depth * 0.18}`;
-      element.style.filter = `blur(${(1 - particle.depth) * 0.18}px)`;
-      element.style.backgroundColor = particle.tint;
     };
 
     const initializeParticles = () => {
@@ -467,11 +482,21 @@ export function BubbleField({
       const initialPaintTime = window.performance.now();
 
       for (const particle of particlesRef.current) {
+        styleParticle(particle);
         paintParticle(particle, initialPaintTime);
       }
     };
 
+    const isBodyOverflowHidden = () =>
+      typeof document !== "undefined" &&
+      document.body?.style?.overflow === "hidden";
+
+    let isPaused = isBodyOverflowHidden();
+
     const step = (time: number) => {
+      frameRef.current = null;
+      if (isReducedMotion || isPaused || isBodyOverflowHidden()) return;
+
       const particles = particlesRef.current;
 
       if (!lastTimeRef.current) {
@@ -658,6 +683,62 @@ export function BubbleField({
       frameRef.current = window.requestAnimationFrame(step);
     };
 
+    const startAnimation = () => {
+      if (!isReducedMotion && !isPaused && !isBodyOverflowHidden() && frameRef.current === null) {
+        lastTimeRef.current = 0;
+        frameRef.current = window.requestAnimationFrame(step);
+      }
+    };
+
+    const updatePausedState = () => {
+      isPaused = isBodyOverflowHidden();
+
+      if (isPaused) {
+        if (frameRef.current !== null) {
+          window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+      } else {
+        startAnimation();
+      }
+    };
+
+    let bodyObserver: MutationObserver | null = null;
+    let overflowPoll: number | null = null;
+    if (
+      typeof MutationObserver !== "undefined" &&
+      typeof document !== "undefined" &&
+      document.body
+    ) {
+      bodyObserver = new MutationObserver(() => {
+        updatePausedState();
+      });
+
+      bodyObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    } else if (typeof document !== "undefined" && document.body) {
+      // Keep modal pause/resume working without MutationObserver. Reconcile even
+      // unchanged overflow: step() may have stopped before a short lock ended.
+      overflowPoll = window.setInterval(updatePausedState, 250);
+    }
+
+    const handleMotionChange = (event: MediaQueryListEvent) => {
+      isReducedMotion = event.matches;
+
+      if (isReducedMotion) {
+        // Freeze the current composition without moving bubbles on preference change.
+        if (frameRef.current !== null) {
+          window.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+      } else {
+        startAnimation();
+      }
+    };
+
+    motionQuery.addEventListener("change", handleMotionChange);
     initializeParticles();
 
     // Re-initialize on resize so coverage and spacing stay proportional to the
@@ -667,13 +748,21 @@ export function BubbleField({
     });
 
     resizeObserver.observe(container);
-    frameRef.current = window.requestAnimationFrame(step);
+    startAnimation();
 
     return () => {
+      if (bodyObserver) {
+        bodyObserver.disconnect();
+      }
+      if (overflowPoll !== null) {
+        window.clearInterval(overflowPoll);
+      }
       resizeObserver.disconnect();
+      motionQuery.removeEventListener("change", handleMotionChange);
 
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
   }, [visibleCount]);

@@ -2,6 +2,7 @@ import type {
   AddressInfo,
   Holiday,
   SocialLink,
+  DeliveryLink,
   WebsiteContent,
 } from "@/app/types/website-content";
 
@@ -9,7 +10,16 @@ const EMAIL_RE =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 const URL_RE =
   /^(https?:\/\/)?([\w-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/i;
+const DOMAIN_RE =
+  /^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
+const DOMAIN_LABEL_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 const PHONE_CHAR_RE = /^[+]?[\d\s().-]{10,25}$/;
+
+export const MAX_SOCIAL_LINKS = 10;
+export const MAX_HOLIDAYS = 16;
+export const MAX_DELIVERY_LINKS = 10;
+export const MAX_D1_STATEMENTS = 40;
+export const MAX_WEBSITE_CONTENT_PAYLOAD_BYTES = 1_000_000;
 
 export function isNonEmpty(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
@@ -54,15 +64,228 @@ export function formatPhoneNumber(value: unknown): string {
   return trimmed;
 }
 
-export function isValidUrlOrEmail(value: unknown): boolean {
-  if (typeof value !== "string") return false;
+export type DestinationKind = "url" | "email";
+
+export type DestinationParseResult =
+  | { ok: true; destination: string; kind: DestinationKind }
+  | { ok: false; error: string };
+
+function isValidDestinationHostname(hostname: string): boolean {
+  // A final root dot is valid in a fully qualified domain name. URL parsing
+  // handles Unicode-to-ASCII conversion but does not enforce DNS label rules.
+  const domain = hostname.endsWith(".") ? hostname.slice(0, -1) : hostname;
+  const labels = domain.split(".");
+  return domain.length <= 253 && labels.length > 1 &&
+    labels.every((label) => DOMAIN_LABEL_RE.test(label));
+}
+
+export function parseAndNormalizeDestination(value: unknown): DestinationParseResult {
+  if (typeof value !== "string") {
+    return { ok: false, error: "Destination must be a text value" };
+  }
   const trimmed = value.trim();
-  if (!trimmed) return false;
-  if (trimmed.startsWith("mailto:")) return isValidEmail(trimmed.slice(7));
-  return isValidEmail(trimmed) || URL_RE.test(trimmed);
+  if (!trimmed) {
+    return { ok: false, error: "Destination cannot be empty" };
+  }
+  if (trimmed.length > 2048) {
+    return { ok: false, error: "Destination is too long (keep under 2048 characters)" };
+  }
+
+  // Bare email address
+  if (isValidEmail(trimmed)) {
+    return { ok: true, destination: `mailto:${trimmed}`, kind: "email" };
+  }
+
+  // A domain with a port resembles a scheme. Recognize that form separately
+  // so explicit schemes still work when their destination starts with a digit.
+  const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+  if (schemeMatch && !DOMAIN_RE.test(trimmed)) {
+    const scheme = schemeMatch[1].toLowerCase();
+    if (scheme === "mailto") {
+      const rest = trimmed.slice(schemeMatch[0].length).trim();
+      if (!rest) {
+        return { ok: false, error: "Enter a valid email address after mailto:" };
+      }
+      const [address, ...queryParts] = rest.split("?");
+      const trimmedAddress = address.trim();
+      if (!isValidEmail(trimmedAddress)) {
+        return { ok: false, error: "Enter a valid email address after mailto:" };
+      }
+      const query = queryParts.length > 0 ? `?${queryParts.join("?")}` : "";
+      return { ok: true, destination: `mailto:${trimmedAddress}${query}`, kind: "email" };
+    }
+
+    if (scheme !== "http" && scheme !== "https") {
+      return {
+        ok: false,
+        error: `Unsupported scheme "${scheme}:". Only http:, https:, and mailto: destinations are supported.`,
+      };
+    }
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!isValidDestinationHostname(parsed.hostname)) {
+        return { ok: false, error: "Enter a valid website destination with a domain name" };
+      }
+      return { ok: true, destination: parsed.href, kind: "url" };
+    } catch {
+      return { ok: false, error: "Enter a valid website destination" };
+    }
+  }
+
+  // Reject relative or protocol-relative paths
+  if (trimmed.startsWith("/") || trimmed.startsWith(".")) {
+    return { ok: false, error: "Relative paths are not supported. Enter a full website address or email." };
+  }
+
+  // Domain-only check (e.g. instagram.com/teazosf, domain.com:8080/path)
+  if (DOMAIN_RE.test(trimmed)) {
+    try {
+      const parsed = new URL(`https://${trimmed}`);
+      if (isValidDestinationHostname(parsed.hostname)) {
+        return { ok: true, destination: parsed.href, kind: "url" };
+      }
+    } catch {}
+  }
+
+  return { ok: false, error: "Enter a valid website destination (e.g. instagram.com/teazo) or email" };
+}
+
+export function normalizeDestination(value: unknown): string | null {
+  const result = parseAndNormalizeDestination(value);
+  return result.ok ? result.destination : null;
+}
+
+export function isValidDestination(value: unknown): boolean {
+  return parseAndNormalizeDestination(value).ok;
+}
+
+export function isValidUrlOrEmail(value: unknown): boolean {
+  return isValidDestination(value);
+}
+
+export function isValidUrl(value: unknown): boolean {
+  if (typeof value !== "string") 
+    return false;
+  const trimmed = value.trim();
+  if (!trimmed) 
+    return false;
+  
+  return URL_RE.test(trimmed);
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export const ALLOWED_LOGO_MIME_TYPES = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+} as const;
+
+export type AllowedLogoMimeType = keyof typeof ALLOWED_LOGO_MIME_TYPES;
+
+// Keep the multipart request below Vercel's 4.5 MB body limit.
+export const MAX_LOGO_BYTES = 4 * 1024 * 1024;
+export const MAX_LOGO_URL_LENGTH = 2048;
+
+export function isValidLogoFile(
+  file: File | undefined,
+  maxBytes = MAX_LOGO_BYTES,
+): { valid: boolean; error?: string } {
+  if (!file) {
+    return { valid: false, error: "No image file provided." };
+  }
+  if (!Object.prototype.hasOwnProperty.call(ALLOWED_LOGO_MIME_TYPES, file.type)) {
+    return {
+      valid: false,
+      error: "Unsupported image format. Please upload PNG, JPG, or WebP.",
+    };
+  }
+  if (file.size === 0) {
+    return { valid: false, error: "The image file is empty." };
+  }
+  if (file.size > maxBytes) {
+    return {
+      valid: false,
+      error: `Image file is too large. Must be ${maxBytes / (1024 * 1024)} MiB or less.`,
+    };
+  }
+  return { valid: true };
+}
+
+export function validateLogo(logo: unknown): { valid: boolean; error?: string } {
+  if (typeof logo !== "string") {
+    return { valid: false, error: "Website logo must be a text URL or path" };
+  }
+  const trimmed = logo.trim();
+  if (!trimmed) {
+    return { valid: false, error: "Website logo cannot be empty" };
+  }
+  if (trimmed.length > MAX_LOGO_URL_LENGTH) {
+    return {
+      valid: false,
+      error: "Website logo reference is too long (keep under 2048 characters)",
+    };
+  }
+
+  // Strictly reject data URLs and embedded base64 images
+  if (/^data:/i.test(trimmed) || /;base64,/i.test(trimmed)) {
+    return {
+      valid: false,
+      error: "Embedded image data and data URLs are not permitted. Please upload the logo through the logo upload endpoint.",
+    };
+  }
+
+  // Reject whitespace characters inside the logo string
+  if (/\s/.test(trimmed)) {
+    return {
+      valid: false,
+      error: "Website logo destination must not contain whitespace characters",
+    };
+  }
+
+  // Root-relative path (e.g. /TEAZO_logo.svg), rejecting protocol-relative (//)
+  if (trimmed.startsWith("/")) {
+    if (trimmed.startsWith("//")) {
+      return {
+        valid: false,
+        error: "Protocol-relative paths are not supported for website logo",
+      };
+    }
+    return { valid: true };
+  }
+
+  // Absolute URL (http:// or https://)
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return {
+          valid: false,
+          error: "Only http: and https: logo URLs are supported",
+        };
+      }
+      const isLocal = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (!isLocal && !isValidDestinationHostname(parsed.hostname)) {
+        return {
+          valid: false,
+          error: "Enter a valid website logo URL with a valid domain name",
+        };
+      }
+      return { valid: true };
+    } catch {
+      return {
+        valid: false,
+        error: "Enter a valid website logo URL",
+      };
+    }
+  }
+
+  return {
+    valid: false,
+    error: "Enter a valid website logo URL (http:// or https://) or site path (e.g. /TEAZO_logo.svg)",
+  };
+}
 
 export function isValidImageFile(
   file: File,
@@ -200,11 +423,18 @@ export function validateAddress(address: Partial<AddressInfo>): {
   };
 }
 
-export function validateSocialLinks(links: SocialLink[]): {
+export function validateSocialLinks(
+  links: (SocialLink | DeliveryLink)[],
+  maxLinks = MAX_SOCIAL_LINKS,
+  collectionName = "social links",
+): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
+  if (links.length > maxLinks) {
+    errors.push(`You can add up to ${maxLinks} ${collectionName}.`);
+  }
   for (const link of links) {
     const labelEmpty = !isNonEmpty(link.label);
     const urlEmpty = !isNonEmpty(link.url);
@@ -215,14 +445,20 @@ export function validateSocialLinks(links: SocialLink[]): {
       }
       if (urlEmpty) {
         errors.push(`URL required for link "${link.label || link.id}"`);
-      } else if (!isValidUrlOrEmail(link.url)) {
-        errors.push(`Enter a valid link or email for "${link.label || link.id}"`);
+      } else {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          errors.push(`Enter a valid link or email for "${link.label || link.id}": ${dest.error}`);
+        }
       }
     } else if (!labelEmpty || !urlEmpty) {
       if (labelEmpty) errors.push(`Platform name required for link`);
       if (urlEmpty) errors.push(`URL required for link "${link.label}"`);
-      else if (!isValidUrlOrEmail(link.url)) {
-        errors.push(`Enter a valid link or email for "${link.label}"`);
+      else {
+        const dest = parseAndNormalizeDestination(link.url);
+        if (!dest.ok) {
+          errors.push(`Enter a valid link or email for "${link.label}": ${dest.error}`);
+        }
       }
     }
   }
@@ -235,11 +471,17 @@ export function validateStory(story: string): { valid: boolean; error?: string }
   return { valid: true };
 }
 
-export function validateHolidays(holidays: Holiday[]): {
+export function validateHolidays(
+  holidays: Holiday[],
+  maxHolidays = MAX_HOLIDAYS,
+): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
+  if (holidays.length > maxHolidays) {
+    errors.push(`You can add up to ${maxHolidays} holiday exceptions.`);
+  }
   const seenDates = new Set<string>();
 
   for (const holiday of holidays) {
@@ -258,8 +500,71 @@ export function validateHolidays(holidays: Holiday[]): {
   return { valid: errors.length === 0, errors };
 }
 
+export type WebsiteContentPatch = Partial<Omit<WebsiteContent, "address">> & {
+  address?: Partial<AddressInfo>;
+};
+
+export function estimateWebsiteContentPatchStatements(
+  patch: WebsiteContentPatch,
+): number {
+  let count = 0;
+  const changesCollections =
+    patch.socialLinks !== undefined || patch.holidays !== undefined;
+  if (changesCollections) {
+    count += 1;
+  }
+  if (patch.address !== undefined || patch.contactFormEnabled !== undefined) {
+    count += 1;
+  }
+  if (patch.story !== undefined) {
+    count += 1;
+  }
+  if (patch.logo !== undefined) {
+    count += 1;
+  }
+  if (patch.onlineOrderingEnabled !== undefined) {
+    count += 1;
+  }
+  if (patch.hours && patch.hours.length === 7) {
+    count += 7;
+  }
+  if (patch.socialLinks !== undefined) {
+    count += 1; // DELETE FROM site_link WHERE link_group = 'social'
+    for (const link of patch.socialLinks) {
+      if (link.id && link.url) count += 1;
+    }
+  }
+  if (patch.deliveryLinks !== undefined) {
+    count += 1; // DELETE FROM site_link WHERE link_group = 'delivery'
+    for (const link of patch.deliveryLinks) {
+      if (link.id && link.url) count += 1;
+    }
+  }
+  if (patch.holidays !== undefined) {
+    count += 1; // DELETE FROM hours_exception
+    for (const holiday of patch.holidays) {
+      if (holiday.date) count += 1;
+    }
+  }
+  return count;
+}
+
+export function getWebsiteContentPatchByteSize(
+  patch: WebsiteContentPatch,
+): number {
+  try {
+    const jsonStr = JSON.stringify(patch);
+    if (typeof Buffer !== "undefined") {
+      return Buffer.byteLength(jsonStr, "utf8");
+    }
+    return new TextEncoder().encode(jsonStr).length;
+  } catch {
+    return 0;
+  }
+}
+
 export function validateWebsiteContentPatch(
-  patch: Partial<WebsiteContent>,
+  patch: WebsiteContentPatch,
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
@@ -277,13 +582,40 @@ export function validateWebsiteContentPatch(
     if (!valid && error) errors.push(error);
   }
 
+  if (patch.logo !== undefined) {
+    const { valid, error } = validateLogo(patch.logo);
+    if (!valid && error) errors.push(error);
+  }
+
   if (patch.socialLinks !== undefined) {
-    const { valid, errors: socialErrors } = validateSocialLinks(patch.socialLinks);
+    const { valid, errors: socialErrors } = validateSocialLinks(
+      patch.socialLinks,
+      MAX_SOCIAL_LINKS,
+      "social links",
+    );
     if (!valid) errors.push(...socialErrors);
   }
 
+  if (patch.deliveryLinks !== undefined) {
+    const { valid, errors: deliveryErrors } = validateSocialLinks(
+      patch.deliveryLinks,
+      MAX_DELIVERY_LINKS,
+      "delivery links",
+    );
+    if (!valid) 
+      errors.push(...deliveryErrors);
+
+    // delivery buttons need links, even though social links can use emails
+    for (const link of patch.deliveryLinks)
+      if (isNonEmpty(link.url) && (!/^https?:\/\//i.test(link.url.trim()) || !isValidUrl(link.url)))
+        errors.push(`Enter a valid http:// or https:// link for "${link.label || link.id}"`);
+  }
+
   if (patch.holidays !== undefined) {
-    const { valid, errors: holidayErrors } = validateHolidays(patch.holidays);
+    const { valid, errors: holidayErrors } = validateHolidays(
+      patch.holidays,
+      MAX_HOLIDAYS,
+    );
     if (!valid) errors.push(...holidayErrors);
   }
 
@@ -291,6 +623,20 @@ export function validateWebsiteContentPatch(
     if (patch[key] !== undefined && typeof patch[key] !== "boolean") {
       errors.push(`${key} must be true or false`);
     }
+  }
+
+  const statements = estimateWebsiteContentPatchStatements(patch);
+  if (statements > MAX_D1_STATEMENTS) {
+    errors.push(
+      `Update requires ${statements} database operations, exceeding the maximum budget of ${MAX_D1_STATEMENTS}.`,
+    );
+  }
+
+  const byteSize = getWebsiteContentPatchByteSize(patch);
+  if (byteSize > MAX_WEBSITE_CONTENT_PAYLOAD_BYTES) {
+    errors.push(
+      `Content update payload (${byteSize} bytes) exceeds the maximum allowed size of ${MAX_WEBSITE_CONTENT_PAYLOAD_BYTES} bytes.`,
+    );
   }
 
   return { valid: errors.length === 0, errors };

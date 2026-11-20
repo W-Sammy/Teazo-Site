@@ -7,13 +7,16 @@ import Subtitle from "@/app/(site)/components/sub-title"
 import ImageCarousel from "@/app/(site)/components/image-carousel";
 
 // import font & bubbles
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { BubbleField } from "@/app/components/bubble-field";
-import { getContactContent } from "@/app/(site)/contact/contact-content";
+import SocialLinks from "./components/social-links";
 import GeneralButton from "@/app/components/general-button";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { listActiveEvents } from "@/app/lib/queries/events";
+import { getEventCategories, getEventItems } from "@/app/lib/event-categories";
 import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat, montserrat500, montserrat800 } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // added page metadata so the browser tab shows TEAZO for the landing page
 export const metadata: Metadata = {
@@ -28,26 +31,17 @@ export const dynamic = "force-dynamic";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
+    preload: false, // preloading every font held back first paint on phones (TZ-515)
     subsets: ['latin'], // import only letters, num
     weight: ['400'] // normal
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 // extra bold montserrat
-const boldMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['800'] // extra bold
-});
+const boldMontserrat = montserrat800;
 
 // medium montserrat
-const mediumMontserrat = Montserrat({
-    subsets: ['latin'],
-    weight: ['500']
-});
+const mediumMontserrat = montserrat500;
 
 function MailIcon() {
   return (
@@ -69,45 +63,31 @@ function MailIcon() {
 
 export default async function Home() {
   const [content, liveEvents] = await Promise.all([
-    getWebsiteContent(),
+    getPublicWebsiteContent(),
     // Events are optional: keep the homepage available if D1 cannot load them.
     listActiveEvents().catch(() => []),
   ]);
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
-  const contactData = await getContactContent();
-  const {
-    location,
-    hours,
-    contactFormEnabled,
-    logo,
-    socialLinks: dynamicSocialLinks,
-  } = contactData;
-  const fbLink = content.socialLinks.find((l) => l.id === "facebook" && l.enabled)?.url || "https://www.facebook.com/people/TEAZO/100063111166083";
-  const igLink = content.socialLinks.find((l) => l.id === "instagram" && l.enabled)?.url || "https://www.instagram.com/teazosf/";
-  const yelpLink = content.socialLinks.find((l) => l.id === "yelp" && l.enabled)?.url || "https://www.yelp.com/biz/teazo-san-francisco";
+  const logoSrc = heroLogoSrc(content.logo);
+  const [eventCategories, eventItems] = await Promise.all([
+    getEventCategories(liveEvents).catch(() => []),
+    getEventItems(liveEvents).catch(() => []),
+  ]);
   const emailHref = `mailto:${content.address.email || "teazosf@hotmail.com"}`;
-  const opensWebmail = false;
-  const phoneDigits = location.phone.replace(/[^\d+]/g, "");
-  const phoneHref = `tel:${phoneDigits || "+14157487398"}`;
-  const isYelpEnabled = dynamicSocialLinks?.find((l) => l.id === "yelp")?.enabled ?? true;
-  const isFbEnabled = dynamicSocialLinks?.find((l) => l.id === "facebook")?.enabled ?? true;
-  const isIgEnabled = dynamicSocialLinks?.find((l) => l.id === "instagram")?.enabled ?? true;
   const storyParagraphs = content.story ? content.story.split(/\n\s*\n|\n/) : [];
 
   return (
     <>
-    <LiveEventsSidebar events={liveEvents} />
+    <LiveEventsSidebar events={liveEvents} categories={eventCategories} items={eventItems} />
     <main className="relative z-0 bg-[#FFF8F9] min-h-screen pb-20 overflow-hidden">
             {/* bubble background */}
             <div className="absolute inset-0 -z-10">
                 <BubbleField />
             </div>
-
+    
             <div className="relative z-10 mx-auto max-w-[1440px] px-5 pb-24 pt-45 sm:px-8 lg:px-10">
-
+            
             {/* logo */}
-            {/* changed from absolute positioning to normal page flow so mobile content does not overlap */}
-            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 pt-45 text-center sm:px-8 lg:px-10">
+            <section className="relative z-20 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-5 text-center sm:px-8 lg:px-10">
                 <Image
                     src={logoSrc}
                     alt="TEAZO logo"
@@ -115,12 +95,13 @@ export default async function Home() {
                     width={389}
                     height={397}
                     className="h-[170px] w-auto sm:h-[195px]"
-                    priority
+                    priority={!logoSrc.startsWith("data:")}
+                    fetchPriority="high"
                     unoptimized={logoSrc.startsWith("data:") || logoSrc.startsWith("http")}
                 />
 
             {/* TEAZO part */}
-            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}>
+            <h1 className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}>
                 TEAZO
             </h1>
 
@@ -138,22 +119,22 @@ export default async function Home() {
             {/* button */}
             {/* changed from absolute positioning to normal page flow so button does not cover text */}
             <div className="mt-6 flex w-full items-center justify-center">
-                <GeneralButton text="ORDER NOW" href="/menu" />
+                <GeneralButton text="ORDER NOW" href="/menu" />    
                 </div>
         </section>
 
             {/*import image carousel*/}
                 <div className="relative z-10 flex justify-center items-center px-4 sm:pt-15">
                 <ImageCarousel images={content.carouselImages ?? []} />
-            </div>
+            </div> 
 
             <div className="relative z-10 mt-14 mb-10 flex w-full justify-center px-4 sm:mt-16">
                 <Subtitle text={"OUR STORY"} />
             </div>
-
-
+      
+        
         {/*textbox with company message and icons*/}
-        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]">
+        <section className="relative z-10 mx-auto mt-12 mb-20 w-[calc(100%-2rem)] max-w-[1000px] bg-white px-6 py-7 sm:px-8 sm:py-8 lg:mt-16 lg:px-7 lg:py-8 xl:max-w-[900px]"> 
         <div className="grid gap-7 lg:grid-cols-1">
 
             {/* fixed className template string so the Montserrat font applies correctly */}
@@ -168,97 +149,26 @@ export default async function Home() {
 
 {/* Call To Action */}
         <section
-                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#faf6f3] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
+                  className={`${montserrat.className} mx-auto mt-10 w-full max-w-[1320px] rounded-[28px] border border-[#e9dbd5] bg-[#FBF4EE] px-5 py-7 shadow-sm sm:px-7 sm:py-8 lg:px-10 lg:py-9`}
                 >
                   <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
                     <div className="max-w-3xl">
-                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#cd8f84]">
+                      <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#8E5629]">
                         Group Orders
                       </p>
                       <h2
-                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#D9AE81] sm:text-[3.5rem]`}
+                        className={`${cabinSketch.className} mt-3 text-[2.8rem] uppercase leading-[0.95] text-[#B28458] sm:text-[3.5rem]`}
                       >
                         Planning for a Crowd?
                       </h2>
                       <p className="mt-4 text-base font-medium leading-7 text-stone-700 sm:text-lg">
-                        Call us for group ordering and discounted pricing on larger
+                        Inquire about group ordering and discounted pricing on larger
                         drink, snack, and dessert orders.
                       </p>
-
-                      <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                        {isFbEnabled && (
-                          <a
-                            href={fbLink}
-                            aria-label={`${location.businessName} on Facebook`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_fb_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                        <a
-                          href={emailHref}
-                          aria-label={`Email ${location.businessName}`}
-                          target={opensWebmail ? "_blank" : undefined}
-                          rel={opensWebmail ? "noreferrer" : undefined}
-                          className="block transition hover:opacity-70"
-                        >
-                          <Image
-                            src="/social_icons/social_svg/teazo_email_icon.svg"
-                            alt=""
-                            aria-hidden="true"
-                            width={64}
-                            height={64}
-                            className="h-12 w-12 object-contain"
-                          />
-                        </a>
-                        {isIgEnabled && (
-                          <a
-                            href={igLink}
-                            aria-label={`${location.businessName} on Instagram`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_insta_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                        {isYelpEnabled && (
-                          <a
-                            href={yelpLink}
-                            aria-label={`${location.businessName} on Yelp`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block transition hover:opacity-70"
-                          >
-                            <Image
-                              src="/social_icons/social_svg/teazo_yelp_icon.svg"
-                              alt=""
-                              aria-hidden="true"
-                              width={64}
-                              height={64}
-                              className="h-12 w-12 object-contain"
-                            />
-                          </a>
-                        )}
-                      </div>
+                      <SocialLinks links={content.socialLinks} businessName={content.address.businessName}
+                        email={content.address.email || "teazosf@hotmail.com"} />
                     </div>
-
+        
                     <a
                       href={emailHref}
                       className="flex h-[66px] w-full max-w-[260px] cursor-pointer items-center justify-center gap-3 bg-black px-6 text-[0.95rem] font-bold tracking-[0.1em] text-white transition hover:bg-[#FFBDC7] sm:w-[260px]"

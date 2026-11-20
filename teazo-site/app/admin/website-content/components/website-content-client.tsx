@@ -8,6 +8,7 @@ import {
   IconLogo,
   IconStory,
   IconSocial,
+  IconDelivery,
   IconContact,
   IconHours,
   IconHolidays,
@@ -17,6 +18,7 @@ import OrderingSection from "./sections/ordering-section";
 import LogoSection from "./sections/logo-section";
 import StorySection from "./sections/story-section";
 import SocialSection from "./sections/social-section";
+import DeliverySection from "./sections/delivery-section";
 import ContactSection from "./sections/contact-section";
 import HoursSection from "./sections/hours-section";
 import HolidaysSection from "./sections/holidays-section";
@@ -24,6 +26,7 @@ import CarouselSection from "./sections/carousel-section";
 import { useWebsiteContent } from "../handlers/use-website-content";
 import type { WebsiteContent } from "@/app/types/website-content";
 import type { SectionId } from "./types";
+import ConfirmDeleteDialog from "@/app/admin/components/confirm-delete-dialog";
 
 // single source of order/labels for both the sidebar TocItems and the mobile dropdown
 const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
@@ -31,6 +34,7 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
   { id: "logo", label: "Website Logo", icon: <IconLogo /> },
   { id: "story", label: "Our Story", icon: <IconStory /> },
   { id: "social", label: "Social Media", icon: <IconSocial /> },
+  { id: "delivery", label: "Delivery", icon: <IconDelivery /> },
   { id: "contact", label: "Contact Info", icon: <IconContact /> },
   { id: "hours", label: "Business Hours", icon: <IconHours /> },
   { id: "holidays", label: "Holiday Exceptions", icon: <IconHolidays /> },
@@ -40,13 +44,17 @@ const SECTIONS: { id: SectionId; label: string; icon: ReactNode }[] = [
 export default function WebsiteContentClient({
   initialContent,
   initialSection = null,
+  canEdit = true,
 }: {
   initialContent: WebsiteContent;
   initialSection?: SectionId | null;
+  canEdit?: boolean;
 }) {
   const {
     content,
+    isDeleting,
     saveStatus,
+    hasUnsavedEdits,
     carousel,
     errorMessage,
     setErrorMessage,
@@ -55,6 +63,9 @@ export default function WebsiteContentClient({
     updateStory,
     updateAddress,
     updateDay,
+    addDeliveryLink,
+    updateDeliveryLink,
+    removeDeliveryLink,
     addSocialLink,
     updateSocialLink,
     removeSocialLink,
@@ -66,6 +77,9 @@ export default function WebsiteContentClient({
   } = useWebsiteContent(initialContent);
 
   const [openSection, setOpenSection] = useState<SectionId | null>(initialSection);
+  const [pendingDelete, setPendingDelete] = useState<{
+    collection: "socialLinks" | "holidays"; id: string; name: string;
+  } | null>(null);
   const sectionRefs = useRef<
     Partial<Record<SectionId, HTMLDivElement | null>>
   >({});
@@ -106,9 +120,11 @@ export default function WebsiteContentClient({
       {errorMessage && (
         <div
           role="alert"
-          className="fixed left-20 right-3 top-3 z-[60] flex max-w-md items-start justify-between gap-3 break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5"
+          className="fixed left-20 right-3 top-3 z-[60] flex max-w-md flex-wrap items-start gap-3 break-words rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 shadow-lg sm:left-auto sm:right-5 sm:top-5"
         >
-          <span>{errorMessage}</span>
+          <span className="w-full">{errorMessage}</span>
+          <button type="button" onClick={() => flushPatch()} className="shrink-0 underline">Retry save</button>
+          <button type="button" onClick={() => window.location.reload()} className="shrink-0 underline">Reload</button>
           <button
             type="button"
             onClick={() => setErrorMessage("")}
@@ -126,6 +142,16 @@ export default function WebsiteContentClient({
             <h1 className="break-words text-2xl font-semibold leading-tight text-[#2b211d] sm:text-[26px]">
               Website Content
             </h1>
+            {saveStatus === "unsaved" && (
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                Unsaved edits
+              </span>
+            )}
             {saveStatus === "saving" && (
               <span
                 role="status"
@@ -133,7 +159,7 @@ export default function WebsiteContentClient({
                 className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 animate-pulse"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                Saving...
+                Saving to server...
               </span>
             )}
             {saveStatus === "saved" && (
@@ -145,7 +171,7 @@ export default function WebsiteContentClient({
                 <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                All changes saved
+                All changes saved to storage
               </span>
             )}
             {saveStatus === "error" && (
@@ -154,7 +180,7 @@ export default function WebsiteContentClient({
                 className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                {carousel.carouselHasError ? "Save failed" : errorMessage ? "Formatting error" : "Save failed"}
+                Save failed
               </span>
             )}
           </div>
@@ -213,7 +239,7 @@ export default function WebsiteContentClient({
           </div>
         </nav>
 
-        <div className="flex w-full min-w-0 flex-col gap-3">
+        <fieldset disabled={!canEdit || isDeleting} className="flex w-full min-w-0 flex-col gap-3">
           <OrderingSection
             onlineOrderingEnabled={content.onlineOrderingEnabled}
             isOpen={openSection === "ordering"}
@@ -246,7 +272,19 @@ export default function WebsiteContentClient({
             setRef={setSectionRef("social")}
             onUpdateLink={updateSocialLink}
             onAddLink={addSocialLink}
-            onRemoveLink={removeSocialLink}
+            onRemoveLink={(id) => setPendingDelete({ collection: "socialLinks", id,
+              name: content.socialLinks.find((entry) => entry.id === id)?.label || "this social media link" })}
+            onBlur={() => flushPatch()}
+          />
+
+          <DeliverySection
+            deliveryLinks={content.deliveryLinks ?? []}
+            isOpen={openSection === "delivery"}
+            onToggle={() => selectSection("delivery")}
+            setRef={setSectionRef("delivery")}
+            onUpdateLink={updateDeliveryLink}
+            onAddLink={addDeliveryLink}
+            onRemoveLink={removeDeliveryLink}
             onBlur={() => flushPatch()}
           />
 
@@ -276,7 +314,8 @@ export default function WebsiteContentClient({
             onToggle={() => selectSection("holidays")}
             setRef={setSectionRef("holidays")}
             onUpdateHoliday={updateHoliday}
-            onRemoveHoliday={removeHoliday}
+            onRemoveHoliday={(id) => setPendingDelete({ collection: "holidays", id,
+              name: content.holidays.find((entry) => entry.id === id)?.name || "this holiday" })}
             onAddHoliday={addHoliday}
             onBlur={() => flushPatch()}
           />
@@ -287,8 +326,21 @@ export default function WebsiteContentClient({
             onToggle={() => selectSection("carousel")}
             setRef={setSectionRef("carousel")}
           />
-        </div>
+        </fieldset>
       </div>
+      {pendingDelete && <ConfirmDeleteDialog title="Delete content entry?"
+        hasUnsavedEdits={hasUnsavedEdits}
+        onReload={() => window.location.reload()}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          const error = await (pendingDelete.collection === "socialLinks"
+            ? removeSocialLink(pendingDelete.id) : removeHoliday(pendingDelete.id));
+          if (!error) setPendingDelete(null);
+          return error;
+        }}>
+        <p>Are you sure you want to delete <strong>{pendingDelete.name}</strong>?</p>
+        <p className="mt-2">This removes the entry from the website. This action cannot be undone.</p>
+      </ConfirmDeleteDialog>}
     </div>
   );
-} 
+}

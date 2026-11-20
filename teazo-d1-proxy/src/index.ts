@@ -131,7 +131,7 @@ function prepare(env: Env, s: Stmt): D1PreparedStatement {
  *   DELETE /media/<key>   token required; idempotent
  */
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024; // backstop — the app resizes before upload
-const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf","video/mp4","video/webm",]);
 /** Keys the app mints look like gallery/2026/09/<uuid>.webp. */
 const KEY_RE = /^[a-z0-9][a-z0-9/_.-]{0,511}$/i;
 
@@ -146,16 +146,132 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
     return json({ error: "bad_key" }, 400);
   }
 
+  
   if (request.method === "GET" || request.method === "HEAD") {
-    const obj = await env.MEDIA.get(key);
-    if (!obj) return new Response("Not found", { status: 404 });
+    const rangeHeader = request.headers.get("range");
+
+    const metadata = await env.MEDIA.head(key);
+
+    if (!metadata) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    let range:
+      | {
+          offset: number;
+          length: number;
+        }
+      | undefined;
+
+    if (rangeHeader) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
+
+      if (!match || (!match[1] && !match[2])) {
+        return new Response(null, {
+          status: 416,
+          headers: {
+            "Content-Range": `bytes */${metadata.size}`,
+          },
+        });
+      }
+
+      const [, startText, endText] = match;
+      const size = metadata.size;
+
+      let start: number;
+      let end: number;
+
+      if (startText === "") {
+        // Example: bytes=-500 (last 500 bytes)
+        const suffixLength = Number(endText);
+
+        if (
+          !Number.isSafeInteger(suffixLength) ||
+          suffixLength <= 0
+        ) {
+          return new Response(null, {
+            status: 416,
+            headers: {
+              "Content-Range": `bytes */${size}`,
+            },
+          });
+        }
+
+        start = Math.max(0, size - suffixLength);
+        end = size - 1;
+      } else {
+        // Example: bytes=0-1023 or bytes=1024-
+        start = Number(startText);
+        end = endText === "" ? size - 1 : Number(endText);
+      }
+
+      if (
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(end) ||
+        start < 0 ||
+        start >= size ||
+        end < start
+      ) {
+        return new Response(null, {
+          status: 416,
+          headers: {
+            "Content-Range": `bytes */${size}`,
+          },
+        });
+      }
+
+      end = Math.min(end, size - 1);
+
+      range = {
+        offset: start,
+        length: end - start + 1,
+      };
+    }
+
+    // Fetch either the entire file or the requested byte range.
+    const obj = await env.MEDIA.get(
+      key,
+      range ? { range } : undefined,
+    );
+
+    if (!obj) {
+      return new Response("Not found", { status: 404 });
+    }
+
     const headers = new Headers();
+
     obj.writeHttpMetadata(headers);
+
     headers.set("etag", obj.httpEtag);
-    // Keys are UUIDs and never reused, so a cached copy can never go stale.
-    headers.set("cache-control", "public, max-age=31536000, immutable");
-    return new Response(request.method === "HEAD" ? null : obj.body, { headers });
+    headers.set("accept-ranges", "bytes");
+    headers.set(
+      "cache-control",
+      "public, max-age=31536000, immutable",
+    );
+
+    if (range) {
+      const start = range.offset;
+      const end = start + range.length - 1;
+
+      headers.set(
+        "content-range",
+        `bytes ${start}-${end}/${metadata.size}`,
+      );
+
+      headers.set("content-length", String(range.length));
+    } else {
+      headers.set("content-length", String(metadata.size));
+    }
+
+    return new Response(
+      request.method === "HEAD" ? null : obj.body,
+      {
+        status: range ? 206 : 200,
+        headers,
+      },
+    );
   }
+
 
   if (!env.PROXY_TOKEN) return json({ error: "proxy_misconfigured" }, 500);
   if (!(await authorized(request, env.PROXY_TOKEN))) return json({ error: "unauthorized" }, 401);
@@ -238,11 +354,9 @@ async function handleMedia(request: Request, env: Env, rawKey: string): Promise<
  *             which caps reads at 3.1M a month.
  *   Deletes   always free.
  *
- * The free amounts belong to the ACCOUNT and are shared by every bucket on it,
- * so production and preview each get a share through their vars in
- * wrangler.jsonc. Neither Worker can see the other's share. Each clamps its own
- * to the account totals below; keeping the two shares' sum within them is up
- * to whoever edits those vars.
+ * The free amounts belong to the ACCOUNT and are shared by every bucket on it.
+ * This production Worker clamps its configured limits to the account totals
+ * below. Any future bucket or Worker must be included in that budget.
  *
  * The guarantee holds while the account stays on the free Workers plan and
  * nothing reaches the buckets except these Workers. Serving a bucket from a
@@ -519,7 +633,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function reapDeletedObjects(env: Env) {
-  // A preview sweeper must never delete production bytes, which is why
+  // A sweeper must never delete bytes from another bucket, which is why
   // pending_r2_deletion records the bucket and not only the key. That filter
   // belongs in the SQL, not only in the loop below: a row this Worker cannot
   // retire would otherwise sit at the head of the queue forever, so once

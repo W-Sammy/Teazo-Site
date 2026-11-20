@@ -1,3 +1,4 @@
+import { memo } from "react";
 import MenuItemCard, { type MenuItem } from "./menu-item-card";
 
 type MenuItemsSectionProps = {
@@ -12,8 +13,9 @@ type MenuItemsSectionProps = {
 
 /* Shared section renderer for menu item groups.
    It displays the heading/subtitle and then maps each item
-   into the reusable MenuItemCard component. */
-export default function MenuItemsSection({
+   into the reusable MenuItemCard component. Memoized so opening the
+   customizer does not re-render sections whose props are unchanged. */
+function MenuItemsSection({
 	title,
 	subtitle,
 	items,
@@ -28,7 +30,7 @@ export default function MenuItemsSection({
 		>
 			<div className="mb-6 flex flex-col items-center justify-center text-center">
 				<h3
-					className={`${headingClassName} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#d9ab79] sm:text-[2.6rem]`}
+					className={`${headingClassName} text-[2.2rem] uppercase leading-[0.95] tracking-[0.04em] text-[#B28458] sm:text-[2.6rem]`}
 				>
 					{title}
 				</h3>
@@ -54,3 +56,5 @@ export default function MenuItemsSection({
 		</section>
 	);
 }
+
+export default memo(MenuItemsSection);

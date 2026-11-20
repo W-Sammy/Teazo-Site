@@ -1,0 +1,299 @@
+
+> teazo-site@0.1.0 test
+> vitest run app/lib/gallery.test.ts app/lib/queries/gallery.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/Users/chenb/TEAZO/Teazo-Site/teazo-site[39m
+
+ [31m❯[39m app/lib/queries/gallery.test.ts [2m([22m[2m35 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 17[2mms[22m[39m
+     [32m✓[39m lists live Gallery images newest first[32m 3[2mms[22m[39m
+     [32m✓[39m returns an empty list when no live images exist[32m 0[2mms[22m[39m
+     [32m✓[39m lists only published images in public display order[32m 0[2mms[22m[39m
+     [32m✓[39m maps unpublished image flags to false[32m 0[2mms[22m[39m
+     [32m✓[39m retrieves an image by its ID[32m 0[2mms[22m[39m
+     [32m✓[39m returns null when the image does not exist[32m 0[2mms[22m[39m
+     [32m✓[39m normalizes accented names for sorting[32m 0[2mms[22m[39m
+     [32m✓[39m lowercases image sort keys[32m 0[2mms[22m[39m
+     [32m✓[39m normalizes case and spacing in tags[32m 0[2mms[22m[39m
+     [32m✓[39m uses a maximum of 12 Gallery tags[32m 0[2mms[22m[39m
+     [32m✓[39m creates image and media records in one batch[32m 0[2mms[22m[39m
+     [32m✓[39m binds media metadata and image identity correctly[32m 0[2mms[22m[39m
+     [32m✓[39m uses normalized tag keys when creating associations[32m 0[2mms[22m[39m
+     [32m✓[39m guards tag associations against deleted images[32m 0[2mms[22m[39m
+     [32m✓[39m propagates failed image creation transactions[32m 1[2mms[22m[39m
+     [32m✓[39m updates image metadata and returns the saved row[32m 0[2mms[22m[39m
+     [32m✓[39m preserves the media reference during metadata updates[32m 0[2mms[22m[39m
+     [32m✓[39m guards metadata writes against concurrent deletion[32m 0[2mms[22m[39m
+     [32m✓[39m replaces existing tag associations when metadata changes[32m 0[2mms[22m[39m
+     [32m✓[39m rejects metadata updates with more than 12 tags[32m 0[2mms[22m[39m
+     [32m✓[39m returns null when the edited image was deleted concurrently[32m 0[2mms[22m[39m
+     [32m✓[39m rejects an incomplete metadata transaction result[32m 0[2mms[22m[39m
+     [32m✓[39m replaces media while preserving the Gallery image ID[32m 0[2mms[22m[39m
+[31m     [31m×[31m guards replacements against concurrent changes[39m[32m 5[2mms[22m[39m
+     [32m✓[39m updates the image record to the new media ID[32m 0[2mms[22m[39m
+     [32m✓[39m protects media that is still referenced by another image[32m 0[2mms[22m[39m
+     [32m✓[39m queues old media for delayed R2 deletion[32m 0[2mms[22m[39m
+     [32m✓[39m returns null when another replacement won the race[32m 0[2mms[22m[39m
+     [32m✓[39m returns null when replacement produces no live row[32m 0[2mms[22m[39m
+     [32m✓[39m rejects incomplete replacement transaction results[32m 0[2mms[22m[39m
+     [32m✓[39m rejects replacements with more than 12 tags[32m 0[2mms[22m[39m
+     [32m✓[39m returns false when deleting a nonexistent image[32m 0[2mms[22m[39m
+     [32m✓[39m soft-deletes an image and its media in one batch[32m 0[2mms[22m[39m
+     [32m✓[39m queues the deleted file without duplicate active queue entries[32m 0[2mms[22m[39m
+     [32m✓[39m does not report success if the deletion transaction fails[32m 0[2mms[22m[39m
+ [31m❯[39m app/lib/gallery.test.ts [2m([22m[2m39 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[32m 36[2mms[22m[39m
+[31m     [31m×[31m maps stored records into Admin Gallery images[39m[32m 8[2mms[22m[39m
+     [32m✓[39m returns an empty Admin Gallery when there are no images[32m 0[2mms[22m[39m
+     [32m✓[39m maps public image captions and alternative text[32m 0[2mms[22m[39m
+     [32m✓[39m uses the image name when public caption or alt text is missing[32m 0[2mms[22m[39m
+     [32m✓[39m returns null when public gallery queries fail[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects blank image names[39m[32m 2[2mms[22m[39m
+     [32m✓[39m rejects image names over 120 characters[32m 1[2mms[22m[39m
+     [32m✓[39m rejects tags that are not an array[32m 0[2mms[22m[39m
+     [32m✓[39m rejects non-string tags[32m 0[2mms[22m[39m
+     [32m✓[39m rejects tags longer than 30 characters[32m 0[2mms[22m[39m
+     [32m✓[39m rejects more than 12 unique tags[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects missing image files[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m rejects empty image files[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects unsupported image MIME types[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects files exceeding 10 MB[39m[32m 3[2mms[22m[39m
+     [32m✓[39m converts uploads to WebP before storing them[32m 3[2mms[22m[39m
+     [32m✓[39m normalizes image names and duplicate tags before persistence[32m 3[2mms[22m[39m
+     [32m✓[39m stores media before writing the Gallery database records[32m 0[2mms[22m[39m
+     [32m✓[39m records the converted image dimensions and owner[32m 0[2mms[22m[39m
+[31m     [31m×[31m returns the saved image read back from D1[39m[32m 1[2mms[22m[39m
+     [32m✓[39m returns a fallback record when the D1 read-back is missing[32m 1[2mms[22m[39m
+     [32m✓[39m returns a fallback record when the D1 read-back throws[32m 0[2mms[22m[39m
+     [32m✓[39m rejects unreadable image data before storage[32m 0[2mms[22m[39m
+     [32m✓[39m does not store media if the public URL cannot be configured[32m 0[2mms[22m[39m
+     [32m✓[39m removes uploaded media after a definite D1 rejection[32m 0[2mms[22m[39m
+     [32m✓[39m preserves uploaded media after an uncertain D1 failure[32m 0[2mms[22m[39m
+     [32m✓[39m preserves the original D1 error if immediate cleanup fails[32m 1[2mms[22m[39m
+     [32m✓[39m updates an image name and tags without replacing its file[32m 1[2mms[22m[39m
+     [32m✓[39m rejects editing an image with an empty ID[32m 0[2mms[22m[39m
+     [32m✓[39m returns 404 when the image no longer exists[32m 0[2mms[22m[39m
+     [32m✓[39m returns 404 when a concurrent deletion prevents the update[32m 0[2mms[22m[39m
+     [32m✓[39m preserves the image ID when replacing its stored media[32m 1[2mms[22m[39m
+     [32m✓[39m rejects replacement when the original image is missing[32m 0[2mms[22m[39m
+[31m     [31m×[31m cleans up a stale replacement and returns a conflict[39m[32m 1[2mms[22m[39m
+     [32m✓[39m cleans up replacement media after a definite D1 rejection[32m 0[2mms[22m[39m
+     [32m✓[39m preserves replacement media after an uncertain D1 failure[32m 0[2mms[22m[39m
+     [32m✓[39m delegates removal to the Gallery database query[32m 0[2mms[22m[39m
+     [32m✓[39m returns false when the Gallery image does not exist[32m 0[2mms[22m[39m
+     [32m✓[39m creates GalleryInputError with an HTTP status[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 9 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mmaps stored records into Admin Gallery images
+[31m[1mAssertionError[22m: expected [ { id: 'image-1', …(5) } ] to deeply equal [ { id: 'image-1', …(4) } ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -1,9 +1,10 @@[39m
+[2m  [[22m
+[2m    {[22m
+[2m      "createdAt": "2026-10-25T12:00:00.000Z",[22m
+[2m      "id": "image-1",[22m
+[31m+     "mediaType": "image",[39m
+[2m      "name": "Milk Tea",[22m
+[2m      "tags": [[22m
+[2m        "Drinks",[22m
+[2m      ],[22m
+[2m      "url": "https://media.example/gallery/original.webp",[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m216:43[22m[39m
+    [90m214|[39m     ])[33m;[39m
+    [90m215|[39m
+    [90m216|[39m     [34mexpect[39m([35mawait[39m [34mgetAdminGalleryImages[39m())[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                           [31m^[39m
+    [90m217|[39m       {
+    [90m218|[39m         id[33m:[39m [32m"image-1"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mrejects blank image names
+[31m[1mAssertionError[22m: expected GalleryInputError: Give the item a name. { status: … } to match object { name: 'GalleryInputError', …(2) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- {[39m
+[32m-   "message": "Give the image a name.",[39m
+[31m+ GalleryInputError {[39m
+[2m    "name": "GalleryInputError",[22m
+[2m    "status": 400,[22m
+[2m  }[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m279:6[22m[39m
+    [90m277|[39m     [35mawait[39m [34mexpect[39m(
+    [90m278|[39m       [34msaveGalleryImage[39m([34muploadInput[39m({ name[33m:[39m [32m"   "[39m }))[33m,[39m
+    [90m279|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({
+    [90m   |[39m      [31m^[39m
+    [90m280|[39m       name[33m:[39m [32m"GalleryInputError"[39m[33m,[39m
+    [90m281|[39m       status[33m:[39m [34m400[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mrejects missing image files
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Choose an image to upload.' but got 'Choose an image or video to upload.'[39m
+
+Expected: [32m"Choose an image to upload."[39m
+Received: [31m"Choose an image [7mor video [27mto upload."[39m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m328:6[22m[39m
+    [90m326|[39m     [35mawait[39m [34mexpect[39m(
+    [90m327|[39m       [34msaveGalleryImage[39m([34muploadInput[39m({ file[33m:[39m [35mnull[39m }))[33m,[39m
+    [90m328|[39m     )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Choose an image to upload."[39m)[33m;[39m
+    [90m   |[39m      [31m^[39m
+    [90m329|[39m   })[33m;[39m
+    [90m330|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mrejects empty image files
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Choose an image to upload.' but got 'Choose an image or video to upload.'[39m
+
+Expected: [32m"Choose an image to upload."[39m
+Received: [31m"Choose an image [7mor video [27mto upload."[39m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m338:6[22m[39m
+    [90m336|[39m         })[33m,[39m
+    [90m337|[39m       )[33m,[39m
+    [90m338|[39m     )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m"Choose an image to upload."[39m)[33m;[39m
+    [90m   |[39m      [31m^[39m
+    [90m339|[39m   })[33m;[39m
+    [90m340|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mrejects unsupported image MIME types
+[31m[1mAssertionError[22m: expected GalleryInputError: Upload a JPEG, PNG, We… { status: … } to match object { status: 415, …(1) }
+(1 matching property omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- {[39m
+[32m-   "message": "Upload a JPEG, PNG or WebP image.",[39m
+[31m+ GalleryInputError {[39m
+[2m    "status": 415,[22m
+[2m  }[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m346:6[22m[39m
+    [90m344|[39m         [34muploadInput[39m({ file[33m:[39m [34mimage[39m([32m"application/pdf"[39m[33m,[39m [32m"file.pdf"[39m) })[33m,[39m
+    [90m345|[39m       )[33m,[39m
+    [90m346|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({
+    [90m   |[39m      [31m^[39m
+    [90m347|[39m       status[33m:[39m [34m415[39m[33m,[39m
+    [90m348|[39m       message[33m:[39m [32m"Upload a JPEG, PNG or WebP image."[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mrejects files exceeding 10 MB
+[31m[1mAssertionError[22m: expected GalleryInputError: The file is over 10 MB. { status: … } to match object { status: 413, …(1) }
+(1 matching property omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- {[39m
+[32m-   "message": "The image is over 10 MB.",[39m
+[31m+ GalleryInputError {[39m
+[2m    "status": 413,[22m
+[2m  }[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m361:6[22m[39m
+    [90m359|[39m     [35mawait[39m [34mexpect[39m(
+    [90m360|[39m       [34msaveGalleryImage[39m([34muploadInput[39m({ file[33m:[39m oversized }))[33m,[39m
+    [90m361|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({
+    [90m   |[39m      [31m^[39m
+    [90m362|[39m       status[33m:[39m [34m413[39m[33m,[39m
+    [90m363|[39m       message[33m:[39m [32m"The image is over 10 MB."[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mreturns the saved image read back from D1
+[31m[1mAssertionError[22m: expected { id: 'image-1', …(5) } to deeply equal { id: 'image-1', …(4) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -1,8 +1,9 @@[39m
+[2m  {[22m
+[2m    "createdAt": "2026-10-25T12:00:00.000Z",[22m
+[2m    "id": "image-1",[22m
+[31m+   "mediaType": "image",[39m
+[2m    "name": "Milk Tea",[22m
+[2m    "tags": [[22m
+[2m      "Drinks",[22m
+[2m    ],[22m
+[2m    "url": "https://media.example/gallery/original.webp",[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m440:51[22m[39m
+    [90m438|[39m
+    [90m439|[39m   [34mit[39m([32m"returns the saved image read back from D1"[39m[33m,[39m [35masync[39m () [33m=>[39m {
+    [90m440|[39m     [34mexpect[39m([35mawait[39m [34msaveGalleryImage[39m([34muploadInput[39m()))[33m.[39m[34mtoEqual[39m({
+    [90m   |[39m                                                   [31m^[39m
+    [90m441|[39m       id[33m:[39m [32m"image-1"[39m[33m,[39m
+    [90m442|[39m       name[33m:[39m [32m"Milk Tea"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/gallery.test.ts[2m > [22mGallery service[2m > [22mcleans up a stale replacement and returns a conflict
+[31m[1mAssertionError[22m: expected GalleryInputError: This gallery item chan… { status: … } to match object { status: 409, …(1) }
+(1 matching property omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- {[39m
+[32m-   "message": StringContaining "This image changed while you were editing.",[39m
+[31m+ GalleryInputError {[39m
+[2m    "status": 409,[22m
+[2m  }[22m
+
+[36m [2m❯[22m app/lib/gallery.test.ts:[2m663:6[22m[39m
+    [90m661|[39m     [35mawait[39m [34mexpect[39m(
+    [90m662|[39m       [34mreplaceGalleryImage[39m([34mreplacementInput[39m())[33m,[39m
+    [90m663|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({
+    [90m   |[39m      [31m^[39m
+    [90m664|[39m       status[33m:[39m [34m409[39m[33m,[39m
+    [90m665|[39m       message[33m:[39m expect[33m.[39m[34mstringContaining[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/lib/queries/gallery.test.ts[2m > [22mGallery D1 queries[2m > [22mguards replacements against concurrent changes
+[31m[1mAssertionError[22m: expected [ 'media-new', 'Images', …(9) ] to deeply equal [ 'media-new', 'Images', …(8) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -1,9 +1,10 @@[39m
+[2m  [[22m
+[2m    "media-new",[22m
+[2m    "Images",[22m
+[2m    "gallery/new.webp",[22m
+[31m+   "image/webp",[39m
+[2m    5000,[22m
+[2m    1000,[22m
+[2m    700,[22m
+[2m    "replacement.png",[22m
+[2m    "admin-1",[22m
+
+[36m [2m❯[22m app/lib/queries/gallery.test.ts:[2m488:32[22m[39m
+    [90m486|[39m     [35mawait[39m [34mreplaceGalleryImageMedia[39m([34mreplacementInput[39m())[33m;[39m
+    [90m487|[39m
+    [90m488|[39m     [34mexpect[39m(statements[[34m0[39m][33m.[39margs)[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m                                [31m^[39m
+    [90m489|[39m       [32m"media-new"[39m[33m,[39m
+    [90m490|[39m       [32m"Images"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m9 failed[39m[22m[2m | [22m[1m[32m65 passed[39m[22m[90m (74)[39m
+[2m   Start at [22m 18:21:52
+[2m   Duration [22m 346ms[2m (transform 128ms, setup 0ms, import 179ms, tests 53ms, environment 0ms)[22m
+

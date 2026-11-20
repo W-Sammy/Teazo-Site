@@ -1,18 +1,27 @@
 "use client";
 
-import React, { useEffect, useState, useSyncExternalStore, Suspense } from "react";
+import React, {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  Suspense,
+} from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Montserrat, Cabin_Sketch } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import { useCart } from "@/app/context/cart-context";
 import { BubbleField } from "@/app/components/bubble-field";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { montserrat } from "@/app/fonts";
+import {
+  clearPaidCheckoutAttempt,
+} from "@/app/lib/checkout-attempt-storage";
+import {
+  clearPendingCheckoutIfMatching,
+  paidOrderOwnsCurrentCart,
+} from "@/app/lib/cart-payment-ownership";
 
 const cabinSketch = Cabin_Sketch({
+  preload: false, // Preloading every font held back first paint on phones.
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -38,7 +47,7 @@ interface SquareOrderLineItem {
 interface SquareOrderDetails {
   id: string;
   state?: string;
-  /** true once Square has a payment for the order */
+  /** True once Square has a payment for the order. */
   isPaid?: boolean;
   locationId?: string;
   lineItems?: SquareOrderLineItem[];
@@ -71,13 +80,21 @@ interface SquareOrderDetails {
   };
 }
 
-function formatMoney(amount?: number | string | bigint): string {
-  if (amount === undefined || amount === null) return "$0.00";
-  const num = typeof amount === "bigint" ? Number(amount) : Number(amount);
+function formatMoney(
+  amount?: number | string | bigint
+): string {
+  if (amount === undefined || amount === null) {
+    return "$0.00";
+  }
+
+  const num = Number(amount);
   return `$${(num / 100).toFixed(2)}`;
 }
 
-function formatPickupTiming(scheduleType?: string, pickupAt?: string): string {
+function formatPickupTiming(
+  scheduleType?: string,
+  pickupAt?: string
+): string {
   if (scheduleType === "SCHEDULED" && pickupAt) {
     try {
       const date = new Date(pickupAt);
@@ -90,27 +107,34 @@ function formatPickupTiming(scheduleType?: string, pickupAt?: string): string {
         minute: "2-digit",
         hour12: true,
       }).format(date);
+
       return `Scheduled: ${timeStr} PT`;
     } catch {
       return `Scheduled: ${pickupAt}`;
     }
   }
+
   return "Pickup ASAP (~20–25 minutes)";
 }
 
-// Square can send the customer back a moment before the payment shows on the
-// order, so an unpaid order is checked a few more times before saying so.
+// Square can send the customer back before payment appears on the order.
+// Check a few more times before reporting an incomplete payment.
 const PAYMENT_CHECKS = 4;
 const PAYMENT_CHECK_DELAY_MS = 1500;
 
-type StoreAddress = { businessName: string; streetAddress: string; locality: string };
+type StoreAddress = {
+  businessName: string;
+  streetAddress: string;
+  locality: string;
+};
+
 const FALLBACK_ADDRESS: StoreAddress = {
   businessName: "TEAZO",
   streetAddress: "1050 Taraval St",
   locality: "San Francisco, CA 94116",
 };
 
-/** Every state of this page sits on the same bubble background as the menu and contact pages. */
+/** Every state of this page uses the site's bubble background. */
 function ConfirmationShell({
   children,
   centered = false,
@@ -119,13 +143,17 @@ function ConfirmationShell({
   centered?: boolean;
 }) {
   return (
-    <main className={`relative min-h-screen bg-[#FFF8F9] text-stone-900 ${montserrat.className}`}>
+    <main
+      className={`relative min-h-screen bg-[#FFF8F9] text-stone-900 ${montserrat.className}`}
+    >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <BubbleField />
       </div>
       <div
         className={`relative z-10 min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8 ${
-          centered ? "flex flex-col items-center justify-center" : ""
+          centered
+            ? "flex flex-col items-center justify-center"
+            : ""
         }`}
       >
         {children}
@@ -137,6 +165,7 @@ function ConfirmationShell({
 function subscribeStorage(callback: () => void) {
   window.addEventListener("storage", callback);
   window.addEventListener("teazo_cart_sync", callback);
+
   return () => {
     window.removeEventListener("storage", callback);
     window.removeEventListener("teazo_cart_sync", callback);
@@ -145,22 +174,45 @@ function subscribeStorage(callback: () => void) {
 
 function getStoredOrderIdSnapshot(): string {
   if (typeof window === "undefined") return "";
+
   try {
-    const confirmed = sessionStorage.getItem("teazo_confirmed_order_id");
-    if (confirmed && confirmed.trim().length > 0) return confirmed.trim();
-
-    const sessionLast = sessionStorage.getItem("teazo_last_order_id");
-    if (sessionLast && sessionLast.trim().length > 0) return sessionLast.trim();
-
-    const raw = localStorage.getItem("teazo_pending_checkout");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed?.orderId && typeof parsed.orderId === "string") return parsed.orderId.trim();
+    const confirmed = sessionStorage.getItem(
+      "teazo_confirmed_order_id"
+    );
+    if (confirmed && confirmed.trim().length > 0) {
+      return confirmed.trim();
     }
 
-    const recent = localStorage.getItem("teazo_recent_order_id");
-    if (recent && recent.trim().length > 0) return recent.trim();
-  } catch {}
+    const sessionLast = sessionStorage.getItem(
+      "teazo_last_order_id"
+    );
+    if (sessionLast && sessionLast.trim().length > 0) {
+      return sessionLast.trim();
+    }
+
+    const raw = localStorage.getItem(
+      "teazo_pending_checkout"
+    );
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (
+        parsed?.orderId &&
+        typeof parsed.orderId === "string"
+      ) {
+        return parsed.orderId.trim();
+      }
+    }
+
+    const recent = localStorage.getItem(
+      "teazo_recent_order_id"
+    );
+    if (recent && recent.trim().length > 0) {
+      return recent.trim();
+    }
+  } catch {
+    // Browser storage may be unavailable.
+  }
+
   return "";
 }
 
@@ -170,12 +222,16 @@ function getServerStoredOrderIdSnapshot(): string {
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
+
   const rawOrderId =
     searchParams.get("orderId") ||
     searchParams.get("order_id") ||
     searchParams.get("id");
+
   const urlOrderId =
-    rawOrderId && rawOrderId !== "{ORDER_ID}" && rawOrderId.trim().length > 0
+    rawOrderId &&
+    rawOrderId !== "{ORDER_ID}" &&
+    rawOrderId.trim().length > 0
       ? rawOrderId.trim()
       : null;
 
@@ -186,75 +242,169 @@ function OrderConfirmationContent() {
   );
 
   const orderId =
-    urlOrderId || (storedOrderId.length > 0 ? storedOrderId : null);
+    urlOrderId ||
+    (storedOrderId.length > 0 ? storedOrderId : null);
 
   const { clearCart, openCart } = useCart();
-  const [order, setOrder] = useState<SquareOrderDetails | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [storeAddress, setStoreAddress] = useState<StoreAddress>(FALLBACK_ADDRESS);
 
-  // Derived loading state: true while an orderId exists and neither receipt nor error has resolved
-  const isLoading = Boolean(orderId) && order === null && errorMessage === null;
+  const [order, setOrder] =
+    useState<SquareOrderDetails | null>(null);
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null);
+  const [storeAddress, setStoreAddress] =
+    useState<StoreAddress>(FALLBACK_ADDRESS);
+  const [isOrderIdExpanded, setIsOrderIdExpanded] =
+    useState(false);
+  const [orderIdCopied, setOrderIdCopied] =
+    useState(false);
 
-  // The pickup address the owner set in the admin
+  async function copyOrderId() {
+    if (!order?.id) return;
+
+    try {
+      await navigator.clipboard.writeText(order.id);
+      setOrderIdCopied(true);
+
+      window.setTimeout(() => {
+        setOrderIdCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error(
+        "Failed to copy order reference:",
+        error
+      );
+    }
+  }
+
+  // Loading while an order ID exists and no receipt or error has resolved.
+  const isLoading =
+    Boolean(orderId) &&
+    order === null &&
+    errorMessage === null;
+
+  // Fetch the pickup address set by the owner in admin settings.
   useEffect(() => {
     let isMounted = true;
+
     fetch("/api/website-content")
       .then((res) => (res.ok ? res.json() : null))
       .then((content) => {
         const address = content?.address;
+
         if (isMounted && address?.streetAddress) {
           setStoreAddress({
-            businessName: address.businessName || FALLBACK_ADDRESS.businessName,
+            businessName:
+              address.businessName ||
+              FALLBACK_ADDRESS.businessName,
             streetAddress: address.streetAddress,
-            locality: address.locality || FALLBACK_ADDRESS.locality,
+            locality:
+              address.locality ||
+              FALLBACK_ADDRESS.locality,
           });
         }
       })
       .catch(() => {});
+
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Fetch verified order receipt from Square API
+  // Fetch the verified order receipt from Square API.
   useEffect(() => {
     if (!orderId) {
       return;
     }
-    const validOrderId: string = orderId;
 
+    const validOrderId: string = orderId;
     let isMounted = true;
 
     async function loadOrder() {
       try {
         let latest: SquareOrderDetails | null = null;
-        for (let check = 1; check <= PAYMENT_CHECKS; check++) {
-          const res = await fetch(`/api/orders/${validOrderId}`, { cache: "no-store" });
+
+        for (
+          let check = 1;
+          check <= PAYMENT_CHECKS;
+          check++
+        ) {
+          const res = await fetch(
+            `/api/orders/${validOrderId}`,
+            { cache: "no-store" }
+          );
+
           if (!res.ok) {
-            throw new Error("Unable to load order receipt from Square.");
+            throw new Error(
+              "Unable to load order receipt from Square."
+            );
           }
-          latest = (await res.json()).order as SquareOrderDetails;
+
+          latest = (await res.json())
+            .order as SquareOrderDetails;
+
           if (!isMounted) return;
-          if (latest.isPaid || latest.state === "CANCELED" || check === PAYMENT_CHECKS) break;
-          await new Promise((resolve) => setTimeout(resolve, PAYMENT_CHECK_DELAY_MS));
+
+          if (
+            latest.isPaid ||
+            latest.state === "CANCELED" ||
+            check === PAYMENT_CHECKS
+          ) {
+            break;
+          }
+
+          await new Promise((resolve) =>
+            setTimeout(resolve, PAYMENT_CHECK_DELAY_MS)
+          );
+
           if (!isMounted) return;
         }
+
         if (!isMounted || !latest) return;
 
         setOrder(latest);
-        // Only a paid order empties the bag. An unpaid one keeps it for another try.
+
         if (latest.isPaid) {
-          // Persist confirmed order ID in session so refreshing preserves receipt
+          // Preserve the verified order reference for receipt refreshes.
           try {
-            sessionStorage.setItem("teazo_confirmed_order_id", validOrderId);
-          } catch {}
-          clearCart();
+            sessionStorage.setItem(
+              "teazo_confirmed_order_id",
+              validOrderId
+            );
+          } catch {
+            // Browser storage may be unavailable.
+          }
+
+          // Verify ownership before removing the matching pending record.
+          // Older receipts must never empty a newer or modified cart.
+          const ownsCart =
+            paidOrderOwnsCurrentCart(
+              validOrderId
+            );
+
+          clearPaidCheckoutAttempt(
+            validOrderId
+          );
+
+          if (ownsCart) {
+            clearCart();
+          }
+
+          clearPendingCheckoutIfMatching(
+            validOrderId
+          );
         }
       } catch (err) {
         if (isMounted) {
-          console.error("Failed to fetch order confirmation:", err);
-          setErrorMessage(err instanceof Error ? err.message : "Failed to load order.");
+          console.error(
+            "Failed to fetch order confirmation:",
+            err
+          );
+
+          setErrorMessage(
+            err instanceof Error
+              ? err.message
+              : "Failed to load order."
+          );
         }
       }
     }
@@ -270,7 +420,9 @@ function OrderConfirmationContent() {
     return (
       <ConfirmationShell centered>
         <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-stone-600 font-medium text-sm">Verifying your order with Square...</p>
+        <p className="text-stone-600 font-medium text-sm">
+          Verifying your order with Square...
+        </p>
       </ConfirmationShell>
     );
   }
@@ -282,11 +434,16 @@ function OrderConfirmationContent() {
           <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
             ℹ️
           </div>
-          <h1 className="text-xl font-bold text-stone-900">Order Not Found</h1>
+
+          <h1 className="text-xl font-bold text-stone-900">
+            Order Not Found
+          </h1>
+
           <p className="text-sm text-stone-600 leading-relaxed">
             {errorMessage ||
               "We could not find an active order reference. If you completed a payment, please check your email for your Square receipt."}
           </p>
+
           <div className="pt-2">
             <Link
               href="/menu"
@@ -304,13 +461,19 @@ function OrderConfirmationContent() {
     return (
       <ConfirmationShell centered>
         <div className="max-w-md w-full bg-white rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-stone-200/60 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mx-auto">
+          <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-2xl">
             ⚠️
           </div>
-          <h1 className="text-xl font-bold text-stone-900">Order Cancelled</h1>
+
+          <h1 className="text-xl font-bold text-stone-900">
+            Order Cancelled
+          </h1>
+
           <p className="text-sm text-stone-600 leading-relaxed">
-            This order was cancelled or voided. If you believe this was an error, please contact TEAZO store staff.
+            This order was cancelled or voided. If you believe
+            this was an error, please contact TEAZO store staff.
           </p>
+
           <div className="pt-2">
             <Link
               href="/menu"
@@ -331,11 +494,18 @@ function OrderConfirmationContent() {
           <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
             ⏳
           </div>
-          <h1 className="text-xl font-bold text-stone-900">Payment Not Completed</h1>
+
+          <h1 className="text-xl font-bold text-stone-900">
+            Payment Not Completed
+          </h1>
+
           <p className="text-sm text-stone-600 leading-relaxed">
-            Square hasn&apos;t received a payment for this order, so it hasn&apos;t been sent to our
-            kitchen. Your bag is still saved. If you just paid, wait a moment and check again.
+            Square hasn&apos;t received a payment for this order,
+            so it hasn&apos;t been sent to our kitchen. Your bag
+            is still saved. If you just paid, wait a moment
+            and check again.
           </p>
+
           <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
             <button
               type="button"
@@ -344,6 +514,7 @@ function OrderConfirmationContent() {
             >
               CHECK AGAIN
             </button>
+
             <button
               type="button"
               onClick={openCart}
@@ -357,7 +528,8 @@ function OrderConfirmationContent() {
     );
   }
 
-  const pickupDetails = order.fulfillments?.[0]?.pickupDetails;
+  const pickupDetails =
+    order.fulfillments?.[0]?.pickupDetails;
   const recipient = pickupDetails?.recipient;
   const lineItems = order.lineItems ?? [];
 
@@ -367,19 +539,76 @@ function OrderConfirmationContent() {
         {/* Success Header Card */}
         <div className="bg-white rounded-2xl p-6 sm:p-8 text-center shadow-sm border border-gray-100">
           <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
 
-          <h1 className={`${cabinSketch.className} text-4xl sm:text-5xl font-bold text-[#DBAF82] mb-1`}>
+          <h1
+            className={`${cabinSketch.className} text-4xl sm:text-5xl font-bold text-[#DBAF82] mb-1`}
+          >
             Order Confirmed!
           </h1>
+
           <p className="text-sm text-gray-600">
-            Thank you for ordering with TEAZO. Your drinks are being sent to our kitchen.
+            Thank you for ordering with TEAZO. Your order
+            is being sent to our staff.
           </p>
-          <div className="mt-3 inline-block px-3 py-1 bg-gray-50 rounded-full border border-gray-200 text-xs text-gray-500 font-mono">
-            Order Reference: {order.id.slice(0, 16)}...
+
+          <div className="mt-3 w-full max-w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-center">
+            <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              Order Reference
+            </span>
+
+            <p
+              className={`mt-1 font-mono text-xs text-gray-600 ${
+                isOrderIdExpanded ? "break-all" : "truncate"
+              }`}
+              title={
+                isOrderIdExpanded ? undefined : order.id
+              }
+            >
+              {isOrderIdExpanded
+                ? order.id
+                : `${order.id.slice(0, 16)}...`}
+            </p>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setIsOrderIdExpanded(
+                    (expanded) => !expanded
+                  )
+                }
+                aria-expanded={isOrderIdExpanded}
+                className="text-[11px] font-semibold text-[#8E5629] transition hover:opacity-70"
+              >
+                {isOrderIdExpanded
+                  ? "Show less"
+                  : "Show full reference"}
+              </button>
+
+              <button
+                type="button"
+                onClick={copyOrderId}
+                className="text-[11px] font-semibold text-[#8E5629] transition hover:opacity-70"
+              >
+                {orderIdCopied
+                  ? "Copied!"
+                  : "Copy full reference"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -397,26 +626,46 @@ function OrderConfirmationContent() {
               <span className="text-gray-400 font-medium uppercase tracking-wider block text-[10px]">
                 Pickup Location
               </span>
-              <p className="font-bold text-gray-900">{storeAddress.businessName}</p>
-              <p className="text-gray-600">{storeAddress.streetAddress}</p>
-              <p className="text-gray-600">{storeAddress.locality}</p>
+
+              <p className="font-bold text-gray-900">
+                {storeAddress.businessName}
+              </p>
+              <p className="text-gray-600">
+                {storeAddress.streetAddress}
+              </p>
+              <p className="text-gray-600">
+                {storeAddress.locality}
+              </p>
             </div>
 
             <div className="space-y-1">
               <span className="text-gray-400 font-medium uppercase tracking-wider block text-[10px]">
                 Estimated Ready Time
               </span>
+
               <p className="font-bold text-gray-900 text-sm">
-                {formatPickupTiming(pickupDetails?.scheduleType, pickupDetails?.pickupAt)}
+                {formatPickupTiming(
+                  pickupDetails?.scheduleType,
+                  pickupDetails?.pickupAt
+                )}
               </p>
+
               {recipient?.displayName && (
-                <p className="text-gray-600 mt-1">Customer: <span className="font-semibold text-gray-800">{recipient.displayName}</span></p>
+                <p className="text-gray-600 mt-1">
+                  Customer:{" "}
+                  <span className="font-semibold text-gray-800">
+                    {recipient.displayName}
+                  </span>
+                </p>
               )}
             </div>
           </div>
 
           <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl text-amber-800 text-xs">
-            💬 <strong>At the Counter:</strong> Show your name or this confirmation screen when you arrive. A receipt has also been sent to your email.
+            💬 <strong>At the Counter:</strong> Show your
+            name or this confirmation screen when you
+            arrive. A receipt has also been sent to your
+            email.
           </div>
         </div>
 
@@ -426,33 +675,47 @@ function OrderConfirmationContent() {
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
               Itemized Receipt
             </h2>
+
             <span className="text-xs text-gray-400 font-medium">
-              {lineItems.length} {lineItems.length === 1 ? "Item" : "Items"}
+              {lineItems.length}{" "}
+              {lineItems.length === 1 ? "Item" : "Items"}
             </span>
           </div>
 
           <div className="divide-y divide-gray-100">
             {lineItems.map((item, idx) => (
-              <div key={item.uid || idx} className="py-3 flex justify-between items-start gap-4 text-xs">
+              <div
+                key={item.uid || idx}
+                className="py-3 flex justify-between items-start gap-4 text-xs"
+              >
                 <div className="space-y-1 flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
                     <span className="font-bold text-gray-900">
                       {item.quantity}× {item.name}
                     </span>
+
                     {item.variationName && (
-                      <span className="text-gray-500 font-medium">({item.variationName})</span>
+                      <span className="text-gray-500 font-medium">
+                        ({item.variationName})
+                      </span>
                     )}
                   </div>
 
-                  {item.modifiers && item.modifiers.length > 0 && (
-                    <div className="flex flex-wrap gap-1 text-[11px] text-gray-600">
-                      {item.modifiers.map((mod, mIdx) => (
-                        <span key={mIdx} className="bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                          {mod.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {item.modifiers &&
+                    item.modifiers.length > 0 && (
+                      <div className="flex flex-wrap gap-1 text-[11px] text-gray-600">
+                        {item.modifiers.map(
+                          (mod, mIdx) => (
+                            <span
+                              key={mIdx}
+                              className="bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100"
+                            >
+                              {mod.name}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    )}
 
                   {item.note && (
                     <p className="text-[11px] text-gray-500 italic">
@@ -473,24 +736,46 @@ function OrderConfirmationContent() {
             {order.totalTaxMoney && (
               <div className="flex justify-between text-gray-600">
                 <span>Sales Tax</span>
-                <span>{formatMoney(order.totalTaxMoney.amount)}</span>
+                <span>
+                  {formatMoney(
+                    order.totalTaxMoney.amount
+                  )}
+                </span>
               </div>
             )}
-            {order.totalTipMoney && Number(order.totalTipMoney.amount) > 0 && (
-              <div className="flex justify-between text-gray-600">
-                <span>Tip</span>
-                <span>{formatMoney(order.totalTipMoney.amount)}</span>
-              </div>
-            )}
-            {order.totalDiscountMoney && Number(order.totalDiscountMoney.amount) > 0 && (
-              <div className="flex justify-between text-emerald-600 font-medium">
-                <span>Discount</span>
-                <span>-{formatMoney(order.totalDiscountMoney.amount)}</span>
-              </div>
-            )}
+
+            {order.totalTipMoney &&
+              Number(order.totalTipMoney.amount) > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>Tip</span>
+                  <span>
+                    {formatMoney(
+                      order.totalTipMoney.amount
+                    )}
+                  </span>
+                </div>
+              )}
+
+            {order.totalDiscountMoney &&
+              Number(
+                order.totalDiscountMoney.amount
+              ) > 0 && (
+                <div className="flex justify-between text-emerald-600 font-medium">
+                  <span>Discount</span>
+                  <span>
+                    -
+                    {formatMoney(
+                      order.totalDiscountMoney.amount
+                    )}
+                  </span>
+                </div>
+              )}
+
             <div className="flex justify-between text-sm font-bold text-gray-900 pt-2 border-t border-gray-100">
               <span>Total Paid</span>
-              <span className="text-base text-[#DBAF82] font-extrabold">{formatMoney(order.totalMoney?.amount)}</span>
+              <span className="text-base text-[#DBAF82] font-extrabold">
+                {formatMoney(order.totalMoney?.amount)}
+              </span>
             </div>
           </div>
         </div>
@@ -501,7 +786,7 @@ function OrderConfirmationContent() {
             href="/menu"
             className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#DBAF82] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-md"
           >
-            ORDER MORE DRINKS
+            ORDER AGAIN / BACK TO MENU
           </Link>
         </div>
       </div>
@@ -515,7 +800,9 @@ export default function OrderConfirmationPage() {
       fallback={
         <ConfirmationShell centered>
           <div className="w-12 h-12 border-4 border-[#DBAF82] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-stone-600 font-medium text-sm">Loading order confirmation...</p>
+          <p className="text-stone-600 font-medium text-sm">
+            Loading order confirmation...
+          </p>
         </ConfirmationShell>
       }
     >

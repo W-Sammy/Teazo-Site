@@ -2,34 +2,39 @@ import type { Metadata } from "next";
 import CatalogChangeNotice from "@/app/components/catalog-change-notice";
 import { getMenuRevision } from "@/app/lib/queries/catalog-revision";
 import Image from "next/image";
-import { Cabin_Sketch, Montserrat } from "next/font/google";
+import { Cabin_Sketch } from "next/font/google";
 import type { MenuItem as CardMenuItem } from "../components/menu-item-card";
 import MenuCatalog from "../components/menu-catalog";
 import { BubbleField } from "@/app/components/bubble-field";
 import GeneralButton from "@/app/components/general-button";
 import Subtitle from "../components/sub-title";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { allowedHosts } from "@/app/lib/imageHosts";
 import type { MenuItem as ApiMenuItem } from "@/app/types/menu-item";
 import { orderableMenuItem } from "@/app/lib/storefront-catalog";
+import { getMenuDisplayState, initializeMenuDisplayItems } from "@/app/lib/queries/menu-display";
+import { SQUARE_CATALOG_TAG } from "@/app/lib/cache-tags";
+import { listActiveEvents } from "@/app/lib/queries/events";
+import LiveEventsSidebar from "@/app/(site)/components/live-events-sidebar";
+import { montserrat } from "@/app/fonts";
+import { heroLogoSrc } from "@/app/lib/default-logo";
 
 export const metadata: Metadata = {
   title: "Menu",
   description: "Explore TEAZO menu categories and featured specials.",
 };
 
+// Live-event visibility must be evaluated for each request as events start and end.
 // Read the catalog at request time, not while building a static copy of the page.
 export const dynamic = "force-dynamic";
 
+
 const cabinSketch = Cabin_Sketch({
+  preload: false, // preloading every font held back first paint on phones (TZ-515)
   subsets: ["latin"],
   weight: ["400"],
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 /* Group real catalog items into sections accepted by MenuItemsSection.
    The section ID identifies the group; every card keeps its real catalog ID. */
@@ -315,7 +320,9 @@ async function loadMenu(): Promise<MenuLoadResult> {
       headers: {
         Accept: "application/json",
       },
-      cache: "no-store",
+      // Shared by every visitor for up to 60 seconds; the Square catalog
+      // webhook clears it as soon as the catalog changes (SQUARE_CATALOG_TAG).
+      next: { revalidate: 60, tags: [SQUARE_CATALOG_TAG] },
       credentials: "omit",
       redirect: "error",
       signal: AbortSignal.timeout(20_000),
@@ -335,13 +342,94 @@ async function loadMenu(): Promise<MenuLoadResult> {
       );
     }
 
-    return {
-      ok: true,
-      sections: buildMenuSections(data.flatMap((item) => {
+    // Website display controls are a local overlay on top of Square's catalog.
+    // Unconfigured Square categories stay hidden until an admin publishes them.
+    // A failed settings read must not accidentally publish hidden categories.
+    let displayState = await getMenuDisplayState();
+    const initializedItemIds = new Set(
+      displayState.items.map((item) => item.squareCatalogObjectId),
+    );
+    if (data.some((item) => !initializedItemIds.has(item.catalogObjectId))) {
+      // Freeze defaults when the website first sees an item, even if no admin
+      // has visited Display Categories since it was added to Square.
+      await initializeMenuDisplayItems(data, displayState.sections);
+      displayState = await getMenuDisplayState();
+    }
+
+    const itemSettings = new Map(
+      displayState.items.map((item) => [item.squareCatalogObjectId, item.visible]),
+    );
+    const sectionSettings = new Map(
+      displayState.sections.map((section) => [section.squareCategoryId, section]),
+    );
+    const uncategorizedSettings = displayState.sections.find(
+      (section) => section.sectionType === "uncategorized",
+    );
+
+    const visibleItems = data.flatMap((item) => {
         const orderable = orderableMenuItem(item);
-        return orderable ? [orderable] : [];
-      })),
-    };
+        if (!orderable) return [];
+
+        const explicitVisibility = itemSettings.get(item.catalogObjectId);
+        const defaultVisible = item.categories.length === 0
+          ? uncategorizedSettings?.defaultItemVisible ?? true
+          : item.categories.some(
+              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? false,
+            );
+
+        return explicitVisibility ?? defaultVisible ? [orderable] : [];
+      });
+
+    const sections = buildMenuSections(visibleItems).filter((section) => {
+        if (section.id === uncategorizedSectionId) {
+          return uncategorizedSettings?.isPublished ?? true;
+        }
+
+        const categoryId = section.id.startsWith("category:")
+          ? section.id.slice("category:".length)
+          : null;
+        return categoryId
+          ? sectionSettings.get(categoryId)?.isPublished ?? false
+          : true;
+      });
+
+    const visibleItemById = new Map(
+      visibleItems.map((item) => [item.catalogObjectId, item]),
+    );
+    for (const custom of displayState.sections.filter(
+      (section) => section.sectionType === "custom" && section.isPublished,
+    )) {
+      const customItems = custom.itemIds
+        .map((itemId) => visibleItemById.get(itemId))
+        .filter((item): item is CatalogMenuItem => Boolean(item));
+      if (customItems.length > 0) {
+        sections.push({
+          id: `custom:${custom.id}`,
+          title: custom.title,
+          items: customItems.map((item) => toCardItem(item, null, custom.title)),
+        });
+      }
+    }
+
+    // Match each rendered section to its saved identity before sorting all
+    // Square, custom, and uncategorized sections together.
+    const sectionOrder = new Map(
+      displayState.sections.map((section) => {
+        const renderedId = section.sectionType === "custom"
+          ? `custom:${section.id}`
+          : section.sectionType === "uncategorized"
+            ? uncategorizedSectionId
+            : `category:${section.squareCategoryId}`;
+        return [renderedId, section.sortOrder];
+      }),
+    );
+    sections.sort((a, b) =>
+      (sectionOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (sectionOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) ||
+      a.title.localeCompare(b.title),
+    );
+
+    return { ok: true, sections };
   } catch (error) {
     console.error("Public menu catalog loading failed:", error);
 
@@ -355,33 +443,29 @@ export default async function MenuPage({
 }: {
   searchParams?: Promise<{ item?: string }>;
 }) {
+  // Events and website content don't depend on the catalog, so they start right
+  // away instead of waiting for the revision check (TZ-515).
+  // Events are optional: keep the menu available if D1 cannot load them.
+  const liveEventsRequest = listActiveEvents().catch(() => []);
+  const contentRequest = getPublicWebsiteContent();
   // Capture before fetching items so a change during rendering is detected too.
   const revision = await getMenuRevision();
-  const [resolvedParams, content, menuResult] = await Promise.all([
+  const [resolvedParams, content, menuResult, liveEvents] = await Promise.all([
     searchParams ? searchParams : Promise.resolve(undefined),
-    getWebsiteContent(),
+    contentRequest,
     loadMenu(),
+    liveEventsRequest,
   ]);
 
   const initialItemId =
     typeof resolvedParams?.item === "string" ? resolvedParams.item : undefined;
 
-  const logoSrc = content.logo || "/TEAZO_logo.svg";
+  const logoSrc = heroLogoSrc(content.logo);
   const sections = menuResult.ok ? menuResult.sections : [];
 
-  // TEAZO Special is shown only when real items have that actual category.
-  // Keep distinct category IDs separate, even when their display names match.
-  const specialSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) === "teazo special",
-  );
-
-  const menuSections = sections.filter(
-    (section) =>
-      normalizeCategoryName(section.title) !== "teazo special",
-  );
-
   return (
+    <>
+    <LiveEventsSidebar events={liveEvents} />
     <main className="relative min-h-screen bg-[#FFF8F9] text-stone-900">
       <CatalogChangeNotice initialRevision={revision} />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -397,7 +481,8 @@ export default async function MenuPage({
             width={389}
             height={397}
             className="h-[170px] w-auto sm:h-[195px]"
-            priority
+            priority={!logoSrc.startsWith("data:")}
+            fetchPriority="high"
             unoptimized={
               logoSrc.startsWith("data:") ||
               logoSrc.startsWith("http")
@@ -405,23 +490,23 @@ export default async function MenuPage({
           />
 
           <h1
-            className={`${cabinSketch.className} mt-3 text-[70px] text-[#D9AE81]`}
+            className={`${cabinSketch.className} mt-3 text-[70px] text-[#B28458]`}
           >
             MENU
           </h1>
 
           <div className="mt-4 flex flex-col items-center sm:mt-6">
-            <p
+            <h2
               className={`${montserrat.className} text-[1.35rem] font-medium uppercase tracking-[0.18em] text-[#161616] sm:text-[1.55rem]`}
             >
               Too Much Scrolling?
-            </p>
+            </h2>
 
-            <p
+            <h2
               className={`${montserrat.className} mt-1 text-[2rem] font-bold uppercase tracking-[0.06em] text-[#161616] sm:text-[2.5rem]`}
             >
               Download Our Menu
-            </p>
+            </h2>
 
             <div className="mt-5 cursor-pointer [&_*]:cursor-pointer">
               <GeneralButton text="DOWNLOAD" href="/static-menu" />
@@ -490,8 +575,7 @@ export default async function MenuPage({
           </section>
         ) : (
           <MenuCatalog
-            specialSections={specialSections}
-            menuSections={menuSections}
+            sections={sections}
             initialItemId={initialItemId}
             headingClassName={cabinSketch.className}
             bodyClassName={montserrat.className}
@@ -499,5 +583,6 @@ export default async function MenuPage({
         )}
       </div>
     </main>
+    </>
   );
 }
