@@ -17,14 +17,8 @@
  * mocked to keep these tests deterministic.
  */
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, } 
+from "vitest";
 
 import { batch, prepare } from "@/app/lib/d1";
 import { toPublicUrl } from "@/app/lib/media";
@@ -220,8 +214,8 @@ describe("Event database queries", () => {
     expect(events).toEqual([]);
   });
 
-  // Events without uploaded images use the Admin Dashboard
-  // fallback icon instead of a missing image URL.
+  // Events without uploaded images use the public TEAZO
+  // logo instead of a missing image URL.
   it("uses the fallback image when no event image exists", async () => {
     allResults = [
       { results: [eventRow()] },
@@ -231,7 +225,7 @@ describe("Event database queries", () => {
     const events = await listEvents();
 
     expect(events[0].imageUrl).toBe(
-      "/admin_icons/admin_svg/teazo_dash_icon.svg",
+      "/TEAZO_logo.svg",
     );
   });
 
