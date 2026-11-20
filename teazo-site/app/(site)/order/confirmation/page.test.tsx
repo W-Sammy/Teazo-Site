@@ -29,6 +29,11 @@ import {
   waitFor,
 } from "@testing-library/react";
 
+import {
+  CART_REVISION_STORAGE_KEY,
+  PENDING_CHECKOUT_STORAGE_KEY,
+} from "@/app/lib/cart-payment-ownership";
+
 const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   clearCart: vi.fn(),
@@ -74,6 +79,7 @@ vi.mock("@/app/components/bubble-field", () => ({
 import OrderConfirmationPage from "./page";
 
 const ORDER_ID = "CVuxowTLMQkI9Yq9SFJ84oG6phYZY";
+const CART_REVISION = "11111111-1111-4111-8111-111111111111";
 
 type OrderFixture = {
   id: string;
@@ -197,6 +203,29 @@ function setOrderUrl(
   );
 }
 
+/**
+ * Records ownership of the current bag by the specified Square
+ * order. Only a matching verified paid order may clear the bag.
+ */
+function recordCurrentCartOwnership(
+  orderId = ORDER_ID,
+  revision = CART_REVISION,
+) {
+  localStorage.setItem(
+    CART_REVISION_STORAGE_KEY,
+    revision,
+  );
+
+  localStorage.setItem(
+    PENDING_CHECKOUT_STORAGE_KEY,
+    JSON.stringify({
+      orderId,
+      timestamp: Date.now(),
+      cartRevision: revision,
+    }),
+  );
+}
+
 function orderRequestCount() {
   return mocks.fetch.mock.calls.filter(
     ([url]) => url === `/api/orders/${ORDER_ID}`,
@@ -240,8 +269,9 @@ describe("Public order confirmation page", () => {
     expect(mocks.clearCart).not.toHaveBeenCalled();
   });
 
-  it("confirms a paid order and clears the cart", async () => {
+  it("confirms a paid order and clears its matching cart", async () => {
     setOrderUrl();
+    recordCurrentCartOwnership();
 
     render(<OrderConfirmationPage />);
 
@@ -262,10 +292,32 @@ describe("Public order confirmation page", () => {
         "teazo_confirmed_order_id",
       ),
     ).toBe(ORDER_ID);
+
+    expect(
+      localStorage.getItem(
+        PENDING_CHECKOUT_STORAGE_KEY,
+      ),
+    ).toBeNull();
+  });
+
+  it("shows a paid receipt without clearing an unrelated cart", async () => {
+    setOrderUrl();
+
+    render(<OrderConfirmationPage />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Order Confirmed!",
+      }),
+    ).toBeTruthy();
+
+    expect(orderRequestCount()).toBe(1);
+    expect(mocks.clearCart).not.toHaveBeenCalled();
   });
 
   it("displays canceled orders without clearing the cart", async () => {
     setOrderUrl();
+    recordCurrentCartOwnership();
 
     mockOrderResponses([
       makeOrder({
@@ -286,6 +338,12 @@ describe("Public order confirmation page", () => {
     expect(mocks.clearCart).not.toHaveBeenCalled();
 
     expect(
+      localStorage.getItem(
+        PENDING_CHECKOUT_STORAGE_KEY,
+      ),
+    ).not.toBeNull();
+
+    expect(
       screen.queryByRole("heading", {
         name: "Order Confirmed!",
       }),
@@ -296,6 +354,7 @@ describe("Public order confirmation page", () => {
     "stops payment verification after four unpaid checks",
     async () => {
       setOrderUrl();
+      recordCurrentCartOwnership();
 
       mockOrderResponses([
         makeOrder({ isPaid: false }),
@@ -315,6 +374,12 @@ describe("Public order confirmation page", () => {
       expect(mocks.clearCart).not.toHaveBeenCalled();
 
       expect(
+        localStorage.getItem(
+          PENDING_CHECKOUT_STORAGE_KEY,
+        ),
+      ).not.toBeNull();
+
+      expect(
         screen.queryByRole("heading", {
           name: "Order Confirmed!",
         }),
@@ -332,9 +397,10 @@ describe("Public order confirmation page", () => {
   );
 
   it(
-    "retries a pending payment and confirms it when Square reports paid",
+    "retries a pending payment and clears its matching cart when paid",
     async () => {
       setOrderUrl();
+      recordCurrentCartOwnership();
 
       mockOrderResponses([
         makeOrder({ isPaid: false }),
@@ -362,6 +428,7 @@ describe("Public order confirmation page", () => {
 
   it("handles an unavailable order response without clearing the cart", async () => {
     setOrderUrl();
+    recordCurrentCartOwnership();
 
     const errorLog = vi
       .spyOn(console, "error")
@@ -434,6 +501,7 @@ describe("Public order confirmation page", () => {
     ).toBeTruthy();
 
     expect(orderRequestCount()).toBe(1);
+    expect(mocks.clearCart).not.toHaveBeenCalled();
   });
 
   it("displays scheduled pickup information in Pacific time", async () => {
@@ -518,6 +586,8 @@ describe("Public order confirmation page", () => {
       ORDER_ID,
     );
 
+    recordCurrentCartOwnership();
+
     render(<OrderConfirmationPage />);
 
     expect(
@@ -527,16 +597,14 @@ describe("Public order confirmation page", () => {
     ).toBeTruthy();
 
     expect(orderRequestCount()).toBe(1);
-    expect(mocks.clearCart).toHaveBeenCalledOnce();
+
+    await waitFor(() => {
+      expect(mocks.clearCart).toHaveBeenCalledOnce();
+    });
   });
 
   it("restores a pending checkout order from local storage", async () => {
-    localStorage.setItem(
-      "teazo_pending_checkout",
-      JSON.stringify({
-        orderId: ORDER_ID,
-      }),
-    );
+    recordCurrentCartOwnership();
 
     render(<OrderConfirmationPage />);
 
@@ -547,6 +615,10 @@ describe("Public order confirmation page", () => {
     ).toBeTruthy();
 
     expect(orderRequestCount()).toBe(1);
+
+    await waitFor(() => {
+      expect(mocks.clearCart).toHaveBeenCalledOnce();
+    });
   });
 
   it("restores a recent order reference from local storage", async () => {
@@ -564,6 +636,7 @@ describe("Public order confirmation page", () => {
     ).toBeTruthy();
 
     expect(orderRequestCount()).toBe(1);
+    expect(mocks.clearCart).not.toHaveBeenCalled();
   });
 
   it("prioritizes the URL order reference over a stored reference", async () => {

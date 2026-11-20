@@ -102,7 +102,7 @@ TEAZO uses the following testing tools.
 | Tool | Purpose |
 |---|---|
 | Vitest | Test runner, assertions, mocks, lifecycle hooks |
-| Playwright (`@playwright/test`) | Chromium browser tests for authentication and Owner account-management workflows |
+| Playwright (`@playwright/test`) | Chromium browser tests for authentication, Owner account management, and public cart/checkout workflows |
 | React Testing Library | Testing React components and user interactions |
 | jsdom | Simulated browser DOM for React component tests |
 | Node.js | Default test execution environment |
@@ -171,7 +171,7 @@ Playwright discovers `e2e/**/*.spec.ts` separately from Vitest, using:
 - Development server: start `npm run dev -- --hostname localhost --port 3000` when needed, or reuse an existing local server outside CI.
 - Failure artifacts: screenshots and traces are written below `.next/playwright-test-results`, an ignored build directory.
 
-The initial browser suite is focused on administrator authentication and account management. It does not automate real Google sign-in or production administrator changes.
+The browser suite covers administrator authentication and account management, as well as public cart and checkout interactions. It does not automate real Google sign-in, production administrator changes, or actual Square payments.
 
 ## 3. Running automated tests
 
@@ -221,6 +221,8 @@ The Playwright results cover 19 authentication/password-flow tests and 20 accoun
 
 These figures are a historical **branch-local verification**, not a guaranteed result for future checkouts or a claim that these tests are already on `dev`. Run both suites again after changes. Do not combine the Vitest and Playwright totals into a single Vitest count.
 
+On **November 19, 2026**, the checkout work on `ben-test-frontend-checkout` separately verified **185 Vitest tests across 10 focused test files**, **9 Playwright tests in the public checkout spec**, and a manual local D1 concurrency check in which one of 10 simultaneous requests claimed a checkout attempt and one of 10 claimed processing ownership. These are scoped verification results, **not** a passing full-repository Vitest or combined Playwright result; the 185-test set overlaps the broader test inventory. The complete Vitest run on the checkout branch had unrelated failing tests, and those results must be reconciled after branch integration. The D1 concurrency check did not create real Square links or payments.
+
 ### Understanding test results
 
 After running the test command, Vitest displays the results in the terminal. When using the dot reporter, individual tests are represented by dots, followed by a summary of the run.
@@ -248,7 +250,7 @@ The output contains several important details:
 - **Test Files** indicates how many test files completed successfully.
 - **Tests** indicates how many individual tests passed.
 - **Start at** shows when execution began.
-- **Duration** shows how long the test run took.
+- **Duration** shows how long the run took.
 
 A successful run should report all completed tests as passed, with no failed tests, and exit with status code 0.
 
@@ -340,6 +342,12 @@ Run Owner account-management tests (requires an authenticated local Owner sessio
 npx playwright test e2e/admin-account-management.spec.ts e2e/admin-account-management-mobile.spec.ts --project=chromium
 ```
 
+Run the public cart/customizer/checkout browser spec, which uses mocked checkout and Square responses and needs no authenticated Owner session:
+
+```bash
+npx playwright test e2e/customizer-cart-checkout.spec.ts --workers=2
+```
+
 Playwright's exit summary reports passed, failed, and skipped tests. A skipped Owner test **does not demonstrate that its workflow passed**. Confirm the expected test count and zero skips when reporting complete verification.
 
 ### Prepare a local Owner session for protected browser tests
@@ -383,7 +391,7 @@ Tests are organized by the functionality they verify rather than by individual d
 | Admin Menu | Item forms, creation, editing, deletion, refresh behavior, category display controls, validation, PDF uploads |
 | Gallery | Public image display, administrator selection, upload/deletion routes, media utilities, database queries |
 | Events | Public Events display, administrator forms, API routes, event dates, database queries |
-| Checkout | Cart interactions, duplicate submissions, payment-link handling, order confirmation |
+| Checkout | Cart/customizer interactions, synchronous duplicate-submit prevention, checkout-attempt UUID validation, persistent D1 idempotency coordination, Square retry and failure handling, cart revision ownership, payment confirmation, and abandoned-checkout recovery |
 | Orders and Webhooks | Order lifecycle, Square webhook validation, category synchronization, cache invalidation, and failure scenarios |
 | Contact | Form submission, email notifications, notification recovery, Turnstile verification, database queries |
 | Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior |
@@ -428,8 +436,9 @@ Browser tests are kept under `teazo-site/e2e/` and run independently of the co-l
 | `admin-password-flow.spec.ts` | 10 | Password-link requests, setup/reset validation, API error handling, mobile dialog |
 | `admin-account-management.spec.ts` | 19 | Owner-only account list, add/edit/delete flows, invitations, authorization failures, responsive UI |
 | `admin-account-management-mobile.spec.ts` | 1 | Synthetic add, edit, invitation, and delete workflows at a mobile viewport |
+| `customizer-cart-checkout.spec.ts` | 9 | Public cart totals, item customization, checkout validation and error handling, retry, pending/disabled states, mocked Square redirect, and mobile viewport |
 
-**Verified Playwright baseline:** 39 Chromium tests passed across 4 specs on November 18, 2026. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
+**Verified Playwright baselines:** 39 Chromium tests passed across the four administrator specs on November 18, 2026 (`ben-update-vitests`); 9 checkout tests passed in the fifth spec on November 19, 2026 (`ben-test-frontend-checkout`). These were **separate branch-local runs**, not a verified combined 48-test run. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
 
 ### Backend and API tests
 
@@ -454,6 +463,25 @@ Relevant assertions include:
 - Idempotency and duplicate-request handling.
 
 API route tests commonly mock external systems rather than performing live network requests.
+
+### Checkout idempotency and cart recovery tests
+
+The checkout regression tests are distributed across shared utilities, components, route handlers, and the cart context. Useful focused files include:
+
+| Test file | Focus |
+|---|---|
+| `app/lib/checkout-validators.test.ts` | Required checkout-attempt UUID, customer contact, pickup timing, and cart validation |
+| `app/api/checkout/route.duplicate-submission.test.ts` | Sequential/concurrent duplicate requests, stable Square idempotency keys, safe retries, and D1 failures with mocked services |
+| `app/lib/queries/checkout-attempts.test.ts` | Atomic claim and processing-owner SQL, completion, and uncertain-state transitions through mocked D1 calls |
+| `app/(site)/components/cart-drawer-checkout.test.tsx` | Duplicate direct submissions, disabled states, Turnstile, errors, retry, and mocked redirect |
+| `app/lib/checkout-attempt-storage.test.ts` | Attempt identity and reuse; new IDs for new purchases; matching payment cleanup |
+| `app/lib/cart-payment-ownership.test.ts` | Cart revision changes and paid-order ownership guards |
+| `app/context/cart-context.frontend.test.tsx` | Existing cart persistence, quantity, customization, and totals |
+| `app/context/cart-context.checkout-recovery.test.tsx` | Recovery after Square is closed, including modified/new carts and delayed responses |
+| `app/(site)/order/confirmation/page.test.tsx` | Receipt states, payment verification, matching cart ownership |
+| `app/(site)/order/confirmation/page.checkout-attempt.test.tsx` | Paid/unpaid/canceled checkout-attempt cleanup and protection against old receipts |
+
+For a focused checkout regression run, pass these filenames to `npx vitest run`. A successful targeted run does **not** establish that the full repository suite passes.
 
 ### Database and migration tests
 
@@ -481,6 +509,20 @@ Tests may verify:
 - Application behavior when database operations fail.
 
 SQLite-backed tests execute real SQL against temporary in-memory databases. This differs from testing the actual deployed Cloudflare D1 service.
+
+### Local D1 concurrency verification
+
+`teazo-site/scripts/verify-checkout-d1-concurrency.ps1` is a **separate manual integration check**, not a Vitest or Playwright test. It sends concurrent SQL operations to the local D1 proxy and verifies that the unique checkout-attempt reservation and conditional processing ownership each have exactly one winner. The script uses a temporary attempt record and deletes it afterward. It does **not** contact Square or prove production D1 concurrency.
+
+Prerequisites: PowerShell 7 (`pwsh`), the local D1 proxy running at `http://127.0.0.1:8787`, matching local proxy credentials in `teazo-site/.env.local`, and migration `0014_checkout_idempotency.sql` applied to the local D1 database. From `teazo-site/`:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\verify-checkout-d1-concurrency.ps1"
+```
+
+Expected: one successful reservation out of ten, one successful processing-owner claim out of ten, and successful cleanup. The script is restricted to a loopback proxy; never change it to target a production endpoint or include credentials in logs. Database ownership is one part of payment safety: mocked route tests separately verify that duplicate requests do not issue independent Square operations.
+
+When changing D1 schema, verify migrations in a local database first. `teazo-site/migrations/0014_checkout_idempotency.sql` creates the persistent checkout-attempt table. Database migrations are **not automatically applied during deployment**. Before deploying an application version that requires a new table, the authorized deployer must apply the migration to the target database and verify the schema; see [Developer Guide](DEV-GUIDE.md), section 7. Do not use a remote migration command as part of routine automated testing.
 
 ### Utility tests
 
@@ -595,6 +637,8 @@ The two Square webhook Vitest files (`app/api/square/webhooks/route.test.ts` and
 
 The login and password-flow specs intercept authentication and password endpoints, so their simulated failures and success responses do not change real credentials or send email. The account-management specs require a real **local Owner session to enter the protected page**, then use synthetic account records and intercepted account APIs; unexpected writes are blocked in those specs.
 
+The checkout browser spec intercepts the checkout and related dependencies and uses mock responses; it does not create real Square payment links.
+
 Do not assume every browser test is fully isolated merely because it uses Playwright routing. Review new test routes before adding them, avoid production services, and never run destructive authenticated workflows against real customer or production data. A valid local Owner session proves local access; it is not a production login test.
 
 ### Reset state between tests
@@ -689,7 +733,7 @@ For each meaningful application change or testing pull request:
 7. Run TypeScript checking.
 8. Verify the Next.js production build.
 9. Review the Git diff for unrelated modifications.
-10. Perform manual integration or browser checks when the change requires them.
+10. Perform manual integration or browser checks when the change requires them. For new D1 tables, verify the local migration and document the required production migration-before-application deployment order.
 
 ### Recommended commands
 
@@ -793,6 +837,10 @@ A run showing `20 skipped` is not a passing verification of the Owner workflows,
 
 The configured origin is `http://localhost:3000`, not `http://127.0.0.1:3000`. Ensure port 3000 is free or the correct Next.js dev server is running. If login appears broken, confirm the local D1 proxy is active before changing the tests or credentials.
 
+### Local checkout concurrency script cannot connect
+
+Confirm the local D1 proxy is running at `http://127.0.0.1:8787`, that `.env.local` contains a matching local `PROXY_TOKEN`, and that the checkout-attempt migration was applied to the **local** database. Run the script from `teazo-site/` with PowerShell 7. Do not paste authentication tokens into bug reports or switch the test to a remote database.
+
 ### SQLite or migration errors
 
 Confirm that the expected migration files exist in the current checkout.
@@ -873,9 +921,9 @@ The Vitest suite primarily verifies:
 - Mocked external service interactions.
 - Database queries and migrations.
 
-Playwright additionally verifies selected browser-based authentication and administrator-management interactions in Chromium, with mocked APIs. Further testing may be necessary for:
+Playwright additionally verifies selected browser-based authentication, administrator-management, and public cart/checkout interactions in Chromium, with mocked APIs. Further testing may be necessary for:
 
-- Other real browser end-to-end workflows outside the four current Playwright specs.
+- Other real browser end-to-end workflows outside the five currently documented Playwright specs.
 - Production Google authentication behavior.
 - Live Square sandbox integrations.
 - Deployed Cloudflare D1 and R2 behavior.
@@ -883,7 +931,7 @@ Playwright additionally verifies selected browser-based authentication and admin
 - Mobile Safari and Android browser differences.
 - Accessibility.
 - Performance under load.
-- Production concurrency and operational monitoring.
+- Production concurrency and operational monitoring; local proxy SQL concurrency testing cannot establish all production conditions.
 
 Vitest and Playwright are separate automated testing suites. Vitest does not provide real-browser end-to-end coverage; Playwright provides limited real-browser coverage for selected workflows. Passing either suite does not prove every production integration or browser is supported.
 

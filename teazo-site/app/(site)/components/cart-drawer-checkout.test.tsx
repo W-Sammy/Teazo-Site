@@ -2,11 +2,16 @@
  * Tests public shopping bag checkout submission.
  *
  * Covers button disabling, repeated submissions,
- * validation, failure recovery, security token reset,
- * and ordering availability.
+ * validation, successful checkout-session responses,
+ * failure recovery, security token reset, and ordering
+ * availability.
  *
  * All cart, Turnstile, and network dependencies are
  * mocked. No production orders or payments are made.
+ *
+ * jsdom does not implement cross-page navigation.
+ * Successful checkout tests verify the recorded order
+ * and redirecting state; Playwright verifies navigation.
  */
 
 // @vitest-environment jsdom
@@ -533,30 +538,36 @@ describe("Shopping Bag checkout submission", () => {
     });
   });
 
-  it("characterizes direct form resubmission during an active request", async () => {
+  it("prevents duplicate checkout requests from direct form resubmission", async () => {
     const { settle } = pendingCheckout();
 
     await prepareCheckout();
 
-    // Unlike a normal disabled-button click, a direct
-    // form submit reaches the submission handler.
+    // A direct form submission can bypass the disabled
+    // checkout button. The handler must reject a second
+    // submission synchronously while the first is pending.
     submitCheckoutForm();
     submitCheckoutForm();
 
-    // This documents current behavior rather than
-    // asserting that duplicates are prevented.
-    expect(checkoutCalls()).toHaveLength(2);
+    // Only the first submission may reach the checkout API.
+    expect(checkoutCalls()).toHaveLength(1);
+
+    // The original request remains active, and the checkout
+    // button must remain disabled until that request settles.
+    expect(checkoutButton().disabled).toBe(true);
 
     settle(failedResponse());
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "Square temporarily unavailable",
-        ),
+        screen.getByText("Square temporarily unavailable"),
       ).toBeTruthy();
     });
-  });
+
+  // The duplicate submission must not create a second
+  // checkout request when the first request fails.
+  expect(checkoutCalls()).toHaveLength(1);
+});
 
   it("rejects missing customer details before sending checkout requests", async () => {
     await renderReadyCart();
@@ -651,6 +662,84 @@ describe("Shopping Bag checkout submission", () => {
         "turnstile-reset-key",
       ).textContent,
     ).toBe("1");
+  });
+
+  // Verify that the Shopping Bag accepts a successful
+  // checkout-session response and records the order ID.
+  //
+  // jsdom cannot navigate to an external checkout page,
+  // so this test asserts the response-handling effects.
+  // The Playwright test separately verifies navigation.
+  it("records a successful checkout session and enters the redirecting state", async () => {
+    const orderId = "TEST_ORDER_123";
+
+    // Use a reserved, non-deliverable domain.
+    // No request is made to this destination in jsdom.
+    const checkoutUrl =
+      "https://checkout.example.invalid/test-session";
+
+    mocks.fetch.mockImplementation(
+      async (url: string) => {
+        if (url === "/api/website-content") {
+          return Response.json(makeContent());
+        }
+
+        if (url === "/api/checkout") {
+          return Response.json(
+            {
+              checkoutUrl,
+              orderId,
+            },
+            { status: 200 },
+          );
+        }
+
+        throw new Error(
+          `Unexpected request: ${url}`,
+        );
+      },
+    );
+
+    await prepareCheckout();
+
+    // The actual checkout button should initiate one
+    // request and process the mocked successful response.
+    fireEvent.click(checkoutButton());
+
+    await waitFor(() => {
+      expect(checkoutCalls()).toHaveLength(1);
+
+      // Recording the pending order occurs only after
+      // the successful response has been processed.
+      expect(
+        mocks.recordPendingCheckoutOrder,
+      ).toHaveBeenCalledWith(orderId);
+    });
+
+    expect(
+      mocks.recordPendingCheckoutOrder,
+    ).toHaveBeenCalledTimes(1);
+
+    // The browser is preparing to leave for checkout.
+    // Keep the button disabled to prevent further clicks.
+    const redirectingButton = screen.getByRole(
+      "button",
+      { name: /Redirecting to Square/ },
+    ) as HTMLButtonElement;
+
+    expect(redirectingButton.disabled).toBe(true);
+
+    // A successful response must not be presented
+    // as a checkout error or consume a retry token.
+    expect(
+      screen.queryByText(
+        "Missing checkout URL from server.",
+      ),
+    ).toBeNull();
+
+    // The successful response must not cause
+    // a duplicate checkout-session request.
+    expect(checkoutCalls()).toHaveLength(1);
   });
 
   it("handles an incomplete checkout response without recording an order", async () => {

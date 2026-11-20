@@ -3,6 +3,27 @@ import { catalogFixture } from "@/test/catalog-fixtures";
 import type { WebsiteContent } from "@/app/types/website-content";
 import { pacificToUtc } from "@/app/lib/store-hours";
 
+/**
+ * Tests the checkout API with mocked Square, D1, Turnstile, rate limits,
+ * catalog reads, and website content. No live purchases are created.
+ */
+
+const ATTEMPT_ID = "11111111-1111-4111-8111-111111111111";
+
+type StoredAttempt = {
+  attempt_id: string;
+  request_hash: string;
+  square_idempotency_key: string;
+  square_request_json: string;
+  status: "reserved" | "processing" | "uncertain" | "completed";
+  processing_owner: string | null;
+  processing_started_at: string | null;
+  checkout_url: string | null;
+  order_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 const mocks = vi.hoisted(() => ({
   readCatalogItems: vi.fn(),
   readCatalogModifierLists: vi.fn(),
@@ -10,6 +31,14 @@ const mocks = vi.hoisted(() => ({
   getWebsiteContent: vi.fn(),
   verifyTurnstile: vi.fn(),
   consumeRateLimit: vi.fn(),
+  getCheckoutAttempt: vi.fn(),
+  reserveCheckoutAttempt: vi.fn(),
+  beginCheckoutProcessing: vi.fn(),
+  resumeUncertainCheckoutAttempt: vi.fn(),
+  recoverStalledCheckoutAttempt: vi.fn(),
+  completeCheckoutAttempt: vi.fn(),
+  markCheckoutUncertain: vi.fn(),
+  attempts: new Map<string, unknown>(),
 }));
 
 vi.mock("@/app/lib/square-catalog", () => ({
@@ -17,32 +46,71 @@ vi.mock("@/app/lib/square-catalog", () => ({
   readCatalogModifierLists: mocks.readCatalogModifierLists,
 }));
 
-vi.mock("@/app/lib/turnstile", () => ({ verifyTurnstile: mocks.verifyTurnstile }));
+vi.mock("@/app/lib/turnstile", () => ({
+  verifyTurnstile: mocks.verifyTurnstile,
+}));
+
 vi.mock("@/app/lib/queries/rate-limit", () => ({
-  CHECKOUT_RATE_LIMIT: { name: "checkout", limit: 10, windowMs: 600_000 },
+  CHECKOUT_RATE_LIMIT: {
+    name: "checkout",
+    limit: 10,
+    windowMs: 600_000,
+  },
   consumeRateLimit: mocks.consumeRateLimit,
 }));
 
 vi.mock("@/app/lib/square", () => ({
-  squareClient: { checkout: { paymentLinks: { create: mocks.createPaymentLink } } },
+  squareClient: {
+    checkout: {
+      paymentLinks: {
+        create: mocks.createPaymentLink,
+      },
+    },
+  },
 }));
+
 vi.mock("@/app/lib/square-location", () => ({
   resolveSquareLocationId: async () => "LOCATION_1",
 }));
+
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: mocks.getWebsiteContent,
+}));
+
+vi.mock("@/app/lib/queries/checkout-attempts", () => ({
+  getCheckoutAttempt: mocks.getCheckoutAttempt,
+  reserveCheckoutAttempt: mocks.reserveCheckoutAttempt,
+  beginCheckoutProcessing: mocks.beginCheckoutProcessing,
+  resumeUncertainCheckoutAttempt: mocks.resumeUncertainCheckoutAttempt,
+  recoverStalledCheckoutAttempt: mocks.recoverStalledCheckoutAttempt,
+  completeCheckoutAttempt: mocks.completeCheckoutAttempt,
+  markCheckoutUncertain: mocks.markCheckoutUncertain,
 }));
 
 const { POST } = await import("@/app/api/checkout/route");
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-function content(overrides: Partial<WebsiteContent> = {}): WebsiteContent {
+
+function content(
+  overrides: Partial<WebsiteContent> = {},
+): WebsiteContent {
   return {
     logo: "",
     story: "",
     socialLinks: [],
-    address: { businessName: "TEAZO", streetAddress: "", locality: "", phone: "", email: "" },
-    hours: DAYS.map((day) => ({ day, start: 11, end: 20, closed: day === "Mon" })),
+    address: {
+      businessName: "TEAZO",
+      streetAddress: "",
+      locality: "",
+      phone: "",
+      email: "",
+    },
+    hours: DAYS.map((day) => ({
+      day,
+      start: 11,
+      end: 20,
+      closed: day === "Mon",
+    })),
     holidays: [],
     contactFormEnabled: true,
     onlineOrderingEnabled: true,
@@ -50,208 +118,712 @@ function content(overrides: Partial<WebsiteContent> = {}): WebsiteContent {
   };
 }
 
-const customer = { displayName: "Test Customer", email: "test@example.com", phone: "(415) 555-0100" };
-const items = [{ catalogObjectId: "ITEM1", variationId: "VAR1", quantity: 2, modifierOptionIds: ["MOD1"] }];
+const customer = {
+  displayName: "Test Customer",
+  email: "test@example.com",
+  phone: "(415) 555-0100",
+};
+
+const items = [
+  {
+    catalogObjectId: "ITEM1",
+    variationId: "VAR1",
+    quantity: 2,
+    modifierOptionIds: ["MOD1"],
+  },
+];
 
 function checkout(body: Record<string, unknown>) {
   return POST(
     new Request("http://localhost:3000/api/checkout", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.7, 10.0.0.1" },
-      body: JSON.stringify({ turnstileToken: "token-1", ...body }),
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+      },
+      body: JSON.stringify({
+        checkoutAttemptId: ATTEMPT_ID,
+        turnstileToken: "token-1",
+        ...body,
+      }),
     }),
   );
 }
 
+function storedAttempt(id: string): StoredAttempt | null {
+  return (mocks.attempts.get(id) as StoredAttempt | undefined) ?? null;
+}
+
+/**
+ * Models the required D1 state transitions for ordinary checkout requests.
+ * More detailed concurrent claims, retries, and recovery are covered in the
+ * dedicated duplicate-submission regression suite.
+ */
+function setupAttemptStore() {
+  mocks.getCheckoutAttempt.mockImplementation(
+    async (id: string) => storedAttempt(id),
+  );
+
+  mocks.reserveCheckoutAttempt.mockImplementation(
+    async (input: {
+      attemptId: string;
+      requestHash: string;
+      squareIdempotencyKey: string;
+      squareRequestJson: string;
+    }) => {
+      if (storedAttempt(input.attemptId)) {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+
+      const attempt: StoredAttempt = {
+        attempt_id: input.attemptId,
+        request_hash: input.requestHash,
+        square_idempotency_key: input.squareIdempotencyKey,
+        square_request_json: input.squareRequestJson,
+        status: "reserved",
+        processing_owner: null,
+        processing_started_at: null,
+        checkout_url: null,
+        order_id: null,
+        created_at: now,
+        updated_at: now,
+      };
+
+      mocks.attempts.set(input.attemptId, attempt);
+
+      return { ...attempt };
+    },
+  );
+
+  mocks.beginCheckoutProcessing.mockImplementation(
+    async (id: string, ownerId: string) => {
+      const attempt = storedAttempt(id);
+
+      if (!attempt || attempt.status !== "reserved") {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+
+      attempt.status = "processing";
+      attempt.processing_owner = ownerId;
+      attempt.processing_started_at = now;
+      attempt.updated_at = now;
+
+      return { ...attempt };
+    },
+  );
+
+  mocks.resumeUncertainCheckoutAttempt.mockImplementation(
+    async (id: string, ownerId: string) => {
+      const attempt = storedAttempt(id);
+
+      if (!attempt || attempt.status !== "uncertain") {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+
+      attempt.status = "processing";
+      attempt.processing_owner = ownerId;
+      attempt.processing_started_at = now;
+      attempt.updated_at = now;
+
+      return { ...attempt };
+    },
+  );
+
+  mocks.recoverStalledCheckoutAttempt.mockImplementation(
+    async (original: StoredAttempt, ownerId: string) => {
+      const attempt = storedAttempt(original.attempt_id);
+
+      if (
+        !attempt ||
+        attempt.status !== "processing" ||
+        attempt.processing_owner !== original.processing_owner ||
+        attempt.processing_started_at !== original.processing_started_at
+      ) {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+
+      attempt.processing_owner = ownerId;
+      attempt.processing_started_at = now;
+      attempt.updated_at = now;
+
+      return { ...attempt };
+    },
+  );
+
+  mocks.completeCheckoutAttempt.mockImplementation(
+    async (
+      id: string,
+      ownerId: string,
+      checkoutUrl: string,
+      orderId: string,
+    ) => {
+      const attempt = storedAttempt(id);
+
+      if (
+        !attempt ||
+        attempt.status !== "processing" ||
+        attempt.processing_owner !== ownerId
+      ) {
+        return null;
+      }
+
+      attempt.status = "completed";
+      attempt.processing_owner = null;
+      attempt.processing_started_at = null;
+      attempt.checkout_url = checkoutUrl;
+      attempt.order_id = orderId;
+      attempt.updated_at = new Date().toISOString();
+
+      return { ...attempt };
+    },
+  );
+
+  mocks.markCheckoutUncertain.mockImplementation(
+    async (id: string, ownerId: string) => {
+      const attempt = storedAttempt(id);
+
+      if (
+        !attempt ||
+        attempt.status !== "processing" ||
+        attempt.processing_owner !== ownerId
+      ) {
+        return null;
+      }
+
+      attempt.status = "uncertain";
+      attempt.processing_owner = null;
+      attempt.updated_at = new Date().toISOString();
+
+      return { ...attempt };
+    },
+  );
+}
+
 beforeEach(() => {
+  vi.resetAllMocks();
+  mocks.attempts.clear();
+
   vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://checkout.test/");
+
   vi.useFakeTimers({ toFake: ["Date"] });
-  // Wednesday October 14, 2026 at 3:00 PM in San Francisco: the store is open
+
+  // Wednesday October 14, 2026 at 3:00 PM in San Francisco: the store is open.
   vi.setSystemTime(pacificToUtc(2026, 10, 14, 15, 0));
+
   const fixture = catalogFixture();
+
   mocks.readCatalogItems.mockResolvedValue([fixture.item]);
   mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
   mocks.getWebsiteContent.mockResolvedValue(content());
   mocks.verifyTurnstile.mockResolvedValue({ ok: true });
   mocks.consumeRateLimit.mockResolvedValue(true);
+
   mocks.createPaymentLink.mockResolvedValue({
-    paymentLink: { url: "https://sandbox.square.link/u/test", orderId: "ORDER_1" },
+    paymentLink: {
+      url: "https://sandbox.square.link/u/test",
+      orderId: "ORDER_1",
+    },
   });
+
+  setupAttemptStore();
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.useRealTimers();
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe("POST /api/checkout", () => {
-  it.each(["other drink", "duplicate", "too few", "too many", "unrelated", "disabled", "hidden", "quantities", "text", "nested"])("prevents Payment Link creation for %s options", async (state) => {
-    const fixture = catalogFixture();
-    const line = { ...items[0], modifierOptionIds: ["MOD1"] };
-    if (state === "other drink") line.catalogObjectId = "OTHER_DRINK";
-    if (state === "duplicate") line.modifierOptionIds = ["MOD1", "MOD1"];
-    if (state === "too few") line.modifierOptionIds = [];
-    if (state === "too many") line.modifierOptionIds = ["MOD1", "MOD2"];
-    if (state === "unrelated") line.modifierOptionIds = ["UNRELATED"];
-    if (state === "disabled") fixture.item.itemData!.modifierListInfo![0].enabled = false;
-    if (state === "hidden") fixture.option.modifierData!.hiddenOnline = true;
-    if (state === "quantities") fixture.list.modifierListData!.allowQuantities = true;
-    if (state === "text") fixture.list.modifierListData!.modifierType = "TEXT";
-    if (state === "nested") fixture.option.modifierData!.childModifierListIds = ["CHILD"];
-    mocks.readCatalogItems.mockResolvedValue([fixture.item]);
-    mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items: [line] });
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ code: "INVALID_OPTIONS", variationIds: ["VAR1"] });
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+  it.each([
+    "other drink",
+    "duplicate",
+    "too few",
+    "too many",
+    "unrelated",
+    "disabled",
+    "hidden",
+    "quantities",
+    "text",
+    "nested",
+  ])(
+    "prevents Payment Link creation for %s options",
+    async (state) => {
+      const fixture = catalogFixture();
 
-  it("keeps checkout returns on the preview deployment when no explicit base URL is set", async () => {
-    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("VERCEL_URL", "checkout-preview.vercel.app");
-    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "teazous.com");
-    const response = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(response.status).toBe(200);
-    expect(mocks.createPaymentLink.mock.calls[0][0].checkoutOptions.redirectUrl)
-      .toBe("https://checkout-preview.vercel.app/order/confirmation");
-  });
+      const line = {
+        ...items[0],
+        modifierOptionIds: ["MOD1"],
+      };
 
-  it("reports missing preview URL configuration before creating a payment link", async () => {
-    vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("VERCEL_URL", undefined);
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      const response = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-      expect(response.status).toBe(503);
+      if (state === "other drink") {
+        line.catalogObjectId = "OTHER_DRINK";
+      }
+
+      if (state === "duplicate") {
+        line.modifierOptionIds = ["MOD1", "MOD1"];
+      }
+
+      if (state === "too few") {
+        line.modifierOptionIds = [];
+      }
+
+      if (state === "too many") {
+        line.modifierOptionIds = ["MOD1", "MOD2"];
+      }
+
+      if (state === "unrelated") {
+        line.modifierOptionIds = ["UNRELATED"];
+      }
+
+      if (state === "disabled") {
+        fixture.item.itemData!.modifierListInfo![0].enabled = false;
+      }
+
+      if (state === "hidden") {
+        fixture.option.modifierData!.hiddenOnline = true;
+      }
+
+      if (state === "quantities") {
+        fixture.list.modifierListData!.allowQuantities = true;
+      }
+
+      if (state === "text") {
+        fixture.list.modifierListData!.modifierType = "TEXT";
+      }
+
+      if (state === "nested") {
+        fixture.option.modifierData!.childModifierListIds = ["CHILD"];
+      }
+
+      mocks.readCatalogItems.mockResolvedValue([fixture.item]);
+      mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
+
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items: [line],
+      });
+
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({
+        code: "INVALID_OPTIONS",
+        variationIds: ["VAR1"],
+      });
       expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-    } finally {
-      log.mockRestore();
-    }
-  });
+    },
+  );
 
-  it("creates a Square pickup order and returns the payment link", async () => {
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+  it(
+    "keeps checkout returns on the preview deployment when no explicit base URL is set",
+    async () => {
+      vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("VERCEL_ENV", "preview");
+      vi.stubEnv("VERCEL_URL", "checkout-preview.vercel.app");
+      vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "teazous.com");
+
+      const response = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
+
+      expect(response.status).toBe(200);
+
+      expect(
+        mocks.createPaymentLink.mock.calls[0][0]
+          .checkoutOptions.redirectUrl,
+      ).toBe(
+        "https://checkout-preview.vercel.app/order/confirmation",
+      );
+    },
+  );
+
+  it(
+    "reports missing preview URL configuration before creating a payment link",
+    async () => {
+      vi.stubEnv("NEXT_PUBLIC_BASE_URL", undefined);
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("VERCEL_ENV", "preview");
+      vi.stubEnv("VERCEL_URL", undefined);
+
+      const log = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      try {
+        const response = await checkout({
+          customer,
+          pickupTiming: { type: "ASAP" },
+          items,
+        });
+
+        expect(response.status).toBe(503);
+        expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+      } finally {
+        log.mockRestore();
+      }
+    },
+  );
+
+  it(
+    "creates a Square pickup order and returns the payment link",
+    async () => {
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
+
+      expect(res.status).toBe(200);
+
+      expect(await res.json()).toEqual({
+        checkoutUrl: "https://sandbox.square.link/u/test",
+        orderId: "ORDER_1",
+      });
+
+      const request = mocks.createPaymentLink.mock.calls[0][0];
+
+      expect(request.idempotencyKey).toBe(ATTEMPT_ID);
+      expect(request.order.locationId).toBe("LOCATION_1");
+
+      // Tagged so the receipt lookup will show it.
+      expect(request.order.metadata).toEqual({
+        teazo_source: "website_checkout",
+      });
+
+      expect(request.order.lineItems).toEqual([
+        {
+          catalogObjectId: "VAR1",
+          quantity: "2",
+          note: undefined,
+          modifiers: [{ catalogObjectId: "MOD1" }],
+        },
+      ]);
+
+      expect(request.order.fulfillments[0]).toMatchObject({
+        type: "PICKUP",
+        pickupDetails: {
+          scheduleType: "ASAP",
+          prepTimeDuration: "PT25M",
+          recipient: {
+            displayName: "Test Customer",
+            phoneNumber: "+14155550100",
+          },
+        },
+      });
+
+      expect(storedAttempt(ATTEMPT_ID)?.status).toBe("completed");
+    },
+  );
+
+  it(
+    "rejects a newly unavailable cart before creating any Payment Link",
+    async () => {
+      const fixture = catalogFixture();
+
+      fixture.option.modifierData!.locationOverrides = [
+        { locationId: "LOCATION_1", soldOut: true },
+      ];
+
+      mocks.readCatalogItems.mockResolvedValue([fixture.item]);
+      mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
+
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
+
+      expect(res.status).toBe(400);
+
+      expect(await res.json()).toMatchObject({
+        code: "ITEM_UNAVAILABLE",
+        variationIds: ["VAR1"],
+      });
+
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
+
+  it(
+    "does not create a Payment Link when Square catalog validation cannot run",
+    async () => {
+      mocks.readCatalogItems.mockRejectedValueOnce(
+        new Error("Catalog unavailable"),
+      );
+
+      const log = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      try {
+        const res = await checkout({
+          customer,
+          pickupTiming: { type: "ASAP" },
+          items,
+        });
+
+        expect(res.status).toBe(503);
+        expect(await res.json()).toMatchObject({
+          code: "CATALOG_UNAVAILABLE",
+        });
+        expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+      } finally {
+        log.mockRestore();
+      }
+    },
+  );
+
+  it(
+    "refuses orders while online ordering is paused, without contacting Square",
+    async () => {
+      mocks.getWebsiteContent.mockResolvedValue(
+        content({ onlineOrderingEnabled: false }),
+      );
+
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
+
+      expect(res.status).toBe(400);
+
+      expect(await res.json()).toMatchObject({
+        code: "ORDERING_PAUSED",
+      });
+
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
+
+  it(
+    "fails closed with 503 when website content storage is unavailable, without contacting Square",
+    async () => {
+      mocks.getWebsiteContent.mockRejectedValueOnce(
+        new Error("Website content storage is unconfigured."),
+      );
+
+      const log = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      try {
+        const res = await checkout({
+          customer,
+          pickupTiming: { type: "ASAP" },
+          items,
+        });
+
+        expect(res.status).toBe(503);
+
+        expect(await res.json()).toMatchObject({
+          code: "STORAGE_UNAVAILABLE",
+        });
+
+        expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+      } finally {
+        log.mockRestore();
+      }
+    },
+  );
+
+  it("accepts a pickup scheduled days ahead", async () => {
+    const pickupAt = pacificToUtc(
+      2026,
+      10,
+      17,
+      12,
+      30,
+    ).toISOString();
+
+    const res = await checkout({
+      customer,
+      pickupTiming: { type: "SCHEDULED", pickupAt },
+      items,
+    });
+
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ checkoutUrl: "https://sandbox.square.link/u/test", orderId: "ORDER_1" });
 
-    const request = mocks.createPaymentLink.mock.calls[0][0];
-    expect(request.order.locationId).toBe("LOCATION_1");
-    // Tagged so the receipt lookup will show it
-    expect(request.order.metadata).toEqual({ teazo_source: "website_checkout" });
-    expect(request.order.lineItems).toEqual([
-      { catalogObjectId: "VAR1", quantity: "2", note: undefined, modifiers: [{ catalogObjectId: "MOD1" }] },
-    ]);
-    expect(request.order.fulfillments[0]).toMatchObject({
-      type: "PICKUP",
-      pickupDetails: {
-        scheduleType: "ASAP",
-        prepTimeDuration: "PT25M",
-        recipient: { displayName: "Test Customer", phoneNumber: "+14155550100" },
-      },
+    const fulfillment =
+      mocks.createPaymentLink.mock.calls[0][0].order.fulfillments[0];
+
+    expect(fulfillment.pickupDetails).toMatchObject({
+      scheduleType: "SCHEDULED",
+      pickupAt,
     });
   });
 
-  it("rejects a newly unavailable cart before creating any Payment Link", async () => {
-    const fixture = catalogFixture();
-    fixture.option.modifierData!.locationOverrides = [{ locationId: "LOCATION_1", soldOut: true }];
-    mocks.readCatalogItems.mockResolvedValue([fixture.item]);
-    mocks.readCatalogModifierLists.mockResolvedValue([fixture.list]);
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ code: "ITEM_UNAVAILABLE", variationIds: ["VAR1"] });
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+  it(
+    "refuses a scheduled time between the 15-minute marks without contacting Square",
+    async () => {
+      const pickupAt = pacificToUtc(
+        2026,
+        10,
+        17,
+        14,
+        7,
+      ).toISOString();
 
-  it("does not create a Payment Link when Square catalog validation cannot run", async () => {
-    mocks.readCatalogItems.mockRejectedValueOnce(new Error("Catalog unavailable"));
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(500);
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "SCHEDULED", pickupAt },
+        items,
+      });
 
-  it("refuses orders while online ordering is paused, without contacting Square", async () => {
-    mocks.getWebsiteContent.mockResolvedValue(content({ onlineOrderingEnabled: false }));
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ code: "ORDERING_PAUSED" });
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+      expect(res.status).toBe(400);
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
 
-  it("fails closed with 503 when website content storage is unavailable, without contacting Square", async () => {
-    mocks.getWebsiteContent.mockRejectedValueOnce(new Error("Website content storage is unconfigured."));
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(503);
-    expect(await res.json()).toMatchObject({ code: "STORAGE_UNAVAILABLE" });
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+  it(
+    "refuses a pickup on a closed day without contacting Square",
+    async () => {
+      const pickupAt = pacificToUtc(
+        2026,
+        10,
+        19,
+        12,
+        0,
+      ).toISOString();
 
-  it("accepts a pickup scheduled days ahead", async () => {
-    const pickupAt = pacificToUtc(2026, 10, 17, 12, 30).toISOString();
-    const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
-    expect(res.status).toBe(200);
-    const fulfillment = mocks.createPaymentLink.mock.calls[0][0].order.fulfillments[0];
-    expect(fulfillment.pickupDetails).toMatchObject({ scheduleType: "SCHEDULED", pickupAt });
-  });
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "SCHEDULED", pickupAt },
+        items,
+      });
 
-  it("refuses a scheduled time between the 15-minute marks without contacting Square", async () => {
-    const pickupAt = pacificToUtc(2026, 10, 17, 14, 7).toISOString();
-    const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
-    expect(res.status).toBe(400);
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
-
-  it("refuses a pickup on a closed day without contacting Square", async () => {
-    const pickupAt = pacificToUtc(2026, 10, 19, 12, 0).toISOString();
-    const res = await checkout({ customer, pickupTiming: { type: "SCHEDULED", pickupAt }, items });
-    expect(res.status).toBe(400);
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+      expect(res.status).toBe(400);
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
 
   it("checks the bot token with the visitor's IP", async () => {
-    await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(mocks.verifyTurnstile).toHaveBeenCalledWith("token-1", "203.0.113.7");
-    expect(mocks.consumeRateLimit).toHaveBeenCalledWith(expect.objectContaining({ name: "checkout" }), "203.0.113.7");
+    await checkout({
+      customer,
+      pickupTiming: { type: "ASAP" },
+      items,
+    });
+
+    expect(mocks.verifyTurnstile).toHaveBeenCalledWith(
+      "token-1",
+      "203.0.113.7",
+    );
+
+    expect(mocks.consumeRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "checkout" }),
+      "203.0.113.7",
+    );
   });
 
-  it("refuses a missing or failed bot check without contacting Square", async () => {
-    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "rejected" });
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items, turnstileToken: undefined });
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ code: "BOT_CHECK_FAILED" });
-    expect(mocks.verifyTurnstile).toHaveBeenCalledWith("", "203.0.113.7");
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+  it(
+    "refuses a missing or failed bot check without contacting Square",
+    async () => {
+      mocks.verifyTurnstile.mockResolvedValue({
+        ok: false,
+        reason: "rejected",
+      });
+
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+        turnstileToken: undefined,
+      });
+
+      expect(res.status).toBe(400);
+
+      expect(await res.json()).toMatchObject({
+        code: "BOT_CHECK_FAILED",
+      });
+
+      expect(mocks.verifyTurnstile).toHaveBeenCalledWith(
+        "",
+        "203.0.113.7",
+      );
+
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
 
   it("answers 503 when the bot check itself can't run", async () => {
-    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "unavailable" });
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
+    mocks.verifyTurnstile.mockResolvedValue({
+      ok: false,
+      reason: "unavailable",
+    });
+
+    const res = await checkout({
+      customer,
+      pickupTiming: { type: "ASAP" },
+      items,
+    });
+
     expect(res.status).toBe(503);
     expect(mocks.createPaymentLink).not.toHaveBeenCalled();
   });
 
-  it("answers 429 past the rate limit, without contacting Square", async () => {
-    mocks.consumeRateLimit.mockResolvedValue(false);
-    const res = await checkout({ customer, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(429);
-    expect(res.headers.get("retry-after")).toBe("600");
-    expect(await res.json()).toMatchObject({ code: "RATE_LIMITED" });
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+  it(
+    "answers 429 past the rate limit, without contacting Square",
+    async () => {
+      mocks.consumeRateLimit.mockResolvedValue(false);
 
-  it("doesn't count requests that fail the bot check against the rate limit", async () => {
-    mocks.verifyTurnstile.mockResolvedValue({ ok: false, reason: "missing" });
-    await checkout({ customer, pickupTiming: { type: "ASAP" }, items, turnstileToken: undefined });
-    expect(mocks.consumeRateLimit).not.toHaveBeenCalled();
-  });
+      const res = await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
 
-  it("refuses a malformed body without contacting Square", async () => {
-    const res = await checkout({ customer: { ...customer, phone: "555" }, pickupTiming: { type: "ASAP" }, items });
-    expect(res.status).toBe(400);
-    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
-  });
+      expect(res.status).toBe(429);
+      expect(res.headers.get("retry-after")).toBe("600");
+
+      expect(await res.json()).toMatchObject({
+        code: "RATE_LIMITED",
+      });
+
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
+
+  it(
+    "doesn't count requests that fail the bot check against the rate limit",
+    async () => {
+      mocks.verifyTurnstile.mockResolvedValue({
+        ok: false,
+        reason: "missing",
+      });
+
+      await checkout({
+        customer,
+        pickupTiming: { type: "ASAP" },
+        items,
+        turnstileToken: undefined,
+      });
+
+      expect(mocks.consumeRateLimit).not.toHaveBeenCalled();
+    },
+  );
+
+  it(
+    "refuses a malformed body without contacting Square",
+    async () => {
+      const res = await checkout({
+        customer: { ...customer, phone: "555" },
+        pickupTiming: { type: "ASAP" },
+        items,
+      });
+
+      expect(res.status).toBe(400);
+      expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -26,19 +26,19 @@ export interface CartModifierChoice {
 export interface CartItem {
   cartItemId: string; // Unique UUID per customization configuration
   catalogObjectId: string; // Square Item ID
-  variationId: string; // Square Variation ID (Size)
-  variationName?: string; // Display name for variation (e.g. "Regular", "Large")
+  variationId: string;
+  variationName?: string;
   name: string;
   basePriceCents: number;
   imageUrl: string | null;
   selectedModifiers: CartModifierChoice[];
   quantity: number;
   notes?: string;
-  itemTotalCents: number; // (basePriceCents + sum(modifierPrices)) * quantity
+  itemTotalCents: number;
 }
 
 export interface CheckoutItemRequest {
-  catalogObjectId: string; // Parent Square Item ID, verified against variationId.
+  catalogObjectId: string;
   variationId: string;
   quantity: number;
   notes?: string;
@@ -46,6 +46,12 @@ export interface CheckoutItemRequest {
 }
 
 export interface CheckoutRequestBody {
+  /**
+   * Stable UUID identifying one checkout attempt.
+   * Reuse it when retrying the same purchase.
+   * Generate a new UUID for a genuinely new purchase.
+   */
+  checkoutAttemptId: string;
   customer: CustomerContact;
   pickupTiming: PickupTiming;
   items: CheckoutItemRequest[];
