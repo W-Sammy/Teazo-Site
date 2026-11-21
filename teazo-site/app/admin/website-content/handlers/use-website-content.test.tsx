@@ -492,6 +492,22 @@ describe("Website Content save handling", () => {
     expect(result.current.hasUnsavedEdits).toBe(false);
   });
 
+  it("sends a new edit made after a failed save when the page unloads", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementationOnce(async () => ({
+      ok: false, status: 503, json: async () => ({ error: "Service unavailable" }),
+    }));
+
+    act(() => { result.current.updateStory("First story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+
+    // The tab closes before the new edit's save timer fires.
+    act(() => { result.current.updateStory("Revised story edit"); });
+    act(() => { window.dispatchEvent(new Event("beforeunload")); });
+
+    expect(savedPatches().at(-1)).toEqual({ story: "Revised story edit" });
+  });
+
   it("updates local logo state from confirmed upload without triggering redundant general PATCH", async () => {
     const { result } = await renderContentHook();
 
