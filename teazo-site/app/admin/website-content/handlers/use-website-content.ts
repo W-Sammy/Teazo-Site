@@ -51,10 +51,11 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const pendingPatchRef = useRef<Partial<WebsiteContent>>({});
+  // A failed save must not be silently resubmitted when the page unloads.
+  const failedSaveRef = useRef(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const savedTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isSavingRef = useRef<boolean>(false);
-  const failedSaveRef = useRef(false);
   const saveOperationRef = useRef<Promise<boolean> | null>(null);
   const revisionRef = useRef(initialContent.collectionsRevision ?? 0);
   const reconciliationRef = useRef<string | null>(null);
@@ -74,6 +75,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       debounceTimerRef.current = null;
     }
     if (immediatePatch) {
+      // An explicit new action is allowed to initiate another save.
+      failedSaveRef.current = false;
       pendingPatchRef.current = {
         ...pendingPatchRef.current,
         ...immediatePatch,
@@ -93,7 +96,6 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
     if (Object.keys(pendingPatchRef.current).length === 0) return true;
 
     isSavingRef.current = true;
-    failedSaveRef.current = false;
     const operation = (async () => {
       try {
         while (Object.keys(pendingPatchRef.current).length > 0) {
@@ -147,6 +149,7 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
             throw error;
           }
         }
+        failedSaveRef.current = false;
         setSaveStatus("saved");
         setErrorMessage("");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -182,6 +185,8 @@ export function useWebsiteContent(initialContent: WebsiteContent) {
       return;
     }
 
+    // A new valid edit may be saved normally, even after an earlier failure.
+    failedSaveRef.current = false;
     setSaveStatus((current) => current === "saving" ? "saving" : "unsaved");
 
     pendingPatchRef.current = {
