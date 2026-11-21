@@ -82,7 +82,7 @@ export default function NavBar() {
                         left on desktop, centered on mobile */}
                     <Link 
                         href="/" 
-                        className={`${cabinSketch.className} border-b-2 border-[#B28458] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#B28458] md:text-[64px]`}
+                        className={`${cabinSketch.className} border-b-2 border-[#8E5629] text-[48px] font-normal leading-[0.8] tracking-[0.05em] text-[#8E5629] md:text-[64px]`}
                     >
                         TEAZO
                     </Link>
@@ -94,9 +94,11 @@ export default function NavBar() {
                         onMouseEnter={preloadCartInteriorModule}
                         onFocus={preloadCartInteriorModule}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
+                        className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
                     >
                         <svg
+                            aria-hidden="true"
+                            focusable="false"
                             className="w-6 h-6 transition-transform group-hover:scale-105"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -112,7 +114,7 @@ export default function NavBar() {
 
                         {/* Active item counter badge */}
                         {totalCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-[#DBAF82] text-white text-[10px] font-bold rounded-full h-4.5 min-w-[18px] px-1 flex items-center justify-center shadow-sm">
+                            <span className="absolute -top-1 -right-1 bg-[#8E5629] text-white text-[10px] font-bold rounded-full h-4.5 min-w-[18px] px-1 flex items-center justify-center shadow-sm">
                                 {totalCount}
                             </span>
                         )}
@@ -299,9 +301,11 @@ export default function NavBar() {
                         onMouseEnter={preloadCartInteriorModule}
                         onFocus={preloadCartInteriorModule}
                         aria-label={`Open Cart (${totalCount} items)`}
-                        className="cursor-pointer relative p-2 text-black hover:text-[#DBAF82] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
+                        className="cursor-pointer relative p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
                     >
                         <svg
+                            aria-hidden="true"
+                            focusable="false"
                             className="w-6 h-6 transition-transform group-hover:scale-105"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -317,7 +321,7 @@ export default function NavBar() {
 
                         {/* Active item counter badge */}
                         {totalCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-[#DBAF82] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center shadow-sm">
+                            <span className="absolute -top-1 -right-1 bg-[#8E5629] text-white text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center shadow-sm">
                                 {totalCount}
                             </span>
                         )}
