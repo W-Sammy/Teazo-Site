@@ -89,7 +89,7 @@ Most **Vitest** tests use mocks or in-memory databases. They generally do not re
 - Live email delivery.
 - A production database.
 
-Playwright browser tests require a local Next.js server. The Playwright configuration can start it automatically at `http://localhost:3000` if one is not already running. Protected Owner account-management tests additionally need a valid local Owner session, and the local D1 proxy may need to be running for authentication and protected pages to work.
+Playwright browser tests require a local Next.js server. The Playwright configuration can start it automatically at `http://localhost:3000` if one is not already running. Protected Owner account-management tests additionally need a valid local Owner session, and the local D1 proxy may need to be running for authentication and protected pages to work. Admin Delivery browser tests also require a saved local administrator session. Public Delivery browser tests read the currently configured local delivery links, so at least one complete, enabled platform must exist in local website content; the local D1 proxy may be needed to serve that content.
 
 Some separate manual and integration verification procedures also require these services or their sandbox equivalents.
 
@@ -102,7 +102,7 @@ TEAZO uses the following testing tools.
 | Tool | Purpose |
 |---|---|
 | Vitest | Test runner, assertions, mocks, lifecycle hooks |
-| Playwright (`@playwright/test`) | Chromium browser tests for authentication, Owner account management, and public cart/checkout workflows |
+| Playwright (`@playwright/test`) | Chromium browser tests for authentication, administrator management, public cart/checkout, Delivery, Admin Delivery, and Static Menu workflows |
 | React Testing Library | Testing React components and user interactions |
 | jsdom | Simulated browser DOM for React component tests |
 | Node.js | Default test execution environment |
@@ -171,7 +171,7 @@ Playwright discovers `e2e/**/*.spec.ts` separately from Vitest, using:
 - Development server: start `npm run dev -- --hostname localhost --port 3000` when needed, or reuse an existing local server outside CI.
 - Failure artifacts: screenshots and traces are written below `.next/playwright-test-results`, an ignored build directory.
 
-The browser suite covers administrator authentication and account management, as well as public cart and checkout interactions. It does not automate real Google sign-in, production administrator changes, or actual Square payments.
+The browser suite covers administrator authentication and account management, public cart and checkout interactions, public Delivery, Admin Delivery, and Static Menu behavior. It does not automate real Google sign-in, production administrator changes, or actual Square payments. The new Delivery and Static Menu specs optionally read `TEAZO_E2E_BASE_URL`; the Static Menu spec also accepts `TEAZO_E2E_STATIC_MENU_PATH` (default `/static-menu`). These overrides are spec-specific, not changes to the shared Playwright server configuration.
 
 ## 3. Running automated tests
 
@@ -274,6 +274,16 @@ For a React component test:
 npm test -- app/admin/events/components/event-form.test.tsx
 ```
 
+### Run Delivery and Static Menu Vitest tests
+
+The public Delivery, Static Menu, and administrator Delivery tests are distributed across multiple directories. The following PowerShell-compatible command runs all nine affected Vitest files, including existing website-content assertions in those files:
+
+```powershell
+npx vitest run "app/(site)/delivery/page.test.tsx" "app/(site)/static-menu/page.test.tsx" "app/(site)/static-menu/static-menu-content.test.ts" "app/admin/website-content/components/sections/delivery-section.test.tsx" "app/admin/website-content/handlers/use-website-content.test.tsx" "app/api/website-content/route.test.ts" "app/lib/website-content-delivery.test.ts" "app/lib/website-content-validators.test.ts" "app/lib/website-content.test.ts"
+```
+
+The command runs complete files, not only the newly added tests. It is a focused regression run and does not replace `npm test`.
+
 ### Run related tests using a directory filter
 
 ```bash
@@ -350,6 +360,26 @@ npx playwright test e2e/customizer-cart-checkout.spec.ts --workers=2
 
 Playwright's exit summary reports passed, failed, and skipped tests. A skipped Owner test **does not demonstrate that its workflow passed**. Confirm the expected test count and zero skips when reporting complete verification.
 
+### Run Delivery and Static Menu browser tests
+
+The three additional browser specs can be run independently or together:
+
+```powershell
+npx playwright test e2e/delivery.spec.ts e2e/delivery-admin.spec.ts e2e/static-menu.spec.ts --project=chromium --workers=2
+```
+
+```powershell
+npx playwright test e2e/delivery.spec.ts --project=chromium
+npx playwright test e2e/delivery-admin.spec.ts --project=chromium
+npx playwright test e2e/static-menu.spec.ts --project=chromium
+```
+
+`delivery.spec.ts` is a public, unauthenticated browser suite. It reads delivery platforms saved in local website content and expects at least one complete, enabled platform. It checks page content, configured link destinations, keyboard activation, and responsive layouts. Destination navigation is intercepted with a fake page; it does not contact real delivery providers. The local Next.js app and its local database proxy may need to be running to load the saved links.
+
+`delivery-admin.spec.ts` loads the real local `/admin/website-content` page and requires `TEAZO_E2E_ADMIN_STORAGE_STATE` to point to a saved, authorized local Admin or Owner session. If that variable does not point to an existing file, its tests skip; if the session is expired, navigation to login fails the test. The suite intercepts website-content saves, records attempted PATCH payloads, and blocks unexpected writes. It verifies user interactions and outgoing save data, **not** database persistence.
+
+`static-menu.spec.ts` tests `/static-menu` and the `OPEN PDF` interaction, keyboard access, new-tab behavior, PDF preview rendering, fallbacks, viewport changes, and simulated Safari user-agent behavior. It loads `public/teazo-menu.pdf` as a fixture and intercepts PDF requests to test success and failure conditions. Safari behavior is simulated in Chromium; it is not a real Safari test.
+
 ### Prepare a local Owner session for protected browser tests
 
 Do this only with an authorized local development Owner account. Keep saved browser state **outside the repository**: it contains authentication cookies and must never be committed, shared, or uploaded to test logs.
@@ -385,9 +415,14 @@ Tests are organized by the functionality they verify rather than by individual d
 
 ### Functional coverage
 
+The Delivery and Static Menu areas include both component-level tests and Chromium browser tests. Delivery administration also covers saving, validation, visibility, ordering, removal, and error recovery without writing production data.
+
 | Website area | Types of behavior tested |
 |---|---|
 | Public Menu | Catalog display, loading states, category visibility, data handling, and error conditions |
+| Static Menu | Page content, logo, link behavior, PDF preview, fallback states, keyboard access, responsive layout, and simulated Safari behavior |
+| Public Delivery | Page content, logo, visible platform links and ordering, external-link destinations, keyboard activation, and responsive layout |
+| Admin Delivery | Delivery platform add/edit/hide/show/remove, field requirements, URL and name validation, debounced saves, errors, and multi-platform isolation |
 | Admin Menu | Item forms, creation, editing, deletion, refresh behavior, category display controls, validation, PDF uploads |
 | Gallery | Public image display, administrator selection, upload/deletion routes, media utilities, database queries |
 | Events | Public Events display, administrator forms, API routes, event dates, database queries |
@@ -426,6 +461,22 @@ Examples of behaviors to test include:
 
 Frontend tests should focus on observable behavior rather than implementation details whenever practical.
 
+### Delivery and Static Menu Vitest files
+
+The following nine test files contain the new Delivery and Static Menu coverage. Some also contain earlier website-content tests, so do not interpret their entire test counts as new additions.
+
+| Test file | Main behaviors |
+|---|---|
+| `app/(site)/delivery/page.test.tsx` | Public heading, description, displayed/hidden delivery platforms, ordering, content loading, and logo source |
+| `app/(site)/static-menu/page.test.tsx` | Page metadata, headings, logo, static-menu component, and website-content loading |
+| `app/(site)/static-menu/static-menu-content.test.ts` | PDF link and helper text, server-rendered fallback, and simulated Safari behavior |
+| `app/admin/website-content/components/sections/delivery-section.test.tsx` | Form validation, blank drafts, name length, visibility, editing, and removing the correct row |
+| `app/admin/website-content/handlers/use-website-content.test.tsx` | Delivery save timing, failed/invalid saves, drafts, visibility and deletion, capacity limits, and cross-row isolation |
+| `app/api/website-content/route.test.ts` | Administrator authorization, delivery PATCH validation, empty-list saves, and persistence failure responses |
+| `app/lib/website-content-delivery.test.ts` | Delivery URL protocol requirements, hidden items, invalid URLs, and empty-list saves |
+| `app/lib/website-content-validators.test.ts` | Shared website-content validation, delivery link formats, platform limits, and invalid data |
+| `app/lib/website-content.test.ts` | Local fake-D1 delivery reads/writes, delete semantics, validation failures, and cache invalidation |
+
 ### Playwright browser tests
 
 Browser tests are kept under `teazo-site/e2e/` and run independently of the co-located Vitest tests:
@@ -437,6 +488,9 @@ Browser tests are kept under `teazo-site/e2e/` and run independently of the co-l
 | `admin-account-management.spec.ts` | 19 | Owner-only account list, add/edit/delete flows, invitations, authorization failures, responsive UI |
 | `admin-account-management-mobile.spec.ts` | 1 | Synthetic add, edit, invitation, and delete workflows at a mobile viewport |
 | `customizer-cart-checkout.spec.ts` | 9 | Public cart totals, item customization, checkout validation and error handling, retry, pending/disabled states, mocked Square redirect, and mobile viewport |
+| `delivery.spec.ts` | Not yet included in historical baseline | Public Delivery page, live local content, links, keyboard access, refresh behavior, and responsive layouts |
+| `delivery-admin.spec.ts` | Not yet included in historical baseline | Authenticated local admin editor, draft management, field validation, intercepted saves, failures, visibility, and mobile interaction |
+| `static-menu.spec.ts` | Not yet included in historical baseline | PDF button, preview rendering, fallback states, keyboard activation, new tab, resizing, and Safari simulation |
 
 **Verified Playwright baselines:** 39 Chromium tests passed across the four administrator specs on November 18, 2026 (`ben-update-vitests`); 9 checkout tests passed in the fifth spec on November 19, 2026 (`ben-test-frontend-checkout`). These were **separate branch-local runs**, not a verified combined 48-test run. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
 
@@ -641,6 +695,14 @@ The checkout browser spec intercepts the checkout and related dependencies and u
 
 Do not assume every browser test is fully isolated merely because it uses Playwright routing. Review new test routes before adding them, avoid production services, and never run destructive authenticated workflows against real customer or production data. A valid local Owner session proves local access; it is not a production login test.
 
+### Delivery and Static Menu isolation
+
+Delivery administration tests use the real local authenticated page but intercept `PATCH /api/website-content`, record intended payloads, and block unexpected write requests. They also stub carousel initialization, so tests do not persist website-content or carousel changes. A valid local session is still required to load protected routes.
+
+Public Delivery tests allow local content reads but mock navigation to delivery platforms. This prevents tests from reaching external delivery websites. They depend on valid, enabled links in the local website-content data.
+
+Static Menu browser tests intercept PDF requests and use the committed `public/teazo-menu.pdf` fixture. They simulate missing PDFs, corrupt PDFs, and PDF module failures, rather than requiring these failures in the live application. Always distinguish simulated Safari user-agent tests in Chromium from testing on Safari itself.
+
 ### Reset state between tests
 
 Relevant Vitest utilities include:
@@ -777,7 +839,7 @@ Examples include:
 - Verifying Cloudflare D1/R2 integrations.
 - Testing responsive layout on mobile devices.
 - Confirming browser-specific behavior.
-- Checking accessibility and keyboard navigation.
+- Checking accessibility and keyboard navigation, including manual review with the WAVE browser extension when evaluating accessibility. WAVE findings are manual verification results unless explicitly captured in automated assertions.
 
 Use development or sandbox systems whenever possible.
 
@@ -840,6 +902,18 @@ The configured origin is `http://localhost:3000`, not `http://127.0.0.1:3000`. E
 ### Local checkout concurrency script cannot connect
 
 Confirm the local D1 proxy is running at `http://127.0.0.1:8787`, that `.env.local` contains a matching local `PROXY_TOKEN`, and that the checkout-attempt migration was applied to the **local** database. Run the script from `teazo-site/` with PowerShell 7. Do not paste authentication tokens into bug reports or switch the test to a remote database.
+
+### Delivery browser tests have no visible platforms
+
+Run the local application and, where required, the local D1 proxy. In the local administrator Website Content editor, confirm at least one delivery platform has a nonempty name, a valid URL, and enabled visibility. The public Delivery browser tests intentionally require one such configured platform; hidden and empty-state behavior is covered by Vitest instead.
+
+### Admin Delivery browser tests are skipped or redirected to login
+
+Set `TEAZO_E2E_ADMIN_STORAGE_STATE` in the terminal running Playwright to a valid local browser storage-state file outside the repository. The `TEAZO_E2E_OWNER_STORAGE_STATE` variable alone is not read by this spec. If redirected to `/login`, re-export the saved local session and confirm the D1 proxy and authenticated editor are available. A skipped test does not prove its workflow passed.
+
+### Static Menu PDF tests cannot find their fixture
+
+Run Playwright from `teazo-site/` and check that `public/teazo-menu.pdf` exists in the checkout. The tests read that PDF at startup. They use mocked failure responses and Chromium-based Safari simulation, not live failures or a real Safari browser.
 
 ### SQLite or migration errors
 
@@ -921,15 +995,15 @@ The Vitest suite primarily verifies:
 - Mocked external service interactions.
 - Database queries and migrations.
 
-Playwright additionally verifies selected browser-based authentication, administrator-management, and public cart/checkout interactions in Chromium, with mocked APIs. Further testing may be necessary for:
+Playwright additionally verifies selected browser-based authentication, administrator management, public cart/checkout, public Delivery, Admin Delivery, and Static Menu interactions in Chromium. These tests use a combination of mocked APIs, intercepted requests, and local application data. Further testing may be necessary for:
 
-- Other real browser end-to-end workflows outside the five currently documented Playwright specs.
+- Other real browser end-to-end workflows outside the eight currently documented Playwright specs.
 - Production Google authentication behavior.
 - Live Square sandbox integrations.
 - Deployed Cloudflare D1 and R2 behavior.
 - Actual email deliverability.
 - Mobile Safari and Android browser differences.
-- Accessibility.
+- Accessibility, including manual WAVE browser-extension reviews, screen-reader checks, color contrast, and keyboard navigation across the site. Browser keyboard assertions and simulated states do not constitute a complete accessibility audit.
 - Performance under load.
 - Production concurrency and operational monitoring; local proxy SQL concurrency testing cannot establish all production conditions.
 
