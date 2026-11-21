@@ -151,7 +151,7 @@ export default function LiveEventsSidebar({ events, categories = [], items = [] 
         )}
         <span className="hidden sm:inline">{isOpen ? "Close" : "Events"}</span>
         {!hasBeenOpenedByUser && (
-          <span aria-hidden="true" className="absolute -right-2 -top-2 flex h-7 min-w-7 items-center justify-center rounded-full bg-[#B85F66] px-1 text-xs font-bold leading-none tracking-normal text-white shadow-md">
+          <span aria-hidden="true" className="absolute -right-2 -top-2 flex h-7 min-w-7 items-center justify-center rounded-full bg-[#935357] px-1 text-xs font-bold leading-none tracking-normal text-white shadow-md">
             {events.length}
           </span>
         )}

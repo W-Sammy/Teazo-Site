@@ -36,12 +36,12 @@ export default function PaymentBadges({ className = "" }: { className?: string }
           className="flex items-center justify-center h-7 px-2.5 rounded bg-white border border-gray-200 text-gray-700 text-[11px] font-semibold tracking-tight shadow-sm select-none"
         >
           <span aria-hidden="true">
-            <span className="text-[#4285F4] font-bold">G</span>
-            <span className="text-[#EA4335] font-bold">o</span>
-            <span className="text-[#FBBC05] font-bold">o</span>
-            <span className="text-[#4285F4] font-bold">g</span>
-            <span className="text-[#34A853] font-bold">l</span>
-            <span className="text-[#EA4335] font-bold mr-1">e</span>
+            <span className="text-[#1753BA] font-bold">G</span>
+            <span className="text-[#B8261C] font-bold">o</span>
+            <span className="text-[#8E5629] font-bold">o</span>
+            <span className="text-[#1753BA] font-bold">g</span>
+            <span className="text-[#00861F] font-bold">l</span>
+            <span className="text-[#B8261C] font-bold mr-1">e</span>
           </span>
           <span className="text-gray-700">Pay</span>
         </div>
@@ -51,7 +51,7 @@ export default function PaymentBadges({ className = "" }: { className?: string }
           role="img"
           aria-label="Cash App Pay"
           title="Cash App Pay"
-          className="flex items-center justify-center h-7 px-2.5 rounded bg-[#00D632] text-white text-[11px] font-bold tracking-tight shadow-sm select-none"
+          className="flex items-center justify-center h-7 px-2.5 rounded bg-[#00861F] text-white text-[11px] font-bold tracking-tight shadow-sm select-none"
         >
           $ Cash App
         </div>

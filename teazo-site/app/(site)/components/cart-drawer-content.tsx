@@ -968,7 +968,7 @@ export default function CartDrawerContent({
               <Link
                 href="/menu"
                 onClick={onClose}
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white text-xs font-bold tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white text-xs font-bold tracking-wider hover:bg-[#74461F] transition shadow-sm"
               >
                 EXPLORE MENU
               </Link>
@@ -1150,7 +1150,7 @@ export default function CartDrawerContent({
                           disabled={
                             editingLoadingId === item.cartItemId
                           }
-                          className="text-[11px] font-semibold text-[#c68f5d] hover:text-[#a06b3a] transition underline disabled:opacity-50"
+                          className="text-[11px] font-semibold text-[#8E5629] hover:text-[#74461F] transition underline disabled:opacity-50"
                         >
                           {editingLoadingId === item.cartItemId
                             ? "Loading..."
@@ -1632,7 +1632,7 @@ export default function CartDrawerContent({
             className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide transition flex items-center justify-center gap-2 shadow-md ${
               isCheckoutDisabled
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-[#B28458] text-white hover:bg-[#c69a6d] active:scale-[0.99]"
+                : "bg-[#8E5629] text-white hover:bg-[#74461F] active:scale-[0.99]"
             }`}
           >
             {checkoutStatus.isPending && (
