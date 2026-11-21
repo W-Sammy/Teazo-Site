@@ -38,7 +38,11 @@
       "database_name": "teazo-db",
       // Created on the team Cloudflare account. Not a secret, and the
       // Worker cannot deploy from a fresh clone without it.
-      "database_id": "de4f8bf8-4a40-4397-9468-588951d7275c",
+      // Since 2026-11-20 this is the database Cloudflare lists as
+      // teazo-db-v2: a copy of the original that also allows video files,
+      // since SQLite can't change a table's allowed types in place. The name
+      // above stays teazo-db so the npm scripts keep working.
+      "database_id": "af98db95-0d9d-41ce-982f-1bdffb031112",
       "migrations_dir": "../teazo-site/migrations"
     }
   ],

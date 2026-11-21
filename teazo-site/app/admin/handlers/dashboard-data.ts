@@ -60,7 +60,7 @@ async function loadMetrics(fixture: DashboardFixture): Promise<DashboardMetrics>
 export type DashboardData = {
   metrics: DashboardMetrics;
   events: AdminEvent[];
-  websiteContent: WebsiteContent;
+  websiteContent: WebsiteContent | null;
   storageUsage: StorageUsage[];
 };
 
@@ -69,7 +69,10 @@ export async function getDashboardData(): Promise<DashboardData> {
   const [fixtureContents, events, websiteContent, storageUsage] = await Promise.all([
     readFile(fixturePath, "utf8"),
     listActiveEvents(),
-    getWebsiteContent(),
+    getWebsiteContent().catch((error) => {
+      console.error("Dashboard failed to load website content:", error);
+      return null;
+    }),
     getStorageUsage(),
   ]);
   const fixture = JSON.parse(fixtureContents) as DashboardFixture;

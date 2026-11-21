@@ -26,12 +26,17 @@ export default function Sidebar({
   // Read the current route to highlight the matching navigation entry.
   const pathname = usePathname();
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
- useEffect(() => {
-  setPendingPath(null);
-  onMobileClose();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [pathname]);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setPendingPath(null);
+  }
+
+  useEffect(() => {
+    onMobileClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const activePath = pendingPath ?? pathname;
 

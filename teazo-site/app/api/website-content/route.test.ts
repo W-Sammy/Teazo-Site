@@ -1,5 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { revalidatePath } from "next/cache";
 
 const mocks = vi.hoisted(() => ({
@@ -11,6 +10,10 @@ vi.mock("@/app/lib/admin", () => ({ requireAdminApi: mocks.requireAdminApi }));
 vi.mock("@/app/lib/website-content", () => ({
   getWebsiteContent: vi.fn(),
   updateWebsiteContent: mocks.updateWebsiteContent,
+  deleteWebsiteContentEntry: vi.fn(),
+  WebsiteContentValidationError: class WebsiteContentValidationError extends Error {},
+  WebsiteContentNotFoundError: class WebsiteContentNotFoundError extends Error {},
+  WebsiteContentConflictError: class WebsiteContentConflictError extends Error {},
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -86,7 +89,7 @@ describe("additional delivery API tests", () => {
             expect(await response.json()).toEqual({ deliveryLinks: [platform] });
             expect(mocks.requireAdminApi).toHaveBeenCalledWith(expect.any(Request), 2);
             expect(mocks.updateWebsiteContent).toHaveBeenCalledExactlyOnceWith({ deliveryLinks: [platform] });
-            expect(revalidatePath).toHaveBeenCalledWith("/delivery");
+            expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
             expect(revalidatePath).toHaveBeenCalledWith("/admin/website-content");
         });
 
@@ -138,8 +141,11 @@ describe("additional delivery API tests", () => {
             mocks.updateWebsiteContent.mockRejectedValueOnce(new Error("Test database unavailable"));
 
             const response = await submit([platform]);
-            expect(response.status).toBe(500);
-            expect(await response.json()).toMatchObject({ error: "Failed to update website content" });
+            expect(response.status).toBe(503);
+            expect(await response.json()).toMatchObject({
+                error: "The write could not be confirmed. Reload this page to check current content before trying again.",
+                requiresReload: true,
+            });
             expect(revalidatePath).not.toHaveBeenCalled();
         });
     });

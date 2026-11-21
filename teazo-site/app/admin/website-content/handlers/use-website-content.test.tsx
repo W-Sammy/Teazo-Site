@@ -45,6 +45,7 @@ const DAYS = [
 
 function makeContent(): WebsiteContent {
   return {
+    collectionsRevision: 0,
     logo: "/TEAZO_logo.svg",
     story: "Original TEAZO story",
     socialLinks: [],
@@ -131,6 +132,7 @@ describe("Website Content save handling", () => {
             status: 200,
             json: async () => ({
               success: true,
+              collectionsRevision: 1,
             }),
           };
         }
@@ -323,6 +325,7 @@ describe("Website Content save handling", () => {
     await waitFor(() => {
       expect(savedPatches()).toEqual([
         {
+          collectionsRevision: 0,
           holidays: [
             {
               id: "holiday-1",
@@ -433,6 +436,273 @@ describe("Website Content save handling", () => {
     expect(
       (saveCall?.[1] as RequestInit).keepalive,
     ).toBe(true);
+  });
+
+  it("does not resubmit a failed save when the page unloads", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementation(async (url: string) => {
+      if (url === "/api/website-content") {
+        return { ok: false, status: 503, json: async () => ({ error: "Service unavailable" }) };
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    act(() => { result.current.updateStory("Failed story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    expect(savedPatches()).toHaveLength(1);
+    expect(result.current.hasUnsavedEdits).toBe(true);
+
+    act(() => { window.dispatchEvent(new Event("beforeunload")); });
+    expect(savedPatches()).toHaveLength(1);
+    expect(result.current.saveStatus).toBe("error");
+  });
+
+  it("allows an explicit retry after a failed save", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementationOnce(async () => ({
+      ok: false, status: 503, json: async () => ({ error: "Service unavailable" }),
+    }));
+
+    act(() => { result.current.updateStory("Retry this story"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    expect(savedPatches()).toHaveLength(1);
+
+    await act(async () => { expect(await result.current.flushPatch()).toBe(true); });
+    expect(savedPatches()).toEqual([
+      { story: "Retry this story" },
+      { story: "Retry this story" },
+    ]);
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("allows a new valid edit to save after a previous failure", async () => {
+    const { result } = await renderContentHook();
+    mocks.fetch.mockImplementationOnce(async () => ({
+      ok: false, status: 503, json: async () => ({ error: "Service unavailable" }),
+    }));
+
+    act(() => { result.current.updateStory("First story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    act(() => { result.current.updateStory("Revised story edit"); });
+    await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
+    expect(savedPatches()).toEqual([
+      { story: "First story edit" },
+      { story: "Revised story edit" },
+    ]);
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("updates local logo state from confirmed upload without triggering redundant general PATCH", async () => {
+    const { result } = await renderContentHook();
+
+    act(() => {
+      result.current.updateLogo("https://r2.teazo.com/logo/2026/11/confirmed.webp");
+    });
+
+    expect(result.current.content.logo).toBe(
+      "https://r2.teazo.com/logo/2026/11/confirmed.webp",
+    );
+    // Ensure no redundant PATCH /api/website-content was dispatched
+    expect(savedPatches()).toEqual([]);
+  });
+
+  it("transitions save status from idle to unsaved upon debounced input, and tracks hasUnsavedEdits", async () => {
+    const { result } = await renderContentHook();
+
+    expect(result.current.saveStatus).toBe("idle");
+    expect(result.current.hasUnsavedEdits).toBe(false);
+
+    act(() => {
+      result.current.updateStory("Unsaved debounced story edit");
+    });
+
+    expect(result.current.saveStatus).toBe("unsaved");
+    expect(result.current.hasUnsavedEdits).toBe(true);
+
+    await waitFor(
+      () => {
+        expect(result.current.saveStatus).toBe("saved");
+      },
+      { timeout: 2500 },
+    );
+
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("enforces collection limits when adding social links and holidays", async () => {
+    const { result } = await renderContentHook();
+
+    // Add up to 10 social links
+    for (let i = 0; i < 10; i++) {
+      let added = false;
+      act(() => {
+        added = result.current.addSocialLink();
+      });
+      expect(added).toBe(true);
+    }
+    expect(result.current.content.socialLinks).toHaveLength(10);
+
+    // 11th should be refused
+    let add11th = true;
+    act(() => {
+      add11th = result.current.addSocialLink();
+    });
+    expect(add11th).toBe(false);
+    expect(result.current.content.socialLinks).toHaveLength(10);
+    expect(result.current.errorMessage).toContain("Maximum limit of 10 social links reached");
+
+    // Existing content has 1 holiday, add up to 16
+    for (let i = 1; i < 16; i++) {
+      let added = false;
+      act(() => {
+        added = result.current.addHoliday();
+      });
+      expect(added).toBe(true);
+    }
+    expect(result.current.content.holidays).toHaveLength(16);
+
+    // 17th should be refused
+    let add17th = true;
+    act(() => {
+      add17th = result.current.addHoliday();
+    });
+    expect(add17th).toBe(false);
+    expect(result.current.content.holidays).toHaveLength(16);
+    expect(result.current.errorMessage).toContain("Maximum limit of 16 holiday exceptions reached");
+  });
+
+  it("tracks invalid edits and drafts independently of the save queue", async () => {
+    const { result } = await renderContentHook();
+    act(() => { result.current.updateAddress({ email: "invalid" }); });
+    await act(async () => { await result.current.flushPatch(); });
+    expect(result.current.hasUnsavedEdits).toBe(true);
+    expect(result.current.saveStatus).toBe("unsaved");
+    act(() => { result.current.updateAddress({ email: makeContent().address.email }); });
+    await act(async () => { await result.current.flushPatch(); });
+    expect(result.current.hasUnsavedEdits).toBe(false);
+
+    act(() => { result.current.addHoliday(); });
+    expect(result.current.hasUnsavedEdits).toBe(true);
+    expect(result.current.saveStatus).toBe("unsaved");
+    const id = result.current.content.holidays.at(-1)!.id;
+    await act(async () => { await result.current.removeHoliday(id); });
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("retains the dirty warning for invalid edits made during an in-flight save", async () => {
+    const { result } = await renderContentHook();
+    let finish!: (response: Response) => void;
+    mocks.fetch.mockImplementationOnce(() => new Promise<Response>((resolve) => { finish = resolve; }));
+    act(() => { result.current.updateStory("Submitted story"); });
+    let save!: Promise<boolean>;
+    act(() => { save = result.current.flushPatch(); });
+    act(() => { result.current.updateStory(""); });
+    expect(result.current.saveStatus).toBe("saving");
+    await act(async () => { finish(Response.json({ success: true })); await save; });
+    expect(result.current.content.story).toBe("");
+    expect(result.current.hasUnsavedEdits).toBe(true);
+    expect(result.current.saveStatus).toBe("unsaved");
+  });
+
+  it("refuses an eleventh delivery row and saves edits to the ten supported rows", async () => {
+    const initialContent = makeContent();
+    initialContent.deliveryLinks = Array.from({ length: 10 }, (_, i) => ({
+      id: `delivery-${i}`, label: `Delivery ${i}`, icon: "", url: `https://example.com/${i}`, enabled: true,
+    }));
+    const { result } = renderHook(() => useWebsiteContent(initialContent));
+    await waitFor(() => expect(result.current.carousel.carouselReady).toBe(true));
+    act(() => { result.current.addDeliveryLink(); });
+    expect(result.current.content.deliveryLinks).toHaveLength(10);
+    expect(result.current.errorMessage).toContain("Maximum limit of 10 delivery links reached");
+    act(() => { result.current.updateDeliveryLink("delivery-0", { label: "Updated" }); });
+    await act(async () => { await result.current.flushPatch(); });
+    expect(savedPatches().at(-1)?.deliveryLinks?.[0].label).toBe("Updated");
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("reports legacy over-capacity delivery edits without claiming they were saved", async () => {
+    const initialContent = makeContent();
+    initialContent.deliveryLinks = Array.from({ length: 11 }, (_, i) => ({
+      id: `delivery-${i}`, label: `Delivery ${i}`, icon: "", url: `https://example.com/${i}`, enabled: true,
+    }));
+    const { result } = renderHook(() => useWebsiteContent(initialContent));
+    await waitFor(() => expect(result.current.carousel.carouselReady).toBe(true));
+    act(() => { result.current.updateDeliveryLink("delivery-0", { label: "Updated" }); });
+    await act(async () => { await result.current.flushPatch(); });
+    expect(result.current.errorMessage).toContain("up to 10 delivery links");
+    expect(result.current.hasUnsavedEdits).toBe(true);
+    expect(result.current.saveStatus).not.toBe("saved");
+    expect(savedPatches()).toEqual([]);
+    await act(async () => { result.current.removeDeliveryLink("delivery-10"); });
+    expect(savedPatches().at(-1)?.deliveryLinks).toHaveLength(10);
+    expect(result.current.hasUnsavedEdits).toBe(false);
+  });
+
+  it("isolates failed pending saves and blocks subsequent deletion until resolved", async () => {
+    const { result } = await renderContentHook();
+
+    // Mock API failure for PATCH
+    mocks.fetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === "/api/admin/website-content/carousel") {
+        return { ok: true, status: 200, json: async () => ({ success: true, images: [] }) };
+      }
+      if (url === "/api/website-content" && init?.method === "PATCH") {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({ error: "Database temporarily unavailable" }),
+        };
+      }
+      if (url === "/api/website-content" && init?.method === "DELETE") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ collectionsRevision: 1 }),
+        };
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    // Make an edit that fails saving
+    act(() => {
+      result.current.updateStory("Story that fails to save");
+    });
+
+    await waitFor(() => {
+      expect(result.current.saveStatus).toBe("error");
+    });
+    expect(result.current.hasUnsavedEdits).toBe(true);
+
+    // Attempting to delete holiday-1 while a pending save is failed must be blocked
+    let deleteError: string | null = null;
+    await act(async () => {
+      deleteError = await result.current.removeHoliday("holiday-1");
+    });
+
+    expect(deleteError).toBe("Save pending changes successfully before deleting, or reload this page.");
+    expect(result.current.content.holidays).toHaveLength(1);
+
+    // Now mock PATCH succeeding
+    mocks.fetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === "/api/admin/website-content/carousel") {
+        return { ok: true, status: 200, json: async () => ({ success: true, images: [] }) };
+      }
+      if (url === "/api/website-content" && init?.method === "PATCH") {
+        return { ok: true, status: 200, json: async () => ({ collectionsRevision: 1 }) };
+      }
+      if (url === "/api/website-content" && init?.method === "DELETE") {
+        return { ok: true, status: 200, json: async () => ({ collectionsRevision: 1 }) };
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    // Retrying deletion now flushes pending saves successfully, then deletes
+    await act(async () => {
+      deleteError = await result.current.removeHoliday("holiday-1");
+    });
+
+    expect(deleteError).toBeNull();
+    expect(result.current.content.holidays).toHaveLength(0);
   });
 });
 
@@ -596,17 +866,20 @@ describe("delivery hook tests", () => {
           expect(result.current.errorMessage).toBe("Delivery save unavailable");
       });
 
-      it("shows a network error and allows a fresh edit to save successfully", async () => {
+      it("requires a reload after an unconfirmed network save and blocks further saves", async () => {
           const { result } = await setup();
           fetchMock.mockRejectedValueOnce(new Error("Connection lost"));
           await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: false }));
 
           expect(result.current.saveStatus).toBe("error");
-          expect(result.current.errorMessage).toBe("Connection lost");
+          expect(result.current.errorMessage).toBe("The save could not be confirmed. Reload this page to check current content before trying again.");
+          expect(result.current.hasUnsavedEdits).toBe(true);
+          const attempts = savedPatches().length;
           
           await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: true }));
-          expect(result.current.saveStatus).toBe("saved");
-          expect(result.current.errorMessage).toBe("");
+          expect(result.current.saveStatus).toBe("error");
+          expect(result.current.errorMessage).toContain("Reload this page");
+          expect(savedPatches()).toHaveLength(attempts);
       });
 
       it("flushes a waiting valid edit on blur without sending the timer save twice", async () => {

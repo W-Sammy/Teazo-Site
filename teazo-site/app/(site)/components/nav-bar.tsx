@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Cabin_Sketch } from "next/font/google"; // import fonts
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/cart-context";
+import { preloadCartInteriorModule } from "./cart-drawer";
 
 import type { MouseEvent } from "react"; // for mobile menu
 import { montserrat700 } from "@/app/fonts";
@@ -90,6 +91,8 @@ export default function NavBar() {
                     <button
                         type="button"
                         onClick={openCart}
+                        onMouseEnter={preloadCartInteriorModule}
+                        onFocus={preloadCartInteriorModule}
                         aria-label={`Open Cart (${totalCount} items)`}
                         className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
                     >
@@ -295,6 +298,8 @@ export default function NavBar() {
                     <button
                         type="button"
                         onClick={openCart}
+                        onMouseEnter={preloadCartInteriorModule}
+                        onFocus={preloadCartInteriorModule}
                         aria-label={`Open Cart (${totalCount} items)`}
                         className="cursor-pointer relative p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
                     >

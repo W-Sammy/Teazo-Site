@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconLogo } from "../icons";
 import { Logo, ErrorText } from "../field-controls";
-import { isValidImageFile } from "../validators";
+import { isValidLogoFile } from "../validators";
 
 export default function LogoSection({
   logo,
@@ -17,15 +17,17 @@ export default function LogoSection({
   isOpen: boolean;
   onToggle: () => void;
   setRef: (el: HTMLDivElement | null) => void;
-  onLogoChange: (dataUrl: string) => void;
+  onLogoChange: (url: string) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [requiresReload, setRequiresReload] = useState(false);
+  const uploadBlocked = isUploading || requiresReload;
 
   async function handleFile(file: File | undefined) {
-    if (!file) return;
+    if (!file || uploadBlocked) return;
 
-    const check = isValidImageFile(file);
+    const check = isValidLogoFile(file);
     if (!check.valid) {
       setError(check.error ?? "Invalid image file");
       return;
@@ -44,24 +46,23 @@ export default function LogoSection({
 
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
-        throw new Error(payload.error || "Failed to upload logo.");
+        setRequiresReload(payload.requiresReload === true ||
+          (res.status >= 500 && payload.requiresReload !== false));
+        setError(typeof payload.error === "string" ? payload.error : "Failed to upload logo.");
+        return;
       }
 
       const data = await res.json();
-      if (data.url) {
+      if (typeof data?.url === "string" && data.url) {
         onLogoChange(data.url);
-        setIsUploading(false);
-        return;
+        setError(null);
+      } else {
+        setRequiresReload(true);
+        setError("The server returned an unexpected response. Check the saved logo before uploading again.");
       }
     } catch {
-      // Fall back to data URL for offline / local testing
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          onLogoChange(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+      setRequiresReload(true);
+      setError("The logo save could not be confirmed. Reload this page to check the saved logo before uploading again.");
     } finally {
       setIsUploading(false);
     }
@@ -79,40 +80,61 @@ export default function LogoSection({
       <div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
         <label
           htmlFor="website-logo-upload"
-          title="Change logo"
-          className="group relative flex h-24 w-24 max-w-full shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-[#ecdfd7] bg-[#fbf3ea] p-2"
+          title={isUploading ? "Uploading logo..." : "Change logo"}
+          className={`group relative flex h-24 w-24 max-w-full shrink-0 items-center justify-center rounded-2xl border border-[#ecdfd7] bg-[#fbf3ea] p-2 ${
+            isUploading ? "cursor-wait opacity-70" : "cursor-pointer"
+          }`}
+          aria-busy={isUploading}
         >
           <Logo src={logo} />
 
-          <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-            Edit
+          <span
+            className={`absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 text-xs font-semibold text-white transition-opacity ${
+              isUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            {isUploading ? "Uploading..." : "Edit"}
           </span>
 
-          {/* visually hidden; the styled label above is the actual click target that opens the file picker */}
           <input
             id="website-logo-upload"
             type="file"
-            accept="image/*"
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            accept="image/png,image/jpeg,image/webp"
+            disabled={uploadBlocked}
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
             className="hidden"
           />
         </label>
 
         <div className="flex min-w-0 flex-col items-start gap-2.5">
           <p className="text-xs text-gray-400">
-            Shown in the site header and browser tab favicon.
+            Shown in header and banner areas across the site. Browser tab favicon is a static asset.
           </p>
+          <p className="text-xs text-gray-400">PNG, JPEG, or WebP, up to 4 MiB.</p>
 
           <label
             htmlFor="website-logo-upload"
-            className="inline-flex min-h-11 max-w-full cursor-pointer items-center justify-center rounded-full border border-[#dbb082] px-4 py-1.5 text-center text-xs font-semibold text-[#a5652b] transition-colors hover:bg-[#fbf3ea] sm:min-h-0"
+            className={`inline-flex min-h-11 max-w-full items-center justify-center rounded-full border border-[#dbb082] px-4 py-1.5 text-center text-xs font-semibold text-[#a5652b] transition-colors sm:min-h-0 ${
+              uploadBlocked
+                ? "cursor-wait opacity-50 pointer-events-none"
+                : "cursor-pointer hover:bg-[#fbf3ea]"
+            }`}
+            aria-disabled={uploadBlocked}
           >
-            Change logo
+            {isUploading ? "Uploading..." : "Change logo"}
           </label>
 
           {error && <ErrorText>{error}</ErrorText>}
+          {requiresReload && (
+            <button type="button" onClick={() => window.location.reload()} className="text-xs font-semibold text-[#a5652b] underline">
+              Reload saved logo
+            </button>
+          )}
         </div>
       </div>
     </AccordionItem>
   );
-} 
+}

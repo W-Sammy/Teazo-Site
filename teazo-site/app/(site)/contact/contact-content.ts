@@ -22,33 +22,25 @@ export const contactContent: ContactContent = {
     mapQuery: "1050 Taraval St, San Francisco, CA 94116",
   },
   hours: [
-    { day: "Monday", hours: "11:00 AM - 8:00 PM" },
-    { day: "Tuesday", hours: "11:00 AM - 6:00 PM" },
-    { day: "Wednesday", hours: "11:00 AM - 8:00 PM" },
-    { day: "Thursday", hours: "11:00 AM - 8:00 PM" },
-    { day: "Friday", hours: "11:00 AM - 10:00 PM" },
-    { day: "Saturday", hours: "11:00 AM - 10:00 PM" },
-    { day: "Sunday", hours: "11:00 AM - 8:00 PM" },
+    { day: "Monday", hours: "Temporarily unavailable" },
+    { day: "Tuesday", hours: "Temporarily unavailable" },
+    { day: "Wednesday", hours: "Temporarily unavailable" },
+    { day: "Thursday", hours: "Temporarily unavailable" },
+    { day: "Friday", hours: "Temporarily unavailable" },
+    { day: "Saturday", hours: "Temporarily unavailable" },
+    { day: "Sunday", hours: "Temporarily unavailable" },
   ],
-  socialLinks: [
-    { id: "facebook", label: "Facebook", icon: "/social_icons/social_svg/teazo_fb_icon.svg", url: "https://www.facebook.com/people/TEAZO/100063111166083", enabled: true },
-    { id: "instagram", label: "Instagram", icon: "/social_icons/social_svg/teazo_insta_icon.svg", url: "https://www.instagram.com/teazosf/", enabled: true },
-    { id: "yelp", label: "Yelp", icon: "/social_icons/social_svg/teazo_yelp_icon.svg", url: "https://www.yelp.com/biz/teazo-san-francisco", enabled: true },
-  ],
-  contactFormEnabled: true,
+  socialLinks: [],
+  contactFormEnabled: false,
 };
 
 /**
  * Loads contact content including location, formatted hours, and contactFormEnabled setting.
- * Allows the customer-facing Contact page to retrieve live configuration from D1/admin.
+ * Allows the customer-facing Contact page to retrieve live configuration from D1/admin,
+ * or the safe outage presentation if storage cannot be reached.
  */
 export async function getContactContent(): Promise<ContactContent> {
-  try {
-    const liveContent = await getLiveContactContent();
-    return liveContent;
-  } catch {
-    return contactContent;
-  }
+  return getLiveContactContent();
 }
 
 // Google Maps embed URL for the iframe on the left side of the contact card.

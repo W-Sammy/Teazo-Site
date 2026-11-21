@@ -4,7 +4,7 @@ This document explains how to run, maintain, extend, and troubleshoot automated 
 
 It is intended for developers and administrators responsible for maintaining the website after its initial development.
 
-The automated test suite helps verify application behavior, detect regressions, and reduce the risk of introducing defects when changing the website. It does not replace manual browser testing or verification of production services.
+The automated test suites help verify application behavior, detect regressions, and reduce the risk of introducing defects when changing the website. Vitest exercises unit, component, API, and database behavior; Playwright tests selected workflows in a real Chromium browser. Neither replaces manual verification of production services.
 
 For general development setup, including the Next.js application, Cloudflare Worker, local database, authentication, and environment variables, see the [Developer Guide](DEV-GUIDE.md).
 
@@ -41,8 +41,10 @@ Teazo-Site/
 │   └── DEV-GUIDE.md
 ├── teazo-site/
 │   ├── app/
+│   ├── e2e/
 │   ├── migrations/
 │   ├── test/
+│   ├── playwright.config.ts
 │   ├── package.json
 │   ├── package-lock.json
 │   └── vitest.config.mts
@@ -66,9 +68,19 @@ If the application is already installed and the dependencies have not changed, r
 
 Windows developers can use Git Bash or PowerShell for the testing commands shown here. The general Developer Guide recommends Git Bash for the broader local development environment.
 
+### Install the Playwright browser
+
+After `npm ci`, install the Chromium browser used by the Playwright configuration:
+
+```bash
+npx playwright install chromium
+```
+
+`@playwright/test` is a development dependency in `teazo-site/package.json`. Browser binaries are installed separately from npm packages. Do not add an unrelated `npm audit fix` or dependency upgrade while making a focused testing change.
+
 ### Running tests does not normally require production services
 
-Most automated tests use mocks or in-memory databases. They generally do not require:
+Most **Vitest** tests use mocks or in-memory databases. They generally do not require:
 
 - A running Next.js development server.
 - A running Cloudflare Worker.
@@ -77,7 +89,9 @@ Most automated tests use mocks or in-memory databases. They generally do not req
 - Live email delivery.
 - A production database.
 
-Some separate manual and integration verification procedures do require these services or their sandbox equivalents.
+Playwright browser tests require a local Next.js server. The Playwright configuration can start it automatically at `http://localhost:3000` if one is not already running. Protected Owner account-management tests additionally need a valid local Owner session, and the local D1 proxy may need to be running for authentication and protected pages to work.
+
+Some separate manual and integration verification procedures also require these services or their sandbox equivalents.
 
 Never use production credentials or customer data simply to make automated tests run.
 
@@ -88,6 +102,7 @@ TEAZO uses the following testing tools.
 | Tool | Purpose |
 |---|---|
 | Vitest | Test runner, assertions, mocks, lifecycle hooks |
+| Playwright (`@playwright/test`) | Chromium browser tests for authentication, Owner account management, and public cart/checkout workflows |
 | React Testing Library | Testing React components and user interactions |
 | jsdom | Simulated browser DOM for React component tests |
 | Node.js | Default test execution environment |
@@ -142,17 +157,33 @@ This declaration must appear near the beginning of the relevant test file.
 
 A jsdom test can verify rendered elements and simulated interactions, but it does not reproduce every feature of Chrome, Safari, Firefox, or mobile browsers.
 
+### Playwright configuration
+
+The browser-testing configuration is in:
+
+`teazo-site/playwright.config.ts`
+
+Playwright discovers `e2e/**/*.spec.ts` separately from Vitest, using:
+
+- Base URL: `http://localhost:3000` (use `localhost`, not `127.0.0.1`, for the established local login workflow).
+- Browser project: `chromium` using Playwright's Desktop Chrome device settings. Individual tests may set a mobile viewport.
+- Parallel execution: two workers; CI retries are configured separately from local runs.
+- Development server: start `npm run dev -- --hostname localhost --port 3000` when needed, or reuse an existing local server outside CI.
+- Failure artifacts: screenshots and traces are written below `.next/playwright-test-results`, an ignored build directory.
+
+The browser suite covers administrator authentication and account management, as well as public cart and checkout interactions. It does not automate real Google sign-in, production administrator changes, or actual Square payments.
+
 ## 3. Running automated tests
 
 All commands in this section are run from `teazo-site/`.
 
-### Run the complete suite
+### Run the complete Vitest suite
 
 ```bash
 npm test
 ```
 
-The `test` script invokes `vitest run`, which runs the discovered test files once and exits.
+The `test` script invokes `vitest run`, which runs the discovered Vitest files once and exits. It does not run Playwright specs.
 
 ### Recommended command for large regression runs
 
@@ -160,11 +191,37 @@ The `test` script invokes `vitest run`, which runs the discovered test files onc
 npm test -- --maxWorkers=2 --reporter=dot
 ```
 
-This limits Vitest to two workers and displays compact test output.
+Vitest runs test files in parallel by default. However, running the complete TEAZO test suite with unrestricted worker concurrency has previously caused intermittent timeouts, particularly in the Square SDK tests.
 
-Using two workers is recommended for large combined test suites because high concurrency has previously caused intermittent timeouts in a Square SDK test.
+For more reliable full-suite verification, use `--maxWorkers=2` to limit execution to two concurrent workers. The `--reporter=dot` option displays compact test output without affecting test execution.
 
-The worker setting does not change the assertions or intentionally increase test timeouts.
+If any tests still fail when running with `--maxWorkers=2`, run the affected test file individually to determine whether the failure is reproducible:
+
+```bash
+# Example: rerun a failing test file individually.
+npx vitest run app/lib/square.test.ts
+```
+
+If the test passes individually but fails during the full suite, investigate possible worker contention, shared state, timing issues, or incomplete test cleanup. Rerun the full suite after investigating to confirm that all tests pass together.
+
+If the test also fails individually, inspect its assertions, mocks, dependencies, and error messages to identify the underlying issue.
+
+**Do not assume that an individually passing test resolves a full-suite failure.** A successful full-suite run is still required before considering the test suite verified.
+
+### Latest verified test results
+
+On **November 18, 2026**, testing on `ben-update-vitests` after merging the approved `dev` changes and adding the four Playwright spec files produced:
+
+| Framework | Verified result | Test files |
+|---|---|---|
+| Vitest | 2,034 passed, 0 failed | 119 passed |
+| Playwright (Chromium) | 39 passed, 0 failed, 0 skipped | 4 specs |
+
+The Playwright results cover 19 authentication/password-flow tests and 20 account-management tests. TypeScript, targeted ESLint, and Git whitespace checks also passed for the browser-test additions. The Next.js production build passed after the `dev` integration, before the Playwright dependency was added.
+
+These figures are a historical **branch-local verification**, not a guaranteed result for future checkouts or a claim that these tests are already on `dev`. Run both suites again after changes. Do not combine the Vitest and Playwright totals into a single Vitest count.
+
+On **November 19, 2026**, the checkout work on `ben-test-frontend-checkout` separately verified **185 Vitest tests across 10 focused test files**, **9 Playwright tests in the public checkout spec**, and a manual local D1 concurrency check in which one of 10 simultaneous requests claimed a checkout attempt and one of 10 claimed processing ownership. These are scoped verification results, **not** a passing full-repository Vitest or combined Playwright result; the 185-test set overlaps the broader test inventory. The complete Vitest run on the checkout branch had unrelated failing tests, and those results must be reconciled after branch integration. The D1 concurrency check did not create real Square links or payments.
 
 ### Understanding test results
 
@@ -193,7 +250,7 @@ The output contains several important details:
 - **Test Files** indicates how many test files completed successfully.
 - **Tests** indicates how many individual tests passed.
 - **Start at** shows when execution began.
-- **Duration** shows how long the test run took.
+- **Duration** shows how long the run took.
 
 A successful run should report all completed tests as passed, with no failed tests, and exit with status code 0.
 
@@ -259,6 +316,67 @@ Watch mode reruns relevant tests as files change.
 
 Press Ctrl+C to stop watch mode.
 
+### Discover and run Playwright browser tests
+
+List discovered browser tests without executing them:
+
+```bash
+npx playwright test --list
+```
+
+Run all configured browser specs in Chromium:
+
+```bash
+npx playwright test --project=chromium
+```
+
+Run only administrator login and password tests (these mock authentication and password APIs):
+
+```bash
+npx playwright test e2e/admin-login.spec.ts e2e/admin-password-flow.spec.ts --project=chromium
+```
+
+Run Owner account-management tests (requires an authenticated local Owner session):
+
+```bash
+npx playwright test e2e/admin-account-management.spec.ts e2e/admin-account-management-mobile.spec.ts --project=chromium
+```
+
+Run the public cart/customizer/checkout browser spec, which uses mocked checkout and Square responses and needs no authenticated Owner session:
+
+```bash
+npx playwright test e2e/customizer-cart-checkout.spec.ts --workers=2
+```
+
+Playwright's exit summary reports passed, failed, and skipped tests. A skipped Owner test **does not demonstrate that its workflow passed**. Confirm the expected test count and zero skips when reporting complete verification.
+
+### Prepare a local Owner session for protected browser tests
+
+Do this only with an authorized local development Owner account. Keep saved browser state **outside the repository**: it contains authentication cookies and must never be committed, shared, or uploaded to test logs.
+
+In PowerShell, from `teazo-site/`:
+
+```powershell
+$sessionDir = Join-Path $env:LOCALAPPDATA 'Teazo-Playwright'
+New-Item -ItemType Directory -Force -Path $sessionDir | Out-Null
+$env:TEAZO_E2E_OWNER_STORAGE_STATE = Join-Path $sessionDir 'owner-state.json'
+
+npx playwright codegen --save-storage="$env:TEAZO_E2E_OWNER_STORAGE_STATE" 'http://localhost:3000/login'
+```
+
+Sign in within the opened Playwright Chromium browser, navigate to `http://localhost:3000/admin/settings`, and confirm the Owner-only administrator-management interface loads. Close the browser and inspector so codegen saves its storage state.
+
+Verify the path exists without printing the file's credentials:
+
+```powershell
+Write-Host "Owner session configured: $([bool]$env:TEAZO_E2E_OWNER_STORAGE_STATE)"
+Write-Host "Owner session file exists: $(Test-Path -LiteralPath $env:TEAZO_E2E_OWNER_STORAGE_STATE)"
+```
+
+The account-management specs read `TEAZO_E2E_OWNER_STORAGE_STATE` (or, as a fallback, `TEAZO_E2E_ADMIN_STORAGE_STATE`). Environment variables set in PowerShell apply only to that terminal session; set the path again in any new terminal. File existence does not guarantee the cookies remain valid. If the session expires, sign in again and regenerate the storage state.
+
+Run the local D1 proxy alongside Next.js when needed for sign-in or protected pages. The browser tests' synthetic administrator API interactions are intercepted, but loading the protected settings page still depends on a valid Owner session.
+
 ## 4. Test coverage areas
 
 The test suite covers frontend components, backend API routes, database operations, and shared application utilities.
@@ -269,17 +387,17 @@ Tests are organized by the functionality they verify rather than by individual d
 
 | Website area | Types of behavior tested |
 |---|---|
-| Public Menu | Catalog display, loading states, data handling, and error conditions |
-| Admin Menu | Item forms, creation, editing, deletion, refresh behavior, validation, PDF uploads |
+| Public Menu | Catalog display, loading states, category visibility, data handling, and error conditions |
+| Admin Menu | Item forms, creation, editing, deletion, refresh behavior, category display controls, validation, PDF uploads |
 | Gallery | Public image display, administrator selection, upload/deletion routes, media utilities, database queries |
 | Events | Public Events display, administrator forms, API routes, event dates, database queries |
-| Checkout | Cart interactions, duplicate submissions, payment-link handling, order confirmation |
-| Orders and Webhooks | Order lifecycle, Square webhook validation and processing, failure scenarios |
+| Checkout | Cart/customizer interactions, synchronous duplicate-submit prevention, checkout-attempt UUID validation, persistent D1 idempotency coordination, Square retry and failure handling, cart revision ownership, payment confirmation, and abandoned-checkout recovery |
+| Orders and Webhooks | Order lifecycle, Square webhook validation, category synchronization, cache invalidation, and failure scenarios |
 | Contact | Form submission, email notifications, notification recovery, Turnstile verification, database queries |
 | Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior |
 | Analytics | Dashboard queries, analytics storage, SQL behavior, cleanup procedures |
-| Authentication | Session validation, password setup/reset, password tokens, rate limiting, invitation handling |
-| Administrator Management | Owner/Admin authorization, administrator settings, invitations, database migrations |
+| Authentication | Session validation, password setup/reset, password tokens, rate limiting, invitation handling; browser login/password workflows |
+| Administrator Management | Owner/Admin authorization, administrator settings, invitations, database migrations; desktop/mobile browser account workflows |
 | Ownership Transfer | Ownership-transfer requests, acceptance/decline, concurrency, SQL operations, notifications, UI behavior |
 
 Some application features have additional tests in shared utility directories.
@@ -308,6 +426,20 @@ Examples of behaviors to test include:
 
 Frontend tests should focus on observable behavior rather than implementation details whenever practical.
 
+### Playwright browser tests
+
+Browser tests are kept under `teazo-site/e2e/` and run independently of the co-located Vitest tests:
+
+| Spec file | Verified cases | Main behaviors |
+|---|---:|---|
+| `admin-login.spec.ts` | 9 | Login controls, form validation, mocked invalid credentials, redirect safety, mobile usability |
+| `admin-password-flow.spec.ts` | 10 | Password-link requests, setup/reset validation, API error handling, mobile dialog |
+| `admin-account-management.spec.ts` | 19 | Owner-only account list, add/edit/delete flows, invitations, authorization failures, responsive UI |
+| `admin-account-management-mobile.spec.ts` | 1 | Synthetic add, edit, invitation, and delete workflows at a mobile viewport |
+| `customizer-cart-checkout.spec.ts` | 9 | Public cart totals, item customization, checkout validation and error handling, retry, pending/disabled states, mocked Square redirect, and mobile viewport |
+
+**Verified Playwright baselines:** 39 Chromium tests passed across the four administrator specs on November 18, 2026 (`ben-update-vitests`); 9 checkout tests passed in the fifth spec on November 19, 2026 (`ben-test-frontend-checkout`). These were **separate branch-local runs**, not a verified combined 48-test run. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
+
 ### Backend and API tests
 
 API route tests are generally located under:
@@ -331,6 +463,25 @@ Relevant assertions include:
 - Idempotency and duplicate-request handling.
 
 API route tests commonly mock external systems rather than performing live network requests.
+
+### Checkout idempotency and cart recovery tests
+
+The checkout regression tests are distributed across shared utilities, components, route handlers, and the cart context. Useful focused files include:
+
+| Test file | Focus |
+|---|---|
+| `app/lib/checkout-validators.test.ts` | Required checkout-attempt UUID, customer contact, pickup timing, and cart validation |
+| `app/api/checkout/route.duplicate-submission.test.ts` | Sequential/concurrent duplicate requests, stable Square idempotency keys, safe retries, and D1 failures with mocked services |
+| `app/lib/queries/checkout-attempts.test.ts` | Atomic claim and processing-owner SQL, completion, and uncertain-state transitions through mocked D1 calls |
+| `app/(site)/components/cart-drawer-checkout.test.tsx` | Duplicate direct submissions, disabled states, Turnstile, errors, retry, and mocked redirect |
+| `app/lib/checkout-attempt-storage.test.ts` | Attempt identity and reuse; new IDs for new purchases; matching payment cleanup |
+| `app/lib/cart-payment-ownership.test.ts` | Cart revision changes and paid-order ownership guards |
+| `app/context/cart-context.frontend.test.tsx` | Existing cart persistence, quantity, customization, and totals |
+| `app/context/cart-context.checkout-recovery.test.tsx` | Recovery after Square is closed, including modified/new carts and delayed responses |
+| `app/(site)/order/confirmation/page.test.tsx` | Receipt states, payment verification, matching cart ownership |
+| `app/(site)/order/confirmation/page.checkout-attempt.test.tsx` | Paid/unpaid/canceled checkout-attempt cleanup and protection against old receipts |
+
+For a focused checkout regression run, pass these filenames to `npx vitest run`. A successful targeted run does **not** establish that the full repository suite passes.
 
 ### Database and migration tests
 
@@ -359,6 +510,20 @@ Tests may verify:
 
 SQLite-backed tests execute real SQL against temporary in-memory databases. This differs from testing the actual deployed Cloudflare D1 service.
 
+### Local D1 concurrency verification
+
+`teazo-site/scripts/verify-checkout-d1-concurrency.ps1` is a **separate manual integration check**, not a Vitest or Playwright test. It sends concurrent SQL operations to the local D1 proxy and verifies that the unique checkout-attempt reservation and conditional processing ownership each have exactly one winner. The script uses a temporary attempt record and deletes it afterward. It does **not** contact Square or prove production D1 concurrency.
+
+Prerequisites: PowerShell 7 (`pwsh`), the local D1 proxy running at `http://127.0.0.1:8787`, matching local proxy credentials in `teazo-site/.env.local`, and migration `0014_checkout_idempotency.sql` applied to the local D1 database. From `teazo-site/`:
+
+```powershell
+pwsh -NoProfile -File ".\scripts\verify-checkout-d1-concurrency.ps1"
+```
+
+Expected: one successful reservation out of ten, one successful processing-owner claim out of ten, and successful cleanup. The script is restricted to a loopback proxy; never change it to target a production endpoint or include credentials in logs. Database ownership is one part of payment safety: mocked route tests separately verify that duplicate requests do not issue independent Square operations.
+
+When changing D1 schema, verify migrations in a local database first. `teazo-site/migrations/0014_checkout_idempotency.sql` creates the persistent checkout-attempt table. Database migrations are **not automatically applied during deployment**. Before deploying an application version that requires a new table, the authorized deployer must apply the migration to the target database and verify the schema; see [Developer Guide](DEV-GUIDE.md), section 7. Do not use a remote migration command as part of routine automated testing.
+
 ### Utility tests
 
 Shared business logic tests are commonly found under:
@@ -379,8 +544,9 @@ Use:
 
 - `*.test.ts` for TypeScript tests.
 - `*.test.tsx` for React component tests.
+- `e2e/*.spec.ts` for Playwright browser tests.
 
-Place tests near the corresponding application modules when practical.
+Place Vitest tests near the corresponding application modules when practical. Keep Playwright specs in `e2e/`. Include explanatory comments and avoid embedding credentials or customer data.
 
 ### Example utility test
 
@@ -462,6 +628,18 @@ Common mocked services include:
 Mocks must be established before modules that depend on them are evaluated.
 
 Some tests use dynamic imports to control module initialization and mocking order.
+
+### Square webhook category synchronization
+
+The two Square webhook Vitest files (`app/api/square/webhooks/route.test.ts` and `route.catalog-cache.test.ts`) mock `@/app/lib/sync-menu-categories` and its `syncSquareMenuCategories()` function. This prevents tests from initializing a real Square client and tests category synchronization without live credentials. The route tests also verify menu cache revalidation, including `/admin/menu/display-categories`, for valid catalog events.
+
+### Playwright request interception and real sessions
+
+The login and password-flow specs intercept authentication and password endpoints, so their simulated failures and success responses do not change real credentials or send email. The account-management specs require a real **local Owner session to enter the protected page**, then use synthetic account records and intercepted account APIs; unexpected writes are blocked in those specs.
+
+The checkout browser spec intercepts the checkout and related dependencies and uses mock responses; it does not create real Square payment links.
+
+Do not assume every browser test is fully isolated merely because it uses Playwright routing. Review new test routes before adding them, avoid production services, and never run destructive authenticated workflows against real customer or production data. A valid local Owner session proves local access; it is not a production login test.
 
 ### Reset state between tests
 
@@ -550,17 +728,18 @@ For each meaningful application change or testing pull request:
 2. Install or refresh dependencies when package files have changed.
 3. Run the directly affected tests.
 4. Run related regression tests outside the changed directory.
-5. Run the complete automated test suite.
+5. Run the complete Vitest suite and, where configured, the relevant Playwright browser suite.
 6. Run targeted ESLint on changed code.
 7. Run TypeScript checking.
 8. Verify the Next.js production build.
 9. Review the Git diff for unrelated modifications.
-10. Perform manual integration or browser checks when the change requires them.
+10. Perform manual integration or browser checks when the change requires them. For new D1 tables, verify the local migration and document the required production migration-before-application deployment order.
 
 ### Recommended commands
 
 ```bash
 npm test -- --maxWorkers=2 --reporter=dot
+npx playwright test --project=chromium
 npx tsc --noEmit
 npm run build
 ```
@@ -638,6 +817,30 @@ If an individual test continues to time out, investigate its asynchronous operat
 
 Avoid increasing timeouts indiscriminately.
 
+### Playwright reports a missing browser executable
+
+Install the browser binary corresponding to the current Playwright package:
+
+```bash
+npx playwright install chromium
+```
+
+A new checkout also needs `npm ci` from `teazo-site/`.
+
+### Owner account-management tests are skipped or redirected to login
+
+Confirm `TEAZO_E2E_OWNER_STORAGE_STATE` points to an existing JSON file **outside the repository**, that its cookies are still valid, and that the account can access `/admin/settings`. Regenerate the session with `playwright codegen --save-storage` if needed. Run the local D1 proxy when authentication or the settings page depends on it.
+
+A run showing `20 skipped` is not a passing verification of the Owner workflows, even if Playwright exits successfully.
+
+### Playwright cannot connect to the local website
+
+The configured origin is `http://localhost:3000`, not `http://127.0.0.1:3000`. Ensure port 3000 is free or the correct Next.js dev server is running. If login appears broken, confirm the local D1 proxy is active before changing the tests or credentials.
+
+### Local checkout concurrency script cannot connect
+
+Confirm the local D1 proxy is running at `http://127.0.0.1:8787`, that `.env.local` contains a matching local `PROXY_TOKEN`, and that the checkout-attempt migration was applied to the **local** database. Run the script from `teazo-site/` with PowerShell 7. Do not paste authentication tokens into bug reports or switch the test to a remote database.
+
 ### SQLite or migration errors
 
 Confirm that the expected migration files exist in the current checkout.
@@ -710,7 +913,7 @@ Tests should be independent and repeatable.
 
 The presence of automated tests does not guarantee complete application coverage.
 
-The existing testing approach primarily verifies:
+The Vitest suite primarily verifies:
 
 - TypeScript utility and business logic.
 - React component behavior in a simulated DOM.
@@ -718,9 +921,9 @@ The existing testing approach primarily verifies:
 - Mocked external service interactions.
 - Database queries and migrations.
 
-Additional testing may be necessary for:
+Playwright additionally verifies selected browser-based authentication, administrator-management, and public cart/checkout interactions in Chromium, with mocked APIs. Further testing may be necessary for:
 
-- Real browser end-to-end workflows.
+- Other real browser end-to-end workflows outside the five currently documented Playwright specs.
 - Production Google authentication behavior.
 - Live Square sandbox integrations.
 - Deployed Cloudflare D1 and R2 behavior.
@@ -728,9 +931,9 @@ Additional testing may be necessary for:
 - Mobile Safari and Android browser differences.
 - Accessibility.
 - Performance under load.
-- Production concurrency and operational monitoring.
+- Production concurrency and operational monitoring; local proxy SQL concurrency testing cannot establish all production conditions.
 
-Vitest is the established automated testing framework for this project. Real-browser end-to-end testing is not provided by the Vitest component and API tests described in this guide.
+Vitest and Playwright are separate automated testing suites. Vitest does not provide real-browser end-to-end coverage; Playwright provides limited real-browser coverage for selected workflows. Passing either suite does not prove every production integration or browser is supported.
 
 A successful test count is **not** a code-coverage percentage.
 
@@ -763,6 +966,7 @@ Update it when:
 - Test conventions change.
 - New functional testing areas are added.
 - Additional integration or end-to-end testing tools are adopted.
+- Playwright browser configurations, authenticated-session requirements, or covered workflows change.
 
 The repository READMEs and the [Developer Guide](DEV-GUIDE.md) should link to this document rather than maintain duplicate testing instructions.
 

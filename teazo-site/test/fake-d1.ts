@@ -62,7 +62,7 @@ export function createFakeD1() {
       state.reads = 0;
       state.batchError = null;
     },
-    module: { prepare, batch },
+    module: { prepare, batch, MAX_STATEMENTS: 40 },
   };
 }
 

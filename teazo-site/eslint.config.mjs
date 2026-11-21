@@ -8,10 +8,13 @@ const eslintConfig = defineConfig([
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
-    ".next/**",
+    "**/.next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Bundled third-party PDF.js assets:
+    "public/pdfjs/**",
+    "public/pdf.worker.min.mjs",
   ]),
 ]);
 

@@ -1027,6 +1027,22 @@ published or the database can't be read.
 > }
 > ```
 
+**Website logo uploads.** `POST /api/admin/website-content/logo` accepts PNG,
+JPEG, and WebP files up to **4 MiB**. The picker and route share validation;
+this lower limit leaves room for multipart encoding below Vercel's request
+limit. The endpoint uploads the file and saves `site.logo` once. The editor
+uses the confirmed URL without sending another general content PATCH. Logo
+text patches accept HTTP(S) URLs or site paths, never embedded image data.
+The favicon remains a static asset, and custom social icon uploads are not
+supported.
+
+If D1 definitely rejects the write, the endpoint removes the new upload. A
+transport failure, timeout, or server error may hide a committed write, so
+the file is retained and its key is logged for reconciliation. HTTP 503 with
+`requiresReload: true` tells the editor to disable uploads and offer Reload
+before another attempt. An explicit rejection returns `requiresReload: false`
+and allows retry. Failed cleanup is logged with the media key as well.
+
 ### 4.2 Deleting a file
 
 **Never delete the bytes yourself.** Retire the rows and queue the bytes, in one
@@ -1382,13 +1398,13 @@ pages.
 | `PROXY_TOKEN` | the production Worker's secret | Secret. Must match `wrangler secret put PROXY_TOKEN` for that Worker |
 | `R2_PUBLIC_BASE` | the production Worker URL + `/media` | |
 | `AUTH_SECRET` | a long random string | Secret |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | Secret. The OAuth client must list the production site's `/api/auth/callback/google` URL |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | the team OAuth client | Secret. The OAuth client must list `https://teazous.com/api/auth/callback/google` (and `https://www.teazous.com/api/auth/callback/google`) |
 | `SQUARE_ENVIRONMENT` | `production` when going live | Defaults to `sandbox` regardless of Vercel's environment. Any other value fails startup and the build |
 | `SQUARE_ACCESS_TOKEN` | the shop's production Square access token | Secret. Must match `SQUARE_ENVIRONMENT` |
 | `SQUARE_LOCATION_ID` | the shop's production Square location ID | Required in production. Must belong to the account and environment selected above |
 | `SQUARE_WEBHOOK_SIGNATURE_KEY` | the production webhook subscription's signature key | Secret. Use the subscription for the selected Square environment |
 | `SQUARE_WEBHOOK_NOTIFICATION_URL` | the live site's HTTPS URL + `/api/square/webhooks` | Must exactly match that subscription's notification URL, including any trailing slash |
-| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazo-site.vercel.app/` | Used for catalog reads, checkout's post-payment redirect and invite links |
+| `NEXT_PUBLIC_BASE_URL` | the live site's HTTPS URL, e.g. `https://teazous.com/` | Used for catalog reads, checkout's post-payment redirect and invite links |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | the production widget's site key | Public |
 | `TURNSTILE_SECRET_KEY` | the production widget's secret | Secret |
 | `BREVO_API_KEY` | the Brevo API key | Secret. Unset means the deployment sends no email |
@@ -1436,9 +1452,8 @@ this on your machine, follow §2.8 and start the app with
 `VERCEL_ENV=production npm start`.
 
 **Turnstile.** On the team Cloudflare account, open Turnstile, add a widget in
-Managed mode, and list the production hostname (`teazo-site.vercel.app` for
-now, plus the shop's own domain later). It is free, and the site does not need
-to be on Cloudflare.
+Managed mode, and list the production hostname (`teazous.com` and `www.teazous.com`).
+It is free, and the site does not need to be on Cloudflare.
 
 **Brevo** (free plan: 300 emails a day, never billed while no card is added):
 

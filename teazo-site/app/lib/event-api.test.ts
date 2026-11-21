@@ -269,14 +269,22 @@ describe("saveEvent", () => {
     expect(createEvent).not.toHaveBeenCalled();
   });
 
-  it("rejects an empty description", async () => {
+  // Descriptions are optional in both the form and API.
+  it("accepts an empty event description", async () => {
     const response = await saveEvent(
       makeRequest(makeForm({ description: "" })),
       null,
     );
 
-    expect(response.status).toBe(400);
-    expect(createEvent).not.toHaveBeenCalled();
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "",
+      }),
+      "admin-1",
+      undefined,
+    );
   });
 
   it("rejects an invalid start date", async () => {
