@@ -4,14 +4,14 @@ import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import Delivery from "./page";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { heroLogoSrc } from "@/app/lib/default-logo";
 
 vi.stubGlobal("React", React);
 
 // mock content
 vi.mock("@/app/lib/website-content", () => ({
-    getWebsiteContent: vi.fn(),
+    getPublicWebsiteContent: vi.fn(),
 }));
 
 vi.mock("next/font/google", () => ({
@@ -48,7 +48,7 @@ vi.mock("@/app/lib/default-logo", () => ({
     heroLogoSrc: vi.fn(() => "/test-delivery-logo.svg"),
 }));
 
-type WebsiteContent = Awaited<ReturnType<typeof getWebsiteContent>>;
+type WebsiteContent = Awaited<ReturnType<typeof getPublicWebsiteContent>>;
 type DeliveryLink = NonNullable<WebsiteContent["deliveryLinks"]>[number];
 
 function makeLink(overrides: Partial<DeliveryLink> = {}): DeliveryLink {
@@ -67,7 +67,7 @@ function makeContent(deliveryLinks: DeliveryLink[] | null | undefined): WebsiteC
 }
 
 async function renderPage(content: WebsiteContent) {
-    vi.mocked(getWebsiteContent).mockResolvedValue(content);
+    vi.mocked(getPublicWebsiteContent).mockResolvedValue(content);
     return render(await Delivery());
 }
 
@@ -163,7 +163,7 @@ describe("public delivery page", () => {
     it("loads the website content once for this render", async () => {
         await renderPage(makeContent([]));
 
-        expect(getWebsiteContent).toHaveBeenCalledTimes(1);
+        expect(getPublicWebsiteContent).toHaveBeenCalledTimes(1);
     });
 
     it("uses the logo returned by the shared logo helper", async () => {

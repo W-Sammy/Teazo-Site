@@ -4,14 +4,14 @@ import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StaticMenuPage, { metadata } from "./page";
-import { getWebsiteContent } from "@/app/lib/website-content";
+import { getPublicWebsiteContent } from "@/app/lib/website-content";
 import { heroLogoSrc } from "@/app/lib/default-logo";
 
 vi.stubGlobal("React", React);
 
 // mock website content
 vi.mock("@/app/lib/website-content", () => ({
-    getWebsiteContent: vi.fn(),
+    getPublicWebsiteContent: vi.fn(),
 }));
 
 vi.mock("next/font/google", () => ({
@@ -46,11 +46,11 @@ vi.mock("./static-menu-content", () => ({
     default: () => React.createElement("div", { "data-testid": "static-menu-content" }),
 }));
 
-type WebsiteContent = Awaited<ReturnType<typeof getWebsiteContent>>;
+type WebsiteContent = Awaited<ReturnType<typeof getPublicWebsiteContent>>;
 
 beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getWebsiteContent).mockResolvedValue({ logo: undefined } as unknown as WebsiteContent);
+    vi.mocked(getPublicWebsiteContent).mockResolvedValue({ logo: undefined } as unknown as WebsiteContent);
 });
 
 afterEach(() => {
@@ -89,7 +89,7 @@ describe("static menu page", () => {
     it("loads website content once for this render", async () => {
         render(await StaticMenuPage());
 
-        expect(getWebsiteContent).toHaveBeenCalledTimes(1);
+        expect(getPublicWebsiteContent).toHaveBeenCalledTimes(1);
     });
 });
 
