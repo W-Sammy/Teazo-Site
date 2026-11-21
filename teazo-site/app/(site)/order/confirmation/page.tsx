@@ -445,7 +445,7 @@ function OrderConfirmationContent() {
           <div className="pt-2">
             <Link
               href="/menu"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#74461F] transition shadow-sm"
             >
               EXPLORE MENU
             </Link>
@@ -475,7 +475,7 @@ function OrderConfirmationContent() {
           <div className="pt-2">
             <Link
               href="/menu"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#74461F] transition shadow-sm"
             >
               BACK TO MENU
             </Link>
@@ -508,7 +508,7 @@ function OrderConfirmationContent() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-[#B28458] text-[#c69a6d] font-bold text-xs tracking-wider hover:bg-[#FAF7F2] transition"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-[#B28458] text-[#8E5629] font-bold text-xs tracking-wider hover:bg-[#FAF7F2] transition"
             >
               CHECK AGAIN
             </button>
@@ -516,7 +516,7 @@ function OrderConfirmationContent() {
             <button
               type="button"
               onClick={openCart}
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#B28458] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#74461F] transition shadow-sm"
             >
               BACK TO YOUR BAG
             </button>
@@ -778,7 +778,7 @@ function OrderConfirmationContent() {
         <div className="text-center pt-2">
           <Link
             href="/menu"
-            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#c69a6d] transition shadow-md"
+            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#8E5629] text-white font-bold text-xs tracking-wider hover:bg-[#74461F] transition shadow-md"
           >
             ORDER AGAIN / BACK TO MENU
           </Link>
