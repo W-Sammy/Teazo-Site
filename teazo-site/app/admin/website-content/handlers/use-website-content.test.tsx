@@ -518,8 +518,8 @@ describe("delivery hook tests", () => {
 
           act(() => result.current.updateDeliveryLink(platform.id, { label: "Latest Edit" }));
           await advance(599);
-
           expect(savedPatches()).toEqual([]);
+          
           await advance(1);
           expect(savedPatches()).toEqual([{
               deliveryLinks: [{ ...platform, label: "Latest Edit" }, secondPlatform],
@@ -529,6 +529,7 @@ describe("delivery hook tests", () => {
       it("saves visibility immediately and preserves the other platform", async () => {
           const { result } = await setup();
           await act(async () => result.current.updateDeliveryLink(secondPlatform.id, { enabled: false }));
+
           expect(savedPatches()).toEqual([{
               deliveryLinks: [platform, { ...secondPlatform, enabled: false }],
           }]);
@@ -538,6 +539,7 @@ describe("delivery hook tests", () => {
       it("removes only the selected platform and saves immediately", async () => {
           const { result } = await setup();
           await act(async () => result.current.removeDeliveryLink(secondPlatform.id));
+
           expect(savedPatches()).toEqual([{ deliveryLinks: [platform] }]);
           expect(result.current.content.deliveryLinks).toEqual([platform]);
       });
@@ -546,6 +548,7 @@ describe("delivery hook tests", () => {
           const { result } = await setup();
           await act(async () => result.current.removeDeliveryLink(secondPlatform.id));
           await act(async () => result.current.removeDeliveryLink(platform.id));
+
           expect(savedPatches().at(-1)).toEqual({ deliveryLinks: [] });
       });
 
@@ -555,6 +558,7 @@ describe("delivery hook tests", () => {
       ])("does not submit an invalid delivery edit: %j", async (patch) => {
           const { result } = await setup();
           act(() => result.current.updateDeliveryLink(platform.id, patch));
+
           await advance(1000);
           expect(savedPatches()).toEqual([]);
       });
@@ -564,6 +568,7 @@ describe("delivery hook tests", () => {
           act(() => result.current.addDeliveryLink());
           act(() => result.current.updateDeliveryLink(platform.id, { label: "Updated" }));
           await advance(600);
+
           expect(savedPatches()).toEqual([{
               deliveryLinks: [{ ...platform, label: "Updated" }, secondPlatform],
           }]);
@@ -577,6 +582,7 @@ describe("delivery hook tests", () => {
           act(() => result.current.updateDeliveryLink(platform.id, { enabled: false }));
           expect(result.current.saveStatus).toBe("saving");
           await act(async () => { finish(Response.json({ success: true })); });
+
           expect(result.current.saveStatus).toBe("saved");
           expect(result.current.errorMessage).toBe("");
       });
@@ -585,6 +591,7 @@ describe("delivery hook tests", () => {
           const { result } = await setup();
           fetchMock.mockResolvedValueOnce(Response.json({ error: "Delivery save unavailable" }, { status: 503 }));
           await act(async () => result.current.updateDeliveryLink(platform.id, { enabled: false }));
+
           expect(result.current.saveStatus).toBe("error");
           expect(result.current.errorMessage).toBe("Delivery save unavailable");
       });

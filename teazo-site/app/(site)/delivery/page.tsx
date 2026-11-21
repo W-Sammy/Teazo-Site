@@ -21,6 +21,11 @@ const boldMontserrat = montserrat800;
 // medium montserrat
 const mediumMontserrat = montserrat500;
 
+// name shown in the browser tab
+export const metadata = {
+    title: "Delivery",
+};
+
 export default async function Delivery() {
   const content = await getWebsiteContent();
   const logoSrc = heroLogoSrc(content.logo);

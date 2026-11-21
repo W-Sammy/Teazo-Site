@@ -13,7 +13,6 @@ const platform = {
 
 // runs full save validation for a single platform
 function checkDelivery(patch: Partial<DeliveryLink> = {}) {
-    // returns an object that states whether changes are acceptable
     return validateWebsiteContentPatch({ deliveryLinks: [{ ...platform, ...patch }] });
 }
 

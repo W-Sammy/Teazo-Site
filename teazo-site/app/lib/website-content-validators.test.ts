@@ -64,7 +64,6 @@ describe("delivery link validation", () => {
   };
 
   function validateDelivery(deliveryLinks: unknown) {
-    // deliberately allow malformed values here to test what an actual request could contain
     return validateWebsiteContentPatch({ deliveryLinks } as Parameters<typeof validateWebsiteContentPatch>[0]);
   }
 
