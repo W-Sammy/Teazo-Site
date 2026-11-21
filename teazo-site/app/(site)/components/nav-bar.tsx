@@ -94,6 +94,8 @@ export default function NavBar() {
                         className="cursor-pointer absolute right-12 top-1/2 z-[10000] -translate-y-1/2 p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group md:hidden"
                     >
                         <svg
+                            aria-hidden="true"
+                            focusable="false"
                             className="w-6 h-6 transition-transform group-hover:scale-105"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -297,6 +299,8 @@ export default function NavBar() {
                         className="cursor-pointer relative p-2 text-black hover:text-[#8E5629] transition rounded-full hover:bg-black/5 flex items-center justify-center group"
                     >
                         <svg
+                            aria-hidden="true"
+                            focusable="false"
                             className="w-6 h-6 transition-transform group-hover:scale-105"
                             fill="none"
                             viewBox="0 0 24 24"
