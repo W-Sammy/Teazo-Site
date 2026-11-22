@@ -1,4 +1,5 @@
 import { squareClient } from "@/app/lib/square";
+import { squareWriteBlockedResponse } from "@/app/lib/square-read-only";
 import type { CatalogObject, Currency } from "square";
 import type {
   MenuItem,
@@ -212,6 +213,9 @@ export async function POST(request: Request) {
   if (!access.ok) {
     return access.response;
   }
+
+  const blocked = squareWriteBlockedResponse();
+  if (blocked) return blocked;
 
   try {
     let requestBody: unknown;

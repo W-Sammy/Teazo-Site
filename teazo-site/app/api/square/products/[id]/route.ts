@@ -1,5 +1,6 @@
 import { resolveSquareLocationId } from "@/app/lib/square-location";
 import { squareClient } from "@/app/lib/square";
+import { squareWriteBlockedResponse } from "@/app/lib/square-read-only";
 import type { CatalogObject, Currency } from "square";
 import { buildMenuItemFromGetResponse } from "@/app/lib/square-helpers";
 import { requireAdminApi } from "@/app/lib/admin";
@@ -129,6 +130,9 @@ export async function PUT(
   if (!access.ok) {
     return access.response;
   }
+
+  const blocked = squareWriteBlockedResponse();
+  if (blocked) return blocked;
 
   const { id } = await ctx.params;
   let updateConfirmed = false;
@@ -408,6 +412,9 @@ export async function DELETE(
   if (!access.ok) {
     return access.response;
   }
+
+  const blocked = squareWriteBlockedResponse();
+  if (blocked) return blocked;
 
   const { id } = await ctx.params;
 
