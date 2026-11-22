@@ -1,0 +1,1695 @@
+{
+  "section": "05-Contact-Notifications",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission saves valid contact messages",
+          "status": "passed",
+          "title": "saves valid contact messages",
+          "duration": 12.715900000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission trims whitespace from submitted values",
+          "status": "passed",
+          "title": "trims whitespace from submitted values",
+          "duration": 0.4690999999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission accepts submissions without a last name or subject",
+          "status": "passed",
+          "title": "accepts submissions without a last name or subject",
+          "duration": 0.9512,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects missing required field firstName",
+          "status": "passed",
+          "title": "rejects missing required field firstName",
+          "duration": 0.5755999999999801,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects missing required field email",
+          "status": "passed",
+          "title": "rejects missing required field email",
+          "duration": 0.2645000000000266,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects missing required field message",
+          "status": "passed",
+          "title": "rejects missing required field message",
+          "duration": 0.22050000000001546,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects whitespace-only required fields",
+          "status": "passed",
+          "title": "rejects whitespace-only required fields",
+          "duration": 0.2504000000000133,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects invalid email address not-an-email",
+          "status": "passed",
+          "title": "rejects invalid email address not-an-email",
+          "duration": 0.20699999999999363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects invalid email address person@",
+          "status": "passed",
+          "title": "rejects invalid email address person@",
+          "duration": 0.19190000000000396,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects invalid email address @example.com",
+          "status": "passed",
+          "title": "rejects invalid email address @example.com",
+          "duration": 0.231899999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects invalid email address person example@example.com",
+          "status": "passed",
+          "title": "rejects invalid email address person example@example.com",
+          "duration": 0.19880000000000564,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission enforces the 'firstName' maximum length",
+          "status": "passed",
+          "title": "enforces the 'firstName' maximum length",
+          "duration": 0.20930000000001314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission enforces the 'lastName' maximum length",
+          "status": "passed",
+          "title": "enforces the 'lastName' maximum length",
+          "duration": 0.16059999999998809,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission enforces the 'email' maximum length",
+          "status": "passed",
+          "title": "enforces the 'email' maximum length",
+          "duration": 0.16380000000000905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission enforces the 'subject' maximum length",
+          "status": "passed",
+          "title": "enforces the 'subject' maximum length",
+          "duration": 0.14339999999998554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission enforces the 'message' maximum length",
+          "status": "passed",
+          "title": "enforces the 'message' maximum length",
+          "duration": 0.13120000000000687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission accepts values exactly at their maximum lengths",
+          "status": "passed",
+          "title": "accepts values exactly at their maximum lengths",
+          "duration": 0.206799999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission returns the submitted values after validation errors",
+          "status": "passed",
+          "title": "returns the submitted values after validation errors",
+          "duration": 0.17659999999997922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission does not treat an uploaded file as a valid first name",
+          "status": "passed",
+          "title": "does not treat an uploaded file as a valid first name",
+          "duration": 0.3149999999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission silently ignores honeypot submissions",
+          "status": "passed",
+          "title": "silently ignores honeypot submissions",
+          "duration": 0.24430000000000973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission passes the Turnstile token and visitor IP to verification",
+          "status": "passed",
+          "title": "passes the Turnstile token and visitor IP to verification",
+          "duration": 0.18729999999999336,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission omits malformed forwarded IP addresses",
+          "status": "passed",
+          "title": "omits malformed forwarded IP addresses",
+          "duration": 0.2668000000000177,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects Turnstile result 'missing'",
+          "status": "passed",
+          "title": "rejects Turnstile result 'missing'",
+          "duration": 0.24279999999998836,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects Turnstile result 'rejected'",
+          "status": "passed",
+          "title": "rejects Turnstile result 'rejected'",
+          "duration": 0.1618999999999744,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects Turnstile result 'unavailable'",
+          "status": "passed",
+          "title": "rejects Turnstile result 'unavailable'",
+          "duration": 0.15319999999999823,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission rejects submissions when the contact form is disabled",
+          "status": "passed",
+          "title": "rejects submissions when the contact form is disabled",
+          "duration": 0.21399999999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission reports a database failure when checking form availability",
+          "status": "passed",
+          "title": "reports a database failure when checking form availability",
+          "duration": 0.26089999999999236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission reports a database failure when saving a message",
+          "status": "passed",
+          "title": "reports a database failure when saving a message",
+          "duration": 0.2185000000000059,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission schedules notification after saving the message",
+          "status": "passed",
+          "title": "schedules notification after saving the message",
+          "duration": 0.17730000000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission persists the message before scheduling notification",
+          "status": "passed",
+          "title": "persists the message before scheduling notification",
+          "duration": 0.7712000000000216,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission notifies the owner after a successful submission",
+          "status": "passed",
+          "title": "notifies the owner after a successful submission",
+          "duration": 0.545800000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission keeps a submission successful when email delivery fails",
+          "status": "passed",
+          "title": "keeps a submission successful when email delivery fails",
+          "duration": 0.6067999999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission keeps a submission successful when notification counts fail",
+          "status": "passed",
+          "title": "keeps a submission successful when notification counts fail",
+          "duration": 0.2869000000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission keeps the message when no owner notification address is configured",
+          "status": "passed",
+          "title": "keeps the message when no owner notification address is configured",
+          "duration": 0.23950000000002092,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission uses the development fallback owner address",
+          "status": "passed",
+          "title": "uses the development fallback owner address",
+          "duration": 0.2563999999999851,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission sends a normal notification at the hourly limit",
+          "status": "passed",
+          "title": "sends a normal notification at the hourly limit",
+          "duration": 0.25620000000000687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission sends an alerts-paused notice when the hourly cap is exceeded",
+          "status": "passed",
+          "title": "sends an alerts-paused notice when the hourly cap is exceeded",
+          "duration": 0.23910000000000764,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission suppresses further emails above the hourly cap",
+          "status": "passed",
+          "title": "suppresses further emails above the hourly cap",
+          "duration": 0.19360000000000355,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission sends a normal notification at the daily limit",
+          "status": "passed",
+          "title": "sends a normal notification at the daily limit",
+          "duration": 0.25610000000000355,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission sends an alerts-paused notice when the daily cap is exceeded",
+          "status": "passed",
+          "title": "sends an alerts-paused notice when the daily cap is exceeded",
+          "duration": 0.2259999999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission suppresses further emails above the daily cap",
+          "status": "passed",
+          "title": "suppresses further emails above the daily cap",
+          "duration": 0.19579999999999131,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission sends one warning when both caps are crossed together",
+          "status": "passed",
+          "title": "sends one warning when both caps are crossed together",
+          "duration": 0.21959999999998558,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission uses trimmed visitor details in owner notifications",
+          "status": "passed",
+          "title": "uses trimmed visitor details in owner notifications",
+          "duration": 0.27710000000001855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form submission"
+          ],
+          "fullName": "Contact form submission preserves a successful submission when email is skipped",
+          "status": "passed",
+          "title": "preserves a successful submission when email is skipped",
+          "duration": 0.20009999999999195,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296731681,
+      "endTime": 1795296731706.2002,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/contact/actions.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Persistence and deferred delivery"
+          ],
+          "fullName": "Contact notification recovery Persistence and deferred delivery does not schedule owner notification until message persistence completes",
+          "status": "passed",
+          "title": "does not schedule owner notification until message persistence completes",
+          "duration": 68.68710000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Persistence and deferred delivery"
+          ],
+          "fullName": "Contact notification recovery Persistence and deferred delivery preserves the saved message and does not automatically retry a failed email",
+          "status": "passed",
+          "title": "preserves the saved message and does not automatically retry a failed email",
+          "duration": 2.535899999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Persistence and deferred delivery"
+          ],
+          "fullName": "Contact notification recovery Persistence and deferred delivery does not automatically retry when notification-count retrieval fails",
+          "status": "passed",
+          "title": "does not automatically retry when notification-count retrieval fails",
+          "duration": 0.4119000000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Persistence and deferred delivery"
+          ],
+          "fullName": "Contact notification recovery Persistence and deferred delivery does not retry when the email provider reports skipped delivery",
+          "status": "passed",
+          "title": "does not retry when the email provider reports skipped delivery",
+          "duration": 0.2960999999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Persistence and deferred delivery"
+          ],
+          "fullName": "Contact notification recovery Persistence and deferred delivery does not retroactively deliver a message after missing notification configuration is corrected",
+          "status": "passed",
+          "title": "does not retroactively deliver a message after missing notification configuration is corrected",
+          "duration": 0.7087999999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Repeated and concurrent accepted submissions"
+          ],
+          "fullName": "Contact notification recovery Repeated and concurrent accepted submissions handles two separately accepted identical submissions as two saved messages",
+          "status": "passed",
+          "title": "handles two separately accepted identical submissions as two saved messages",
+          "duration": 0.4521000000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Repeated and concurrent accepted submissions"
+          ],
+          "fullName": "Contact notification recovery Repeated and concurrent accepted submissions handles concurrent accepted submissions without merging their notification callbacks",
+          "status": "passed",
+          "title": "handles concurrent accepted submissions without merging their notification callbacks",
+          "duration": 0.41900000000001114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Repeated and concurrent accepted submissions"
+          ],
+          "fullName": "Contact notification recovery Repeated and concurrent accepted submissions characterizes duplicate notifications if the same deferred callback is executed twice",
+          "status": "passed",
+          "title": "characterizes duplicate notifications if the same deferred callback is executed twice",
+          "duration": 0.24230000000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Repeated and concurrent accepted submissions"
+          ],
+          "fullName": "Contact notification recovery Repeated and concurrent accepted submissions does not replay a failed notification during a later successful submission",
+          "status": "passed",
+          "title": "does not replay a failed notification during a later successful submission",
+          "duration": 0.41020000000000323,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Notification limits across multiple submissions"
+          ],
+          "fullName": "Contact notification recovery Notification limits across multiple submissions sends one hourly-cap warning and suppresses later notifications as counts rise",
+          "status": "passed",
+          "title": "sends one hourly-cap warning and suppresses later notifications as counts rise",
+          "duration": 0.44530000000000314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Notification limits across multiple submissions"
+          ],
+          "fullName": "Contact notification recovery Notification limits across multiple submissions sends one daily-cap warning and suppresses later notifications as counts rise",
+          "status": "passed",
+          "title": "sends one daily-cap warning and suppresses later notifications as counts rise",
+          "duration": 0.3102999999999838,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification recovery",
+            "Notification limits across multiple submissions"
+          ],
+          "fullName": "Contact notification recovery Notification limits across multiple submissions characterizes repeated cap-warning delivery if the same callback is executed twice",
+          "status": "passed",
+          "title": "characterizes repeated cap-warning delivery if the same callback is executed twice",
+          "duration": 0.2230000000000132,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296726415,
+      "endTime": 1795296726490.3103,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/contact/contact-notification-recovery.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health rejects requests without authorization",
+          "status": "passed",
+          "title": "rejects requests without authorization",
+          "duration": 12.775900000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health rejects requests with an incorrect secret",
+          "status": "passed",
+          "title": "rejects requests with an incorrect secret",
+          "duration": 0.5065999999999917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health rejects requests when CRON_SECRET is missing",
+          "status": "passed",
+          "title": "rejects requests when CRON_SECRET is missing",
+          "duration": 0.46809999999999263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health reports a missing Brevo key as a failure",
+          "status": "passed",
+          "title": "reports a missing Brevo key as a failure",
+          "duration": 2.2516999999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health successfully checks Brevo and reports success",
+          "status": "passed",
+          "title": "successfully checks Brevo and reports success",
+          "duration": 1.4754000000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health reports an invalid Brevo key as a failure",
+          "status": "passed",
+          "title": "reports an invalid Brevo key as a failure",
+          "duration": 0.6203000000000145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health reports Brevo server errors as failures",
+          "status": "passed",
+          "title": "reports Brevo server errors as failures",
+          "duration": 0.40040000000001896,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health reports Brevo network failures",
+          "status": "passed",
+          "title": "reports Brevo network failures",
+          "duration": 0.5939000000000192,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health does not fail Brevo when monitoring is unavailable",
+          "status": "passed",
+          "title": "does not fail Brevo when monitoring is unavailable",
+          "duration": 0.4813999999999794,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health does not fail Brevo when monitoring returns HTTP 500",
+          "status": "passed",
+          "title": "does not fail Brevo when monitoring returns HTTP 500",
+          "duration": 0.46690000000000964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health skips monitoring when the URL is not configured",
+          "status": "passed",
+          "title": "skips monitoring when the URL is not configured",
+          "duration": 0.30270000000001573,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health rejects an unsafe monitoring URL",
+          "status": "passed",
+          "title": "rejects an unsafe monitoring URL",
+          "duration": 0.3201000000000249,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health does not expose credentials in error responses",
+          "status": "passed",
+          "title": "does not expose credentials in error responses",
+          "duration": 0.5004999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/cron/brevo-health"
+          ],
+          "fullName": "GET /api/cron/brevo-health does not log the monitoring URL on failure",
+          "status": "passed",
+          "title": "does not log the monitoring URL on failure",
+          "duration": 0.33740000000000236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296734953,
+      "endTime": 1795296734974.5005,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/cron/brevo-health/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "reports a missing key without creating a widget, including after retry",
+          "status": "passed",
+          "title": "reports a missing key without creating a widget, including after retry",
+          "duration": 11.507500000000164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296740466,
+      "endTime": 1795296740477.5076,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/components/turnstile-widget.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation includes the visitor name and subject in the email subject",
+          "status": "passed",
+          "title": "includes the visitor name and subject in the email subject",
+          "duration": 10.203300000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation omits the subject suffix when the visitor leaves it blank",
+          "status": "passed",
+          "title": "omits the subject suffix when the visitor leaves it blank",
+          "duration": 0.27789999999998827,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation handles an omitted optional last name",
+          "status": "passed",
+          "title": "handles an omitted optional last name",
+          "duration": 0.20350000000001955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation uses the visitor email as the reply-to address",
+          "status": "passed",
+          "title": "uses the visitor email as the reply-to address",
+          "duration": 0.47460000000000946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation includes the visitor details in the plain-text body",
+          "status": "passed",
+          "title": "includes the visitor details in the plain-text body",
+          "duration": 0.28019999999997935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation shows a fallback for an optional empty subject",
+          "status": "passed",
+          "title": "shows a fallback for an optional empty subject",
+          "duration": 0.18700000000001182,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation preserves multiline visitor messages",
+          "status": "passed",
+          "title": "preserves multiline visitor messages",
+          "duration": 0.1922999999999888,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation escapes HTML tags in the visitor message",
+          "status": "passed",
+          "title": "escapes HTML tags in the visitor message",
+          "duration": 0.24080000000000723,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation escapes special HTML characters in visitor details",
+          "status": "passed",
+          "title": "escapes special HTML characters in visitor details",
+          "duration": 0.23789999999999623,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation escapes single quotes in the HTML body",
+          "status": "passed",
+          "title": "escapes single quotes in the HTML body",
+          "duration": 0.21930000000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation displays the received date in Pacific time",
+          "status": "passed",
+          "title": "displays the received date in Pacific time",
+          "duration": 0.164100000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact notification generation"
+          ],
+          "fullName": "Contact notification generation includes guidance to reply directly to the visitor",
+          "status": "passed",
+          "title": "includes guidance to reply directly to the visitor",
+          "duration": 0.13649999999998386,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296738363,
+      "endTime": 1795296738376.164,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/contact-notification.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery sends email through Brevo when an API key is configured",
+          "status": "passed",
+          "title": "sends email through Brevo when an API key is configured",
+          "duration": 13.948299999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery includes the Brevo API key in request headers",
+          "status": "passed",
+          "title": "includes the Brevo API key in request headers",
+          "duration": 0.4899000000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery includes sender, recipient, and message content",
+          "status": "passed",
+          "title": "includes sender, recipient, and message content",
+          "duration": 1.4321000000000197,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery normalizes newline and tab characters in email headers",
+          "status": "passed",
+          "title": "normalizes newline and tab characters in email headers",
+          "duration": 0.42670000000001096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery limits sender and reply-to names to 70 characters",
+          "status": "passed",
+          "title": "limits sender and reply-to names to 70 characters",
+          "duration": 0.420599999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery omits reply-to when one is not provided",
+          "status": "passed",
+          "title": "omits reply-to when one is not provided",
+          "duration": 0.5681999999999903,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery enables the Brevo sandbox header when configured",
+          "status": "passed",
+          "title": "enables the Brevo sandbox header when configured",
+          "duration": 0.3667000000000087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery does not include the sandbox header during normal delivery",
+          "status": "passed",
+          "title": "does not include the sandbox header during normal delivery",
+          "duration": 0.4128000000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery rejects Brevo delivery without a verified sender address",
+          "status": "passed",
+          "title": "rejects Brevo delivery without a verified sender address",
+          "duration": 1.1567000000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery reports Brevo API rejection with its HTTP status",
+          "status": "passed",
+          "title": "reports Brevo API rejection with its HTTP status",
+          "duration": 1.2402999999999906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery reports Brevo network failures",
+          "status": "passed",
+          "title": "reports Brevo network failures",
+          "duration": 0.40960000000001173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery prefers Brevo over Mailpit when both are configured",
+          "status": "passed",
+          "title": "prefers Brevo over Mailpit when both are configured",
+          "duration": 0.44419999999999504,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery captures messages through Mailpit without Brevo credentials",
+          "status": "passed",
+          "title": "captures messages through Mailpit without Brevo credentials",
+          "duration": 0.3785000000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery removes trailing slashes from the Mailpit URL",
+          "status": "passed",
+          "title": "removes trailing slashes from the Mailpit URL",
+          "duration": 0.3248000000000104,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery sends the correct Mailpit message fields",
+          "status": "passed",
+          "title": "sends the correct Mailpit message fields",
+          "duration": 0.3078999999999894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery reports Mailpit HTTP failures",
+          "status": "passed",
+          "title": "reports Mailpit HTTP failures",
+          "duration": 0.3148999999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery reports Mailpit connection failures",
+          "status": "passed",
+          "title": "reports Mailpit connection failures",
+          "duration": 0.33039999999999736,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery prints email locally when no delivery system is configured",
+          "status": "passed",
+          "title": "prints email locally when no delivery system is configured",
+          "duration": 0.6542999999999779,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery skips email outside development when no transport is configured",
+          "status": "passed",
+          "title": "skips email outside development when no transport is configured",
+          "duration": 0.3669999999999902,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Outgoing email delivery"
+          ],
+          "fullName": "Outgoing email delivery creates EmailError instances with optional status codes",
+          "status": "passed",
+          "title": "creates EmailError instances with optional status codes",
+          "duration": 0.26370000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296734221,
+      "endTime": 1795296734245.367,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/email.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries returns true when the contact form is enabled",
+          "status": "passed",
+          "title": "returns true when the contact form is enabled",
+          "duration": 1.1470999999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries returns false when the contact form is disabled",
+          "status": "passed",
+          "title": "returns false when the contact form is disabled",
+          "duration": 0.14229999999997744,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries defaults to enabled when no business profile exists",
+          "status": "passed",
+          "title": "defaults to enabled when no business profile exists",
+          "duration": 0.10489999999998645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries queries the primary business profile",
+          "status": "passed",
+          "title": "queries the primary business profile",
+          "duration": 0.7785000000000082,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries propagates database errors when checking availability",
+          "status": "passed",
+          "title": "propagates database errors when checking availability",
+          "duration": 0.8961999999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries returns contact counts for the last hour and day",
+          "status": "passed",
+          "title": "returns contact counts for the last hour and day",
+          "duration": 0.2148000000000252,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries returns zero counts when D1 returns no row",
+          "status": "passed",
+          "title": "returns zero counts when D1 returns no row",
+          "duration": 0.11299999999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries uses the expected rolling time windows",
+          "status": "passed",
+          "title": "uses the expected rolling time windows",
+          "duration": 0.17739999999997735,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries propagates errors when message counts cannot be loaded",
+          "status": "passed",
+          "title": "propagates errors when message counts cannot be loaded",
+          "duration": 0.209699999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries inserts a complete contact message",
+          "status": "passed",
+          "title": "inserts a complete contact message",
+          "duration": 1.0541999999999803,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries converts blank optional fields to null",
+          "status": "passed",
+          "title": "converts blank optional fields to null",
+          "duration": 0.16370000000000573,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries uses parameterized SQL for visitor-provided values",
+          "status": "passed",
+          "title": "uses parameterized SQL for visitor-provided values",
+          "duration": 0.15210000000001855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Contact form database queries"
+          ],
+          "fullName": "Contact form database queries propagates database write errors",
+          "status": "passed",
+          "title": "propagates database write errors",
+          "duration": 0.14029999999999632,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742694,
+      "endTime": 1795296742700.1404,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/contact.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification accepts a token approved by Cloudflare",
+          "status": "passed",
+          "title": "accepts a token approved by Cloudflare",
+          "duration": 15.046500000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification sends the secret and token to Siteverify",
+          "status": "passed",
+          "title": "sends the secret and token to Siteverify",
+          "duration": 0.6158000000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification includes the visitor IP when one is provided",
+          "status": "passed",
+          "title": "includes the visitor IP when one is provided",
+          "duration": 0.40739999999999554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification omits remoteip when no visitor IP is available",
+          "status": "passed",
+          "title": "omits remoteip when no visitor IP is available",
+          "duration": 0.35849999999999227,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects a missing token before making a request",
+          "status": "passed",
+          "title": "rejects a missing token before making a request",
+          "duration": 0.4946999999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects tokens longer than 2048 characters",
+          "status": "passed",
+          "title": "rejects tokens longer than 2048 characters",
+          "duration": 0.4451999999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects a token Cloudflare marks unsuccessful",
+          "status": "passed",
+          "title": "rejects a token Cloudflare marks unsuccessful",
+          "duration": 0.5015999999999963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects expired or duplicate tokens",
+          "status": "passed",
+          "title": "rejects expired or duplicate tokens",
+          "duration": 0.5036000000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification reports secret configuration failures as unavailable",
+          "status": "passed",
+          "title": "reports secret configuration failures as unavailable",
+          "duration": 0.48569999999998004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification reports Cloudflare internal errors as unavailable",
+          "status": "passed",
+          "title": "reports Cloudflare internal errors as unavailable",
+          "duration": 0.41150000000001796,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification fails closed when Siteverify cannot be reached",
+          "status": "passed",
+          "title": "fails closed when Siteverify cannot be reached",
+          "duration": 0.4035999999999831,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification fails closed when Cloudflare returns invalid JSON",
+          "status": "passed",
+          "title": "fails closed when Cloudflare returns invalid JSON",
+          "duration": 0.42449999999999477,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification uses Cloudflare's development test secret when no secret is configured",
+          "status": "passed",
+          "title": "uses Cloudflare's development test secret when no secret is configured",
+          "duration": 0.5120000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification fails closed without a secret outside development",
+          "status": "passed",
+          "title": "fails closed without a secret outside development",
+          "duration": 0.34600000000000364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects Cloudflare test secret 1x0000000000000000000000000000000AA in production",
+          "status": "passed",
+          "title": "rejects Cloudflare test secret 1x0000000000000000000000000000000AA in production",
+          "duration": 0.349899999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects Cloudflare test secret 2x0000000000000000000000000000000AA in production",
+          "status": "passed",
+          "title": "rejects Cloudflare test secret 2x0000000000000000000000000000000AA in production",
+          "duration": 0.2774000000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification rejects Cloudflare test secret 3x0000000000000000000000000000000AA in production",
+          "status": "passed",
+          "title": "rejects Cloudflare test secret 3x0000000000000000000000000000000AA in production",
+          "duration": 0.23900000000000432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cloudflare Turnstile verification"
+          ],
+          "fullName": "Cloudflare Turnstile verification logs an invalid public site key in production",
+          "status": "passed",
+          "title": "logs an invalid public site key in production",
+          "duration": 0.5471000000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736636,
+      "endTime": 1795296736658.547,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/turnstile.test.ts"
+    }
+  ]
+}

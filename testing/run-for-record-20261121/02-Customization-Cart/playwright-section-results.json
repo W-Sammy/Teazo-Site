@@ -1,0 +1,22 @@
+[
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "displays cart items and subtotal",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "updates totals when increasing quantity",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "updates customization prices in the edit modal",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "keeps the Shopping Bag usable on mobile",
+    "status": "expected"
+  }
+]

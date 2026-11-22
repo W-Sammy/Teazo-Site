@@ -1,0 +1,11 @@
+File,Passed,Failed,Other
+app/(site)/components/cart-drawer-edit.test.tsx,15,0,0
+app/(site)/components/cart-drawer-shell.test.tsx,19,0,0
+app/(site)/components/chunk-loading-and-recovery.test.tsx,15,0,0
+app/(site)/components/customizer-availability-prefetch.test.ts,6,0,0
+app/(site)/components/item-customizer-modal.frontend.test.tsx,12,0,0
+app/(site)/components/item-customizer-modal.test.tsx,16,0,0
+app/context/cart-context.frontend.test.tsx,15,0,0
+app/lib/cart-issues.test.ts,6,0,0
+app/lib/customizer-availability.test.ts,13,0,0
+app/lib/square-option-rules.test.ts,48,0,0

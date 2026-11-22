@@ -1,0 +1,132 @@
+[
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "adds a blank draft without saving it",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "shows the required name error when the URL is entered first",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "adds a complete platform and submits its name and URL",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "rejects an invalid delivery URL: tea@example.com",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "rejects an invalid delivery URL: mailto:tea@example.com",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "rejects an invalid delivery URL: example.com",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "rejects an invalid delivery URL: not a link",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "enforces the name limit during browser typing and pasted-text insertion",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "edits, hides, restores and removes a synthetic platform",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "shows a failed save and recovers after another valid edit",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "opens delivery on mobile and submits a complete platform",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "does not save after a previously valid name is cleared",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "does not save after a previously valid url is cleared",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "clears an invalid URL error and submits the corrected URL",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "edits a second platform without changing the first platform or its save data",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery-admin.spec.ts",
+    "test": "discards a waiting valid URL save if the same field becomes invalid before leaving it",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "opens without logging in and shows the page title and introductory text",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "displays a successfully loaded TEAZO logo",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "shows readable uppercase button labels and complete web URLs",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "clicking every delivery button opens its configured destination",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "a delivery button can be reached with Tab",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "Enter opens a focused delivery button's destination",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "hovering a button keeps its label and destination intact",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "refreshing preserves the displayed button labels, order, and URLs",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "buttons fit and can be clicked at a 390px viewport width",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/delivery.spec.ts",
+    "test": "buttons fit and can be clicked at a 1280px viewport width",
+    "status": "expected"
+  }
+]

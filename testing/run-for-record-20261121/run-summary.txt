@@ -1,0 +1,25 @@
+TEAZO FULL TEST EVIDENCE - RUN SUMMARY
+Branch: dev
+Commit: e5f5c41
+Run: 20261121-133109
+
+Vitest: 2354/2354 passed across 131 files; 0 failed, 0 other
+Playwright: 90/90 passed across 8 files; 0 failed, 0 skipped
+
+COPY INTO SYSTEM TEST REPORT (.7 RESULTS):
+1.7 Results: 164/164 Vitest tests passed across 11 test files. Additionally, 16/16 Playwright tests passed across 1 test file(s).
+2.7 Results: 165/165 Vitest tests passed across 10 test files. Additionally, 4/4 Playwright tests passed across 1 test file(s).
+3.7 Results: 252/252 Vitest tests passed across 14 test files. Additionally, 5/5 Playwright tests passed across 1 test file(s).
+4.7 Results: 75/75 Vitest tests passed across 5 test files.
+5.7 Results: 134/134 Vitest tests passed across 8 test files.
+6.7 Results: 168/168 Vitest tests passed across 8 test files.
+7.7 Results: 154/154 Vitest tests passed across 10 test files.
+8.7 Results: 186/186 Vitest tests passed across 8 test files.
+9.7 Results: 379/379 Vitest tests passed across 25 test files. Additionally, 39/39 Playwright tests passed across 4 test file(s).
+10.7 Results: 613/613 Vitest tests passed across 24 test files. Additionally, 26/26 Playwright tests passed across 2 test file(s).
+11.7 Results: 41/41 Vitest tests passed across 5 test files.
+12.7 Results: 23/23 Vitest tests passed across 3 test files.
+
+All checks passed: true
+ISSUES:
+None

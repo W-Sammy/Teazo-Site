@@ -1,0 +1,3851 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\psilo\\source\\repo\\Teazo-Site\\teazo-site\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config=C:\\Users\\psilo\\source\\repo\\Teazo-Site\\teazo-site\\playwright.evidence.temp.config.ts",
+      "--project=chromium",
+      "--workers=2"
+    ],
+    "configFile": "C:\\Users\\psilo\\source\\repo\\Teazo-Site\\teazo-site\\playwright.evidence.temp.config.ts",
+    "rootDir": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/psilo/Desktop/Teazo-Full-Test-Evidence/20261121-133109-dev/Playwright/raw-test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "name": "chromium",
+        "testDir": "C:\\Users\\psilo\\source\\repo\\Teazo-Site\\teazo-site\\e2e",
+        "snapshotDir": "C:\\Users\\psilo\\source\\repo\\Teazo-Site\\teazo-site\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 45000,
+        "use": {
+          "baseURL": "http://localhost:3000",
+          "navigationTimeout": 60000,
+          "screenshot": "on",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/159.0.8154.6 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\playwright-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin-account-management-mobile.spec.ts",
+      "file": "admin-account-management-mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "completes synthetic mobile add, edit, invitation, and delete workflows",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3061,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-21T21:32:28.557Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-m-021a4-tation-and-delete-workflows-chromium\\test-finished-1.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1a038d34b747aa200b8c-9db85a3fe5222671b048",
+          "file": "admin-account-management-mobile.spec.ts",
+          "line": 79,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "admin-account-management.spec.ts",
+      "file": "admin-account-management.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Frontend administrator account management",
+          "file": "admin-account-management.spec.ts",
+          "line": 438,
+          "column": 6,
+          "specs": [
+            {
+              "title": "displays separate Owner and Admin accounts with protected Owner actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2487,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:28.561Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-4b712-ith-protected-Owner-actions-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-92d71b43dc12876c5445",
+              "file": "admin-account-management.spec.ts",
+              "line": 439,
+              "column": 3
+            },
+            {
+              "title": "cancels Add New User without creating an account",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 504,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:31.124Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-cc749-without-creating-an-account-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-76da80b275f4dd9a2077",
+              "file": "admin-account-management.spec.ts",
+              "line": 466,
+              "column": 3
+            },
+            {
+              "title": "creates a normalized Admin and displays invitation confirmation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 964,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:31.635Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-aa58d-ays-invitation-confirmation-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-5732ebf2d732018b8b04",
+              "file": "admin-account-management.spec.ts",
+              "line": 504,
+              "column": 3
+            },
+            {
+              "title": "rejects an empty Add User form without creating an account",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 891,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:31.704Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-788e6-without-creating-an-account-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-bf6e1cae98831ab6768a",
+              "file": "admin-account-management.spec.ts",
+              "line": 563,
+              "column": 3
+            },
+            {
+              "title": "preserves Add User inputs after an account-creation conflict",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 627,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:32.602Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-0ce51-n-account-creation-conflict-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-ba247af6a4c623b08ed8",
+              "file": "admin-account-management.spec.ts",
+              "line": 595,
+              "column": 3
+            },
+            {
+              "title": "keeps account editing unchanged when canceled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 623,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:32.605Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-c3662-ing-unchanged-when-canceled-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-baf91f75f91928a2a19a",
+              "file": "admin-account-management.spec.ts",
+              "line": 645,
+              "column": 3
+            },
+            {
+              "title": "validates an empty edited username without sending PATCH",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 680,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:33.235Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-79903-rname-without-sending-PATCH-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-04bef9825d80d95b9b90",
+              "file": "admin-account-management.spec.ts",
+              "line": 690,
+              "column": 3
+            },
+            {
+              "title": "updates an Admin username only after successful PATCH",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 713,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:33.236Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-c580e-only-after-successful-PATCH-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-329f2ee3f777695b2341",
+              "file": "admin-account-management.spec.ts",
+              "line": 728,
+              "column": 3
+            },
+            {
+              "title": "preserves the edit dialog and username after a rejected PATCH",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 644,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:33.922Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-5e625-name-after-a-rejected-PATCH-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-0d8a380207959c732942",
+              "file": "admin-account-management.spec.ts",
+              "line": 782,
+              "column": 3
+            },
+            {
+              "title": "cancels administrator deletion without a DELETE request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 593,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:33.954Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-98985-on-without-a-DELETE-request-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-8e2fdf9d0afb39e387ba",
+              "file": "admin-account-management.spec.ts",
+              "line": 825,
+              "column": 3
+            },
+            {
+              "title": "removes a regular administrator after confirmed deletion",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 659,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:34.553Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-974e3-or-after-confirmed-deletion-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-c6d5cc9cdd2ea1abe69a",
+              "file": "admin-account-management.spec.ts",
+              "line": 860,
+              "column": 3
+            },
+            {
+              "title": "retains an administrator when deletion fails",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 625,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:34.571Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-106f5-strator-when-deletion-fails-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-3100618c746aa9e0ec87",
+              "file": "admin-account-management.spec.ts",
+              "line": 901,
+              "column": 3
+            },
+            {
+              "title": "resends an eligible invitation without sending real email",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 593,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:35.203Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-b6c1e--without-sending-real-email-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-6a89e2edc0aacb303a39",
+              "file": "admin-account-management.spec.ts",
+              "line": 946,
+              "column": 3
+            },
+            {
+              "title": "reports invitation resend failures without a success notice",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 595,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:35.218Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-c7780-es-without-a-success-notice-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-301a5101306a1cf01de6",
+              "file": "admin-account-management.spec.ts",
+              "line": 974,
+              "column": 3
+            },
+            {
+              "title": "prevents duplicate invitation resends while a request is pending",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 611,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:35.804Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-62f25--while-a-request-is-pending-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-227593db670ed1d1bbfc",
+              "file": "admin-account-management.spec.ts",
+              "line": 1006,
+              "column": 3
+            },
+            {
+              "title": "hides management actions when administrator API returns 401",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 476,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:35.819Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-00058-ministrator-API-returns-401-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-1aeea8b26961f411b769",
+              "file": "admin-account-management.spec.ts",
+              "line": 1065,
+              "column": 5
+            },
+            {
+              "title": "hides management actions when administrator API returns 403",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 477,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:36.302Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-5e1a5-ministrator-API-returns-403-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-58fde9114fd1c4dd028a",
+              "file": "admin-account-management.spec.ts",
+              "line": 1065,
+              "column": 5
+            },
+            {
+              "title": "withdraws account-management actions after a failed authorization refresh",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 540,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:36.420Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-4f72a-ailed-authorization-refresh-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-639edaccaa16c76b95a3",
+              "file": "admin-account-management.spec.ts",
+              "line": 1095,
+              "column": 3
+            },
+            {
+              "title": "keeps Add and Edit Account controls usable on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 569,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:36.786Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-account-management-F-e667c-t-controls-usable-on-mobile-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "987f08ae675fdb734216-13900e13afeba25bae57",
+              "file": "admin-account-management.spec.ts",
+              "line": 1123,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "admin-login.spec.ts",
+      "file": "admin-login.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Admin login browser tests",
+          "file": "admin-login.spec.ts",
+          "line": 158,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the login page and controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 335,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:36.972Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-7295f-the-login-page-and-controls-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-5680a5cbd0b3e9cc5adc",
+              "file": "admin-login.spec.ts",
+              "line": 160,
+              "column": 3
+            },
+            {
+              "title": "requires both login fields before submitting",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 382,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:37.315Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-d778f-in-fields-before-submitting-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-6ae7a61a3f1dc1ed59e7",
+              "file": "admin-login.spec.ts",
+              "line": 205,
+              "column": 3
+            },
+            {
+              "title": "uses native browser email validation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 384,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:37.364Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-fb54b-ve-browser-email-validation-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-5494f4415e365eef9e77",
+              "file": "admin-login.spec.ts",
+              "line": 232,
+              "column": 3
+            },
+            {
+              "title": "displays denied Google account feedback",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 375,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:37.702Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-315f1-ied-Google-account-feedback-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-615e0d0d3c8cb23c5521",
+              "file": "admin-login.spec.ts",
+              "line": 259,
+              "column": 3
+            },
+            {
+              "title": "displays authentication service errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 341,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:37.753Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-e9f2a-thentication-service-errors-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-ce5a06b8dbd2305d9754",
+              "file": "admin-login.spec.ts",
+              "line": 274,
+              "column": 3
+            },
+            {
+              "title": "normalizes credentials and displays invalid login feedback",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 575,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:38.085Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-5c4af-lays-invalid-login-feedback-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-3c38b544dd6a2fce865d",
+              "file": "admin-login.spec.ts",
+              "line": 290,
+              "column": 3
+            },
+            {
+              "title": "rejects an unsafe login destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 577,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:38.099Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-24bf8-an-unsafe-login-destination-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-dd42901577e9a2349e6c",
+              "file": "admin-login.spec.ts",
+              "line": 333,
+              "column": 3
+            },
+            {
+              "title": "preserves a valid ownership-transfer destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 533,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:38.667Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-a71e7-ership-transfer-destination-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-99adb0c37b5786c8f0e0",
+              "file": "admin-login.spec.ts",
+              "line": 368,
+              "column": 3
+            },
+            {
+              "title": "keeps login controls available on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 384,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:38.683Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-login-Admin-login-br-647e6-ontrols-available-on-mobile-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "481c7578028bb96ee688-1fe55ba5bc43910b9f04",
+              "file": "admin-login.spec.ts",
+              "line": 402,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "admin-password-flow.spec.ts",
+      "file": "admin-password-flow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Admin password-flow browser tests",
+          "file": "admin-password-flow.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens and closes the password request dialog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 629,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:39.076Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--2f2b7-the-password-request-dialog-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-9c359dd36fb0b2cb9301",
+              "file": "admin-password-flow.spec.ts",
+              "line": 21,
+              "column": 3
+            },
+            {
+              "title": "submits a normalized password-link request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 523,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:39.211Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--1b3e4-lized-password-link-request-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-4af120c4f39e3f902cec",
+              "file": "admin-password-flow.spec.ts",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "displays password request rate-limit errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 731,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:39.710Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--7fa9d-d-request-rate-limit-errors-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-5fcf4060065de0e4d511",
+              "file": "admin-password-flow.spec.ts",
+              "line": 100,
+              "column": 3
+            },
+            {
+              "title": "displays network errors during a password request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 715,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:39.743Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--87842-s-during-a-password-request-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-f048f2738b71807a073e",
+              "file": "admin-password-flow.spec.ts",
+              "line": 141,
+              "column": 3
+            },
+            {
+              "title": "rejects a password shorter than six characters",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 685,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:40.447Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--973c0-shorter-than-six-characters-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-34a4977d49a6f40c0484",
+              "file": "admin-password-flow.spec.ts",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "rejects mismatched passwords",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 512,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:40.465Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--bdd50-ejects-mismatched-passwords-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-4009813e3baa8518d7c1",
+              "file": "admin-password-flow.spec.ts",
+              "line": 226,
+              "column": 3
+            },
+            {
+              "title": "submits a valid setup password request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 578,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:40.982Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--23a34-alid-setup-password-request-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-5051c5043c8a1b61527f",
+              "file": "admin-password-flow.spec.ts",
+              "line": 276,
+              "column": 5
+            },
+            {
+              "title": "submits a valid reset password request",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 723,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:41.139Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--00a17-alid-reset-password-request-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-d79352e54624f75df143",
+              "file": "admin-password-flow.spec.ts",
+              "line": 276,
+              "column": 5
+            },
+            {
+              "title": "offers recovery when a password token is invalid",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 946,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:41.566Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--7ef73-a-password-token-is-invalid-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-5c35ff057277a0d15f74",
+              "file": "admin-password-flow.spec.ts",
+              "line": 341,
+              "column": 3
+            },
+            {
+              "title": "keeps the password dialog usable on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 376,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:41.870Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\admin-password-flow-Admin--0532d-ord-dialog-usable-on-mobile-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "520115ef4385a20cb121-912973f60ecc1a8ebbac",
+              "file": "admin-password-flow.spec.ts",
+              "line": 394,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "customizer-cart-checkout.spec.ts",
+      "file": "customizer-cart-checkout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Customizer, Cart, and Checkout browser tests",
+          "file": "customizer-cart-checkout.spec.ts",
+          "line": 308,
+          "column": 6,
+          "specs": [
+            {
+              "title": "displays cart items and subtotal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 716,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:42.258Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-da629-ays-cart-items-and-subtotal-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-6ca1dc379ae8e5f7cf26",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 311,
+              "column": 3
+            },
+            {
+              "title": "updates totals when increasing quantity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1123,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:42.526Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-9cfa0-ls-when-increasing-quantity-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-8918d4e018e21ebacd48",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 333,
+              "column": 3
+            },
+            {
+              "title": "updates customization prices in the edit modal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1387,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:42.981Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-84a40-on-prices-in-the-edit-modal-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-58e6b6348be5dd08b0e4",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 355,
+              "column": 3
+            },
+            {
+              "title": "validates checkout customer details",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1251,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:43.656Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-7a741-s-checkout-customer-details-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-6c844f6cf99d84e08d03",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 400,
+              "column": 3
+            },
+            {
+              "title": "shows rejected-order feedback",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1378,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:44.377Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-d148a-ows-rejected-order-feedback-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-cbef43a181f40522fb7c",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 444,
+              "column": 3
+            },
+            {
+              "title": "allows retry after checkout service failure",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1441,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:44.915Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-01018-er-checkout-service-failure-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-343fc608caec76b24bf8",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 490,
+              "column": 3
+            },
+            {
+              "title": "disables checkout while awaiting a response",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1414,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:45.764Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-05449-t-while-awaiting-a-response-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-be1d6163ce87b3e9bdde",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 533,
+              "column": 3
+            },
+            {
+              "title": "navigates to a mocked successful checkout session",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1179,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:46.366Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-b824d-successful-checkout-session-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-0634aead2e7e7f18140c",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 591,
+              "column": 3
+            },
+            {
+              "title": "keeps the Shopping Bag usable on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 957,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:47.186Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\customizer-cart-checkout-C-4146f-opping-Bag-usable-on-mobile-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5e325e6a793c95a5faa4-4e8fd428d7b2711cac5f",
+              "file": "customizer-cart-checkout.spec.ts",
+              "line": 726,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "delivery-admin.spec.ts",
+      "file": "delivery-admin.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Admin delivery browser interactions",
+          "file": "delivery-admin.spec.ts",
+          "line": 128,
+          "column": 6,
+          "specs": [
+            {
+              "title": "adds a blank draft without saving it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 979,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:47.557Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-14cfb-ank-draft-without-saving-it-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-20643dd10af9ca1e4f1c",
+              "file": "delivery-admin.spec.ts",
+              "line": 129,
+              "column": 5
+            },
+            {
+              "title": "shows the required name error when the URL is entered first",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 941,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:48.158Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-5dd6f-en-the-URL-is-entered-first-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-7b9ef351a0a4c032767b",
+              "file": "delivery-admin.spec.ts",
+              "line": 153,
+              "column": 5
+            },
+            {
+              "title": "adds a complete platform and submits its name and URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 994,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:48.545Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-5e138-nd-submits-its-name-and-URL-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-d8a1055dca2246d81067",
+              "file": "delivery-admin.spec.ts",
+              "line": 165,
+              "column": 5
+            },
+            {
+              "title": "rejects an invalid delivery URL: tea@example.com",
+              "ok": true,
+              "tags": [
+                "example.com"
+              ],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 960,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:49.106Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-f7107-elivery-URL-tea-example-com-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-1d52befdcd0d3bc542d5",
+              "file": "delivery-admin.spec.ts",
+              "line": 187,
+              "column": 9
+            },
+            {
+              "title": "rejects an invalid delivery URL: mailto:tea@example.com",
+              "ok": true,
+              "tags": [
+                "example.com"
+              ],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 973,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:49.544Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-37ec7--URL-mailto-tea-example-com-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-f3ea1eff6ceda628dc52",
+              "file": "delivery-admin.spec.ts",
+              "line": 187,
+              "column": 9
+            },
+            {
+              "title": "rejects an invalid delivery URL: example.com",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 998,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:50.071Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-d0157-id-delivery-URL-example-com-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-f6bb2bf096e944592ee3",
+              "file": "delivery-admin.spec.ts",
+              "line": 187,
+              "column": 9
+            },
+            {
+              "title": "rejects an invalid delivery URL: not a link",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 993,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:50.523Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-9a4ff-lid-delivery-URL-not-a-link-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-c1a554b55a4baaec1ce8",
+              "file": "delivery-admin.spec.ts",
+              "line": 187,
+              "column": 9
+            },
+            {
+              "title": "enforces the name limit during browser typing and pasted-text insertion",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 970,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:51.076Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-0907d-g-and-pasted-text-insertion-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-ff9d170f8522fdce20ff",
+              "file": "delivery-admin.spec.ts",
+              "line": 215,
+              "column": 5
+            },
+            {
+              "title": "edits, hides, restores and removes a synthetic platform",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1122,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:51.522Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-269b7-emoves-a-synthetic-platform-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-f5acec56b6a26f1f835c",
+              "file": "delivery-admin.spec.ts",
+              "line": 238,
+              "column": 5
+            },
+            {
+              "title": "shows a failed save and recovers after another valid edit",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 945,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:52.051Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-61e68-rs-after-another-valid-edit-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-2592078cefdef267ca24",
+              "file": "delivery-admin.spec.ts",
+              "line": 286,
+              "column": 5
+            },
+            {
+              "title": "opens delivery on mobile and submits a complete platform",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 886,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:52.652Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-e671b-submits-a-complete-platform-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-c0ef167503ef6e377353",
+              "file": "delivery-admin.spec.ts",
+              "line": 310,
+              "column": 5
+            },
+            {
+              "title": "does not save after a previously valid name is cleared",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 927,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:53.003Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-9d0ab-ously-valid-name-is-cleared-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-c2aa41ae1249f87ae96f",
+              "file": "delivery-admin.spec.ts",
+              "line": 336,
+              "column": 9
+            },
+            {
+              "title": "does not save after a previously valid url is cleared",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 970,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:53.543Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-19aa9-iously-valid-url-is-cleared-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-529ba3d8e0387d5e9714",
+              "file": "delivery-admin.spec.ts",
+              "line": 336,
+              "column": 9
+            },
+            {
+              "title": "clears an invalid URL error and submits the corrected URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 977,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:53.937Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-a3d9d-d-submits-the-corrected-URL-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-7d8ae83998cb45a27eae",
+              "file": "delivery-admin.spec.ts",
+              "line": 359,
+              "column": 5
+            },
+            {
+              "title": "edits a second platform without changing the first platform or its save data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1079,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:54.519Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-f6dd3-t-platform-or-its-save-data-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-7bad4630bdfc69bd3b22",
+              "file": "delivery-admin.spec.ts",
+              "line": 388,
+              "column": 5
+            },
+            {
+              "title": "discards a waiting valid URL save if the same field becomes invalid before leaving it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 961,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:54.919Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-admin-Admin-deliv-fcf7a-s-invalid-before-leaving-it-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "c72d3ff7cbdff1bf3094-cc5a500c6a1f5431dd9d",
+              "file": "delivery-admin.spec.ts",
+              "line": 421,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "delivery.spec.ts",
+      "file": "delivery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "public delivery page",
+          "file": "delivery.spec.ts",
+          "line": 67,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens without logging in and shows the page title and introductory text",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 407,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:55.607Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-268da-title-and-introductory-text-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-45b2cc1f797f90b896d4",
+              "file": "delivery.spec.ts",
+              "line": 98,
+              "column": 5
+            },
+            {
+              "title": "displays a successfully loaded TEAZO logo",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 409,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:55.889Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-12fc9-cessfully-loaded-TEAZO-logo-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-6b35463e21fa62196a00",
+              "file": "delivery.spec.ts",
+              "line": 106,
+              "column": 5
+            },
+            {
+              "title": "shows readable uppercase button labels and complete web URLs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 483,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:56.020Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-876db-abels-and-complete-web-URLs-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-3e82c5bcf9b54d65fff5",
+              "file": "delivery.spec.ts",
+              "line": 117,
+              "column": 5
+            },
+            {
+              "title": "clicking every delivery button opens its configured destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1129,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:56.304Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-774bf--its-configured-destination-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-53e277c9a827b646a675",
+              "file": "delivery.spec.ts",
+              "line": 135,
+              "column": 5
+            },
+            {
+              "title": "a delivery button can be reached with Tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 426,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:56.509Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-dd9b0-ton-can-be-reached-with-Tab-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-cdedb374fe0d251ff696",
+              "file": "delivery.spec.ts",
+              "line": 150,
+              "column": 5
+            },
+            {
+              "title": "Enter opens a focused delivery button's destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 541,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:56.941Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-97c2c-livery-button-s-destination-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-fd7a84bde362fa23e2f9",
+              "file": "delivery.spec.ts",
+              "line": 160,
+              "column": 5
+            },
+            {
+              "title": "hovering a button keeps its label and destination intact",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 528,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:57.438Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-a38f2-abel-and-destination-intact-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-22ec0ba8366396553c20",
+              "file": "delivery.spec.ts",
+              "line": 168,
+              "column": 5
+            },
+            {
+              "title": "refreshing preserves the displayed button labels, order, and URLs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 652,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:57.489Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-f0062-utton-labels-order-and-URLs-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-3a4d4e6274f75538060f",
+              "file": "delivery.spec.ts",
+              "line": 179,
+              "column": 5
+            },
+            {
+              "title": "buttons fit and can be clicked at a 390px viewport width",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 661,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:57.971Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-7cd08-d-at-a-390px-viewport-width-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-86fc9155529e35650efe",
+              "file": "delivery.spec.ts",
+              "line": 192,
+              "column": 9
+            },
+            {
+              "title": "buttons fit and can be clicked at a 1280px viewport width",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 678,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:58.147Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\delivery-public-delivery-p-a0c7c--at-a-1280px-viewport-width-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "6be646c84a0e17f5bcd7-714aedc2e873f7bc2f65",
+              "file": "delivery.spec.ts",
+              "line": 192,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "static-menu.spec.ts",
+      "file": "static-menu.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "public static menu page",
+          "file": "static-menu.spec.ts",
+          "line": 129,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens without logging in and shows its title, heading, and instructions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 446,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:58.643Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--07e28-le-heading-and-instructions-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-a81dc9a572ac74ec8731",
+              "file": "static-menu.spec.ts",
+              "line": 130,
+              "column": 5
+            },
+            {
+              "title": "shows a successfully loaded TEAZO logo",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 446,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:58.837Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--7c63b-cessfully-loaded-TEAZO-logo-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-bd3521ee67ca9ecabf1b",
+              "file": "static-menu.spec.ts",
+              "line": 140,
+              "column": 5
+            },
+            {
+              "title": "the PDF link has the correct URL and safe new-tab settings",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 470,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:59.093Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--dad69-L-and-safe-new-tab-settings-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-a4efbbc6169a5c6a4af8",
+              "file": "static-menu.spec.ts",
+              "line": 151,
+              "column": 5
+            },
+            {
+              "title": "draws the menu PDF page on desktop",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 634,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:59.290Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--cd01c-he-menu-PDF-page-on-desktop-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-0a7ed07408c16502a84f",
+              "file": "static-menu.spec.ts",
+              "line": 162,
+              "column": 5
+            },
+            {
+              "title": "clicking OPEN PDF opens the correct new tab and preserves the menu tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 540,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:59.569Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--1877a--and-preserves-the-menu-tab-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-db47a3e41161daef0b83",
+              "file": "static-menu.spec.ts",
+              "line": 171,
+              "column": 5
+            },
+            {
+              "title": "the PDF link can receive Tab focus and open with Enter",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 561,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:32:59.930Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--14b80-b-focus-and-open-with-Enter-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-48ba0a1687687775d94e",
+              "file": "static-menu.spec.ts",
+              "line": 177,
+              "column": 5
+            },
+            {
+              "title": "hovering changes the button from black to pink without changing its URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 661,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:00.113Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--11a6e-nk-without-changing-its-URL-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-e65f1eabd0ca29593a08",
+              "file": "static-menu.spec.ts",
+              "line": 189,
+              "column": 5
+            },
+            {
+              "title": "refreshing keeps the PDF button and redraws the preview",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1037,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:00.496Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--17e84-ton-and-redraws-the-preview-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-cafe748da7c1ce810818",
+              "file": "static-menu.spec.ts",
+              "line": 201,
+              "column": 5
+            },
+            {
+              "title": "resizing a desktop preview redraws the menu page to fit without duplicates",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1006,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:00.779Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--4feac-e-to-fit-without-duplicates-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-f6c1a1f09882a071695c",
+              "file": "static-menu.spec.ts",
+              "line": 211,
+              "column": 5
+            },
+            {
+              "title": "shows fallback instructions when PDF loading fails: missing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 718,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:01.538Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--563c9-n-PDF-loading-fails-missing-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-6c799fdbbef1b5a8bc5b",
+              "file": "static-menu.spec.ts",
+              "line": 232,
+              "column": 9
+            },
+            {
+              "title": "shows fallback instructions when PDF loading fails: corrupt",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 729,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:01.790Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--37930-n-PDF-loading-fails-corrupt-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-7eb92c270783a3f4c068",
+              "file": "static-menu.spec.ts",
+              "line": 232,
+              "column": 9
+            },
+            {
+              "title": "shows fallback instructions when PDF loading fails: module-error",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 525,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:02.261Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--d1c7c--loading-fails-module-error-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-6aa20c94109a594f4230",
+              "file": "static-menu.spec.ts",
+              "line": 232,
+              "column": 9
+            },
+            {
+              "title": "uses the correct preview behavior and usable button at 390px",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 561,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:02.524Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--ce2ed--and-usable-button-at-390px-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-d0c1a51cd79098167c5d",
+              "file": "static-menu.spec.ts",
+              "line": 244,
+              "column": 9
+            },
+            {
+              "title": "uses the correct preview behavior and usable button at 639px",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 568,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:02.792Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--3dedf--and-usable-button-at-639px-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-d43156fb4f853469954e",
+              "file": "static-menu.spec.ts",
+              "line": 244,
+              "column": 9
+            },
+            {
+              "title": "uses the correct preview behavior and usable button at 640px",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 758,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:03.090Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--6e8f0--and-usable-button-at-640px-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-dd422681ba6d37ba6e86",
+              "file": "static-menu.spec.ts",
+              "line": 244,
+              "column": 9
+            },
+            {
+              "title": "Safari detection hides the desktop preview while keeping OPEN PDF usable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 539,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-21T21:33:03.365Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\psilo\\Desktop\\Teazo-Full-Test-Evidence\\20261121-133109-dev\\Playwright\\raw-test-results\\static-menu-public-static--b70ad-ile-keeping-OPEN-PDF-usable-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f5e23a5554d9b5530271-7aaebda85082b7a1748a",
+              "file": "static-menu.spec.ts",
+              "line": 269,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-21T21:32:28.160Z",
+    "duration": 36082.985,
+    "expected": 90,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

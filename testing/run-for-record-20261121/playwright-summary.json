@@ -1,0 +1,65 @@
+{
+  "passed": 90,
+  "failed": 0,
+  "skipped": 0,
+  "total": 90,
+  "files": 8,
+  "stats": {
+    "startTime": "2026-11-21T21:32:28.160Z",
+    "duration": 36082.985,
+    "expected": 90,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "bySection": [
+    {
+      "section": "01-Public-Menu-Catalog",
+      "tests": 16
+    },
+    {
+      "section": "02-Customization-Cart",
+      "tests": 4
+    },
+    {
+      "section": "03-Checkout-Payment-Links",
+      "tests": 5
+    },
+    {
+      "section": "04-Orders-Payment-Status",
+      "tests": 0
+    },
+    {
+      "section": "05-Contact-Notifications",
+      "tests": 0
+    },
+    {
+      "section": "06-Gallery-Images",
+      "tests": 0
+    },
+    {
+      "section": "07-Events",
+      "tests": 0
+    },
+    {
+      "section": "08-Admin-Menu",
+      "tests": 0
+    },
+    {
+      "section": "09-Admin-Accounts-Access",
+      "tests": 39
+    },
+    {
+      "section": "10-Website-Content-Hours",
+      "tests": 26
+    },
+    {
+      "section": "11-Dashboard-Analytics",
+      "tests": 0
+    },
+    {
+      "section": "12-Shared-Components-Configuration",
+      "tests": 0
+    }
+  ]
+}

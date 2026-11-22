@@ -1,0 +1,82 @@
+[
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "opens without logging in and shows its title, heading, and instructions",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "shows a successfully loaded TEAZO logo",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "the PDF link has the correct URL and safe new-tab settings",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "draws the menu PDF page on desktop",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "clicking OPEN PDF opens the correct new tab and preserves the menu tab",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "the PDF link can receive Tab focus and open with Enter",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "hovering changes the button from black to pink without changing its URL",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "refreshing keeps the PDF button and redraws the preview",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "resizing a desktop preview redraws the menu page to fit without duplicates",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "shows fallback instructions when PDF loading fails: missing",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "shows fallback instructions when PDF loading fails: corrupt",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "shows fallback instructions when PDF loading fails: module-error",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "uses the correct preview behavior and usable button at 390px",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "uses the correct preview behavior and usable button at 639px",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "uses the correct preview behavior and usable button at 640px",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/static-menu.spec.ts",
+    "test": "Safari detection hides the desktop preview while keeping OPEN PDF usable",
+    "status": "expected"
+  }
+]

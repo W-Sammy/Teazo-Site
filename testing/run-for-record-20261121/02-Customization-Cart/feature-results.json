@@ -1,0 +1,2092 @@
+{
+  "section": "02-Customization-Cart",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff uses one product GET and one body parse for first Edit, retaining choices and fresh prices",
+          "status": "passed",
+          "title": "uses one product GET and one body parse for first Edit, retaining choices and fresh prices",
+          "duration": 421.3559,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff uses the handed-off response to block an unavailable item",
+          "status": "passed",
+          "title": "uses the handed-off response to block an unavailable item",
+          "duration": 62.312999999999874,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff uses the handed-off response to block an unavailable option",
+          "status": "passed",
+          "title": "uses the handed-off response to block an unavailable option",
+          "duration": 58.84510000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff uses the handed-off response to block an unavailable group",
+          "status": "passed",
+          "title": "uses the handed-off response to block an unavailable group",
+          "duration": 57.10539999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff uses the handed-off response to block an unavailable variation",
+          "status": "passed",
+          "title": "uses the handed-off response to block an unavailable variation",
+          "duration": 52.79740000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff does not silently replace an edited variation removed from the catalog",
+          "status": "passed",
+          "title": "does not silently replace an edited variation removed from the catalog",
+          "duration": 67.98630000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff reuses a fresh result when editing a second line with different choices",
+          "status": "passed",
+          "title": "reuses a fresh result when editing a second line with different choices",
+          "duration": 122.82920000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff opens immediately after expiry and waits for a new availability check before Update",
+          "status": "passed",
+          "title": "opens immediately after expiry and waits for a new availability check before Update",
+          "duration": 194.3744999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff does not open a dismissed Edit, even when the bag reopens before its response",
+          "status": "passed",
+          "title": "does not open a dismissed Edit, even when the bag reopens before its response",
+          "duration": 117.33199999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff does not open the customizer after the bag is closed",
+          "status": "passed",
+          "title": "does not open the customizer after the bag is closed",
+          "duration": 59.62299999999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff ignores an older response after selecting a newer line for ITEM1",
+          "status": "passed",
+          "title": "ignores an older response after selecting a newer line for ITEM1",
+          "duration": 152.36399999999958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff ignores an older response after selecting a newer line for ITEM2",
+          "status": "passed",
+          "title": "ignores an older response after selecting a newer line for ITEM2",
+          "duration": 153.00070000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff allows retrying an initial failed Edit without caching the failure",
+          "status": "passed",
+          "title": "allows retrying an initial failed Edit without caching the failure",
+          "duration": 72.96849999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff retries failed availability with a new GET and ignores the dismissed pending refresh",
+          "status": "passed",
+          "title": "retries failed availability with a new GET and ignores the dismissed pending refresh",
+          "duration": 160.69489999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "bag Edit availability handoff"
+          ],
+          "fullName": "bag Edit availability handoff rejects a mismatched product response without caching it",
+          "status": "passed",
+          "title": "rejects a mismatched product response without caching it",
+          "duration": 59.94410000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296692767,
+      "endTime": 1795296694579.944,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/cart-drawer-edit.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle renders the outer shell in a closed painted state before first opening",
+          "status": "passed",
+          "title": "renders the outer shell in a closed painted state before first opening",
+          "duration": 68.50060000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle slides in and sets open transform when isCartOpen becomes true",
+          "status": "passed",
+          "title": "slides in and sets open transform when isCartOpen becomes true",
+          "duration": 15.438900000000103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle locks body scroll when opened and restores when closed",
+          "status": "passed",
+          "title": "locks body scroll when opened and restores when closed",
+          "duration": 16.156099999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle closes immediately when close button is clicked in the header",
+          "status": "passed",
+          "title": "closes immediately when close button is clicked in the header",
+          "duration": 11.259800000000041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle closes immediately when clicking backdrop",
+          "status": "passed",
+          "title": "closes immediately when clicking backdrop",
+          "duration": 3.60979999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle handles Escape key in outer shell",
+          "status": "passed",
+          "title": "handles Escape key in outer shell",
+          "duration": 17.777199999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle restores focus to trigger element when drawer closes",
+          "status": "passed",
+          "title": "restores focus to trigger element when drawer closes",
+          "duration": 4.322200000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle traps focus between the first and last interactive element in the shell",
+          "status": "passed",
+          "title": "traps focus between the first and last interactive element in the shell",
+          "duration": 11.72440000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle renders interior skeleton while loading on first open",
+          "status": "passed",
+          "title": "renders interior skeleton while loading on first open",
+          "duration": 3.1372999999998683,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming defers loading until intent, deduplicates warming, and never renders a skeleton after warming",
+          "status": "passed",
+          "title": "defers loading until intent, deduplicates warming, and never renders a skeleton after warming",
+          "duration": 27.73770000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming preserves checkout state on updates and reopening after a cold load",
+          "status": "passed",
+          "title": "preserves checkout state on updates and reopening after a cold load",
+          "duration": 343.0022999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming renders the skeleton while a preload is still pending",
+          "status": "passed",
+          "title": "renders the skeleton while a preload is still pending",
+          "duration": 30.486399999999776,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming can warm successfully after a rejected speculative load",
+          "status": "passed",
+          "title": "can warm successfully after a rejected speculative load",
+          "duration": 17.64449999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming executes an idle preload with a deadline and cancels it on unmount",
+          "status": "passed",
+          "title": "executes an idle preload with a deadline and cancels it on unmount",
+          "duration": 13.901699999999892,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming executes the fallback preload after one second",
+          "status": "passed",
+          "title": "executes the fallback preload after one second",
+          "duration": 15.66840000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming cancels the fallback when unmounted or the cart becomes empty",
+          "status": "passed",
+          "title": "cancels the fallback when unmounted or the cart becomes empty",
+          "duration": 15.282600000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming does not schedule idle preload when totalCount is 0",
+          "status": "passed",
+          "title": "does not schedule idle preload when totalCount is 0",
+          "duration": 15.068899999999758,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming warms the cart while the customizer chunk is still downloading",
+          "status": "passed",
+          "title": "warms the cart while the customizer chunk is still downloading",
+          "duration": 92.48999999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartDrawer Shell & Loading Lifecycle",
+            "Cart Interior Chunk Pre-warming"
+          ],
+          "fullName": "CartDrawer Shell & Loading Lifecycle Cart Interior Chunk Pre-warming preloads on hover and focus of both bag buttons without opening the cart",
+          "status": "passed",
+          "title": "preloads on hover and focus of both bag buttons without opening the cart",
+          "duration": 31.396099999999933,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296701559,
+      "endTime": 1795296702314.396,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/cart-drawer-shell.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal renders with accessible dialog attributes",
+          "status": "passed",
+          "title": "renders with accessible dialog attributes",
+          "duration": 61.22530000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal locks body scroll on mount and restores it on unmount",
+          "status": "passed",
+          "title": "locks body scroll on mount and restores it on unmount",
+          "duration": 1.8287000000000262,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal calls onDismiss when Escape is pressed",
+          "status": "passed",
+          "title": "calls onDismiss when Escape is pressed",
+          "duration": 2.5131999999998698,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal calls onDismiss when Cancel button is clicked",
+          "status": "passed",
+          "title": "calls onDismiss when Cancel button is clicked",
+          "duration": 9.858600000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal calls onDismiss when clicking backdrop",
+          "status": "passed",
+          "title": "calls onDismiss when clicking backdrop",
+          "duration": 2.8904999999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal does not call onDismiss when clicking inside the modal card",
+          "status": "passed",
+          "title": "does not call onDismiss when clicking inside the modal card",
+          "duration": 3.0866000000000895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CustomizerLoadingModal"
+          ],
+          "fullName": "CustomizerLoadingModal moves initial focus to the Cancel button and restores focus on unmount",
+          "status": "passed",
+          "title": "moves initial focus to the Cancel button and restores focus on unmount",
+          "duration": 71.96409999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary renders children when no error occurs",
+          "status": "passed",
+          "title": "renders children when no error occurs",
+          "duration": 1.734899999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary rethrows non-chunk errors to the outer boundary instead of showing a connection message",
+          "status": "passed",
+          "title": "rethrows non-chunk errors to the outer boundary instead of showing a connection message",
+          "duration": 4.033500000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary classifies chunk-load failures",
+          "status": "passed",
+          "title": "classifies chunk-load failures",
+          "duration": 0.2279999999998381,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary catches errors and displays error UI with retry and dismiss options",
+          "status": "passed",
+          "title": "catches errors and displays error UI with retry and dismiss options",
+          "duration": 6.644399999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary calls onDismiss when Cancel is clicked",
+          "status": "passed",
+          "title": "calls onDismiss when Cancel is clicked",
+          "duration": 6.528700000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary calls onDismiss when Escape is pressed in modal variant",
+          "status": "passed",
+          "title": "calls onDismiss when Escape is pressed in modal variant",
+          "duration": 3.0423000000000684,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary renders inline variant correctly with alert role",
+          "status": "passed",
+          "title": "renders inline variant correctly with alert role",
+          "duration": 5.3297000000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "ChunkErrorBoundary"
+          ],
+          "fullName": "ChunkErrorBoundary handles retry lifecycle allowing fresh component resolution",
+          "status": "passed",
+          "title": "handles retry lifecycle allowing fresh component resolution",
+          "duration": 643.4711,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296699439,
+      "endTime": 1795296700263.4712,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/chunk-loading-and-recovery.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch requests the encoded product URL without caching",
+          "status": "passed",
+          "title": "requests the encoded product URL without caching",
+          "duration": 13.598000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch hands the early request over exactly once",
+          "status": "passed",
+          "title": "hands the early request over exactly once",
+          "duration": 0.852499999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch ignores the early request for a different item",
+          "status": "passed",
+          "title": "ignores the early request for a different item",
+          "duration": 0.31560000000001764,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch drops an early request older than the freshness window",
+          "status": "passed",
+          "title": "drops an early request older than the freshness window",
+          "duration": 0.8837000000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch passes a failed early request to the consumer instead of hiding it",
+          "status": "passed",
+          "title": "passes a failed early request to the consumer instead of hiding it",
+          "duration": 0.7871000000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer availability prefetch"
+          ],
+          "fullName": "customizer availability prefetch discards a failed request nobody consumed",
+          "status": "passed",
+          "title": "discards a failed request nobody consumed",
+          "duration": 0.3456999999999937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296737368,
+      "endTime": 1795296737385.3457,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/customizer-availability-prefetch.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions loads and displays current customization options",
+          "status": "passed",
+          "title": "loads and displays current customization options",
+          "duration": 119.73689999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions displays the default price",
+          "status": "passed",
+          "title": "displays the default price",
+          "duration": 64.78590000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions updates the price when changing size",
+          "status": "passed",
+          "title": "updates the price when changing size",
+          "duration": 28.75630000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions adds selected topping prices",
+          "status": "passed",
+          "title": "adds selected topping prices",
+          "duration": 30.450199999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions replaces a single-select modifier",
+          "status": "passed",
+          "title": "replaces a single-select modifier",
+          "duration": 26.82030000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions enforces modifier selection limits",
+          "status": "passed",
+          "title": "enforces modifier selection limits",
+          "duration": 34.98569999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions updates price based on selected quantity",
+          "status": "passed",
+          "title": "updates price based on selected quantity",
+          "duration": 21.521600000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions adds a selected configuration to the cart",
+          "status": "passed",
+          "title": "adds a selected configuration to the cart",
+          "duration": 26.15300000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions updates an existing customized drink",
+          "status": "passed",
+          "title": "updates an existing customized drink",
+          "duration": 19.14390000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions prevents ordering unavailable items",
+          "status": "passed",
+          "title": "prevents ordering unavailable items",
+          "duration": 17.29600000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions offers a retry after catalog failure",
+          "status": "passed",
+          "title": "offers a retry after catalog failure",
+          "duration": 60.73939999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Drink customizer frontend interactions"
+          ],
+          "fullName": "Drink customizer frontend interactions closes the modal using Escape",
+          "status": "passed",
+          "title": "closes the modal using Escape",
+          "duration": 16.132000000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296708242,
+      "endTime": 1795296708708.132,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/item-customizer-modal.frontend.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability lets customers choose options before the fresh check returns",
+          "status": "passed",
+          "title": "lets customers choose options before the fresh check returns",
+          "duration": 111.02930000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability finishes an early Add to Bag once the check confirms it",
+          "status": "passed",
+          "title": "finishes an early Add to Bag once the check confirms it",
+          "duration": 50.20879999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability does not add when the check finds the chosen option sold out",
+          "status": "passed",
+          "title": "does not add when the check finds the chosen option sold out",
+          "duration": 34.05919999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability adds immediately when the check has already confirmed",
+          "status": "passed",
+          "title": "adds immediately when the check has already confirmed",
+          "duration": 15.085299999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability does not add later if the check rejects the early request and the customer fixes the choice",
+          "status": "passed",
+          "title": "does not add later if the check rejects the early request and the customer fixes the choice",
+          "duration": 30.95719999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability blocks adding and offers a retry when the check fails",
+          "status": "passed",
+          "title": "blocks adding and offers a retry when the check fails",
+          "duration": 31.08699999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability does not confirm availability from a snapshot with expired",
+          "status": "passed",
+          "title": "does not confirm availability from a snapshot with expired",
+          "duration": 22.366899999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability does not confirm availability from a snapshot with different product",
+          "status": "passed",
+          "title": "does not confirm availability from a snapshot with different product",
+          "duration": 32.18880000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability"
+          ],
+          "fullName": "customizer background availability does not confirm availability from a snapshot with future timestamp",
+          "status": "passed",
+          "title": "does not confirm availability from a snapshot with future timestamp",
+          "duration": 19.767299999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance updates option callbacks, labels, prices, selection, disabled state, and role",
+          "status": "passed",
+          "title": "updates option callbacks, labels, prices, selection, disabled state, and role",
+          "duration": 7.7172999999997955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance uses fresh group callbacks and catalog data when selections stay the same",
+          "status": "passed",
+          "title": "uses fresh group callbacks and catalog data when selections stay the same",
+          "duration": 9.129799999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance allows toggling toppings like Honey Boba without affecting Sweetness or Ice Level",
+          "status": "passed",
+          "title": "allows toggling toppings like Honey Boba without affecting Sweetness or Ice Level",
+          "duration": 42.23649999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance allows clearing an optional single-select choice",
+          "status": "passed",
+          "title": "allows clearing an optional single-select choice",
+          "duration": 13.433899999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance replaces required single-select choices without clearing them",
+          "status": "passed",
+          "title": "replaces required single-select choices without clearing them",
+          "duration": 17.43820000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance retains explicit choices and refreshes untouched defaults with the catalog",
+          "status": "passed",
+          "title": "retains explicit choices and refreshes untouched defaults with the catalog",
+          "duration": 23.497299999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "customizer background availability",
+            "Modifier memoization and performance"
+          ],
+          "fullName": "customizer background availability Modifier memoization and performance enforces limits and reports batched over-limit clicks using the latest selections",
+          "status": "passed",
+          "title": "enforces limits and reports batched over-limit clicks using the latest selections",
+          "duration": 30.330600000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296706263,
+      "endTime": 1795296706754.3306,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/item-customizer-modal.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state calculates item totals with modifier prices",
+          "status": "passed",
+          "title": "calculates item totals with modifier prices",
+          "duration": 1.176200000000108,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state does not return negative totals",
+          "status": "passed",
+          "title": "does not return negative totals",
+          "duration": 0.21029999999996107,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state normalizes customization fingerprints",
+          "status": "passed",
+          "title": "normalizes customization fingerprints",
+          "duration": 0.20679999999993015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state distinguishes different customizations",
+          "status": "passed",
+          "title": "distinguishes different customizations",
+          "duration": 0.43010000000003856,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state starts with an empty hydrated cart",
+          "status": "passed",
+          "title": "starts with an empty hydrated cart",
+          "duration": 19.80750000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state adds an item and updates totals",
+          "status": "passed",
+          "title": "adds an item and updates totals",
+          "duration": 80.07549999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state merges identical configurations",
+          "status": "passed",
+          "title": "merges identical configurations",
+          "duration": 15.947800000000143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state keeps different customizations separate",
+          "status": "passed",
+          "title": "keeps different customizations separate",
+          "duration": 15.53449999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state recalculates totals after quantity changes",
+          "status": "passed",
+          "title": "recalculates totals after quantity changes",
+          "duration": 31.91619999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state enforces the maximum quantity",
+          "status": "passed",
+          "title": "enforces the maximum quantity",
+          "duration": 12.000499999999874,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state updates the configuration of an existing item",
+          "status": "passed",
+          "title": "updates the configuration of an existing item",
+          "duration": 19.176999999999907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state removes an item and clears its subtotal",
+          "status": "passed",
+          "title": "removes an item and clears its subtotal",
+          "duration": 15.298199999999952,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state clears saved cart contents",
+          "status": "passed",
+          "title": "clears saved cart contents",
+          "duration": 31.246700000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state restores persisted cart items",
+          "status": "passed",
+          "title": "restores persisted cart items",
+          "duration": 31.2034000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend shopping cart state"
+          ],
+          "fullName": "Frontend shopping cart state tracks shopping bag visibility",
+          "status": "passed",
+          "title": "tracks shopping bag visibility",
+          "duration": 7.97609999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296714506,
+      "endTime": 1795296714787.976,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/context/cart-context.frontend.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "readCartIssue"
+          ],
+          "fullName": "readCartIssue reads unavailable items and option problems",
+          "status": "passed",
+          "title": "reads unavailable items and option problems",
+          "duration": 1.1100000000000136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "readCartIssue"
+          ],
+          "fullName": "readCartIssue ignores other errors, and issues that name no items",
+          "status": "passed",
+          "title": "ignores other errors, and issues that name no items",
+          "duration": 0.18189999999998463,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "readCartIssue"
+          ],
+          "fullName": "readCartIssue drops anything in variationIds that isn't an ID",
+          "status": "passed",
+          "title": "drops anything in variationIds that isn't an ID",
+          "duration": 0.09380000000001587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "cartItemsWithIssue"
+          ],
+          "fullName": "cartItemsWithIssue finds every cart line with a named variation, including the same drink customized twice",
+          "status": "passed",
+          "title": "finds every cart line with a named variation, including the same drink customized twice",
+          "duration": 0.19960000000000377,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "cartItemsWithIssue"
+          ],
+          "fullName": "cartItemsWithIssue is empty with no issue, or once the named lines are gone",
+          "status": "passed",
+          "title": "is empty with no issue, or once the named lines are gone",
+          "duration": 0.28460000000001173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "cartItemsWithIssue"
+          ],
+          "fullName": "cartItemsWithIssue says what to do for each kind of issue",
+          "status": "passed",
+          "title": "says what to do for each kind of issue",
+          "duration": 0.323599999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746579,
+      "endTime": 1795296746581.3235,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/cart-issues.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability blocks unsupported groups with a customer-facing message while retaining admin details",
+          "status": "passed",
+          "title": "blocks unsupported groups with a customer-facing message while retaining admin details",
+          "duration": 1.7989000000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability checks effective minimum and maximum before enabling Add to Bag",
+          "status": "passed",
+          "title": "checks effective minimum and maximum before enabling Add to Bag",
+          "duration": 0.4702999999999804,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability applies fresh defaults and item limits after a Dashboard change",
+          "status": "passed",
+          "title": "applies fresh defaults and item limits after a Dashboard change",
+          "duration": 0.3973999999999762,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability keeps the drink and its choices usable, but unconfirmed, until the fresh check completes",
+          "status": "passed",
+          "title": "keeps the drink and its choices usable, but unconfirmed, until the fresh check completes",
+          "duration": 0.6923000000000172,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability keeps the customer's selected size valid when Square's variation order changes",
+          "status": "passed",
+          "title": "keeps the customer's selected size valid when Square's variation order changes",
+          "duration": 0.16730000000001155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability requires another size when the selected size sells out instead of silently switching",
+          "status": "passed",
+          "title": "requires another size when the selected size sells out instead of silently switching",
+          "duration": 0.2313999999999794,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability flags a selected option hidden by Square and allows a replacement",
+          "status": "passed",
+          "title": "flags a selected option hidden by Square and allows a replacement",
+          "duration": 0.2691000000000088,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability ignores availability changes to options the customer did not select",
+          "status": "passed",
+          "title": "ignores availability changes to options the customer did not select",
+          "duration": 0.2494999999999834,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability flags selections from a group Square has disabled",
+          "status": "passed",
+          "title": "flags selections from a group Square has disabled",
+          "duration": 0.19840000000002078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability keeps archived drink details visible with an inline reason and blocks adding",
+          "status": "passed",
+          "title": "keeps archived drink details visible with an inline reason and blocks adding",
+          "duration": 0.16799999999997794,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability blocks adding when a required group becomes impossible",
+          "status": "passed",
+          "title": "blocks adding when a required group becomes impossible",
+          "duration": 0.10829999999998563,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability blocks adding when the check fails, and evaluates provisionally again while a retry is pending",
+          "status": "passed",
+          "title": "blocks adding when the check fails, and evaluates provisionally again while a retry is pending",
+          "duration": 0.12459999999998672,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "background customizer availability"
+          ],
+          "fullName": "background customizer availability rejects a response with no availability information",
+          "status": "passed",
+          "title": "rejects a response with no availability information",
+          "duration": 0.06820000000001869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296743028,
+      "endTime": 1795296743033.1245,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/customizer-availability.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds undefined/undefined to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds undefined/undefined to 1/2",
+          "duration": 1.2351999999999919,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds null/null to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds null/null to 1/2",
+          "duration": 0.12290000000001555,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -1/-1 to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds -1/-1 to 1/2",
+          "duration": 0.09489999999999554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds undefined/-1 to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds undefined/-1 to 1/2",
+          "duration": 0.0800000000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -1/undefined to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds -1/undefined to 1/2",
+          "duration": 0.07999999999998408,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -1n/-1n to 1/2",
+          "status": "passed",
+          "title": "resolves item bounds -1n/-1n to 1/2",
+          "duration": 0.084699999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds 0/0 to 0/0",
+          "status": "passed",
+          "title": "resolves item bounds 0/0 to 0/0",
+          "duration": 0.06359999999997967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds 0/1 to 0/1",
+          "status": "passed",
+          "title": "resolves item bounds 0/1 to 0/1",
+          "duration": 0.057999999999992724,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds 2/3 to 2/3",
+          "status": "passed",
+          "title": "resolves item bounds 2/3 to 2/3",
+          "duration": 0.06889999999998508,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds 0/-1 to 0/0",
+          "status": "passed",
+          "title": "resolves item bounds 0/-1 to 0/0",
+          "duration": 0.08729999999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -1/1 to 0/1",
+          "status": "passed",
+          "title": "resolves item bounds -1/1 to 0/1",
+          "duration": 0.059899999999998954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds undefined/1 to 0/1",
+          "status": "passed",
+          "title": "resolves item bounds undefined/1 to 0/1",
+          "duration": 0.05150000000000432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds 2/undefined to 2/0",
+          "status": "passed",
+          "title": "resolves item bounds 2/undefined to 2/0",
+          "duration": 0.0408999999999935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -2/-1 to 0/0",
+          "status": "passed",
+          "title": "resolves item bounds -2/-1 to 0/0",
+          "duration": 0.03249999999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits resolves item bounds -1/-2 to 0/0",
+          "status": "passed",
+          "title": "resolves item bounds -1/-2 to 0/0",
+          "duration": 0.029799999999994498,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits normalizes default/invalid list bounds undefined to optional/unlimited regardless of SINGLE",
+          "status": "passed",
+          "title": "normalizes default/invalid list bounds undefined to optional/unlimited regardless of SINGLE",
+          "duration": 0.07839999999998781,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits normalizes default/invalid list bounds null to optional/unlimited regardless of SINGLE",
+          "status": "passed",
+          "title": "normalizes default/invalid list bounds null to optional/unlimited regardless of SINGLE",
+          "duration": 0.032100000000014006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits normalizes default/invalid list bounds -1n to optional/unlimited regardless of SINGLE",
+          "status": "passed",
+          "title": "normalizes default/invalid list bounds -1n to optional/unlimited regardless of SINGLE",
+          "duration": 0.028699999999986403,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits normalizes default/invalid list bounds -2n to optional/unlimited regardless of SINGLE",
+          "status": "passed",
+          "title": "normalizes default/invalid list bounds -2n to optional/unlimited regardless of SINGLE",
+          "duration": 0.02369999999999095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits normalizes default/invalid list bounds 0n to optional/unlimited regardless of SINGLE",
+          "status": "passed",
+          "title": "normalizes default/invalid list bounds 0n to optional/unlimited regardless of SINGLE",
+          "duration": 0.026499999999998636,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits permits zero or one choice for an optional single-choice group",
+          "status": "passed",
+          "title": "permits zero or one choice for an optional single-choice group",
+          "duration": 0.716700000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square effective modifier limits"
+          ],
+          "fullName": "Square effective modifier limits treats zero maximum as unlimited distinct choices, but never permits duplicates",
+          "status": "passed",
+          "title": "treats zero maximum as unlimited distinct choices, but never permits duplicates",
+          "duration": 0.2225999999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base true with override NO to false",
+          "status": "passed",
+          "title": "resolves base true with override NO to false",
+          "duration": 0.17900000000000205,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base false with override YES to true",
+          "status": "passed",
+          "title": "resolves base false with override YES to true",
+          "duration": 0.05349999999998545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base true with override NOT_SET to true",
+          "status": "passed",
+          "title": "resolves base true with override NOT_SET to true",
+          "duration": 0.04070000000001528,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base false with override NOT_SET to false",
+          "status": "passed",
+          "title": "resolves base false with override NOT_SET to false",
+          "duration": 0.034099999999995134,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base true with override undefined to true",
+          "status": "passed",
+          "title": "resolves base true with override undefined to true",
+          "duration": 0.028699999999986403,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility resolves base undefined with override undefined to false",
+          "status": "passed",
+          "title": "resolves base undefined with override undefined to false",
+          "duration": 0.030699999999995953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility does not invent required defaults based on option name or price",
+          "status": "passed",
+          "title": "does not invent required defaults based on option name or price",
+          "duration": 0.13939999999999486,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility uses optional defaults and per-drink overrides without affecting other drinks",
+          "status": "passed",
+          "title": "uses optional defaults and per-drink overrides without affecting other drinks",
+          "duration": 0.157100000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility never preselects a sold out default",
+          "status": "passed",
+          "title": "never preselects a sold out default",
+          "duration": 0.12040000000001783,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility never preselects a hidden default",
+          "status": "passed",
+          "title": "never preselects a hidden default",
+          "duration": 0.073599999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility never preselects a absent default",
+          "status": "passed",
+          "title": "never preselects a absent default",
+          "duration": 0.057899999999989404,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility never preselects a deleted default",
+          "status": "passed",
+          "title": "never preselects a deleted default",
+          "duration": 0.05500000000000682,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility never preselects a disabled default",
+          "status": "passed",
+          "title": "never preselects a disabled default",
+          "duration": 0.6950999999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square option defaults and online visibility"
+          ],
+          "fullName": "Square option defaults and online visibility blocks contradictory defaults until the customer fixes the selection",
+          "status": "passed",
+          "title": "blocks contradictory defaults until the customer fixes the selection",
+          "duration": 0.14500000000001023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities true/undefined to true",
+          "status": "passed",
+          "title": "resolves allow_quantities true/undefined to true",
+          "duration": 0.08639999999999759,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities true/NOT_SET to true",
+          "status": "passed",
+          "title": "resolves allow_quantities true/NOT_SET to true",
+          "duration": 0.03460000000001173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities true/NO to false",
+          "status": "passed",
+          "title": "resolves allow_quantities true/NO to false",
+          "duration": 0.0292999999999779,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities false/YES to true",
+          "status": "passed",
+          "title": "resolves allow_quantities false/YES to true",
+          "duration": 0.02940000000000964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities false/NOT_SET to false",
+          "status": "passed",
+          "title": "resolves allow_quantities false/NOT_SET to false",
+          "duration": 0.02410000000000423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations resolves allow_quantities undefined/undefined to false",
+          "status": "passed",
+          "title": "resolves allow_quantities undefined/undefined to false",
+          "duration": 0.024399999999985766,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks quantities and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks quantities and exposes an actionable admin reason, unless disabled",
+          "duration": 0.2696000000000254,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks text and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks text and exposes an actionable admin reason, unless disabled",
+          "duration": 0.10809999999997899,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks nested and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks nested and exposes an actionable admin reason, unless disabled",
+          "duration": 0.1477999999999895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks limits and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks limits and exposes an actionable admin reason, unless disabled",
+          "duration": 0.10300000000000864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks deleted and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks deleted and exposes an actionable admin reason, unless disabled",
+          "duration": 0.11050000000000182,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "unsupported catalog configurations"
+          ],
+          "fullName": "unsupported catalog configurations blocks missing and exposes an actionable admin reason, unless disabled",
+          "status": "passed",
+          "title": "blocks missing and exposes an actionable admin reason, unless disabled",
+          "duration": 0.09050000000002001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742216,
+      "endTime": 1795296742223.0906,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/square-option-rules.test.ts"
+    }
+  ]
+}

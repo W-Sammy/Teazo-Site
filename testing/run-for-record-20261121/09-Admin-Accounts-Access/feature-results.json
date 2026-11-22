@@ -1,0 +1,4894 @@
+{
+  "section": "09-Admin-Accounts-Access",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls hides the entire pending-transfer section when no offer exists",
+          "status": "passed",
+          "title": "hides the entire pending-transfer section when no offer exists",
+          "duration": 82.7355,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls displays the pending section below New User with aligned headings and adjacent controls",
+          "status": "passed",
+          "title": "displays the pending section below New User with aligned headings and adjacent controls",
+          "duration": 32.96400000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls hides the pending section after Refresh Status confirms resolution",
+          "status": "passed",
+          "title": "hides the pending section after Refresh Status confirms resolution",
+          "duration": 29.59590000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls shows a lookup error and allows Refresh Status to retry",
+          "status": "passed",
+          "title": "shows a lookup error and allows Refresh Status to retry",
+          "duration": 28.58030000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls reveals the section after creating an offer and removes it after cancellation",
+          "status": "passed",
+          "title": "reveals the section after creating an offer and removes it after cancellation",
+          "duration": 77.96219999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin page pending ownership-transfer controls"
+          ],
+          "fullName": "Admin page pending ownership-transfer controls keeps the pending section visible when cancellation fails",
+          "status": "passed",
+          "title": "keeps the pending section visible when cancellation fails",
+          "duration": 36.0145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296711120,
+      "endTime": 1795296711408.0144,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/settings/components/admin-table.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog uses neutral wording and identifies the receiving Admin",
+          "status": "passed",
+          "title": "uses neutral wording and identifies the receiving Admin",
+          "duration": 71.10889999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog requires acknowledgment before enabling Send Ownership Offer",
+          "status": "passed",
+          "title": "requires acknowledgment before enabling Send Ownership Offer",
+          "duration": 16.410900000000083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog allows cancellation without sending an offer",
+          "status": "passed",
+          "title": "allows cancellation without sending an offer",
+          "duration": 4.642399999999952,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog supports Escape to cancel the dialog",
+          "status": "passed",
+          "title": "supports Escape to cancel the dialog",
+          "duration": 1.8716999999999189,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog disables actions while submitting",
+          "status": "passed",
+          "title": "disables actions while submitting",
+          "duration": 4.722600000000057,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation dialog"
+          ],
+          "fullName": "Ownership transfer confirmation dialog displays a transfer submission error",
+          "status": "passed",
+          "title": "displays a transfer submission error",
+          "duration": 3.3443999999999505,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296724425,
+      "endTime": 1795296724527.3445,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/settings/components/transfer-ownership-dialog.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation rejects unauthenticated requests",
+          "status": "passed",
+          "title": "rejects unauthenticated requests",
+          "duration": 13.490000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation rejects regular Admin accounts",
+          "status": "passed",
+          "title": "rejects regular Admin accounts",
+          "duration": 1.3478000000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation allows Owner accounts",
+          "status": "passed",
+          "title": "allows Owner accounts",
+          "duration": 0.49209999999999354,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation rejects regular Admin accounts even with legacy invitation permission",
+          "status": "passed",
+          "title": "rejects regular Admin accounts even with legacy invitation permission",
+          "duration": 0.2687999999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation rejects accounts that are no longer eligible",
+          "status": "passed",
+          "title": "rejects accounts that are no longer eligible",
+          "duration": 0.2966000000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation limits excessive requests from one Owner",
+          "status": "passed",
+          "title": "limits excessive requests from one Owner",
+          "duration": 0.3078000000000145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation limits excessive invitations to the same target",
+          "status": "passed",
+          "title": "limits excessive invitations to the same target",
+          "duration": 0.20589999999998554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation checks requester and recipient rate limits separately",
+          "status": "passed",
+          "title": "checks requester and recipient rate limits separately",
+          "duration": 0.6646000000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation uses the server-authorized invitation sender",
+          "status": "passed",
+          "title": "uses the server-authorized invitation sender",
+          "duration": 0.49850000000000705,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation returns a success message when delivery is submitted",
+          "status": "passed",
+          "title": "returns a success message when delivery is submitted",
+          "duration": 0.9391999999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation reports failed email delivery",
+          "status": "passed",
+          "title": "reports failed email delivery",
+          "duration": 0.559899999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation rejects skipped invitations",
+          "status": "passed",
+          "title": "rejects skipped invitations",
+          "duration": 0.16249999999999432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation distinguishes local terminal output from real delivery",
+          "status": "passed",
+          "title": "distinguishes local terminal output from real delivery",
+          "duration": 0.25149999999999295,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation reports invitations captured by local Mailpit",
+          "status": "passed",
+          "title": "reports invitations captured by local Mailpit",
+          "duration": 0.21659999999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation does not claim email delivery in Brevo sandbox mode",
+          "status": "passed",
+          "title": "does not claim email delivery in Brevo sandbox mode",
+          "duration": 0.2989000000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation returns no-store on successful responses",
+          "status": "passed",
+          "title": "returns no-store on successful responses",
+          "duration": 0.14560000000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/[id]/resend-invitation"
+          ],
+          "fullName": "POST /api/admin/[id]/resend-invitation returns a service error for unexpected failures",
+          "status": "passed",
+          "title": "returns a service error for unexpected failures",
+          "duration": 0.43729999999999336,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736827,
+      "endTime": 1795296736847.4373,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/[id]/resend-invitation/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Authentication and authorization"
+          ],
+          "fullName": "Ownership transfer decision API Authentication and authorization rejects unauthorized requests with HTTP 401",
+          "status": "passed",
+          "title": "rejects unauthorized requests with HTTP 401",
+          "duration": 14.558599999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Authentication and authorization"
+          ],
+          "fullName": "Ownership transfer decision API Authentication and authorization rejects unauthorized requests with HTTP 403",
+          "status": "passed",
+          "title": "rejects unauthorized requests with HTTP 403",
+          "duration": 0.4988999999999919,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Authentication and authorization"
+          ],
+          "fullName": "Ownership transfer decision API Authentication and authorization rejects the current Owner as an offer recipient",
+          "status": "passed",
+          "title": "rejects the current Owner as an offer recipient",
+          "duration": 0.38160000000002015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Authentication and authorization"
+          ],
+          "fullName": "Ownership transfer decision API Authentication and authorization uses the authenticated Admin ID rather than a client-supplied ID",
+          "status": "passed",
+          "title": "uses the authenticated Admin ID rather than a client-supplied ID",
+          "duration": 1.0226999999999862,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Authentication and authorization"
+          ],
+          "fullName": "Ownership transfer decision API Authentication and authorization does not permit another Admin to use the recipient's identity",
+          "status": "passed",
+          "title": "does not permit another Admin to use the recipient's identity",
+          "duration": 0.4720000000000084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects malformed JSON",
+          "status": "passed",
+          "title": "rejects malformed JSON",
+          "duration": 0.4092000000000269,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: null",
+          "status": "passed",
+          "title": "rejects invalid decision input: null",
+          "duration": 0.3271000000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: undefined",
+          "status": "passed",
+          "title": "rejects invalid decision input: undefined",
+          "duration": 0.26550000000000296,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {}",
+          "duration": 0.3059000000000083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\"}",
+          "duration": 0.44939999999999714,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"decision\":\"accepted\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"decision\":\"accepted\"}",
+          "duration": 0.2231999999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":123,\"decision\":\"accepted\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":123,\"decision\":\"accepted\"}",
+          "duration": 0.20270000000002142,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":null,\"decision\":\"accepted\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":null,\"decision\":\"accepted\"}",
+          "duration": 0.19759999999999422,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":null}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":null}",
+          "duration": 0.1529999999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":\"approve\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":\"approve\"}",
+          "duration": 0.21160000000000423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":\"cancel\"}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":\"cancel\"}",
+          "duration": 0.2331000000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":true}",
+          "status": "passed",
+          "title": "rejects invalid decision input: {\"token\":\"CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk\",\"decision\":true}",
+          "duration": 0.19950000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Request validation"
+          ],
+          "fullName": "Ownership transfer decision API Request validation rejects a token that the database cannot validate",
+          "status": "passed",
+          "title": "rejects a token that the database cannot validate",
+          "duration": 0.2324999999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership accepts a valid offer and sends completion notifications",
+          "status": "passed",
+          "title": "accepts a valid offer and sends completion notifications",
+          "duration": 0.7267000000000223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership rejects an offer already accepted or otherwise resolved",
+          "status": "passed",
+          "title": "rejects an offer already accepted or otherwise resolved",
+          "duration": 0.20109999999999673,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership rejects a database-enforced transfer condition: Ownership transfer link expired",
+          "status": "passed",
+          "title": "rejects a database-enforced transfer condition: Ownership transfer link expired",
+          "duration": 0.318300000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership rejects a database-enforced transfer condition: Ownership transfer accounts are no longer eligible",
+          "status": "passed",
+          "title": "rejects a database-enforced transfer condition: Ownership transfer accounts are no longer eligible",
+          "duration": 0.21879999999998745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership rejects a database-enforced transfer condition: Invalid ownership transfer status transition",
+          "status": "passed",
+          "title": "rejects a database-enforced transfer condition: Invalid ownership transfer status transition",
+          "duration": 0.21279999999998722,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership does not send duplicate notifications for a repeated decision",
+          "status": "passed",
+          "title": "does not send duplicate notifications for a repeated decision",
+          "duration": 0.3225999999999942,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership does not reverse an accepted transfer when one notification fails",
+          "status": "passed",
+          "title": "does not reverse an accepted transfer when one notification fails",
+          "duration": 0.24979999999999336,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership preserves the accepted result when notification delivery throws",
+          "status": "passed",
+          "title": "preserves the accepted result when notification delivery throws",
+          "duration": 0.20699999999999363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Accepting ownership"
+          ],
+          "fullName": "Ownership transfer decision API Accepting ownership returns a service error when the ownership decision fails unexpectedly",
+          "status": "passed",
+          "title": "returns a service error when the ownership decision fails unexpectedly",
+          "duration": 0.21959999999998558,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Declining ownership"
+          ],
+          "fullName": "Ownership transfer decision API Declining ownership records a decline and notifies the current Owner",
+          "status": "passed",
+          "title": "records a decline and notifies the current Owner",
+          "duration": 0.32450000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Declining ownership"
+          ],
+          "fullName": "Ownership transfer decision API Declining ownership rejects a repeated decline",
+          "status": "passed",
+          "title": "rejects a repeated decline",
+          "duration": 0.7871000000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer decision API",
+            "Declining ownership"
+          ],
+          "fullName": "Ownership transfer decision API Declining ownership does not reverse a decline when notification delivery fails",
+          "status": "passed",
+          "title": "does not reverse a decline when notification delivery fails",
+          "duration": 0.255800000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296732324,
+      "endTime": 1795296732349.2559,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/ownership-transfer/decision/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "GET — Pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API GET — Pending ownership transfer returns an empty state when nothing is pending",
+          "status": "passed",
+          "title": "returns an empty state when nothing is pending",
+          "duration": 15.7046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "GET — Pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API GET — Pending ownership transfer returns pending details without exposing the token",
+          "status": "passed",
+          "title": "returns pending details without exposing the token",
+          "duration": 1.017499999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "GET — Pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API GET — Pending ownership transfer rejects unauthorized GET with 401",
+          "status": "passed",
+          "title": "rejects unauthorized GET with 401",
+          "duration": 0.5019000000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "GET — Pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API GET — Pending ownership transfer rejects unauthorized GET with 403",
+          "status": "passed",
+          "title": "rejects unauthorized GET with 403",
+          "duration": 0.2786000000000115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "GET — Pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API GET — Pending ownership transfer fails safely when the database lookup fails",
+          "status": "passed",
+          "title": "fails safely when the database lookup fails",
+          "duration": 0.4788000000000068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects unauthorized initiation with 401",
+          "status": "passed",
+          "title": "rejects unauthorized initiation with 401",
+          "duration": 0.5086000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects unauthorized initiation with 403",
+          "status": "passed",
+          "title": "rejects unauthorized initiation with 403",
+          "duration": 0.37309999999999377,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects malformed JSON",
+          "status": "passed",
+          "title": "rejects malformed JSON",
+          "duration": 0.4087999999999852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: {}",
+          "status": "passed",
+          "title": "rejects invalid recipient input: {}",
+          "duration": 0.39939999999998577,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: null",
+          "status": "passed",
+          "title": "rejects invalid recipient input: null",
+          "duration": 0.3843999999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: undefined",
+          "status": "passed",
+          "title": "rejects invalid recipient input: undefined",
+          "duration": 0.24809999999999377,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: {\"recipientAdminId\":\"\"}",
+          "status": "passed",
+          "title": "rejects invalid recipient input: {\"recipientAdminId\":\"\"}",
+          "duration": 0.21880000000001587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: {\"recipientAdminId\":\"   \"}",
+          "status": "passed",
+          "title": "rejects invalid recipient input: {\"recipientAdminId\":\"   \"}",
+          "duration": 0.2704999999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: {\"recipientAdminId\":123}",
+          "status": "passed",
+          "title": "rejects invalid recipient input: {\"recipientAdminId\":123}",
+          "duration": 0.2640999999999849,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects invalid recipient input: {\"recipientAdminId\":null}",
+          "status": "passed",
+          "title": "rejects invalid recipient input: {\"recipientAdminId\":null}",
+          "duration": 0.19720000000000937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation enforces the Owner's request rate limit",
+          "status": "passed",
+          "title": "enforces the Owner's request rate limit",
+          "duration": 0.5326000000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation fails closed if the rate-limit database is unavailable",
+          "status": "passed",
+          "title": "fails closed if the rate-limit database is unavailable",
+          "duration": 0.27899999999999636,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation creates a transfer and submits the email",
+          "status": "passed",
+          "title": "creates a transfer and submits the email",
+          "duration": 0.533600000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation does not claim delivery in Brevo sandbox mode",
+          "status": "passed",
+          "title": "does not claim delivery in Brevo sandbox mode",
+          "duration": 0.30860000000001264,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation reports printed delivery accurately",
+          "status": "passed",
+          "title": "reports printed delivery accurately",
+          "duration": 0.2592999999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation reports captured delivery accurately",
+          "status": "passed",
+          "title": "reports captured delivery accurately",
+          "duration": 0.1927000000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation rejects an ineligible recipient or existing pending offer",
+          "status": "passed",
+          "title": "rejects an ineligible recipient or existing pending offer",
+          "duration": 0.19769999999999754,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation reports a pending-request unique constraint conflict",
+          "status": "passed",
+          "title": "reports a pending-request unique constraint conflict",
+          "duration": 0.25499999999999545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation handles unexpected database failures",
+          "status": "passed",
+          "title": "handles unexpected database failures",
+          "duration": 0.23990000000000578,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation cancels the offer when email generation is skipped",
+          "status": "passed",
+          "title": "cancels the offer when email generation is skipped",
+          "duration": 0.42369999999999663,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation does not falsely report cancellation if cancellation returns false",
+          "status": "passed",
+          "title": "does not falsely report cancellation if cancellation returns false",
+          "duration": 0.33899999999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation reports uncertain cancellation when cancellation throws",
+          "status": "passed",
+          "title": "reports uncertain cancellation when cancellation throws",
+          "duration": 0.3311999999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "POST — Ownership transfer initiation"
+          ],
+          "fullName": "Ownership transfer API POST — Ownership transfer initiation handles an email service exception without exposing tokens",
+          "status": "passed",
+          "title": "handles an email service exception without exposing tokens",
+          "duration": 0.3890999999999849,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects unauthorized cancellation with 401",
+          "status": "passed",
+          "title": "rejects unauthorized cancellation with 401",
+          "duration": 0.301400000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects unauthorized cancellation with 403",
+          "status": "passed",
+          "title": "rejects unauthorized cancellation with 403",
+          "duration": 0.23279999999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: {}",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: {}",
+          "duration": 0.21750000000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: null",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: null",
+          "duration": 0.2261000000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: undefined",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: undefined",
+          "duration": 0.20869999999999322,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: {\"transferId\":\"\"}",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: {\"transferId\":\"\"}",
+          "duration": 0.20129999999997494,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: {\"transferId\":\"   \"}",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: {\"transferId\":\"   \"}",
+          "duration": 0.17190000000002215,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects invalid cancellation input: {\"transferId\":123}",
+          "status": "passed",
+          "title": "rejects invalid cancellation input: {\"transferId\":123}",
+          "duration": 0.18670000000000186,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer allows the Owner to cancel an outstanding offer",
+          "status": "passed",
+          "title": "allows the Owner to cancel an outstanding offer",
+          "duration": 0.40389999999999304,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer rejects cancellation when no eligible request exists",
+          "status": "passed",
+          "title": "rejects cancellation when no eligible request exists",
+          "duration": 0.2775000000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer API",
+            "DELETE — Cancel a pending ownership transfer"
+          ],
+          "fullName": "Ownership transfer API DELETE — Cancel a pending ownership transfer handles cancellation database failures",
+          "status": "passed",
+          "title": "handles cancellation database failures",
+          "duration": 0.25890000000001123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296732065,
+      "endTime": 1795296732093.4038,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/ownership-transfer/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects foreign origins",
+          "status": "passed",
+          "title": "rejects foreign origins",
+          "duration": 13.606300000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects non-JSON requests",
+          "status": "passed",
+          "title": "rejects non-JSON requests",
+          "duration": 0.4562999999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects invalid JSON",
+          "status": "passed",
+          "title": "rejects invalid JSON",
+          "duration": 1.1353000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects missing required fields",
+          "status": "passed",
+          "title": "rejects missing required fields",
+          "duration": 0.4025999999999783,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects invalid password purposes",
+          "status": "passed",
+          "title": "rejects invalid password purposes",
+          "duration": 0.37460000000001514,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects malformed tokens",
+          "status": "passed",
+          "title": "rejects malformed tokens",
+          "duration": 0.8778000000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects excessively large password submissions",
+          "status": "passed",
+          "title": "rejects excessively large password submissions",
+          "duration": 0.47159999999999513,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete reports password length errors consistently",
+          "status": "passed",
+          "title": "reports password length errors consistently",
+          "duration": 0.5656999999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects password mismatches",
+          "status": "passed",
+          "title": "rejects password mismatches",
+          "duration": 0.40749999999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects expired, consumed, or invalid tokens",
+          "status": "passed",
+          "title": "rejects expired, consumed, or invalid tokens",
+          "duration": 0.3973000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete rejects excessive submission attempts",
+          "status": "passed",
+          "title": "rejects excessive submission attempts",
+          "duration": 0.3398000000000252,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete fails closed when rate limiting is unavailable",
+          "status": "passed",
+          "title": "fails closed when rate limiting is unavailable",
+          "duration": 0.5803999999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete saves valid password submissions",
+          "status": "passed",
+          "title": "saves valid password submissions",
+          "duration": 0.6944000000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete schedules a password-change confirmation email",
+          "status": "passed",
+          "title": "schedules a password-change confirmation email",
+          "duration": 0.35729999999998086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete does not send confirmation email on failed updates",
+          "status": "passed",
+          "title": "does not send confirmation email on failed updates",
+          "duration": 0.2353999999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete does not undo a successful password change if email fails",
+          "status": "passed",
+          "title": "does not undo a successful password change if email fails",
+          "duration": 0.6171999999999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/complete"
+          ],
+          "fullName": "POST /api/admin/password/complete returns a service error when password storage fails",
+          "status": "passed",
+          "title": "returns a service error when password storage fails",
+          "duration": 0.3182999999999936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296735700,
+      "endTime": 1795296735722.3184,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/password/complete/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects requests from foreign origins",
+          "status": "passed",
+          "title": "rejects requests from foreign origins",
+          "duration": 13.402999999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects requests without an Origin header",
+          "status": "passed",
+          "title": "rejects requests without an Origin header",
+          "duration": 0.4701999999999771,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects non-JSON requests",
+          "status": "passed",
+          "title": "rejects non-JSON requests",
+          "duration": 0.3509999999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects malformed JSON",
+          "status": "passed",
+          "title": "rejects malformed JSON",
+          "duration": 1.0167000000000144,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects missing email addresses",
+          "status": "passed",
+          "title": "rejects missing email addresses",
+          "duration": 0.44239999999999213,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects invalid email types",
+          "status": "passed",
+          "title": "rejects invalid email types",
+          "duration": 0.3211000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects malformed email addresses",
+          "status": "passed",
+          "title": "rejects malformed email addresses",
+          "duration": 0.37949999999997885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects email addresses longer than 254 characters",
+          "status": "passed",
+          "title": "rejects email addresses longer than 254 characters",
+          "duration": 0.3123999999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request normalizes email addresses",
+          "status": "passed",
+          "title": "normalizes email addresses",
+          "duration": 1.5988000000000113,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request returns a generic confirmation for eligible requests",
+          "status": "passed",
+          "title": "returns a generic confirmation for eligible requests",
+          "duration": 0.6451000000000136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request does not reveal email-based rate limiting",
+          "status": "passed",
+          "title": "does not reveal email-based rate limiting",
+          "duration": 0.35820000000001073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request rejects requests exceeding the IP rate limit",
+          "status": "passed",
+          "title": "rejects requests exceeding the IP rate limit",
+          "duration": 0.28000000000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request fails closed if the rate limiter throws",
+          "status": "passed",
+          "title": "fails closed if the rate limiter throws",
+          "duration": 0.7165000000000248,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request schedules email delivery after returning a response",
+          "status": "passed",
+          "title": "schedules email delivery after returning a response",
+          "duration": 0.3755999999999915,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request passes a valid forwarded IP to the rate limiter",
+          "status": "passed",
+          "title": "passes a valid forwarded IP to the rate limiter",
+          "duration": 0.4322999999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/password/request"
+          ],
+          "fullName": "POST /api/admin/password/request sets no-store on responses",
+          "status": "passed",
+          "title": "sets no-store on responses",
+          "duration": 0.223700000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296735880,
+      "endTime": 1795296735901.2236,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/password/request/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Settings API client"
+          ],
+          "fullName": "Admin Settings API client uses the correct backend resend endpoint",
+          "status": "passed",
+          "title": "uses the correct backend resend endpoint",
+          "duration": 14.110000000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings API client"
+          ],
+          "fullName": "Admin Settings API client does not include the obsolete settings/admins route",
+          "status": "passed",
+          "title": "does not include the obsolete settings/admins route",
+          "duration": 0.4147999999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings API client"
+          ],
+          "fullName": "Admin Settings API client URL-encodes administrator IDs",
+          "status": "passed",
+          "title": "URL-encodes administrator IDs",
+          "duration": 0.2849000000000217,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings API client"
+          ],
+          "fullName": "Admin Settings API client returns the backend success message",
+          "status": "passed",
+          "title": "returns the backend success message",
+          "duration": 0.2822000000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings API client"
+          ],
+          "fullName": "Admin Settings API client propagates API failures",
+          "status": "passed",
+          "title": "propagates API failures",
+          "duration": 0.9666999999999746,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296737890,
+      "endTime": 1795296737905.9668,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/settings/admins-api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Settings DELETE authorization"
+          ],
+          "fullName": "Admin Settings DELETE authorization rejects unauthorized deletion with 401",
+          "status": "passed",
+          "title": "rejects unauthorized deletion with 401",
+          "duration": 13.446400000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings DELETE authorization"
+          ],
+          "fullName": "Admin Settings DELETE authorization rejects unauthorized deletion with 403",
+          "status": "passed",
+          "title": "rejects unauthorized deletion with 403",
+          "duration": 0.3662999999999954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings DELETE authorization"
+          ],
+          "fullName": "Admin Settings DELETE authorization allows Owner to delete an Admin",
+          "status": "passed",
+          "title": "allows Owner to delete an Admin",
+          "duration": 0.32679999999999154,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings DELETE authorization"
+          ],
+          "fullName": "Admin Settings DELETE authorization rejects an empty administrator ID",
+          "status": "passed",
+          "title": "rejects an empty administrator ID",
+          "duration": 0.30270000000001573,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings DELETE authorization"
+          ],
+          "fullName": "Admin Settings DELETE authorization returns 400 when the deletion query fails",
+          "status": "passed",
+          "title": "returns 400 when the deletion query fails",
+          "duration": 0.5811999999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects unauthorized PATCH with HTTP 401 before database access",
+          "status": "passed",
+          "title": "rejects unauthorized PATCH with HTTP 401 before database access",
+          "duration": 0.444500000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects unauthorized PATCH with HTTP 403 before database access",
+          "status": "passed",
+          "title": "rejects unauthorized PATCH with HTTP 403 before database access",
+          "duration": 0.279200000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing allows Owner to update a role-2 account username",
+          "status": "passed",
+          "title": "allows Owner to update a role-2 account username",
+          "duration": 1.1976000000000226,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing allows Owner to update a role-1 account username",
+          "status": "passed",
+          "title": "allows Owner to update a role-1 account username",
+          "duration": 0.4311000000000149,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing accepts a username with exactly 40 characters",
+          "status": "passed",
+          "title": "accepts a username with exactly 40 characters",
+          "duration": 0.39859999999998763,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects an empty account ID",
+          "status": "passed",
+          "title": "rejects an empty account ID",
+          "duration": 0.2301999999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'malformed JSON' with HTTP 400",
+          "status": "passed",
+          "title": "rejects 'malformed JSON' with HTTP 400",
+          "duration": 0.22059999999999036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'null JSON' with HTTP 400",
+          "status": "passed",
+          "title": "rejects 'null JSON' with HTTP 400",
+          "duration": 0.1425000000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'array JSON' with HTTP 400",
+          "status": "passed",
+          "title": "rejects 'array JSON' with HTTP 400",
+          "duration": 0.14629999999999654,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'string JSON' with HTTP 400",
+          "status": "passed",
+          "title": "rejects 'string JSON' with HTTP 400",
+          "duration": 0.16849999999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'no fields'",
+          "status": "passed",
+          "title": "rejects 'no fields'",
+          "duration": 0.19200000000000728,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'email-only update'",
+          "status": "passed",
+          "title": "rejects 'email-only update'",
+          "duration": 0.12219999999999231,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'role elevation'",
+          "status": "passed",
+          "title": "rejects 'role elevation'",
+          "duration": 0.10720000000000596,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'role field'",
+          "status": "passed",
+          "title": "rejects 'role field'",
+          "duration": 0.10200000000000387,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'management privilege'",
+          "status": "passed",
+          "title": "rejects 'management privilege'",
+          "duration": 0.09919999999999618,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'legacy management flag'",
+          "status": "passed",
+          "title": "rejects 'legacy management flag'",
+          "duration": 0.09909999999999286,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'email modification'",
+          "status": "passed",
+          "title": "rejects 'email modification'",
+          "duration": 0.14930000000001087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'session modification'",
+          "status": "passed",
+          "title": "rejects 'session modification'",
+          "duration": 0.12319999999999709,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'null username'",
+          "status": "passed",
+          "title": "rejects 'null username'",
+          "duration": 0.188699999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'numeric username'",
+          "status": "passed",
+          "title": "rejects 'numeric username'",
+          "duration": 0.13620000000000232,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'array username'",
+          "status": "passed",
+          "title": "rejects 'array username'",
+          "duration": 0.11420000000001096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects 'object username'",
+          "status": "passed",
+          "title": "rejects 'object username'",
+          "duration": 0.09479999999999222,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects a blank username \"\"",
+          "status": "passed",
+          "title": "rejects a blank username \"\"",
+          "duration": 0.14379999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects a blank username \"  \"",
+          "status": "passed",
+          "title": "rejects a blank username \"  \"",
+          "duration": 0.09189999999998122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects a blank username \"\\n\\t\"",
+          "status": "passed",
+          "title": "rejects a blank username \"\\n\\t\"",
+          "duration": 0.08830000000000382,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing rejects usernames longer than 40 characters",
+          "status": "passed",
+          "title": "rejects usernames longer than 40 characters",
+          "duration": 0.16839999999999122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing returns 404 when the account is missing",
+          "status": "passed",
+          "title": "returns 404 when the account is missing",
+          "duration": 0.18680000000000518,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings PATCH username editing"
+          ],
+          "fullName": "Admin Settings PATCH username editing returns 500 without exposing database details on unexpected failures",
+          "status": "passed",
+          "title": "returns 500 without exposing database details on unexpected failures",
+          "duration": 0.23279999999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296734777,
+      "endTime": 1795296734798.233,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/settings/admins/[id]/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Settings GET authorization"
+          ],
+          "fullName": "Admin Settings GET authorization allows Owner to view administrators",
+          "status": "passed",
+          "title": "allows Owner to view administrators",
+          "duration": 14.920900000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings GET authorization"
+          ],
+          "fullName": "Admin Settings GET authorization rejects unauthenticated requests with 401",
+          "status": "passed",
+          "title": "rejects unauthenticated requests with 401",
+          "duration": 0.5220999999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings GET authorization"
+          ],
+          "fullName": "Admin Settings GET authorization rejects regular Admin requests with 403",
+          "status": "passed",
+          "title": "rejects regular Admin requests with 403",
+          "duration": 0.35650000000001114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings GET authorization"
+          ],
+          "fullName": "Admin Settings GET authorization returns 503 when listing administrators fails",
+          "status": "passed",
+          "title": "returns 503 when listing administrators fails",
+          "duration": 0.6254000000000133,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects unauthorized creation with 401",
+          "status": "passed",
+          "title": "rejects unauthorized creation with 401",
+          "duration": 0.6031999999999869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects unauthorized creation with 403",
+          "status": "passed",
+          "title": "rejects unauthorized creation with 403",
+          "duration": 0.3498000000000161,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations allows Owner to create an Admin and submit an invitation",
+          "status": "passed",
+          "title": "allows Owner to create an Admin and submit an invitation",
+          "duration": 0.7720999999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations ignores client-supplied elevated privileges",
+          "status": "passed",
+          "title": "ignores client-supplied elevated privileges",
+          "duration": 1.0968000000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations reports when the invitation is printed locally",
+          "status": "passed",
+          "title": "reports when the invitation is printed locally",
+          "duration": 0.4638999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations reports when the invitation is captured in Mailpit",
+          "status": "passed",
+          "title": "reports when the invitation is captured in Mailpit",
+          "duration": 0.40630000000001587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations does not claim delivery when Brevo sandbox mode is enabled",
+          "status": "passed",
+          "title": "does not claim delivery when Brevo sandbox mode is enabled",
+          "duration": 0.3108000000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations preserves the created account when invitation delivery fails",
+          "status": "passed",
+          "title": "preserves the created account when invitation delivery fails",
+          "duration": 0.37129999999999086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations preserves the created account when invitation generation is skipped",
+          "status": "passed",
+          "title": "preserves the created account when invitation generation is skipped",
+          "duration": 0.3546000000000049,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations preserves the created account if invitation sending throws",
+          "status": "passed",
+          "title": "preserves the created account if invitation sending throws",
+          "duration": 0.3114999999999952,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations returns 400 when administrator creation fails",
+          "status": "passed",
+          "title": "returns 400 when administrator creation fails",
+          "duration": 0.39759999999998286,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects malformed JSON before creating an administrator",
+          "status": "passed",
+          "title": "rejects malformed JSON before creating an administrator",
+          "duration": 0.28299999999998704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: {}",
+          "status": "passed",
+          "title": "rejects invalid creation input: {}",
+          "duration": 0.21829999999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: {\"username\":\"\",\"email\":\"test@example.invalid\"}",
+          "status": "passed",
+          "title": "rejects invalid creation input: {\"username\":\"\",\"email\":\"test@example.invalid\"}",
+          "duration": 0.1612999999999829,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: {\"username\":\"Test\",\"email\":\"\"}",
+          "status": "passed",
+          "title": "rejects invalid creation input: {\"username\":\"Test\",\"email\":\"\"}",
+          "duration": 0.1338000000000079,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: {\"username\":123,\"email\":\"test@example.invalid\"}",
+          "status": "passed",
+          "title": "rejects invalid creation input: {\"username\":123,\"email\":\"test@example.invalid\"}",
+          "duration": 0.12430000000000518,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: {\"username\":\"Test\",\"email\":123}",
+          "status": "passed",
+          "title": "rejects invalid creation input: {\"username\":\"Test\",\"email\":123}",
+          "duration": 0.11480000000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: null",
+          "status": "passed",
+          "title": "rejects invalid creation input: null",
+          "duration": 0.11109999999999332,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings POST authorization and invitations"
+          ],
+          "fullName": "Admin Settings POST authorization and invitations rejects invalid creation input: undefined",
+          "status": "passed",
+          "title": "rejects invalid creation input: undefined",
+          "duration": 0.11719999999999686,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296735291,
+      "endTime": 1795296735314.1243,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/settings/admins/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging uses the Admin role in the invitation",
+          "status": "passed",
+          "title": "uses the Admin role in the invitation",
+          "duration": 0.9823000000000093,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging does not include retired role or permission terminology",
+          "status": "passed",
+          "title": "does not include retired role or permission terminology",
+          "duration": 0.25550000000001205,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging includes the correct Google SSO instructions",
+          "status": "passed",
+          "title": "includes the correct Google SSO instructions",
+          "duration": 0.18059999999999832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging includes the single-use password setup link",
+          "status": "passed",
+          "title": "includes the single-use password setup link",
+          "duration": 0.12109999999998422,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging explains password setup expiration and recovery",
+          "status": "passed",
+          "title": "explains password setup expiration and recovery",
+          "duration": 0.10610000000002628,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging supports invitations without an invitedBy username",
+          "status": "passed",
+          "title": "supports invitations without an invitedBy username",
+          "duration": 0.0963999999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging escapes special characters in invitation HTML",
+          "status": "passed",
+          "title": "escapes special characters in invitation HTML",
+          "duration": 0.13059999999998695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin invitation messaging"
+          ],
+          "fullName": "Admin invitation messaging preserves the Owner role label when building an Owner invitation",
+          "status": "passed",
+          "title": "preserves the Owner role label when building an Owner invitation",
+          "duration": 0.11000000000001364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746424,
+      "endTime": 1795296746425.2556,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-invite.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation allows matching localhost origins",
+          "status": "passed",
+          "title": "allows matching localhost origins",
+          "duration": 11.469400000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation allows the configured LAN origin in development",
+          "status": "passed",
+          "title": "allows the configured LAN origin in development",
+          "duration": 0.20570000000000732,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects unauthorized external origins",
+          "status": "passed",
+          "title": "rejects unauthorized external origins",
+          "duration": 0.15749999999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects requests without an Origin header",
+          "status": "passed",
+          "title": "rejects requests without an Origin header",
+          "duration": 0.1634999999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects the LAN exception in production",
+          "status": "passed",
+          "title": "rejects the LAN exception in production",
+          "duration": 0.17379999999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects LAN requests with mismatched Host headers",
+          "status": "passed",
+          "title": "rejects LAN requests with mismatched Host headers",
+          "duration": 0.22849999999999682,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects LAN requests without a Host header",
+          "status": "passed",
+          "title": "rejects LAN requests without a Host header",
+          "duration": 0.1442000000000121,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation allows matching same-origin requests in production",
+          "status": "passed",
+          "title": "allows matching same-origin requests in production",
+          "duration": 0.12080000000000268,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects LAN origins using a different port",
+          "status": "passed",
+          "title": "rejects LAN origins using a different port",
+          "duration": 0.13700000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin API write origin validation"
+          ],
+          "fullName": "Admin API write origin validation rejects LAN origins using HTTPS instead of HTTP",
+          "status": "passed",
+          "title": "rejects LAN origins using HTTPS instead of HTTP",
+          "duration": 0.14820000000000277,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296738525,
+      "endTime": 1795296738538.2285,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-origin.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording identifies the Admin role without using a username-dependent greeting",
+          "status": "passed",
+          "title": "identifies the Admin role without using a username-dependent greeting",
+          "duration": 1.6850000000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording correctly identifies an Owner account during password setup",
+          "status": "passed",
+          "title": "correctly identifies an Owner account during password setup",
+          "duration": 1.1081000000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording includes password setup instructions and a single-use 24-hour link",
+          "status": "passed",
+          "title": "includes password setup instructions and a single-use 24-hour link",
+          "duration": 0.36709999999999354,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording preserves generic password-reset wording and the 30-minute expiration",
+          "status": "passed",
+          "title": "preserves generic password-reset wording and the 30-minute expiration",
+          "duration": 0.35060000000001423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording restricts eligible password-email accounts to roles 1 and 2",
+          "status": "passed",
+          "title": "restricts eligible password-email accounts to roles 1 and 2",
+          "duration": 0.38120000000000687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording normalizes the recipient email before looking up the account",
+          "status": "passed",
+          "title": "normalizes the recipient email before looking up the account",
+          "duration": 0.34960000000000946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording rejects invalid email input without querying D1",
+          "status": "passed",
+          "title": "rejects invalid email input without querying D1",
+          "duration": 0.2879000000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording rejects invalid email input without querying D1",
+          "status": "passed",
+          "title": "rejects invalid email input without querying D1",
+          "duration": 0.154200000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording rejects invalid email input without querying D1",
+          "status": "passed",
+          "title": "rejects invalid email input without querying D1",
+          "duration": 0.1448000000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording does not create a token or send email for an ineligible account",
+          "status": "passed",
+          "title": "does not create a token or send email for an ineligible account",
+          "duration": 0.18500000000000227,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording does not send an email if token creation fails",
+          "status": "passed",
+          "title": "does not send an email if token creation fails",
+          "duration": 0.14379999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password and invitation email wording"
+          ],
+          "fullName": "Administrator password and invitation email wording sends a neutral password-change notification without sensitive credentials",
+          "status": "passed",
+          "title": "sends a neutral password-change notification without sensitive credentials",
+          "duration": 0.2896000000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742375,
+      "endTime": 1795296742381.2896,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-password-email-role-simplification.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Application URL security"
+          ],
+          "fullName": "Administrator password emails Application URL security uses the configured application URL",
+          "status": "passed",
+          "title": "uses the configured application URL",
+          "duration": 1.2133000000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Application URL security"
+          ],
+          "fullName": "Administrator password emails Application URL security allows the local development URL",
+          "status": "passed",
+          "title": "allows the local development URL",
+          "duration": 0.23699999999999477,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Application URL security"
+          ],
+          "fullName": "Administrator password emails Application URL security rejects application URLs containing credentials",
+          "status": "passed",
+          "title": "rejects application URLs containing credentials",
+          "duration": 0.601600000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Application URL security"
+          ],
+          "fullName": "Administrator password emails Application URL security rejects insecure nonlocal application URLs",
+          "status": "passed",
+          "title": "rejects insecure nonlocal application URLs",
+          "duration": 0.23849999999998772,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Application URL security"
+          ],
+          "fullName": "Administrator password emails Application URL security requires a configured URL outside development",
+          "status": "passed",
+          "title": "requires a configured URL outside development",
+          "duration": 0.23109999999999786,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password setup"
+          ],
+          "fullName": "Administrator password emails Password setup uses setup tokens for accounts without passwords",
+          "status": "passed",
+          "title": "uses setup tokens for accounts without passwords",
+          "duration": 2.6129999999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password setup"
+          ],
+          "fullName": "Administrator password emails Password setup identifies the Admin role without using the username as a greeting",
+          "status": "passed",
+          "title": "identifies the Admin role without using the username as a greeting",
+          "duration": 0.6537000000000148,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password setup"
+          ],
+          "fullName": "Administrator password emails Password setup identifies Owner accounts correctly during setup",
+          "status": "passed",
+          "title": "identifies Owner accounts correctly during setup",
+          "duration": 0.3357000000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password setup"
+          ],
+          "fullName": "Administrator password emails Password setup includes a single-use 24-hour setup link",
+          "status": "passed",
+          "title": "includes a single-use 24-hour setup link",
+          "duration": 0.34790000000000987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password reset"
+          ],
+          "fullName": "Administrator password emails Password reset uses reset tokens for accounts with passwords",
+          "status": "passed",
+          "title": "uses reset tokens for accounts with passwords",
+          "duration": 0.35590000000001965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password reset"
+          ],
+          "fullName": "Administrator password emails Password reset includes generic reset wording and a single-use 30-minute link",
+          "status": "passed",
+          "title": "includes generic reset wording and a single-use 30-minute link",
+          "duration": 0.26959999999999695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation restricts eligible accounts to Owner and Admin roles",
+          "status": "passed",
+          "title": "restricts eligible accounts to Owner and Admin roles",
+          "duration": 0.32869999999999777,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation normalizes recipient email addresses before lookup",
+          "status": "passed",
+          "title": "normalizes recipient email addresses before lookup",
+          "duration": 0.26909999999998035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation rejects invalid email input without querying the database: ",
+          "status": "passed",
+          "title": "rejects invalid email input without querying the database: ",
+          "duration": 0.19519999999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation rejects invalid email input without querying the database:    ",
+          "status": "passed",
+          "title": "rejects invalid email input without querying the database:    ",
+          "duration": 0.6229999999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation rejects invalid email input without querying the database: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "status": "passed",
+          "title": "rejects invalid email input without querying the database: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "duration": 0.13850000000002183,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation does not send email for unknown or ineligible accounts",
+          "status": "passed",
+          "title": "does not send email for unknown or ineligible accounts",
+          "duration": 0.14500000000001023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Account eligibility and validation"
+          ],
+          "fullName": "Administrator password emails Account eligibility and validation does not send email when token generation fails",
+          "status": "passed",
+          "title": "does not send email when token generation fails",
+          "duration": 0.13409999999998945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Delivery handling"
+          ],
+          "fullName": "Administrator password emails Delivery handling returns the email delivery outcome",
+          "status": "passed",
+          "title": "returns the email delivery outcome",
+          "duration": 0.18760000000000332,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Delivery handling"
+          ],
+          "fullName": "Administrator password emails Delivery handling propagates email delivery errors",
+          "status": "passed",
+          "title": "propagates email delivery errors",
+          "duration": 0.5506000000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password-change notifications"
+          ],
+          "fullName": "Administrator password emails Password-change notifications sends a security notification after a password change",
+          "status": "passed",
+          "title": "sends a security notification after a password change",
+          "duration": 0.24139999999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Administrator password emails",
+            "Password-change notifications"
+          ],
+          "fullName": "Administrator password emails Password-change notifications does not include passwords or setup tokens in confirmation emails",
+          "status": "passed",
+          "title": "does not include passwords or setup tokens in confirmation emails",
+          "duration": 0.20570000000000732,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741250,
+      "endTime": 1795296741261.2415,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-password-email.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations creates the password token table",
+          "status": "passed",
+          "title": "creates the password token table",
+          "duration": 2.6522999999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations creates both token invalidation triggers",
+          "status": "passed",
+          "title": "creates both token invalidation triggers",
+          "duration": 2.092000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations adds session_version with default zero",
+          "status": "passed",
+          "title": "adds session_version with default zero",
+          "duration": 1.7232999999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations rejects unsupported token purposes",
+          "status": "passed",
+          "title": "rejects unsupported token purposes",
+          "duration": 1.8205999999999847,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations rejects expiration times before creation",
+          "status": "passed",
+          "title": "rejects expiration times before creation",
+          "duration": 1.6922999999999888,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations rejects duplicate token hashes",
+          "status": "passed",
+          "title": "rejects duplicate token hashes",
+          "duration": 1.6270999999999844,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations invalidates an older setup link when a replacement is issued",
+          "status": "passed",
+          "title": "invalidates an older setup link when a replacement is issued",
+          "duration": 1.5862999999999943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations does not invalidate setup tokens belonging to another admin",
+          "status": "passed",
+          "title": "does not invalidate setup tokens belonging to another admin",
+          "duration": 1.6805999999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations does not invalidate reset tokens when inserting another reset token",
+          "status": "passed",
+          "title": "does not invalidate reset tokens when inserting another reset token",
+          "duration": 1.9061000000000092,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations invalidates all outstanding tokens after a password change",
+          "status": "passed",
+          "title": "invalidates all outstanding tokens after a password change",
+          "duration": 1.8686999999999898,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations does not consume tokens when the password hash is unchanged",
+          "status": "passed",
+          "title": "does not consume tokens when the password hash is unchanged",
+          "duration": 1.668299999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations does not consume another admin's tokens",
+          "status": "passed",
+          "title": "does not consume another admin's tokens",
+          "duration": 1.6867000000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password D1 migrations"
+          ],
+          "fullName": "Admin password D1 migrations deletes tokens when the owning admin is deleted",
+          "status": "passed",
+          "title": "deletes tokens when the owning admin is deleted",
+          "duration": 1.683099999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296734037,
+      "endTime": 1795296734061.683,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-password-migrations.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers generates a 43-character base64url token",
+          "status": "passed",
+          "title": "generates a 43-character base64url token",
+          "duration": 2.483699999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers stores the SHA-256 token hash rather than the original token",
+          "status": "passed",
+          "title": "stores the SHA-256 token hash rather than the original token",
+          "duration": 0.8166999999999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers creates unique tokens",
+          "status": "passed",
+          "title": "creates unique tokens",
+          "duration": 0.456799999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers sets setup token expiration to 24 hours",
+          "status": "passed",
+          "title": "sets setup token expiration to 24 hours",
+          "duration": 0.2693000000000154,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers sets reset token expiration to 30 minutes",
+          "status": "passed",
+          "title": "sets reset token expiration to 30 minutes",
+          "duration": 0.2682999999999822,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers does not return a token for an ineligible account",
+          "status": "passed",
+          "title": "does not return a token for an ineligible account",
+          "duration": 0.24989999999999668,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers enforces account eligibility in the creation query",
+          "status": "passed",
+          "title": "enforces account eligibility in the creation query",
+          "duration": 0.32099999999999795,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rejects malformed tokens before querying D1",
+          "status": "passed",
+          "title": "rejects malformed tokens before querying D1",
+          "duration": 0.37360000000001037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers accepts a valid unused token record",
+          "status": "passed",
+          "title": "accepts a valid unused token record",
+          "duration": 0.3810000000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers requires matching token purpose and expiration",
+          "status": "passed",
+          "title": "requires matching token purpose and expiration",
+          "duration": 0.2938000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rejects passwords shorter than six characters",
+          "status": "passed",
+          "title": "rejects passwords shorter than six characters",
+          "duration": 0.28139999999999077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rejects passwords longer than 128 characters",
+          "status": "passed",
+          "title": "rejects passwords longer than 128 characters",
+          "duration": 0.1950999999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rejects mismatched passwords",
+          "status": "passed",
+          "title": "rejects mismatched passwords",
+          "duration": 0.1933999999999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rejects invalid tokens without performing password hashing",
+          "status": "passed",
+          "title": "rejects invalid tokens without performing password hashing",
+          "duration": 0.20930000000001314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers hashes valid passwords before saving them",
+          "status": "passed",
+          "title": "hashes valid passwords before saving them",
+          "duration": 0.5764000000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers increments session_version during password updates",
+          "status": "passed",
+          "title": "increments session_version during password updates",
+          "duration": 0.7528000000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers rechecks token eligibility in the final UPDATE",
+          "status": "passed",
+          "title": "rechecks token eligibility in the final UPDATE",
+          "duration": 0.28810000000001423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin password token helpers"
+          ],
+          "fullName": "Admin password token helpers preserves the exact password when hashing",
+          "status": "passed",
+          "title": "preserves the exact password when hashing",
+          "duration": 0.21410000000000196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741576,
+      "endTime": 1795296741585.214,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-password-tokens.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration preserves Owner and converts Can Edit and Can View to Admin",
+          "status": "passed",
+          "title": "preserves Owner and converts Can Edit and Can View to Admin",
+          "duration": 2.3793000000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration preserves account IDs, emails, usernames, credentials, and metadata",
+          "status": "passed",
+          "title": "preserves account IDs, emails, usernames, credentials, and metadata",
+          "duration": 2.023600000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration leaves only the approved Owner and Admin role definitions",
+          "status": "passed",
+          "title": "leaves only the approved Owner and Admin role definitions",
+          "duration": 0.9161000000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration clears all legacy administrator-management permission flags",
+          "status": "passed",
+          "title": "clears all legacy administrator-management permission flags",
+          "duration": 0.9510000000000218,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration preserves invited and soft-deleted account states",
+          "status": "passed",
+          "title": "preserves invited and soft-deleted account states",
+          "duration": 0.9061000000000092,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration preserves foreign-key integrity and the single-Owner invariant",
+          "status": "passed",
+          "title": "preserves foreign-key integrity and the single-Owner invariant",
+          "duration": 0.8494000000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "legacy administrator role migration"
+          ],
+          "fullName": "legacy administrator role migration remains safe if the migration SQL is executed again",
+          "status": "passed",
+          "title": "remains safe if the migration SQL is executed again",
+          "duration": 1.7823000000000206,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741406,
+      "endTime": 1795296741415.7822,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin-roles-migration.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization allows a session matching the database version",
+          "status": "passed",
+          "title": "allows a session matching the database version",
+          "duration": 1.3832999999999913,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects a session with an outdated version",
+          "status": "passed",
+          "title": "rejects a session with an outdated version",
+          "duration": 0.19739999999998759,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects a session with a different administrator ID",
+          "status": "passed",
+          "title": "rejects a session with a different administrator ID",
+          "duration": 0.11929999999998131,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects sessions missing sessionVersion",
+          "status": "passed",
+          "title": "rejects sessions missing sessionVersion",
+          "duration": 0.12899999999999068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects sessions missing adminId",
+          "status": "passed",
+          "title": "rejects sessions missing adminId",
+          "duration": 0.11230000000000473,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects unauthenticated users",
+          "status": "passed",
+          "title": "rejects unauthenticated users",
+          "duration": 12.928500000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects deleted or otherwise unauthorized accounts",
+          "status": "passed",
+          "title": "rejects deleted or otherwise unauthorized accounts",
+          "duration": 0.2956000000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects stale JWT sessions on protected API routes",
+          "status": "passed",
+          "title": "rejects stale JWT sessions on protected API routes",
+          "duration": 0.2219000000000051,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization redirects stale sessions away from protected pages",
+          "status": "passed",
+          "title": "redirects stale sessions away from protected pages",
+          "duration": 0.815100000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization denies Admin accounts access to Owner-only API routes",
+          "status": "passed",
+          "title": "denies Admin accounts access to Owner-only API routes",
+          "duration": 0.2691000000000088,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization rejects cross-origin authenticated writes",
+          "status": "passed",
+          "title": "rejects cross-origin authenticated writes",
+          "duration": 0.3522000000000105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization allows authorized same-origin writes",
+          "status": "passed",
+          "title": "allows authorized same-origin writes",
+          "duration": 0.13689999999999714,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin session authorization"
+          ],
+          "fullName": "Admin session authorization returns 503 if the authorization database is unavailable",
+          "status": "passed",
+          "title": "returns 503 if the authorization database is unavailable",
+          "duration": 0.3960999999999899,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736855,
+      "endTime": 1795296736873.396,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/admin.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer concurrent SQLite transactions"
+          ],
+          "fullName": "Ownership transfer concurrent SQLite transactions does not allow competing acceptance transactions to both succeed",
+          "status": "passed",
+          "title": "does not allow competing acceptance transactions to both succeed",
+          "duration": 45.4855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer concurrent SQLite transactions"
+          ],
+          "fullName": "Ownership transfer concurrent SQLite transactions rolls back an interrupted acceptance completely",
+          "status": "passed",
+          "title": "rolls back an interrupted acceptance completely",
+          "duration": 42.7321,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer concurrent SQLite transactions"
+          ],
+          "fullName": "Ownership transfer concurrent SQLite transactions does not allow an acceptance to overtake a committed decline",
+          "status": "passed",
+          "title": "does not allow an acceptance to overtake a committed decline",
+          "duration": 43.31229999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer concurrent SQLite transactions"
+          ],
+          "fullName": "Ownership transfer concurrent SQLite transactions prevents competing pending offers across two connections",
+          "status": "passed",
+          "title": "prevents competing pending offers across two connections",
+          "duration": 41.01080000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296718879,
+      "endTime": 1795296719051.0107,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/ownership-transfer-concurrency.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer invitation"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer invitation uses neutral wording without inserting usernames into sentences",
+          "status": "passed",
+          "title": "uses neutral wording without inserting usernames into sentences",
+          "duration": 1.587900000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer invitation"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer invitation includes the secure review link and 24-hour expiration",
+          "status": "passed",
+          "title": "includes the secure review link and 24-hour expiration",
+          "duration": 0.23980000000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer invitation"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer invitation explains that opening the link does not transfer ownership",
+          "status": "passed",
+          "title": "explains that opening the link does not transfer ownership",
+          "duration": 0.16629999999997835,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer declined notification"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer declined notification uses neutral wording and preserves existing roles",
+          "status": "passed",
+          "title": "uses neutral wording and preserves existing roles",
+          "duration": 0.3053999999999917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer completion notifications"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer completion notifications notifies both accounts with their correct resulting permissions",
+          "status": "passed",
+          "title": "notifies both accounts with their correct resulting permissions",
+          "duration": 0.8183999999999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer completion notifications"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer completion notifications does not use outdated Settings terminology or username-dependent greetings",
+          "status": "passed",
+          "title": "does not use outdated Settings terminology or username-dependent greetings",
+          "duration": 0.2612000000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer email wording",
+            "Ownership transfer completion notifications"
+          ],
+          "fullName": "Ownership transfer email wording Ownership transfer completion notifications attempts both notifications even when the first delivery fails",
+          "status": "passed",
+          "title": "attempts both notifications even when the first delivery fails",
+          "duration": 0.22270000000000323,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296745794,
+      "endTime": 1795296745798.2227,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/ownership-transfer-email.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration applies the actual migration and creates required database objects",
+          "status": "passed",
+          "title": "applies the actual migration and creates required database objects",
+          "duration": 1.8918000000000177,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration preserves the initial administrator roles during migration",
+          "status": "passed",
+          "title": "preserves the initial administrator roles during migration",
+          "duration": 0.7001999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration allows only one pending ownership request",
+          "status": "passed",
+          "title": "allows only one pending ownership request",
+          "duration": 1.3363999999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration rejects requests for nonexistent administrator accounts",
+          "status": "passed",
+          "title": "rejects requests for nonexistent administrator accounts",
+          "duration": 0.5486999999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration atomically exchanges Owner and Admin roles on acceptance",
+          "status": "passed",
+          "title": "atomically exchanges Owner and Admin roles on acceptance",
+          "duration": 0.9969000000000108,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration declines an offer without changing either account",
+          "status": "passed",
+          "title": "declines an offer without changing either account",
+          "duration": 0.6439000000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration cancels an offer without changing administrator roles",
+          "status": "passed",
+          "title": "cancels an offer without changing administrator roles",
+          "duration": 0.7749000000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration rejects an expired ownership transfer",
+          "status": "passed",
+          "title": "rejects an expired ownership transfer",
+          "duration": 0.9473000000000127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration rejects acceptance if owner-id becomes suspended",
+          "status": "passed",
+          "title": "rejects acceptance if owner-id becomes suspended",
+          "duration": 0.8389999999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration rejects acceptance if recipient-id becomes suspended",
+          "status": "passed",
+          "title": "rejects acceptance if recipient-id becomes suspended",
+          "duration": 0.7763999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration prevents replay after successful acceptance",
+          "status": "passed",
+          "title": "prevents replay after successful acceptance",
+          "duration": 0.7250999999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration prevents reopening a declined request",
+          "status": "passed",
+          "title": "prevents reopening a declined request",
+          "duration": 0.6312000000000069,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration rolls back both accounts if recipient promotion fails",
+          "status": "passed",
+          "title": "rolls back both accounts if recipient promotion fails",
+          "duration": 0.8751000000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer SQLite integration"
+          ],
+          "fullName": "Ownership transfer SQLite integration prevents directly promoting a second Owner",
+          "status": "passed",
+          "title": "prevents directly promoting a second Owner",
+          "duration": 0.5484000000000151,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296738684,
+      "endTime": 1795296738696.5483,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/ownership-transfer-sql.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "expiration and pending requests"
+          ],
+          "fullName": "Ownership transfer database operations expiration and pending requests expires pending requests using the current time",
+          "status": "passed",
+          "title": "expires pending requests using the current time",
+          "duration": 3.187300000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "expiration and pending requests"
+          ],
+          "fullName": "Ownership transfer database operations expiration and pending requests returns a pending request without exposing the token",
+          "status": "passed",
+          "title": "returns a pending request without exposing the token",
+          "duration": 0.8976999999999862,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "expiration and pending requests"
+          ],
+          "fullName": "Ownership transfer database operations expiration and pending requests returns null when no pending request exists",
+          "status": "passed",
+          "title": "returns null when no pending request exists",
+          "duration": 0.2954000000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "expiration and pending requests"
+          ],
+          "fullName": "Ownership transfer database operations expiration and pending requests rejects a missing Owner ID without querying D1",
+          "status": "passed",
+          "title": "rejects a missing Owner ID without querying D1",
+          "duration": 0.23879999999999768,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "expiration and pending requests"
+          ],
+          "fullName": "Ownership transfer database operations expiration and pending requests fails closed when expiration cleanup fails",
+          "status": "passed",
+          "title": "fails closed when expiration cleanup fails",
+          "duration": 0.9997999999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "creating a transfer"
+          ],
+          "fullName": "Ownership transfer database operations creating a transfer rejects missing or identical account IDs",
+          "status": "passed",
+          "title": "rejects missing or identical account IDs",
+          "duration": 0.3036999999999921,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "creating a transfer"
+          ],
+          "fullName": "Ownership transfer database operations creating a transfer rejects a recipient who fails database eligibility",
+          "status": "passed",
+          "title": "rejects a recipient who fails database eligibility",
+          "duration": 0.3094000000000108,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "creating a transfer"
+          ],
+          "fullName": "Ownership transfer database operations creating a transfer creates a secure 24-hour token and stores its hash",
+          "status": "passed",
+          "title": "creates a secure 24-hour token and stores its hash",
+          "duration": 1.179399999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "creating a transfer"
+          ],
+          "fullName": "Ownership transfer database operations creating a transfer does not create another transfer while one is pending",
+          "status": "passed",
+          "title": "does not create another transfer while one is pending",
+          "duration": 0.34789999999998145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer rejects malformed tokens without querying D1",
+          "status": "passed",
+          "title": "rejects malformed tokens without querying D1",
+          "duration": 0.36019999999999186,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer scopes transfer lookup to the intended recipient",
+          "status": "passed",
+          "title": "scopes transfer lookup to the intended recipient",
+          "duration": 0.32030000000000314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer returns null when an offer is no longer eligible",
+          "status": "passed",
+          "title": "returns null when an offer is no longer eligible",
+          "duration": 0.727800000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer conditionally accepts a valid pending offer",
+          "status": "passed",
+          "title": "conditionally accepts a valid pending offer",
+          "duration": 0.286200000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer records an explicit decline without requesting promotion",
+          "status": "passed",
+          "title": "records an explicit decline without requesting promotion",
+          "duration": 0.194500000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer does not update an invalid or resolved offer",
+          "status": "passed",
+          "title": "does not update an invalid or resolved offer",
+          "duration": 0.14300000000000068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "reviewing and deciding an offer"
+          ],
+          "fullName": "Ownership transfer database operations reviewing and deciding an offer returns null if another request resolves the offer first",
+          "status": "passed",
+          "title": "returns null if another request resolves the offer first",
+          "duration": 0.1599999999999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "canceling a transfer"
+          ],
+          "fullName": "Ownership transfer database operations canceling a transfer restricts cancellation to the initiating Owner",
+          "status": "passed",
+          "title": "restricts cancellation to the initiating Owner",
+          "duration": 0.22640000000001237,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer database operations",
+            "canceling a transfer"
+          ],
+          "fullName": "Ownership transfer database operations canceling a transfer returns false when no eligible pending transfer exists",
+          "status": "passed",
+          "title": "returns false when no eligible pending transfer exists",
+          "duration": 0.1144000000000176,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296740894,
+      "endTime": 1795296740905.2263,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/ownership-transfer.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting allows the first email request",
+          "status": "passed",
+          "title": "allows the first email request",
+          "duration": 2.113999999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting allows the third email request",
+          "status": "passed",
+          "title": "allows the third email request",
+          "duration": 0.17619999999999436,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting rejects the fourth email request",
+          "status": "passed",
+          "title": "rejects the fourth email request",
+          "duration": 0.14619999999999322,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting enforces the IP request limit",
+          "status": "passed",
+          "title": "enforces the IP request limit",
+          "duration": 0.1630999999999858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting uses the namespaced rate-limit key",
+          "status": "passed",
+          "title": "uses the namespaced rate-limit key",
+          "duration": 0.9990999999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting uses an atomic INSERT/UPDATE counter",
+          "status": "passed",
+          "title": "uses an atomic INSERT/UPDATE counter",
+          "duration": 0.21920000000000073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting fails closed when D1 returns no counter",
+          "status": "passed",
+          "title": "fails closed when D1 returns no counter",
+          "duration": 0.8422999999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Password request rate limiting"
+          ],
+          "fullName": "Password request rate limiting propagates database errors",
+          "status": "passed",
+          "title": "propagates database errors",
+          "duration": 0.22690000000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296743697,
+      "endTime": 1795296743702.2268,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/password-request-rate-limit.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries lists only non-deleted administrators",
+          "status": "passed",
+          "title": "lists only non-deleted administrators",
+          "duration": 2.400900000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries assigns management permissions according to role rather than legacy flags",
+          "status": "passed",
+          "title": "assigns management permissions according to role rather than legacy flags",
+          "duration": 0.3790000000000191,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries limits invitation eligibility to the two supported roles",
+          "status": "passed",
+          "title": "limits invitation eligibility to the two supported roles",
+          "duration": 0.41679999999999495,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries requires an active role-2 Admin for ownership-transfer eligibility",
+          "status": "passed",
+          "title": "requires an active role-2 Admin for ownership-transfer eligibility",
+          "duration": 0.25079999999999814,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries maps ownership-transfer eligibility from the database flag",
+          "status": "passed",
+          "title": "maps ownership-transfer eligibility from the database flag",
+          "duration": 0.20279999999999632,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries always inserts new accounts as Admin without management privileges",
+          "status": "passed",
+          "title": "always inserts new accounts as Admin without management privileges",
+          "duration": 1.4938999999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries ignores client-supplied Owner roles and management permissions",
+          "status": "passed",
+          "title": "ignores client-supplied Owner roles and management permissions",
+          "duration": 0.2259999999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries updates only the username of a role-1 account",
+          "status": "passed",
+          "title": "updates only the username of a role-1 account",
+          "duration": 0.6262000000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries updates only the username of a role-2 account",
+          "status": "passed",
+          "title": "updates only the username of a role-2 account",
+          "duration": 0.3161000000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries accepts a username with exactly 40 characters",
+          "status": "passed",
+          "title": "accepts a username with exactly 40 characters",
+          "duration": 0.16949999999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects an invalid administrator ID \"\" without querying D1",
+          "status": "passed",
+          "title": "rejects an invalid administrator ID \"\" without querying D1",
+          "duration": 0.8344999999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects an invalid administrator ID \"  \" without querying D1",
+          "status": "passed",
+          "title": "rejects an invalid administrator ID \"  \" without querying D1",
+          "duration": 0.17169999999998709,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects an invalid administrator ID \"\\n\\t\" without querying D1",
+          "status": "passed",
+          "title": "rejects an invalid administrator ID \"\\n\\t\" without querying D1",
+          "duration": 0.1103000000000236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects 'non-string username' without querying D1",
+          "status": "passed",
+          "title": "rejects 'non-string username' without querying D1",
+          "duration": 0.1273999999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects 'empty username' without querying D1",
+          "status": "passed",
+          "title": "rejects 'empty username' without querying D1",
+          "duration": 0.12010000000000787,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects 'whitespace username' without querying D1",
+          "status": "passed",
+          "title": "rejects 'whitespace username' without querying D1",
+          "duration": 0.11099999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects 'overlong username' without querying D1",
+          "status": "passed",
+          "title": "rejects 'overlong username' without querying D1",
+          "duration": 0.1063000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects a nonexistent or deleted administrator after attempting the update",
+          "status": "passed",
+          "title": "rejects a nonexistent or deleted administrator after attempting the update",
+          "duration": 0.14090000000001623,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries rejects an update when the username cannot be verified after rereading",
+          "status": "passed",
+          "title": "rejects an update when the username cannot be verified after rereading",
+          "duration": 0.6470999999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries propagates database update failures",
+          "status": "passed",
+          "title": "propagates database update failures",
+          "duration": 0.2255999999999858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries uses a soft delete instead of removing the database record",
+          "status": "passed",
+          "title": "uses a soft delete instead of removing the database record",
+          "duration": 0.20820000000000505,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries includes the Owner-deletion safeguard in SQL",
+          "status": "passed",
+          "title": "includes the Owner-deletion safeguard in SQL",
+          "duration": 0.11660000000000537,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries finds an eligible Admin for invitation resending",
+          "status": "passed",
+          "title": "finds an eligible Admin for invitation resending",
+          "duration": 0.13049999999998363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries requires an eligible status and no existing password for invitation resending",
+          "status": "passed",
+          "title": "requires an eligible status and no existing password for invitation resending",
+          "duration": 0.1950999999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries excludes the retired Can View role from invitation eligibility",
+          "status": "passed",
+          "title": "excludes the retired Can View role from invitation eligibility",
+          "duration": 0.098700000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Settings database queries"
+          ],
+          "fullName": "Admin Settings database queries returns null when no eligible invitation account is found",
+          "status": "passed",
+          "title": "returns null when no eligible invitation account is found",
+          "duration": 0.10880000000000223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741068,
+      "endTime": 1795296741078.109,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/settings.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page displays neutral introductory wording and labeled account details",
+          "status": "passed",
+          "title": "displays neutral introductory wording and labeled account details",
+          "duration": 44.772699999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page displays expiration and decision controls without automatically accepting",
+          "status": "passed",
+          "title": "displays expiration and decision controls without automatically accepting",
+          "duration": 57.90949999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page submits acceptance only after the recipient selects Accept Ownership",
+          "status": "passed",
+          "title": "submits acceptance only after the recipient selects Accept Ownership",
+          "duration": 35.93489999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page submits a decline and displays the declined state",
+          "status": "passed",
+          "title": "submits a decline and displays the declined state",
+          "duration": 32.6552999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page shows an error when the ownership offer cannot be verified",
+          "status": "passed",
+          "title": "shows an error when the ownership offer cannot be verified",
+          "duration": 12.625099999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page preserves the transfer destination when switching accounts",
+          "status": "passed",
+          "title": "preserves the transfer destination when switching accounts",
+          "duration": 30.157000000000153,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Ownership transfer confirmation page"
+          ],
+          "fullName": "Ownership transfer confirmation page keeps the confirmation page available when a decision fails",
+          "status": "passed",
+          "title": "keeps the confirmation page available when a decision fails",
+          "duration": 32.315900000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296714893,
+      "endTime": 1795296715139.316,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/ownership-transfer/ownership-transfer-client.test.tsx"
+    }
+  ]
+}

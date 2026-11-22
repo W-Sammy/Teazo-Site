@@ -1,0 +1,91 @@
+Section,File,Test,Status,ResultStatus
+09-Admin-Accounts-Access,e2e/admin-account-management-mobile.spec.ts,"completes synthetic mobile add, edit, invitation, and delete workflows",expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,displays separate Owner and Admin accounts with protected Owner actions,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,cancels Add New User without creating an account,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,creates a normalized Admin and displays invitation confirmation,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,rejects an empty Add User form without creating an account,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,preserves Add User inputs after an account-creation conflict,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,keeps account editing unchanged when canceled,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,validates an empty edited username without sending PATCH,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,updates an Admin username only after successful PATCH,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,preserves the edit dialog and username after a rejected PATCH,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,cancels administrator deletion without a DELETE request,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,removes a regular administrator after confirmed deletion,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,retains an administrator when deletion fails,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,resends an eligible invitation without sending real email,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,reports invitation resend failures without a success notice,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,prevents duplicate invitation resends while a request is pending,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,hides management actions when administrator API returns 401,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,hides management actions when administrator API returns 403,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,withdraws account-management actions after a failed authorization refresh,expected,passed
+09-Admin-Accounts-Access,e2e/admin-account-management.spec.ts,keeps Add and Edit Account controls usable on mobile,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,renders the login page and controls,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,requires both login fields before submitting,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,uses native browser email validation,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,displays denied Google account feedback,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,displays authentication service errors,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,normalizes credentials and displays invalid login feedback,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,rejects an unsafe login destination,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,preserves a valid ownership-transfer destination,expected,passed
+09-Admin-Accounts-Access,e2e/admin-login.spec.ts,keeps login controls available on mobile,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,opens and closes the password request dialog,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,submits a normalized password-link request,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,displays password request rate-limit errors,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,displays network errors during a password request,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,rejects a password shorter than six characters,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,rejects mismatched passwords,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,submits a valid setup password request,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,submits a valid reset password request,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,offers recovery when a password token is invalid,expected,passed
+09-Admin-Accounts-Access,e2e/admin-password-flow.spec.ts,keeps the password dialog usable on mobile,expected,passed
+02-Customization-Cart,e2e/customizer-cart-checkout.spec.ts,displays cart items and subtotal,expected,passed
+02-Customization-Cart,e2e/customizer-cart-checkout.spec.ts,updates totals when increasing quantity,expected,passed
+02-Customization-Cart,e2e/customizer-cart-checkout.spec.ts,updates customization prices in the edit modal,expected,passed
+03-Checkout-Payment-Links,e2e/customizer-cart-checkout.spec.ts,validates checkout customer details,expected,passed
+03-Checkout-Payment-Links,e2e/customizer-cart-checkout.spec.ts,shows rejected-order feedback,expected,passed
+03-Checkout-Payment-Links,e2e/customizer-cart-checkout.spec.ts,allows retry after checkout service failure,expected,passed
+03-Checkout-Payment-Links,e2e/customizer-cart-checkout.spec.ts,disables checkout while awaiting a response,expected,passed
+03-Checkout-Payment-Links,e2e/customizer-cart-checkout.spec.ts,navigates to a mocked successful checkout session,expected,passed
+02-Customization-Cart,e2e/customizer-cart-checkout.spec.ts,keeps the Shopping Bag usable on mobile,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,adds a blank draft without saving it,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,shows the required name error when the URL is entered first,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,adds a complete platform and submits its name and URL,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,rejects an invalid delivery URL: tea@example.com,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,rejects an invalid delivery URL: mailto:tea@example.com,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,rejects an invalid delivery URL: example.com,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,rejects an invalid delivery URL: not a link,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,enforces the name limit during browser typing and pasted-text insertion,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,"edits, hides, restores and removes a synthetic platform",expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,shows a failed save and recovers after another valid edit,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,opens delivery on mobile and submits a complete platform,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,does not save after a previously valid name is cleared,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,does not save after a previously valid url is cleared,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,clears an invalid URL error and submits the corrected URL,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,edits a second platform without changing the first platform or its save data,expected,passed
+10-Website-Content-Hours,e2e/delivery-admin.spec.ts,discards a waiting valid URL save if the same field becomes invalid before leaving it,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,opens without logging in and shows the page title and introductory text,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,displays a successfully loaded TEAZO logo,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,shows readable uppercase button labels and complete web URLs,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,clicking every delivery button opens its configured destination,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,a delivery button can be reached with Tab,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,Enter opens a focused delivery button's destination,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,hovering a button keeps its label and destination intact,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,"refreshing preserves the displayed button labels, order, and URLs",expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,buttons fit and can be clicked at a 390px viewport width,expected,passed
+10-Website-Content-Hours,e2e/delivery.spec.ts,buttons fit and can be clicked at a 1280px viewport width,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,"opens without logging in and shows its title, heading, and instructions",expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,shows a successfully loaded TEAZO logo,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,the PDF link has the correct URL and safe new-tab settings,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,draws the menu PDF page on desktop,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,clicking OPEN PDF opens the correct new tab and preserves the menu tab,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,the PDF link can receive Tab focus and open with Enter,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,hovering changes the button from black to pink without changing its URL,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,refreshing keeps the PDF button and redraws the preview,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,resizing a desktop preview redraws the menu page to fit without duplicates,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,shows fallback instructions when PDF loading fails: missing,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,shows fallback instructions when PDF loading fails: corrupt,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,shows fallback instructions when PDF loading fails: module-error,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,uses the correct preview behavior and usable button at 390px,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,uses the correct preview behavior and usable button at 639px,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,uses the correct preview behavior and usable button at 640px,expected,passed
+01-Public-Menu-Catalog,e2e/static-menu.spec.ts,Safari detection hides the desktop preview while keeping OPEN PDF usable,expected,passed

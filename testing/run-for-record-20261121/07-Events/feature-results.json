@@ -1,0 +1,1962 @@
+{
+  "section": "07-Events",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar does not display the sidebar when no events exist",
+          "status": "passed",
+          "title": "does not display the sidebar when no events exist",
+          "duration": 12.365300000000161,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar starts collapsed with the correct event count",
+          "status": "passed",
+          "title": "starts collapsed with the correct event count",
+          "duration": 59.80619999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar opens the sidebar and displays the supplied events",
+          "status": "passed",
+          "title": "opens the sidebar and displays the supplied events",
+          "duration": 20.382700000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar preserves the supplied event ordering",
+          "status": "passed",
+          "title": "preserves the supplied event ordering",
+          "duration": 6.728600000000142,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar displays event dates in Pacific time",
+          "status": "passed",
+          "title": "displays event dates in Pacific time",
+          "duration": 8.507399999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar displays the correct event image sources",
+          "status": "passed",
+          "title": "displays the correct event image sources",
+          "duration": 6.120199999999841,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar does not render event thumbnails until the sidebar is first opened",
+          "status": "passed",
+          "title": "does not render event thumbnails until the sidebar is first opened",
+          "duration": 9.876999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar closes and reopens the sidebar with its toggle",
+          "status": "passed",
+          "title": "closes and reopens the sidebar with its toggle",
+          "duration": 12.923900000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar opens the selected event details modal",
+          "status": "passed",
+          "title": "opens the selected event details modal",
+          "duration": 15.871699999999919,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar uses fallback text for events without descriptions",
+          "status": "passed",
+          "title": "uses fallback text for events without descriptions",
+          "duration": 17.00500000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar closes the event modal using its close button",
+          "status": "passed",
+          "title": "closes the event modal using its close button",
+          "duration": 12.663299999999936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar closes the event modal with Escape",
+          "status": "passed",
+          "title": "closes the event modal with Escape",
+          "duration": 9.251099999999951,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar closes the sidebar with Escape and restores toggle focus",
+          "status": "passed",
+          "title": "closes the sidebar with Escape and restores toggle focus",
+          "duration": 6.201300000000174,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar closes the sidebar when clicking outside",
+          "status": "passed",
+          "title": "closes the sidebar when clicking outside",
+          "duration": 6.3759000000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar keeps the sidebar open when clicking inside it",
+          "status": "passed",
+          "title": "keeps the sidebar open when clicking inside it",
+          "duration": 7.564499999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Events sidebar"
+          ],
+          "fullName": "Public Events sidebar keeps the sidebar open during event modal interaction",
+          "status": "passed",
+          "title": "keeps the sidebar open during event modal interaction",
+          "duration": 9.98239999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296716673,
+      "endTime": 1795296716894.9824,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/live-events-sidebar.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event status"
+          ],
+          "fullName": "Admin Events display helpers Event status classifies events before their start as upcoming",
+          "status": "passed",
+          "title": "classifies events before their start as upcoming",
+          "duration": 0.9793999999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event status"
+          ],
+          "fullName": "Admin Events display helpers Event status classifies events at their exact start as active",
+          "status": "passed",
+          "title": "classifies events at their exact start as active",
+          "duration": 0.099899999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event status"
+          ],
+          "fullName": "Admin Events display helpers Event status classifies events between start and end as active",
+          "status": "passed",
+          "title": "classifies events between start and end as active",
+          "duration": 0.06780000000000541,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event status"
+          ],
+          "fullName": "Admin Events display helpers Event status classifies events at their exact end as active",
+          "status": "passed",
+          "title": "classifies events at their exact end as active",
+          "duration": 0.08129999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event status"
+          ],
+          "fullName": "Admin Events display helpers Event status classifies events after their end as ended",
+          "status": "passed",
+          "title": "classifies events after their end as ended",
+          "duration": 0.07330000000001746,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting formats UTC timestamps in Pacific daylight time",
+          "status": "passed",
+          "title": "formats UTC timestamps in Pacific daylight time",
+          "duration": 0.15509999999997603,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting formats UTC timestamps in Pacific standard time",
+          "status": "passed",
+          "title": "formats UTC timestamps in Pacific standard time",
+          "duration": 0.07909999999998263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting handles dates crossing midnight in Pacific time",
+          "status": "passed",
+          "title": "handles dates crossing midnight in Pacific time",
+          "duration": 0.0730000000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting formats midnight correctly",
+          "status": "passed",
+          "title": "formats midnight correctly",
+          "duration": 0.07660000000001332,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting returns Unknown for invalid dates",
+          "status": "passed",
+          "title": "returns Unknown for invalid dates",
+          "duration": 0.09130000000001814,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event date formatting"
+          ],
+          "fullName": "Admin Events display helpers Event date formatting returns Unknown for empty dates",
+          "status": "passed",
+          "title": "returns Unknown for empty dates",
+          "duration": 0.04970000000000141,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels labels events applying to all items",
+          "status": "passed",
+          "title": "labels events applying to all items",
+          "duration": 0.09479999999999222,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels labels one selected category",
+          "status": "passed",
+          "title": "labels one selected category",
+          "duration": 0.05760000000000787,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels labels multiple selected categories",
+          "status": "passed",
+          "title": "labels multiple selected categories",
+          "duration": 0.039500000000003865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels labels one selected item",
+          "status": "passed",
+          "title": "labels one selected item",
+          "duration": 0.03499999999999659,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels labels multiple selected items",
+          "status": "passed",
+          "title": "labels multiple selected items",
+          "duration": 0.036000000000001364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels combines category and item selection counts",
+          "status": "passed",
+          "title": "combines category and item selection counts",
+          "duration": 0.029599999999987858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels reports no targets when a catalog is available",
+          "status": "passed",
+          "title": "reports no targets when a catalog is available",
+          "duration": 0.036200000000008004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events display helpers",
+            "Event targeting labels"
+          ],
+          "fullName": "Admin Events display helpers Event targeting labels reports an unavailable catalog when no targets exist",
+          "status": "passed",
+          "title": "reports an unavailable catalog when no targets exist",
+          "duration": 0.02790000000001669,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746262,
+      "endTime": 1795296746265.0361,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/events/components/event-display.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions starts a new event with empty fields",
+          "status": "passed",
+          "title": "starts a new event with empty fields",
+          "duration": 78.55650000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions rejects a missing event name",
+          "status": "passed",
+          "title": "rejects a missing event name",
+          "duration": 18.357500000000073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions requires both event dates",
+          "status": "passed",
+          "title": "requires both event dates",
+          "duration": 16.688100000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions accepts a missing description when required fields are valid",
+          "status": "passed",
+          "title": "accepts a missing description when required fields are valid",
+          "duration": 24.522899999999936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions rejects an end date earlier than the start date",
+          "status": "passed",
+          "title": "rejects an end date earlier than the start date",
+          "duration": 23.605099999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions trims valid event details and submits the correct dates",
+          "status": "passed",
+          "title": "trims valid event details and submits the correct dates",
+          "duration": 19.260700000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions calls Cancel without submitting changes",
+          "status": "passed",
+          "title": "calls Cancel without submitting changes",
+          "duration": 17.736400000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions counts affected items without double-counting overlapping selections",
+          "status": "passed",
+          "title": "counts affected items without double-counting overlapping selections",
+          "duration": 12.641200000000026,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions omits specific targets when the event applies to all items",
+          "status": "passed",
+          "title": "omits specific targets when the event applies to all items",
+          "duration": 22.954400000000078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions populates the edit form from an existing event",
+          "status": "passed",
+          "title": "populates the edit form from an existing event",
+          "duration": 8.384499999999889,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions submits edited event details while retaining existing targets",
+          "status": "passed",
+          "title": "submits edited event details while retaining existing targets",
+          "duration": 10.417100000000119,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions rejects unsupported image formats",
+          "status": "passed",
+          "title": "rejects unsupported image formats",
+          "duration": 5.2362000000000535,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions rejects empty image files",
+          "status": "passed",
+          "title": "rejects empty image files",
+          "duration": 4.568400000000111,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions prepares images exceeding 10 MB before saving",
+          "status": "passed",
+          "title": "prepares images exceeding 10 MB before saving",
+          "duration": 40.89390000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions reports an error when oversized-image preparation fails",
+          "status": "passed",
+          "title": "reports an error when oversized-image preparation fails",
+          "duration": 18.637699999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions accepts a valid PNG and forwards the file on save",
+          "status": "passed",
+          "title": "accepts a valid PNG and forwards the file on save",
+          "duration": 17.614599999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions releases replaced image previews and the last preview on unmount",
+          "status": "passed",
+          "title": "releases replaced image previews and the last preview on unmount",
+          "duration": 5.554100000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions converts HEIC uploads to JPEG before saving",
+          "status": "passed",
+          "title": "converts HEIC uploads to JPEG before saving",
+          "duration": 34.77800000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions shows a useful error when HEIC conversion fails",
+          "status": "passed",
+          "title": "shows a useful error when HEIC conversion fails",
+          "duration": 18.734500000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Events form interactions"
+          ],
+          "fullName": "Admin Events form interactions blocks saving while HEIC conversion is in progress",
+          "status": "passed",
+          "title": "blocks saving while HEIC conversion is in progress",
+          "duration": 37.85490000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296708277,
+      "endTime": 1795296708714.855,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/events/components/event-form.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] passes event updates to saveEvent",
+          "status": "passed",
+          "title": "passes event updates to saveEvent",
+          "duration": 13.943699999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] uses the event ID from route parameters",
+          "status": "passed",
+          "title": "uses the event ID from route parameters",
+          "duration": 1.3755999999999915,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] preserves unsuccessful update responses",
+          "status": "passed",
+          "title": "preserves unsuccessful update responses",
+          "duration": 1.0369999999999777,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] requires authorization before deletion",
+          "status": "passed",
+          "title": "requires authorization before deletion",
+          "duration": 0.42969999999999686,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] rejects unauthorized deletion requests",
+          "status": "passed",
+          "title": "rejects unauthorized deletion requests",
+          "duration": 0.3919999999999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] rejects deletion without sufficient permissions",
+          "status": "passed",
+          "title": "rejects deletion without sufficient permissions",
+          "duration": 0.31460000000001287,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] soft-deletes an existing event",
+          "status": "passed",
+          "title": "soft-deletes an existing event",
+          "duration": 0.2635999999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] uses the correct ID when deleting",
+          "status": "passed",
+          "title": "uses the correct ID when deleting",
+          "duration": 0.35089999999999577,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] returns 404 when deleting a nonexistent event",
+          "status": "passed",
+          "title": "returns 404 when deleting a nonexistent event",
+          "duration": 0.644500000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] returns 503 when event deletion fails",
+          "status": "passed",
+          "title": "returns 503 when event deletion fails",
+          "duration": 0.4533999999999878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] sets no-store on deletion error responses",
+          "status": "passed",
+          "title": "sets no-store on deletion error responses",
+          "duration": 0.2723000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events/[id]"
+          ],
+          "fullName": "/api/admin/events/[id] does not call the delete query when authorization fails",
+          "status": "passed",
+          "title": "does not call the delete query when authorization fails",
+          "duration": 0.1671999999999798,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296737202,
+      "endTime": 1795296737221.2722,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/events/[id]/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events returns the event list",
+          "status": "passed",
+          "title": "returns the event list",
+          "duration": 14.407600000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events returns an empty array when there are no events",
+          "status": "passed",
+          "title": "returns an empty array when there are no events",
+          "duration": 0.7137000000000171,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events requires Admin authorization before listing events",
+          "status": "passed",
+          "title": "requires Admin authorization before listing events",
+          "duration": 1.1052999999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events rejects unauthorized event-list requests",
+          "status": "passed",
+          "title": "rejects unauthorized event-list requests",
+          "duration": 0.4187000000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events returns 503 when D1 cannot list events",
+          "status": "passed",
+          "title": "returns 503 when D1 cannot list events",
+          "duration": 0.538800000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events returns 500 for unexpected event-list failures",
+          "status": "passed",
+          "title": "returns 500 for unexpected event-list failures",
+          "duration": 0.3579000000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events sets no-store on event listings",
+          "status": "passed",
+          "title": "sets no-store on event listings",
+          "duration": 0.3177000000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events delegates event creation to saveEvent",
+          "status": "passed",
+          "title": "delegates event creation to saveEvent",
+          "duration": 0.3996999999999957,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events requires edit permission for deleting ended events",
+          "status": "passed",
+          "title": "requires edit permission for deleting ended events",
+          "duration": 0.4813000000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events rejects unauthorized ended-event cleanup",
+          "status": "passed",
+          "title": "rejects unauthorized ended-event cleanup",
+          "duration": 0.2966000000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events rejects deletion without endedOnly=true",
+          "status": "passed",
+          "title": "rejects deletion without endedOnly=true",
+          "duration": 0.39500000000001023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events rejects deletion when endedOnly is missing",
+          "status": "passed",
+          "title": "rejects deletion when endedOnly is missing",
+          "duration": 0.2797999999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events rejects malformed deletion requests",
+          "status": "passed",
+          "title": "rejects malformed deletion requests",
+          "duration": 0.28469999999998663,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events successfully deletes ended events",
+          "status": "passed",
+          "title": "successfully deletes ended events",
+          "duration": 0.2711999999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events returns 503 when ended-event cleanup fails",
+          "status": "passed",
+          "title": "returns 503 when ended-event cleanup fails",
+          "duration": 0.2616000000000156,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/admin/events"
+          ],
+          "fullName": "/api/admin/events sets no-store on error responses",
+          "status": "passed",
+          "title": "sets no-store on error responses",
+          "duration": 0.20949999999999136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296735473,
+      "endTime": 1795296735493.2712,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/events/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects unauthorized event creation",
+          "status": "passed",
+          "title": "rejects unauthorized event creation",
+          "duration": 14.109000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent requires an authenticated Admin with editing permissions",
+          "status": "passed",
+          "title": "requires an authenticated Admin with editing permissions",
+          "duration": 3.1267999999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent creates a valid event",
+          "status": "passed",
+          "title": "creates a valid event",
+          "duration": 1.2112999999999943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent trims event names and descriptions",
+          "status": "passed",
+          "title": "trims event names and descriptions",
+          "duration": 1.2487000000000137,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects an empty event name",
+          "status": "passed",
+          "title": "rejects an empty event name",
+          "duration": 0.6151999999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent accepts an empty event description",
+          "status": "passed",
+          "title": "accepts an empty event description",
+          "duration": 0.5995000000000061,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects an invalid start date",
+          "status": "passed",
+          "title": "rejects an invalid start date",
+          "duration": 0.45990000000000464,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects an invalid end date",
+          "status": "passed",
+          "title": "rejects an invalid end date",
+          "duration": 0.5203999999999951,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects end dates earlier than start dates",
+          "status": "passed",
+          "title": "rejects end dates earlier than start dates",
+          "duration": 0.4960999999999842,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent allows matching start and end timestamps",
+          "status": "passed",
+          "title": "allows matching start and end timestamps",
+          "duration": 0.45409999999998263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent parses appliesToAll correctly",
+          "status": "passed",
+          "title": "parses appliesToAll correctly",
+          "duration": 0.5290999999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent discards malformed target JSON",
+          "status": "passed",
+          "title": "discards malformed target JSON",
+          "duration": 0.633499999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent ignores non-string target IDs",
+          "status": "passed",
+          "title": "ignores non-string target IDs",
+          "duration": 0.43209999999999127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent updates an existing event",
+          "status": "passed",
+          "title": "updates an existing event",
+          "duration": 0.5104999999999791,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent returns 404 when updating a nonexistent event",
+          "status": "passed",
+          "title": "returns 404 when updating a nonexistent event",
+          "duration": 0.3552999999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent uploads valid PNG event images",
+          "status": "passed",
+          "title": "uploads valid PNG event images",
+          "duration": 2.035000000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent uses jpg extension for JPEG images",
+          "status": "passed",
+          "title": "uses jpg extension for JPEG images",
+          "duration": 0.8954000000000235,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent supports WebP images",
+          "status": "passed",
+          "title": "supports WebP images",
+          "duration": 0.6765000000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects unsupported image types",
+          "status": "passed",
+          "title": "rejects unsupported image types",
+          "duration": 0.7729000000000212,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent rejects images larger than the configured limit",
+          "status": "passed",
+          "title": "rejects images larger than the configured limit",
+          "duration": 10.592900000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent does not upload empty image files",
+          "status": "passed",
+          "title": "does not upload empty image files",
+          "duration": 0.6447000000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent returns an error if media storage fails",
+          "status": "passed",
+          "title": "returns an error if media storage fails",
+          "duration": 0.6463999999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent cleans up new media when an update is rejected",
+          "status": "passed",
+          "title": "cleans up new media when an update is rejected",
+          "duration": 0.5345000000000084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent cleans up uploaded media after a rejected D1 write",
+          "status": "passed",
+          "title": "cleans up uploaded media after a rejected D1 write",
+          "duration": 0.48330000000001405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent does not immediately delete media after uncertain server failures",
+          "status": "passed",
+          "title": "does not immediately delete media after uncertain server failures",
+          "duration": 0.4545999999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "saveEvent"
+          ],
+          "fullName": "saveEvent preserves the original failure if cleanup also fails",
+          "status": "passed",
+          "title": "preserves the original failure if cleanup also fails",
+          "duration": 0.4462000000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730538,
+      "endTime": 1795296730582.4463,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/event-api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup caches name lookups for a minute under a stable key",
+          "status": "passed",
+          "title": "caches name lookups for a minute under a stable key",
+          "duration": 1.1812999999999931,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup does not call Square when no targets are selected",
+          "status": "passed",
+          "title": "does not call Square when no targets are selected",
+          "duration": 0.5708999999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup requests only the unique selected IDs and never lists the catalog",
+          "status": "passed",
+          "title": "requests only the unique selected IDs and never lists the catalog",
+          "duration": 0.7767999999999802,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup returns trimmed category names sorted, skipping deleted, unnamed and other types",
+          "status": "passed",
+          "title": "returns trimmed category names sorted, skipping deleted, unnamed and other types",
+          "duration": 5.8851999999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup returns item names sorted, skipping deleted, unnamed and other types",
+          "status": "passed",
+          "title": "returns item names sorted, skipping deleted, unnamed and other types",
+          "duration": 0.32080000000001974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup treats a response without objects as no matches",
+          "status": "passed",
+          "title": "treats a response without objects as no matches",
+          "duration": 0.19650000000001455,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup splits more than 1,000 IDs across calls and merges the results",
+          "status": "passed",
+          "title": "splits more than 1,000 IDs across calls and merges the results",
+          "duration": 1.6678999999999746,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event category and item lookup"
+          ],
+          "fullName": "event category and item lookup propagates Square failures so the page can fall back",
+          "status": "passed",
+          "title": "propagates Square failures so the page can fall back",
+          "duration": 0.8941000000000088,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296738850,
+      "endTime": 1795296738861.894,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/event-categories.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate formats a valid date without the year by default",
+          "status": "passed",
+          "title": "formats a valid date without the year by default",
+          "duration": 0.848399999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate includes the year when requested",
+          "status": "passed",
+          "title": "includes the year when requested",
+          "duration": 0.1886000000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate converts UTC dates to America/Los_Angeles",
+          "status": "passed",
+          "title": "converts UTC dates to America/Los_Angeles",
+          "duration": 0.16160000000002128,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate uses Pacific Standard Time during winter",
+          "status": "passed",
+          "title": "uses Pacific Standard Time during winter",
+          "duration": 0.08449999999999136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate uses Pacific Daylight Time during summer",
+          "status": "passed",
+          "title": "uses Pacific Daylight Time during summer",
+          "duration": 0.08990000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate handles a date crossing midnight in Los Angeles",
+          "status": "passed",
+          "title": "handles a date crossing midnight in Los Angeles",
+          "duration": 0.06579999999999586,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate handles the repeated hour during daylight-saving fallback",
+          "status": "passed",
+          "title": "handles the repeated hour during daylight-saving fallback",
+          "duration": 0.09310000000002105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate returns a fallback for invalid dates",
+          "status": "passed",
+          "title": "returns a fallback for invalid dates",
+          "duration": 0.06429999999997449,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate returns a fallback for an empty date",
+          "status": "passed",
+          "title": "returns a fallback for an empty date",
+          "duration": 0.07130000000000791,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "formatEventDate"
+          ],
+          "fullName": "formatEventDate returns the same fallback when includeYear is true",
+          "status": "passed",
+          "title": "returns the same fallback when includeYear is true",
+          "duration": 0.08360000000001833,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746658,
+      "endTime": 1795296746660.093,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/event-date.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "event targets in sandbox"
+          ],
+          "fullName": "event targets in sandbox preserves the other environment when appliesToAll is false",
+          "status": "passed",
+          "title": "preserves the other environment when appliesToAll is false",
+          "duration": 13.8827,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event targets in sandbox"
+          ],
+          "fullName": "event targets in sandbox preserves the other environment when appliesToAll is true",
+          "status": "passed",
+          "title": "preserves the other environment when appliesToAll is true",
+          "duration": 10.896500000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event targets in production"
+          ],
+          "fullName": "event targets in production preserves the other environment when appliesToAll is false",
+          "status": "passed",
+          "title": "preserves the other environment when appliesToAll is false",
+          "duration": 11.2603,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "event targets in production"
+          ],
+          "fullName": "event targets in production preserves the other environment when appliesToAll is true",
+          "status": "passed",
+          "title": "preserves the other environment when appliesToAll is true",
+          "duration": 11.423699999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730374,
+      "endTime": 1795296730421.4236,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/events-sqlite.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries lists nondeleted events",
+          "status": "passed",
+          "title": "lists nondeleted events",
+          "duration": 1.7872999999999877,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries orders events by start date and ID",
+          "status": "passed",
+          "title": "orders events by start date and ID",
+          "duration": 0.19460000000000832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries returns an empty list when no events exist",
+          "status": "passed",
+          "title": "returns an empty list when no events exist",
+          "duration": 0.4487000000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries uses the fallback image when no event image exists",
+          "status": "passed",
+          "title": "uses the fallback image when no event image exists",
+          "duration": 0.14860000000001605,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries generates the public image URL for stored media",
+          "status": "passed",
+          "title": "generates the public image URL for stored media",
+          "duration": 0.5199000000000069,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries maps boolean appliesToAll values",
+          "status": "passed",
+          "title": "maps boolean appliesToAll values",
+          "duration": 0.16529999999997358,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries maps category and item targets to their events",
+          "status": "passed",
+          "title": "maps category and item targets to their events",
+          "duration": 0.16849999999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries loads targets for the selected Square environment",
+          "status": "passed",
+          "title": "loads targets for the selected Square environment",
+          "duration": 0.11779999999998836,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries filters active events inclusively by start and end time",
+          "status": "passed",
+          "title": "filters active events inclusively by start and end time",
+          "duration": 1.065100000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries checks whether a nondeleted event exists",
+          "status": "passed",
+          "title": "checks whether a nondeleted event exists",
+          "duration": 0.21289999999999054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries returns false when an event does not exist",
+          "status": "passed",
+          "title": "returns false when an event does not exist",
+          "duration": 0.08799999999999386,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries creates an event and its category/item associations",
+          "status": "passed",
+          "title": "creates an event and its category/item associations",
+          "duration": 1.5959999999999752,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries normalizes duplicate and empty target IDs",
+          "status": "passed",
+          "title": "normalizes duplicate and empty target IDs",
+          "duration": 0.4265000000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries does not create individual targets when appliesToAll is true",
+          "status": "passed",
+          "title": "does not create individual targets when appliesToAll is true",
+          "duration": 0.11719999999999686,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries saves media metadata with a newly created event",
+          "status": "passed",
+          "title": "saves media metadata with a newly created event",
+          "duration": 0.15809999999999036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries returns false instead of updating a missing event",
+          "status": "passed",
+          "title": "returns false instead of updating a missing event",
+          "duration": 0.23120000000000118,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries updates event details and replaces targeted associations",
+          "status": "passed",
+          "title": "updates event details and replaces targeted associations",
+          "duration": 0.2132000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries preserves the existing image when no replacement is supplied",
+          "status": "passed",
+          "title": "preserves the existing image when no replacement is supplied",
+          "duration": 0.11750000000000682,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries queues replaced event images for safe R2 deletion",
+          "status": "passed",
+          "title": "queues replaced event images for safe R2 deletion",
+          "duration": 0.1296000000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries does not queue media deletion when the image ID is unchanged",
+          "status": "passed",
+          "title": "does not queue media deletion when the image ID is unchanged",
+          "duration": 0.5024999999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries soft-deletes an existing event",
+          "status": "passed",
+          "title": "soft-deletes an existing event",
+          "duration": 0.18159999999997467,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries returns false when no event was deleted",
+          "status": "passed",
+          "title": "returns false when no event was deleted",
+          "duration": 0.05559999999999832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Event database queries"
+          ],
+          "fullName": "Event database queries soft-deletes only events that have ended",
+          "status": "passed",
+          "title": "soft-deletes only events that have ended",
+          "duration": 0.0630000000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741740,
+      "endTime": 1795296741749.1816,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/events.test.ts"
+    }
+  ]
+}
