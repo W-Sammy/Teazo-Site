@@ -1,0 +1,2124 @@
+{
+  "section": "01-Public-Menu-Catalog",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "MenuCatalog deep-link preload"
+          ],
+          "fullName": "MenuCatalog deep-link preload starts the customizer chunk and availability request for ?item=",
+          "status": "passed",
+          "title": "starts the customizer chunk and availability request for ?item=",
+          "duration": 18.00019999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "MenuCatalog deep-link preload"
+          ],
+          "fullName": "MenuCatalog deep-link preload does nothing on an ordinary menu visit",
+          "status": "passed",
+          "title": "does nothing on an ordinary menu visit",
+          "duration": 1.0873999999998887,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "MenuCatalog deep-link preload"
+          ],
+          "fullName": "MenuCatalog deep-link preload does nothing for an empty item parameter",
+          "status": "passed",
+          "title": "does nothing for an empty item parameter",
+          "duration": 0.7598000000000411,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296738184,
+      "endTime": 1795296738203.7598,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/menu-catalog-deep-link-preload.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Menu section rendering"
+          ],
+          "fullName": "Public Menu catalog Menu section rendering renders featured and regular Menu sections",
+          "status": "passed",
+          "title": "renders featured and regular Menu sections",
+          "duration": 72.44319999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Menu section rendering"
+          ],
+          "fullName": "Public Menu catalog Menu section rendering renders sections in the supplied order, including specials",
+          "status": "passed",
+          "title": "renders sections in the supplied order, including specials",
+          "duration": 5.325600000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Menu section rendering"
+          ],
+          "fullName": "Public Menu catalog Menu section rendering preserves each section's catalog items",
+          "status": "passed",
+          "title": "preserves each section's catalog items",
+          "duration": 8.239699999999857,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Menu section rendering"
+          ],
+          "fullName": "Public Menu catalog Menu section rendering renders featured section subtitles",
+          "status": "passed",
+          "title": "renders featured section subtitles",
+          "duration": 2.6618000000000848,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Menu section rendering"
+          ],
+          "fullName": "Public Menu catalog Menu section rendering renders an empty catalog without an item dialog",
+          "status": "passed",
+          "title": "renders an empty catalog without an item dialog",
+          "duration": 1.5465999999998985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization opens the selected item's customizer",
+          "status": "passed",
+          "title": "opens the selected item's customizer",
+          "duration": 348.5757000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization displays immediate loading feedback when selecting an item",
+          "status": "passed",
+          "title": "displays immediate loading feedback when selecting an item",
+          "duration": 8.246700000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization updates the URL with the selected catalog ID",
+          "status": "passed",
+          "title": "updates the URL with the selected catalog ID",
+          "duration": 6.13760000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization allows direct navigation to a valid item",
+          "status": "passed",
+          "title": "allows direct navigation to a valid item",
+          "duration": 331.6397000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization does not open customizer if URL has no item query even if initialItemId is passed (Back navigation consistency)",
+          "status": "passed",
+          "title": "does not open customizer if URL has no item query even if initialItemId is passed (Back navigation consistency)",
+          "duration": 1.547399999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization does not open an unknown item",
+          "status": "passed",
+          "title": "does not open an unknown item",
+          "duration": 1.232499999999618,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization does not open a customizer without an item ID",
+          "status": "passed",
+          "title": "does not open a customizer without an item ID",
+          "duration": 1.3334999999997308,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization closes the customizer and removes the item query parameter",
+          "status": "passed",
+          "title": "closes the customizer and removes the item query parameter",
+          "duration": 316.2096999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Item selection and customization"
+          ],
+          "fullName": "Public Menu catalog Item selection and customization allows dismissing loading modal before customizer finishes loading",
+          "status": "passed",
+          "title": "allows dismissing loading modal before customizer finishes loading",
+          "duration": 7.403500000000349,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Browser URL preservation"
+          ],
+          "fullName": "Public Menu catalog Browser URL preservation preserves unrelated query parameters when selecting an item",
+          "status": "passed",
+          "title": "preserves unrelated query parameters when selecting an item",
+          "duration": 5.198499999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Browser URL preservation"
+          ],
+          "fullName": "Public Menu catalog Browser URL preservation preserves unrelated parameters when closing the customizer",
+          "status": "passed",
+          "title": "preserves unrelated parameters when closing the customizer",
+          "duration": 324.962,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Browser URL preservation"
+          ],
+          "fullName": "Public Menu catalog Browser URL preservation updates the selected item on browser history navigation",
+          "status": "passed",
+          "title": "updates the selected item on browser history navigation",
+          "duration": 343.5169999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Browser URL preservation"
+          ],
+          "fullName": "Public Menu catalog Browser URL preservation closes the customizer when browser navigation removes the item",
+          "status": "passed",
+          "title": "closes the customizer when browser navigation removes the item",
+          "duration": 323.5092999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog",
+            "Browser URL preservation"
+          ],
+          "fullName": "Public Menu catalog Browser URL preservation closes the customizer for an unknown history item",
+          "status": "passed",
+          "title": "closes the customizer for an unknown history item",
+          "duration": 4.662199999999757,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296688347,
+      "endTime": 1795296690462.662,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/menu-catalog.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "MenuItemsSection memoization"
+          ],
+          "fullName": "MenuItemsSection memoization does not re-render cards when rerendered with identical props",
+          "status": "passed",
+          "title": "does not re-render cards when rerendered with identical props",
+          "duration": 11.863200000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "MenuItemsSection memoization"
+          ],
+          "fullName": "MenuItemsSection memoization re-renders with fresh catalog items",
+          "status": "passed",
+          "title": "re-renders with fresh catalog items",
+          "duration": 8.662399999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "MenuItemsSection memoization"
+          ],
+          "fullName": "MenuItemsSection memoization re-renders with a new heading, subtitle or handler",
+          "status": "passed",
+          "title": "re-renders with a new heading, subtitle or handler",
+          "duration": 2.994299999999839,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296733869,
+      "endTime": 1795296733891.9944,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/menu-items-section.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading keeps unconfigured new Square categories off the public menu",
+          "status": "passed",
+          "title": "keeps unconfigured new Square categories off the public menu",
+          "duration": 76.2464,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading keeps a hidden category off the public menu even if an item is explicitly visible",
+          "status": "passed",
+          "title": "keeps a hidden category off the public menu even if an item is explicitly visible",
+          "duration": 6.830300000000079,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading shows an unavailable menu when display settings fail, including uncategorized items",
+          "status": "passed",
+          "title": "shows an unavailable menu when display settings fail, including uncategorized items",
+          "duration": 11.457200000000057,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading initializes newly seen items before rendering and uses their persisted visibility",
+          "status": "passed",
+          "title": "initializes newly seen items before rendering and uses their persisted visibility",
+          "duration": 7.770300000000134,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading does not reinitialize existing explicit item settings",
+          "status": "passed",
+          "title": "does not reinitialize existing explicit item settings",
+          "duration": 2.6555000000000746,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading does not publish items if their initial display settings cannot be saved",
+          "status": "passed",
+          "title": "does not publish items if their initial display settings cannot be saved",
+          "duration": 7.234699999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading respects custom category/item visibility and availability: {\"visible\":true,\"published\":true,\"availableItem\":true,\"expected\":true}",
+          "status": "passed",
+          "title": "respects custom category/item visibility and availability: {\"visible\":true,\"published\":true,\"availableItem\":true,\"expected\":true}",
+          "duration": 4.640300000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading respects custom category/item visibility and availability: {\"visible\":false,\"published\":true,\"availableItem\":true,\"expected\":false}",
+          "status": "passed",
+          "title": "respects custom category/item visibility and availability: {\"visible\":false,\"published\":true,\"availableItem\":true,\"expected\":false}",
+          "duration": 5.302400000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading respects custom category/item visibility and availability: {\"visible\":true,\"published\":false,\"availableItem\":true,\"expected\":false}",
+          "status": "passed",
+          "title": "respects custom category/item visibility and availability: {\"visible\":true,\"published\":false,\"availableItem\":true,\"expected\":false}",
+          "duration": 4.437399999999798,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading respects custom category/item visibility and availability: {\"visible\":true,\"published\":true,\"availableItem\":false,\"expected\":false}",
+          "status": "passed",
+          "title": "respects custom category/item visibility and availability: {\"visible\":true,\"published\":true,\"availableItem\":false,\"expected\":false}",
+          "duration": 5.932999999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading honors saved Uncategorized category visibility false",
+          "status": "passed",
+          "title": "honors saved Uncategorized category visibility false",
+          "duration": 4.890700000000152,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading"
+          ],
+          "fullName": "Public Menu catalog loading honors saved Uncategorized category visibility true",
+          "status": "passed",
+          "title": "honors saved Uncategorized category visibility true",
+          "duration": 1.6018000000001393,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Catalog request configuration"
+          ],
+          "fullName": "Public Menu catalog loading Catalog request configuration fetches the configured Square products endpoint with the 60-second catalog cache",
+          "status": "passed",
+          "title": "fetches the configured Square products endpoint with the 60-second catalog cache",
+          "duration": 1.9454000000000633,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Catalog request configuration"
+          ],
+          "fullName": "Public Menu catalog loading Catalog request configuration passes the selected item query parameter to the catalog",
+          "status": "passed",
+          "title": "passes the selected item query parameter to the catalog",
+          "duration": 1.8624999999999545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Catalog request configuration"
+          ],
+          "fullName": "Public Menu catalog loading Catalog request configuration does not invent a selected item without a query parameter",
+          "status": "passed",
+          "title": "does not invent a selected item without a query parameter",
+          "duration": 1.4673999999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Empty and unavailable catalogs"
+          ],
+          "fullName": "Public Menu catalog loading Empty and unavailable catalogs shows the empty catalog message for a valid empty response",
+          "status": "passed",
+          "title": "shows the empty catalog message for a valid empty response",
+          "duration": 7.461399999999912,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Empty and unavailable catalogs"
+          ],
+          "fullName": "Public Menu catalog loading Empty and unavailable catalogs excludes unavailable catalog items",
+          "status": "passed",
+          "title": "excludes unavailable catalog items",
+          "duration": 7.083999999999833,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Empty and unavailable catalogs"
+          ],
+          "fullName": "Public Menu catalog loading Empty and unavailable catalogs excludes items without available variations",
+          "status": "passed",
+          "title": "excludes items without available variations",
+          "duration": 4.325900000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Empty and unavailable catalogs"
+          ],
+          "fullName": "Public Menu catalog loading Empty and unavailable catalogs does not treat a missing availability snapshot as available",
+          "status": "passed",
+          "title": "does not treat a missing availability snapshot as available",
+          "duration": 4.190000000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Empty and unavailable catalogs"
+          ],
+          "fullName": "Public Menu catalog loading Empty and unavailable catalogs keeps available items visible while excluding unavailable ones",
+          "status": "passed",
+          "title": "keeps available items visible while excluding unavailable ones",
+          "duration": 1.8555999999998676,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures shows the unavailable state for HTTP 401",
+          "status": "passed",
+          "title": "shows the unavailable state for HTTP 401",
+          "duration": 5.0452000000000226,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures shows the unavailable state for HTTP 429",
+          "status": "passed",
+          "title": "shows the unavailable state for HTTP 429",
+          "duration": 5.356499999999869,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures shows the unavailable state for HTTP 500",
+          "status": "passed",
+          "title": "shows the unavailable state for HTTP 500",
+          "duration": 4.774899999999889,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures shows the unavailable state for HTTP 503",
+          "status": "passed",
+          "title": "shows the unavailable state for HTTP 503",
+          "duration": 4.507599999999911,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures handles a rejected Square request",
+          "status": "passed",
+          "title": "handles a rejected Square request",
+          "duration": 5.491600000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures handles a malformed JSON response",
+          "status": "passed",
+          "title": "handles a malformed JSON response",
+          "duration": 6.081400000000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an invalid catalog response 0",
+          "status": "passed",
+          "title": "rejects an invalid catalog response 0",
+          "duration": 6.971499999999878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an invalid catalog response 1",
+          "status": "passed",
+          "title": "rejects an invalid catalog response 1",
+          "duration": 5.646299999999883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an invalid catalog response 2",
+          "status": "passed",
+          "title": "rejects an invalid catalog response 2",
+          "duration": 5.362100000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an invalid catalog response 3",
+          "status": "passed",
+          "title": "rejects an invalid catalog response 3",
+          "duration": 4.759600000000091,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures fails safely when the configured base URL is missing",
+          "status": "passed",
+          "title": "fails safely when the configured base URL is missing",
+          "duration": 5.328800000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an unsafe or invalid configured base URL ftp://teazo.example/",
+          "status": "passed",
+          "title": "rejects an unsafe or invalid configured base URL ftp://teazo.example/",
+          "duration": 5.20920000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an unsafe or invalid configured base URL https://user:password@teazo.example/",
+          "status": "passed",
+          "title": "rejects an unsafe or invalid configured base URL https://user:password@teazo.example/",
+          "duration": 5.1340000000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures rejects an unsafe or invalid configured base URL not-a-valid-url",
+          "status": "passed",
+          "title": "rejects an unsafe or invalid configured base URL not-a-valid-url",
+          "duration": 6.002100000000155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "API and configuration failures"
+          ],
+          "fullName": "Public Menu catalog loading API and configuration failures does not display an earlier catalog after a subsequent request fails",
+          "status": "passed",
+          "title": "does not display an earlier catalog after a subsequent request fails",
+          "duration": 5.805399999999963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping uses saved category order \"milk-tea\" / \"specials\" / \"uncategorized\" / \"custom-picks\"",
+          "status": "passed",
+          "title": "uses saved category order \"milk-tea\" / \"specials\" / \"uncategorized\" / \"custom-picks\"",
+          "duration": 4.387900000000172,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping uses saved category order \"custom-picks\" / \"uncategorized\" / \"milk-tea\" / \"specials\"",
+          "status": "passed",
+          "title": "uses saved category order \"custom-picks\" / \"uncategorized\" / \"milk-tea\" / \"specials\"",
+          "duration": 4.415499999999838,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping uses saved category order \"specials\" / \"milk-tea\" / \"custom-picks\" / \"uncategorized\"",
+          "status": "passed",
+          "title": "uses saved category order \"specials\" / \"milk-tea\" / \"custom-picks\" / \"uncategorized\"",
+          "duration": 3.7937999999999192,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping keeps TEAZO specials and regular categories distinct",
+          "status": "passed",
+          "title": "keeps TEAZO specials and regular categories distinct",
+          "duration": 3.711799999999812,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping displays an item in each actual category without duplicating repeated membership",
+          "status": "passed",
+          "title": "displays an item in each actual category without duplicating repeated membership",
+          "duration": 3.257699999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping displays uncategorized items without inventing category membership",
+          "status": "passed",
+          "title": "displays uncategorized items without inventing category membership",
+          "duration": 1.1929000000000087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping resolves a category label supplied by another catalog item",
+          "status": "passed",
+          "title": "resolves a category label supplied by another catalog item",
+          "duration": 2.804600000000164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping preserves separate Square category IDs even when their names match",
+          "status": "passed",
+          "title": "preserves separate Square category IDs even when their names match",
+          "duration": 1.3940000000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping maps only available variations and uses their current price",
+          "status": "passed",
+          "title": "maps only available variations and uses their current price",
+          "duration": 1.1798000000001139,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Menu catalog loading",
+            "Square category and item mapping"
+          ],
+          "fullName": "Public Menu catalog loading Square category and item mapping rejects unsafe image URLs while preserving allowed Square image URLs",
+          "status": "passed",
+          "title": "rejects unsafe image URLs while preserving allowed Square image URLs",
+          "duration": 1.1902999999999793,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296713051,
+      "endTime": 1795296713329.1902,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/menu/page.catalog-loading.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "static menu page"
+          ],
+          "fullName": "static menu page exports the Menu tab title and page description",
+          "status": "passed",
+          "title": "exports the Menu tab title and page description",
+          "duration": 1.168100000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu page"
+          ],
+          "fullName": "static menu page shows the menu heading and introduction",
+          "status": "passed",
+          "title": "shows the menu heading and introduction",
+          "duration": 72.32169999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu page"
+          ],
+          "fullName": "static menu page uses the logo returned by the shared logo helper",
+          "status": "passed",
+          "title": "uses the logo returned by the shared logo helper",
+          "duration": 2.9142000000001644,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu page"
+          ],
+          "fullName": "static menu page includes the static menu content component",
+          "status": "passed",
+          "title": "includes the static menu content component",
+          "duration": 1.5317000000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu page"
+          ],
+          "fullName": "static menu page loads website content once for this render",
+          "status": "passed",
+          "title": "loads website content once for this render",
+          "duration": 1.2361000000000786,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296728109,
+      "endTime": 1795296728188.236,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/static-menu/page.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content shows the OPEN PDF button and helper text",
+          "status": "passed",
+          "title": "shows the OPEN PDF button and helper text",
+          "duration": 66.48299999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content leaves the preview out of the initial server HTML but includes the PDF button",
+          "status": "passed",
+          "title": "leaves the preview out of the initial server HTML but includes the PDF button",
+          "duration": 6.444200000000137,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Chrome on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Chrome on a wide screen",
+          "duration": 6.432099999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Firefox on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Firefox on a wide screen",
+          "duration": 4.350399999999809,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Edge on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Edge on a wide screen",
+          "duration": 4.030300000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Safari on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Safari on a wide screen",
+          "duration": 3.0835000000001855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Chrome on iOS on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Chrome on iOS on a wide screen",
+          "duration": 3.1749999999999545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for Android Chrome on a wide screen on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for Android Chrome on a wide screen on a wide screen",
+          "duration": 2.959799999999859,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview rule for an unrecognized browser without a Safari marker on a wide screen",
+          "status": "passed",
+          "title": "applies the preview rule for an unrecognized browser without a Safari marker on a wide screen",
+          "duration": 3.2468999999998687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview size rule at 390px",
+          "status": "passed",
+          "title": "applies the preview size rule at 390px",
+          "duration": 2.1540999999999713,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview size rule at 639px",
+          "status": "passed",
+          "title": "applies the preview size rule at 639px",
+          "duration": 2.322499999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content applies the preview size rule at 640px",
+          "status": "passed",
+          "title": "applies the preview size rule at 640px",
+          "duration": 2.856999999999971,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu PDF content"
+          ],
+          "fullName": "static menu PDF content keeps the preview hidden in Safari even when the screen is exactly 640px wide",
+          "status": "passed",
+          "title": "keeps the preview hidden in Safari even when the screen is exactly 640px wide",
+          "duration": 1.975400000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296722943,
+      "endTime": 1795296723051.9753,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/static-menu/static-menu-content.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "static menu preview eligibility"
+          ],
+          "fullName": "static menu preview eligibility hydrates the server fallback before enabling the desktop preview",
+          "status": "passed",
+          "title": "hydrates the server fallback before enabling the desktop preview",
+          "duration": 27.47550000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu preview eligibility"
+          ],
+          "fullName": "static menu preview eligibility mounts and unmounts the preview at the 640px breakpoint",
+          "status": "passed",
+          "title": "mounts and unmounts the preview at the 640px breakpoint",
+          "duration": 55.738200000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "static menu preview eligibility"
+          ],
+          "fullName": "static menu preview eligibility keeps the PDF link available in Safari without mounting the preview",
+          "status": "passed",
+          "title": "keeps the PDF link available in Safari without mounting the preview",
+          "duration": 3.9121999999999844,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296726149,
+      "endTime": 1795296726235.912,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/static-menu/static-menu-content.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf redirects to the bundled PDF when no upload exists",
+          "status": "passed",
+          "title": "redirects to the bundled PDF when no upload exists",
+          "duration": 13.369999999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf supports the fallback redirect for HEAD requests",
+          "status": "passed",
+          "title": "supports the fallback redirect for HEAD requests",
+          "duration": 0.4795000000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf retrieves the current published PDF from storage",
+          "status": "passed",
+          "title": "retrieves the current published PDF from storage",
+          "duration": 1.484499999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf fetches the PDF without caching or following redirects",
+          "status": "passed",
+          "title": "fetches the PDF without caching or following redirects",
+          "duration": 1.040900000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf uses headers compatible with inline browser PDF viewing",
+          "status": "passed",
+          "title": "uses headers compatible with inline browser PDF viewing",
+          "duration": 0.38409999999998945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf disables caching and MIME-type sniffing",
+          "status": "passed",
+          "title": "disables caching and MIME-type sniffing",
+          "duration": 0.33850000000001046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf forwards supported PDF response headers",
+          "status": "passed",
+          "title": "forwards supported PDF response headers",
+          "duration": 0.3009000000000128,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf does not forward encoded upstream content length",
+          "status": "passed",
+          "title": "does not forward encoded upstream content length",
+          "duration": 0.240099999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf forwards Range headers to the storage service",
+          "status": "passed",
+          "title": "forwards Range headers to the storage service",
+          "duration": 0.42500000000001137,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf preserves successful partial-content responses",
+          "status": "passed",
+          "title": "preserves successful partial-content responses",
+          "duration": 0.31520000000000437,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf preserves unsatisfiable range responses",
+          "status": "passed",
+          "title": "preserves unsatisfiable range responses",
+          "duration": 0.19839999999999236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf uses HEAD when the client requests PDF metadata",
+          "status": "passed",
+          "title": "uses HEAD when the client requests PDF metadata",
+          "duration": 0.26780000000002246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns PDF metadata on successful HEAD requests",
+          "status": "passed",
+          "title": "returns PDF metadata on successful HEAD requests",
+          "duration": 0.20250000000001478,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/other/menu.pdf",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/other/menu.pdf",
+          "duration": 0.20529999999999404,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/menu/../secret.pdf",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/menu/../secret.pdf",
+          "duration": 0.12770000000000437,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/menu//invalid.pdf",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/menu//invalid.pdf",
+          "duration": 0.11299999999999955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/menu/file.txt",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/menu/file.txt",
+          "duration": 0.11320000000000618,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/menu/FILE.PDF",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/menu/FILE.PDF",
+          "duration": 0.10930000000001883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key https://other.example/menu.pdf",
+          "status": "passed",
+          "title": "rejects unsafe storage key https://other.example/menu.pdf",
+          "duration": 0.08689999999998577,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf rejects unsafe storage key documents/menu/file.pdf?token=secret",
+          "status": "passed",
+          "title": "rejects unsafe storage key documents/menu/file.pdf?token=secret",
+          "duration": 0.08680000000001087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns 503 when the current-menu query fails",
+          "status": "passed",
+          "title": "returns 503 when the current-menu query fails",
+          "duration": 0.23980000000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns 503 when fetching the PDF fails",
+          "status": "passed",
+          "title": "returns 503 when fetching the PDF fails",
+          "duration": 0.18530000000001223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns 503 when storage reports a missing PDF",
+          "status": "passed",
+          "title": "returns 503 when storage reports a missing PDF",
+          "duration": 0.27410000000000423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns 503 when storage returns no PDF body",
+          "status": "passed",
+          "title": "returns 503 when storage returns no PDF body",
+          "duration": 0.13280000000000314,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns a bodyless service error for failed HEAD requests",
+          "status": "passed",
+          "title": "returns a bodyless service error for failed HEAD requests",
+          "duration": 0.12749999999999773,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "/api/menu/pdf"
+          ],
+          "fullName": "/api/menu/pdf returns plain text and no-store on service errors",
+          "status": "passed",
+          "title": "returns plain text and no-store on service errors",
+          "duration": 0.12280000000001223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736241,
+      "endTime": 1795296736262.1274,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/menu/pdf/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses uses the same effective rules on list and fresh single-item reads after Dashboard changes",
+          "status": "passed",
+          "title": "uses the same effective rules on list and fresh single-item reads after Dashboard changes",
+          "duration": 15.423599999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses queries all archived states and preserves archived items with reasons",
+          "status": "passed",
+          "title": "queries all archived states and preserves archived items with reasons",
+          "duration": 1.0506000000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses reads all pages without filtering out location-unavailable items",
+          "status": "passed",
+          "title": "reads all pages without filtering out location-unavailable items",
+          "duration": 0.43880000000001473,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses reflects the next API-exposed change without an admin save or deployment",
+          "status": "passed",
+          "title": "reflects the next API-exposed change without an admin save or deployment",
+          "duration": 0.47629999999998063,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses returns identical availability on fresh single-item reads for customizer openings",
+          "status": "passed",
+          "title": "returns identical availability on fresh single-item reads for customizer openings",
+          "duration": 0.855700000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "products availability responses"
+          ],
+          "fullName": "products availability responses never caches a failed availability read",
+          "status": "passed",
+          "title": "never caches a failed availability read",
+          "duration": 2.337799999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736451,
+      "endTime": 1795296736472.338,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/square/products/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability defaults to all locations and respects explicit presence/absence",
+          "status": "passed",
+          "title": "defaults to all locations and respects explicit presence/absence",
+          "duration": 1.0708999999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability retains archived items for admin but hides them publicly",
+          "status": "passed",
+          "title": "retains archived items for admin but hides them publicly",
+          "duration": 1.1037000000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability retains absent items for admin but hides them publicly",
+          "status": "passed",
+          "title": "retains absent items for admin but hides them publicly",
+          "duration": 0.19130000000001246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability retains all sizes sold out items for admin but hides them publicly",
+          "status": "passed",
+          "title": "retains all sizes sold out items for admin but hides them publicly",
+          "duration": 0.1862000000000137,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability keeps a drink with one remaining size and uses that size's price and ID",
+          "status": "passed",
+          "title": "keeps a drink with one remaining size and uses that size's price and ID",
+          "duration": 0.6186999999999898,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability excludes sizes absent from this location and ignores other locations' sold-out flags",
+          "status": "passed",
+          "title": "excludes sizes absent from this location and ignores other locations' sold-out flags",
+          "duration": 0.1927000000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability checks sold-out flags without inventory tracking and honors only a valid expired reset",
+          "status": "passed",
+          "title": "checks sold-out flags without inventory tracking and honors only a valid expired reset",
+          "duration": 0.1710999999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability applies hidden_online=false with per-drink override YES",
+          "status": "passed",
+          "title": "applies hidden_online=false with per-drink override YES",
+          "duration": 0.15809999999999036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability applies hidden_online=true with per-drink override NO",
+          "status": "passed",
+          "title": "applies hidden_online=true with per-drink override NO",
+          "duration": 0.10409999999998831,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability applies hidden_online=true with per-drink override NOT_SET",
+          "status": "passed",
+          "title": "applies hidden_online=true with per-drink override NOT_SET",
+          "duration": 0.11889999999999645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability applies hidden_online=false with per-drink override NOT_SET",
+          "status": "passed",
+          "title": "applies hidden_online=false with per-drink override NOT_SET",
+          "duration": 0.07220000000000937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability does not let a visibility override undo a location's sold-out flag",
+          "status": "passed",
+          "title": "does not let a visibility override undo a location's sold-out flag",
+          "duration": 0.15520000000000778,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability does not leak a shared option's per-drink visibility override to other drinks",
+          "status": "passed",
+          "title": "does not leak a shared option's per-drink visibility override to other drinks",
+          "duration": 0.102800000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability uses the group defaults only when both per-drink bounds are unset",
+          "status": "passed",
+          "title": "uses the group defaults only when both per-drink bounds are unset",
+          "duration": 0.12250000000000227,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability blocks impossible effective required groups and gives admin a reason",
+          "status": "passed",
+          "title": "blocks impossible effective required groups and gives admin a reason",
+          "duration": 0.18769999999997822,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability does not block disabled groups or guess requiredness from SINGLE",
+          "status": "passed",
+          "title": "does not block disabled groups or guess requiredness from SINGLE",
+          "duration": 0.10060000000001423,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability ignores legacy item online publication flags",
+          "status": "passed",
+          "title": "ignores legacy item online publication flags",
+          "duration": 0.051400000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location availability"
+          ],
+          "fullName": "Square location availability fails closed when a linked group or availability snapshot is missing",
+          "status": "passed",
+          "title": "fails closed when a linked group or availability snapshot is missing",
+          "duration": 0.06870000000000687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296743360,
+      "endTime": 1795296743365.0686,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/catalog-availability.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects the size of another drink even when that drink accepts the same modifiers",
+          "status": "passed",
+          "title": "rejects the size of another drink even when that drink accepts the same modifiers",
+          "duration": 2.2169999999999845,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects unrelated options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects unrelated options as INVALID_OPTIONS",
+          "duration": 0.40680000000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects disabled options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects disabled options as INVALID_OPTIONS",
+          "duration": 0.1851000000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects hidden options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects hidden options as INVALID_OPTIONS",
+          "duration": 0.1886000000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects too few available options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects too few available options as INVALID_OPTIONS",
+          "duration": 0.22399999999998954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects quantities options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects quantities options as INVALID_OPTIONS",
+          "duration": 0.1373999999999853,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects text options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects text options as INVALID_OPTIONS",
+          "duration": 0.10869999999999891,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects nested options as INVALID_OPTIONS",
+          "status": "passed",
+          "title": "rejects nested options as INVALID_OPTIONS",
+          "duration": 0.12250000000000227,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog applies fresh item overrides and permits a disabled group only with no selections",
+          "status": "passed",
+          "title": "applies fresh item overrides and permits a disabled group only with no selections",
+          "duration": 0.4865000000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog accepts available items and fetches new Square data on every call",
+          "status": "passed",
+          "title": "accepts available items and fetches new Square data on every call",
+          "duration": 0.257000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects archived with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects archived with the affected line's variation ID",
+          "duration": 0.16270000000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects item absent with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects item absent with the affected line's variation ID",
+          "duration": 0.08199999999999363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects size absent with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects size absent with the affected line's variation ID",
+          "duration": 0.06970000000001164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects size sold out with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects size sold out with the affected line's variation ID",
+          "duration": 0.0741000000000156,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects option sold out with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects option sold out with the affected line's variation ID",
+          "duration": 0.08199999999999363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects item deleted with the affected line's variation ID",
+          "status": "passed",
+          "title": "rejects item deleted with the affected line's variation ID",
+          "duration": 0.06110000000001037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog reports all affected variation IDs without flagging an available sibling",
+          "status": "passed",
+          "title": "reports all affected variation IDs without flagging an available sibling",
+          "duration": 0.09090000000000487,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog accepts expired sold-out sizes",
+          "status": "passed",
+          "title": "accepts expired sold-out sizes",
+          "duration": 0.08230000000000359,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects a selected option removed from Square as invalid",
+          "status": "passed",
+          "title": "rejects a selected option removed from Square as invalid",
+          "duration": 0.06749999999999545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects selections [] that fail effective group rules",
+          "status": "passed",
+          "title": "rejects selections [] that fail effective group rules",
+          "duration": 0.07139999999998281,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects selections [ 'MOD1', 'MOD1' ] that fail effective group rules",
+          "status": "passed",
+          "title": "rejects selections [ 'MOD1', 'MOD1' ] that fail effective group rules",
+          "duration": 0.04470000000000596,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog rejects selections [ 'MOD1', 'MOD2' ] that fail effective group rules",
+          "status": "passed",
+          "title": "rejects selections [ 'MOD1', 'MOD2' ] that fail effective group rules",
+          "duration": 0.5227000000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCartAgainstCatalog"
+          ],
+          "fullName": "validateCartAgainstCatalog does not order on failure to read Square",
+          "status": "passed",
+          "title": "does not order on failure to read Square",
+          "duration": 0.7763000000000204,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742057,
+      "endTime": 1795296742063.7764,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/catalog-validation.test.ts"
+    }
+  ]
+}

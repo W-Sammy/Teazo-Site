@@ -1,0 +1,3182 @@
+{
+  "section": "03-Checkout-Payment-Links",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission keeps checkout disabled until a security token is available",
+          "status": "passed",
+          "title": "keeps checkout disabled until a security token is available",
+          "duration": 398.9592,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission disables the checkout button while a request is pending",
+          "status": "passed",
+          "title": "disables the checkout button while a request is pending",
+          "duration": 104.21580000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission ignores another user click while the checkout button is disabled",
+          "status": "passed",
+          "title": "ignores another user click while the checkout button is disabled",
+          "duration": 76.59069999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission sends the correct cart and trimmed customer details",
+          "status": "passed",
+          "title": "sends the correct cart and trimmed customer details",
+          "duration": 78.26340000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission prevents duplicate checkout requests from direct form resubmission",
+          "status": "passed",
+          "title": "prevents duplicate checkout requests from direct form resubmission",
+          "duration": 77.1230999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission rejects missing customer details before sending checkout requests",
+          "status": "passed",
+          "title": "rejects missing customer details before sending checkout requests",
+          "duration": 35.23630000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission resets the security token after an API failure and permits retry",
+          "status": "passed",
+          "title": "resets the security token after an API failure and permits retry",
+          "duration": 97.4426999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission displays network failures and resets the security token",
+          "status": "passed",
+          "title": "displays network failures and resets the security token",
+          "duration": 76.45879999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission records a successful checkout session and enters the redirecting state",
+          "status": "passed",
+          "title": "records a successful checkout session and enters the redirecting state",
+          "duration": 81.80430000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission handles an incomplete checkout response without recording an order",
+          "status": "passed",
+          "title": "handles an incomplete checkout response without recording an order",
+          "duration": 99.00410000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission prevents checkout while online ordering is paused",
+          "status": "passed",
+          "title": "prevents checkout while online ordering is paused",
+          "duration": 43.47479999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission does not display a checkout button for an empty cart",
+          "status": "passed",
+          "title": "does not display a checkout button for an empty cart",
+          "duration": 4.328100000000177,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission"
+          ],
+          "fullName": "Shopping Bag checkout submission invalidates stale ready status and indicates unavailable settings when content refresh fails on reopening",
+          "status": "passed",
+          "title": "invalidates stale ready status and indicates unavailable settings when content refresh fails on reopening",
+          "duration": 84.6278000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "store hours refresh"
+          ],
+          "fullName": "Shopping Bag checkout submission store hours refresh does not refetch store hours when only the quantity changes",
+          "status": "passed",
+          "title": "does not refetch store hours when only the quantity changes",
+          "duration": 40.11180000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "store hours refresh"
+          ],
+          "fullName": "Shopping Bag checkout submission store hours refresh refetches store hours when the bag is reopened",
+          "status": "passed",
+          "title": "refetches store hours when the bag is reopened",
+          "duration": 26.009599999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "store hours refresh"
+          ],
+          "fullName": "Shopping Bag checkout submission store hours refresh fetches store hours when the first item is added while the bag is closed",
+          "status": "passed",
+          "title": "fetches store hours when the first item is added while the bag is closed",
+          "duration": 25.351799999999912,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests prioritizes submission above all other states",
+          "status": "passed",
+          "title": "prioritizes submission above all other states",
+          "duration": 0.2941000000000713,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests prioritizes schedule loading above ordering, pickup, and security blockers",
+          "status": "passed",
+          "title": "prioritizes schedule loading above ordering, pickup, and security blockers",
+          "duration": 0.18020000000024083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests prioritizes schedule failure above ordering, pickup, and security blockers",
+          "status": "passed",
+          "title": "prioritizes schedule failure above ordering, pickup, and security blockers",
+          "duration": 0.1574000000000524,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests prioritizes ordering paused above pickup blockers and security checks",
+          "status": "passed",
+          "title": "prioritizes ordering paused above pickup blockers and security checks",
+          "duration": 0.2602999999999156,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows no pickup times available when scheduled pickup has 0 days or slots",
+          "status": "passed",
+          "title": "shows no pickup times available when scheduled pickup has 0 days or slots",
+          "duration": 0.12590000000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests does not ask customers to select a time when no scheduled times exist",
+          "status": "passed",
+          "title": "does not ask customers to select a time when no scheduled times exist",
+          "duration": 0.1354999999998654,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows select a pickup time when scheduled times exist but none is selected",
+          "status": "passed",
+          "title": "shows select a pickup time when scheduled times exist but none is selected",
+          "duration": 0.12279999999964275,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows no pickup times available when ASAP is unavailable and 0 pickup days exist",
+          "status": "passed",
+          "title": "shows no pickup times available when ASAP is unavailable and 0 pickup days exist",
+          "duration": 0.13169999999990978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows ASAP pickup unavailable when ASAP is selected but closed and scheduled days exist",
+          "status": "passed",
+          "title": "shows ASAP pickup unavailable when ASAP is selected but closed and scheduled days exist",
+          "duration": 0.13140000000021246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests prioritizes pickup blockers over security verification",
+          "status": "passed",
+          "title": "prioritizes pickup blockers over security verification",
+          "duration": 0.13639999999986685,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows security check unavailable when bot check fails or is unconfigured",
+          "status": "passed",
+          "title": "shows security check unavailable when bot check fails or is unconfigured",
+          "duration": 0.15560000000004948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows checking security when waiting for security verification token",
+          "status": "passed",
+          "title": "shows checking security when waiting for security verification token",
+          "duration": 0.14159999999992579,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout status derivation and precedence unit tests"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout status derivation and precedence unit tests shows ready state only when all blockers are clear and token is supplied",
+          "status": "passed",
+          "title": "shows ready state only when all blockers are clear and token is supplied",
+          "duration": 0.13499999999976353,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays schedule loading status with aria-busy and spinner while store hours load",
+          "status": "passed",
+          "title": "displays schedule loading status with aria-busy and spinner while store hours load",
+          "duration": 14.681499999999687,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays schedule failure status without spinner when store hours fail to load",
+          "status": "passed",
+          "title": "displays schedule failure status without spinner when store hours fail to load",
+          "duration": 25.151600000000144,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays online ordering paused status without spinner when ordering is disabled",
+          "status": "passed",
+          "title": "displays online ordering paused status without spinner when ordering is disabled",
+          "duration": 31.84349999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays no pickup times available when store is closed for ASAP and no scheduled days exist",
+          "status": "passed",
+          "title": "displays no pickup times available when store is closed for ASAP and no scheduled days exist",
+          "duration": 22.416099999999915,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays checking security with aria-busy and spinner while awaiting token",
+          "status": "passed",
+          "title": "displays checking security with aria-busy and spinner while awaiting token",
+          "duration": 25.227800000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays security check unavailable without spinner when bot check fails",
+          "status": "passed",
+          "title": "displays security check unavailable without spinner when bot check fails",
+          "duration": 47.53510000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays ready state with subtotal and enables checkout when token is supplied",
+          "status": "passed",
+          "title": "displays ready state with subtotal and enables checkout when token is supplied",
+          "duration": 41.86310000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility displays submitting state with aria-busy and spinner during submission",
+          "status": "passed",
+          "title": "displays submitting state with aria-busy and spinner during submission",
+          "duration": 86.54920000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility maintains schedule failure precedence even when security token is supplied",
+          "status": "passed",
+          "title": "maintains schedule failure precedence even when security token is supplied",
+          "duration": 58.2786000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility maintains ordering paused precedence and prevents security widget mounting",
+          "status": "passed",
+          "title": "maintains ordering paused precedence and prevents security widget mounting",
+          "duration": 32.74380000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Shopping Bag checkout submission",
+            "checkout button status UI and accessibility"
+          ],
+          "fullName": "Shopping Bag checkout submission checkout button status UI and accessibility does not repeat or alter live status announcement on price or quantity changes",
+          "status": "passed",
+          "title": "does not repeat or alter live status announcement on price or quantity changes",
+          "duration": 51.34810000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296692067,
+      "endTime": 1795296693856.3481,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/cart-drawer-checkout.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow preloading and ordinary browsing do not generate checkout tokens",
+          "status": "passed",
+          "title": "preloading and ordinary browsing do not generate checkout tokens",
+          "duration": 33.82979999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow preserves pending verification across actual Add to Bag",
+          "status": "passed",
+          "title": "preserves pending verification across actual Add to Bag",
+          "duration": 419.4423999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow preserves completed verification across actual Add to Bag",
+          "status": "passed",
+          "title": "preserves completed verification across actual Add to Bag",
+          "duration": 46.55560000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow preserves completing during add verification across actual Add to Bag",
+          "status": "passed",
+          "title": "preserves completing during add verification across actual Add to Bag",
+          "duration": 45.39879999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow preserves valid verification across repeated customizers without creating a new widget",
+          "status": "passed",
+          "title": "preserves valid verification across repeated customizers without creating a new widget",
+          "duration": 40.85499999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow includes the visible cart widget in the bag keyboard loop",
+          "status": "passed",
+          "title": "includes the visible cart widget in the bag keyboard loop",
+          "duration": 62.38040000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow keeps a widget in a closed shadow root reachable from the bag and challenge keyboard loops",
+          "status": "passed",
+          "title": "keeps a widget in a closed shadow root reachable from the bag and challenge keyboard loops",
+          "duration": 55.06280000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow keeps the cart badge aligned with its footer space after layout changes",
+          "status": "passed",
+          "title": "keeps the cart badge aligned with its footer space after layout changes",
+          "duration": 15.879500000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow removes abandoned pending work and rejects callbacks after unmount",
+          "status": "passed",
+          "title": "removes abandoned pending work and rejects callbacks after unmount",
+          "duration": 54.089300000000094,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow keeps one owner for a warm deep link, including Strict Mode remounts",
+          "status": "passed",
+          "title": "keeps one owner for a warm deep link, including Strict Mode remounts",
+          "duration": 88.87130000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow releases customization intent when navigating away",
+          "status": "passed",
+          "title": "releases customization intent when navigating away",
+          "duration": 34.07430000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow does not retain customizer intent after edit failure",
+          "status": "passed",
+          "title": "does not retain customizer intent after edit failure",
+          "duration": 61.35270000000037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow does not retain customizer intent after edit cancellation",
+          "status": "passed",
+          "title": "does not retain customizer intent after edit cancellation",
+          "duration": 58.85159999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow resumes verification when reopened store settings stop pausing orders",
+          "status": "passed",
+          "title": "resumes verification when reopened store settings stop pausing orders",
+          "duration": 85.83369999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow gives a Managed challenge its own visible dialog and keyboard scope",
+          "status": "passed",
+          "title": "gives a Managed challenge its own visible dialog and keyboard scope",
+          "duration": 88.78009999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow returns focus to the loaded customizer when its loading button disappears during a challenge: callback",
+          "status": "passed",
+          "title": "returns focus to the loaded customizer when its loading button disappears during a challenge: callback",
+          "duration": 53.83320000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow returns focus to the loaded customizer when its loading button disappears during a challenge: after-interactive-callback",
+          "status": "passed",
+          "title": "returns focus to the loaded customizer when its loading button disappears during a challenge: after-interactive-callback",
+          "duration": 50.75620000000026,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow returns focus to the loaded customizer when its loading button disappears during a challenge: error-callback",
+          "status": "passed",
+          "title": "returns focus to the loaded customizer when its loading button disappears during a challenge: error-callback",
+          "duration": 57.44439999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow returns focus to the loaded customizer when its loading button disappears during a challenge: Escape",
+          "status": "passed",
+          "title": "returns focus to the loaded customizer when its loading button disappears during a challenge: Escape",
+          "duration": 52.48459999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow returns focus to the loaded customizer when its loading button disappears during a challenge: Continue later",
+          "status": "passed",
+          "title": "returns focus to the loaded customizer when its loading button disappears during a challenge: Continue later",
+          "duration": 58.57749999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow restores the original control in the customizer when it remains available",
+          "status": "passed",
+          "title": "restores the original control in the customizer when it remains available",
+          "duration": 27.759099999999762,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow restores the original control in the bag when it remains available",
+          "status": "passed",
+          "title": "restores the original control in the bag when it remains available",
+          "duration": 36.85830000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow falls back to the bag when its original control is removed",
+          "status": "passed",
+          "title": "falls back to the bag when its original control is removed",
+          "duration": 45.146600000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow falls back to the bag when its original control is disabled",
+          "status": "passed",
+          "title": "falls back to the bag when its original control is disabled",
+          "duration": 39.98539999999957,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow rejects saved SDK callbacks after reset and token consumption",
+          "status": "passed",
+          "title": "rejects saved SDK callbacks after reset and token consumption",
+          "duration": 10.733000000000175,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow recovers from an actual failed checkout without clearing customer inputs",
+          "status": "passed",
+          "title": "recovers from an actual failed checkout without clearing customer inputs",
+          "duration": 52.32250000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow expires a completed token while the bag is closed without background refresh",
+          "status": "passed",
+          "title": "expires a completed token while the bag is closed without background refresh",
+          "duration": 63.22890000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow explains and recovers from a challenge error",
+          "status": "passed",
+          "title": "explains and recovers from a challenge error",
+          "duration": 35.77260000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow explains and recovers from a timeout error",
+          "status": "passed",
+          "title": "explains and recovers from a timeout error",
+          "duration": 35.02569999999969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow downloads the shared script again after a failed download and explicit retry",
+          "status": "passed",
+          "title": "downloads the shared script again after a failed download and explicit retry",
+          "duration": 38.356300000000374,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow expires tokens without an SDK callback, caps automatic refresh, and offers a genuine retry",
+          "status": "passed",
+          "title": "expires tokens without an SDK callback, caps automatic refresh, and offers a genuine retry",
+          "duration": 40.74189999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow shares delayed script loading independently: contact-first",
+          "status": "passed",
+          "title": "shares delayed script loading independently: contact-first",
+          "duration": 13.541799999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout security through the actual ordering flow"
+          ],
+          "fullName": "checkout security through the actual ordering flow shares delayed script loading independently: checkout-first",
+          "status": "passed",
+          "title": "shares delayed script loading independently: checkout-first",
+          "duration": 11.717200000000048,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296689298,
+      "endTime": 1795296691214.7173,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/checkout-security-integration.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle does not start checkout verification during ordinary browsing",
+          "status": "passed",
+          "title": "does not start checkout verification during ordinary browsing",
+          "duration": 30.704200000000128,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle starts verification when customization intent begins before the bag opens",
+          "status": "passed",
+          "title": "starts verification when customization intent begins before the bag opens",
+          "duration": 67.18480000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle starts verification immediately upon direct item deep link before the bag opens",
+          "status": "passed",
+          "title": "starts verification immediately upon direct item deep link before the bag opens",
+          "duration": 4.903500000000122,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle does not duplicate widgets or restart valid verification on repeated intent",
+          "status": "passed",
+          "title": "does not duplicate widgets or restart valid verification on repeated intent",
+          "duration": 17.299600000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle preserves completed verification during customizer-to-bag transition",
+          "status": "passed",
+          "title": "preserves completed verification during customizer-to-bag transition",
+          "duration": 15.263099999999895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle preserves pending verification during customizer-to-bag transition without restarting",
+          "status": "passed",
+          "title": "preserves pending verification during customizer-to-bag transition without restarting",
+          "duration": 17.403800000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle starts verification directly when customer opens a populated bag",
+          "status": "passed",
+          "title": "starts verification directly when customer opens a populated bag",
+          "duration": 7.065800000000081,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle handles token expiration and bounds auto-refresh",
+          "status": "passed",
+          "title": "handles token expiration and bounds auto-refresh",
+          "duration": 13.614700000000084,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle does not auto-refresh expired token if ordering intent was abandoned",
+          "status": "passed",
+          "title": "does not auto-refresh expired token if ordering intent was abandoned",
+          "duration": 5.903700000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle resets security token after checkout failure and allows recovery",
+          "status": "passed",
+          "title": "resets security token after checkout failure and allows recovery",
+          "duration": 6.285600000000159,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle ignores obsolete callbacks from superseded instances",
+          "status": "passed",
+          "title": "ignores obsolete callbacks from superseded instances",
+          "duration": 1.5747999999998683,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle receiving a token never submits checkout automatically",
+          "status": "passed",
+          "title": "receiving a token never submits checkout automatically",
+          "duration": 4.169800000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle does not interfere with contact form Turnstile widget",
+          "status": "passed",
+          "title": "does not interfere with contact form Turnstile widget",
+          "duration": 3.580099999999902,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout Security Verification Lifecycle"
+          ],
+          "fullName": "Checkout Security Verification Lifecycle displays accessible interactive challenge when Cloudflare Managed mode requires interaction",
+          "status": "passed",
+          "title": "displays accessible interactive challenge when Cloudflare Managed mode requires interaction",
+          "duration": 9.018199999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296718482,
+      "endTime": 1795296718686.0183,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/components/checkout-security.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership clears the matching checkout attempt and cart after confirmed payment",
+          "status": "passed",
+          "title": "clears the matching checkout attempt and cart after confirmed payment",
+          "duration": 113.70010000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership preserves checkout state when payment remains incomplete",
+          "status": "passed",
+          "title": "preserves checkout state when payment remains incomplete",
+          "duration": 4534.0937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership preserves checkout state for a canceled order",
+          "status": "passed",
+          "title": "preserves checkout state for a canceled order",
+          "duration": 12.954600000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership preserves a newer attempt and cart when an older receipt is opened",
+          "status": "passed",
+          "title": "preserves a newer attempt and cart when an older receipt is opened",
+          "duration": 30.472499999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership preserves a modified cart after the original order is paid",
+          "status": "passed",
+          "title": "preserves a modified cart after the original order is paid",
+          "duration": 15.412000000000262,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership clears the matching cart when payment becomes paid after verification retries",
+          "status": "passed",
+          "title": "clears the matching cart when payment becomes paid after verification retries",
+          "duration": 1546.2705000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Order confirmation checkout-attempt ownership"
+          ],
+          "fullName": "Order confirmation checkout-attempt ownership does not clear a cart from a legacy pending record without ownership",
+          "status": "passed",
+          "title": "does not clear a cart from a legacy pending record without ownership",
+          "duration": 15.560500000000502,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296680504,
+      "endTime": 1795296686773.5605,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/order/confirmation/page.checkout-attempt.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery creates one payment link and persists its completed result",
+          "status": "passed",
+          "title": "creates one payment link and persists its completed result",
+          "duration": 8.795800000000327,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery returns a stored link for repeated identical requests without calling Square again",
+          "status": "passed",
+          "title": "returns a stored link for repeated identical requests without calling Square again",
+          "duration": 3.7795000000000982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery rejects attempt-ID reuse with different order data",
+          "status": "passed",
+          "title": "rejects attempt-ID reuse with different order data",
+          "duration": 3.405499999999847,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery permits a genuinely different checkout with a new attempt ID",
+          "status": "passed",
+          "title": "permits a genuinely different checkout with a new attempt ID",
+          "duration": 2.760699999999815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery allows only one active Square call during concurrent requests",
+          "status": "passed",
+          "title": "allows only one active Square call during concurrent requests",
+          "duration": 3.354699999999866,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery blocks Square when D1 cannot be read",
+          "status": "passed",
+          "title": "blocks Square when D1 cannot be read",
+          "duration": 1.6154999999998836,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery blocks Square if the atomic insert fails",
+          "status": "passed",
+          "title": "blocks Square if the atomic insert fails",
+          "duration": 1.1015000000002146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery retries an uncertain Square failure with the exact original key and payload",
+          "status": "passed",
+          "title": "retries an uncertain Square failure with the exact original key and payload",
+          "duration": 3.3672999999998865,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery recovers an incomplete Square response with the same key",
+          "status": "passed",
+          "title": "recovers an incomplete Square response with the same key",
+          "duration": 2.1921000000002095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery does not lose the original payload when completing D1 fails after Square success",
+          "status": "passed",
+          "title": "does not lose the original payload when completing D1 fails after Square success",
+          "duration": 1.7791999999999462,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery does not automatically replay an old uncertain attempt",
+          "status": "passed",
+          "title": "does not automatically replay an old uncertain attempt",
+          "duration": 1.540599999999813,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery recovers a stale processing owner without changing Square request",
+          "status": "passed",
+          "title": "recovers a stale processing owner without changing Square request",
+          "duration": 63.77550000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery does not create a link if the rate limiter blocks a repeat request",
+          "status": "passed",
+          "title": "does not create a link if the rate limiter blocks a repeat request",
+          "duration": 1.1397000000001754,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery rejects a failed Turnstile token before consulting the attempt record",
+          "status": "passed",
+          "title": "rejects a failed Turnstile token before consulting the attempt record",
+          "duration": 0.5183000000001812,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery rejects invalid customer and invalid catalog options without reserving",
+          "status": "passed",
+          "title": "rejects invalid customer and invalid catalog options without reserving",
+          "duration": 2.060899999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout persistent idempotency and recovery"
+          ],
+          "fullName": "Checkout persistent idempotency and recovery returns a completed link without revalidating modified store content",
+          "status": "passed",
+          "title": "returns a completed link without revalidating modified store content",
+          "duration": 1.209100000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296728463,
+      "endTime": 1795296728566.209,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/checkout/route.duplicate-submission.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for other drink options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for other drink options",
+          "duration": 6.83809999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for duplicate options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for duplicate options",
+          "duration": 1.2278999999998632,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for too few options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for too few options",
+          "duration": 1.0736000000001695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for too many options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for too many options",
+          "duration": 0.9376999999999498,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for unrelated options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for unrelated options",
+          "duration": 0.9187999999999192,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for disabled options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for disabled options",
+          "duration": 0.821100000000115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for hidden options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for hidden options",
+          "duration": 0.7296999999998661,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for quantities options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for quantities options",
+          "duration": 0.6925000000001091,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for text options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for text options",
+          "duration": 0.7631999999998698,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout prevents Payment Link creation for nested options",
+          "status": "passed",
+          "title": "prevents Payment Link creation for nested options",
+          "duration": 0.742200000000139,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout keeps checkout returns on the preview deployment when no explicit base URL is set",
+          "status": "passed",
+          "title": "keeps checkout returns on the preview deployment when no explicit base URL is set",
+          "duration": 1.2590000000000146,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout reports missing preview URL configuration before creating a payment link",
+          "status": "passed",
+          "title": "reports missing preview URL configuration before creating a payment link",
+          "duration": 0.9283999999997832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout creates a Square pickup order and returns the payment link",
+          "status": "passed",
+          "title": "creates a Square pickup order and returns the payment link",
+          "duration": 0.8048000000003412,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout rejects a newly unavailable cart before creating any Payment Link",
+          "status": "passed",
+          "title": "rejects a newly unavailable cart before creating any Payment Link",
+          "duration": 0.6256000000003041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout does not create a Payment Link when Square catalog validation cannot run",
+          "status": "passed",
+          "title": "does not create a Payment Link when Square catalog validation cannot run",
+          "duration": 0.6929000000000087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout refuses orders while online ordering is paused, without contacting Square",
+          "status": "passed",
+          "title": "refuses orders while online ordering is paused, without contacting Square",
+          "duration": 0.47060000000010405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout fails closed with 503 when website content storage is unavailable, without contacting Square",
+          "status": "passed",
+          "title": "fails closed with 503 when website content storage is unavailable, without contacting Square",
+          "duration": 0.4274999999997817,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout accepts a pickup scheduled days ahead",
+          "status": "passed",
+          "title": "accepts a pickup scheduled days ahead",
+          "duration": 1.0037999999999556,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout refuses a scheduled time between the 15-minute marks without contacting Square",
+          "status": "passed",
+          "title": "refuses a scheduled time between the 15-minute marks without contacting Square",
+          "duration": 0.6201000000000931,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout refuses a pickup on a closed day without contacting Square",
+          "status": "passed",
+          "title": "refuses a pickup on a closed day without contacting Square",
+          "duration": 0.8348000000000866,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout checks the bot token with the visitor's IP",
+          "status": "passed",
+          "title": "checks the bot token with the visitor's IP",
+          "duration": 1.627100000000155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout refuses a missing or failed bot check without contacting Square",
+          "status": "passed",
+          "title": "refuses a missing or failed bot check without contacting Square",
+          "duration": 0.4515999999998712,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout answers 503 when the bot check itself can't run",
+          "status": "passed",
+          "title": "answers 503 when the bot check itself can't run",
+          "duration": 0.3049999999998363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout answers 429 past the rate limit, without contacting Square",
+          "status": "passed",
+          "title": "answers 429 past the rate limit, without contacting Square",
+          "duration": 0.40599999999994907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout doesn't count requests that fail the bot check against the rate limit",
+          "status": "passed",
+          "title": "doesn't count requests that fail the bot check against the rate limit",
+          "duration": 0.2602999999999156,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/checkout"
+          ],
+          "fullName": "POST /api/checkout refuses a malformed body without contacting Square",
+          "status": "passed",
+          "title": "refuses a malformed body without contacting Square",
+          "duration": 0.2645999999999731,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296735100,
+      "endTime": 1795296735125.406,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/checkout/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery clears the matching cart after recovering a paid order",
+          "status": "passed",
+          "title": "clears the matching cart after recovering a paid order",
+          "duration": 29.602800000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery preserves the bag when Square reports an unpaid order",
+          "status": "passed",
+          "title": "preserves the bag when Square reports an unpaid order",
+          "duration": 15.21609999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery preserves cart items but clears a canceled pending order",
+          "status": "passed",
+          "title": "preserves cart items but clears a canceled pending order",
+          "duration": 77.63520000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery refuses automatic clearing for legacy pending orders without ownership",
+          "status": "passed",
+          "title": "refuses automatic clearing for legacy pending orders without ownership",
+          "duration": 78.86040000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery preserves a cart whose revision changed before recovery",
+          "status": "passed",
+          "title": "preserves a cart whose revision changed before recovery",
+          "duration": 79.11509999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery preserves items added while the Square status request is pending",
+          "status": "passed",
+          "title": "preserves items added while the Square status request is pending",
+          "duration": 92.98590000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "CartProvider checkout recovery"
+          ],
+          "fullName": "CartProvider checkout recovery does not remove a newer pending order when an older request finishes",
+          "status": "passed",
+          "title": "does not remove a newer pending order when an older request finishes",
+          "duration": 2.161399999999958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296710291,
+      "endTime": 1795296710666.1614,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/context/cart-context.checkout-recovery.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership creates a persistent revision for a cart",
+          "status": "passed",
+          "title": "creates a persistent revision for a cart",
+          "duration": 1.7701999999999316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership reuses the existing cart revision",
+          "status": "passed",
+          "title": "reuses the existing cart revision",
+          "duration": 0.28089999999997417,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership advances the revision after a cart modification",
+          "status": "passed",
+          "title": "advances the revision after a cart modification",
+          "duration": 0.5186000000001059,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership records the revision captured at checkout",
+          "status": "passed",
+          "title": "records the revision captured at checkout",
+          "duration": 0.4957999999999174,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership allows a paid order to match its unchanged cart",
+          "status": "passed",
+          "title": "allows a paid order to match its unchanged cart",
+          "duration": 0.17340000000012878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership refuses to clear a cart modified after checkout",
+          "status": "passed",
+          "title": "refuses to clear a cart modified after checkout",
+          "duration": 0.14550000000008367,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership refuses an old paid order with a different order ID",
+          "status": "passed",
+          "title": "refuses an old paid order with a different order ID",
+          "duration": 0.12380000000007385,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership does not authorize clearing a legacy record without a revision",
+          "status": "passed",
+          "title": "does not authorize clearing a legacy record without a revision",
+          "duration": 0.11200000000008004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership does not authorize clearing when revision data is missing",
+          "status": "passed",
+          "title": "does not authorize clearing when revision data is missing",
+          "duration": 0.08220000000005712,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership protects a new cart with identical items",
+          "status": "passed",
+          "title": "protects a new cart with identical items",
+          "duration": 0.17410000000018044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership clears only the matching pending order",
+          "status": "passed",
+          "title": "clears only the matching pending order",
+          "duration": 0.20910000000003492,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Cart payment ownership"
+          ],
+          "fullName": "Cart payment ownership rejects malformed stored checkout data",
+          "status": "passed",
+          "title": "rejects malformed stored checkout data",
+          "duration": 0.1391999999998461,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746491,
+      "endTime": 1795296746495.209,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/cart-payment-ownership.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle creates and stores an ID for a new checkout",
+          "status": "passed",
+          "title": "creates and stores an ID for a new checkout",
+          "duration": 1.861699999999928,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle reuses the same ID for an unchanged checkout",
+          "status": "passed",
+          "title": "reuses the same ID for an unchanged checkout",
+          "duration": 0.2719999999999345,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle reuses an attempt after a simulated page reload",
+          "status": "passed",
+          "title": "reuses an attempt after a simulated page reload",
+          "duration": 0.17390000000000327,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle creates a new ID when checkout contents change",
+          "status": "passed",
+          "title": "creates a new ID when checkout contents change",
+          "duration": 0.20250000000010004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle does not include a fresh security token in attempt identity",
+          "status": "passed",
+          "title": "does not include a fresh security token in attempt identity",
+          "duration": 0.14830000000006294,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle associates the matching Square order with the attempt",
+          "status": "passed",
+          "title": "associates the matching Square order with the attempt",
+          "duration": 0.7461000000000695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle does not associate an order with a different attempt",
+          "status": "passed",
+          "title": "does not associate an order with a different attempt",
+          "duration": 0.1937000000000353,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle clears the attempt after its matching order is paid",
+          "status": "passed",
+          "title": "clears the attempt after its matching order is paid",
+          "duration": 0.21520000000009532,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle preserves the attempt when a different order is confirmed",
+          "status": "passed",
+          "title": "preserves the attempt when a different order is confirmed",
+          "duration": 0.19190000000003238,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle prevents an old receipt from clearing a newer attempt",
+          "status": "passed",
+          "title": "prevents an old receipt from clearing a newer attempt",
+          "duration": 0.2132000000001426,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle generates a fresh ID for identical items after payment",
+          "status": "passed",
+          "title": "generates a fresh ID for identical items after payment",
+          "duration": 0.28530000000000655,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt storage lifecycle"
+          ],
+          "fullName": "Checkout attempt storage lifecycle does not clear an attempt without a Square order ID",
+          "status": "passed",
+          "title": "does not clear an attempt without a Square order ID",
+          "duration": 0.09260000000017499,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296745260,
+      "endTime": 1795296745264.2854,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/checkout-attempt-storage.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"4155550199\" as +14155550199",
+          "status": "passed",
+          "title": "reads \"4155550199\" as +14155550199",
+          "duration": 1.053200000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"(415) 555-0199\" as +14155550199",
+          "status": "passed",
+          "title": "reads \"(415) 555-0199\" as +14155550199",
+          "duration": 0.1490000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"415.555.0199\" as +14155550199",
+          "status": "passed",
+          "title": "reads \"415.555.0199\" as +14155550199",
+          "duration": 0.07280000000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \" 1 415 555 0199 \" as +14155550199",
+          "status": "passed",
+          "title": "reads \" 1 415 555 0199 \" as +14155550199",
+          "duration": 0.0648999999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"+1 (415) 555-0199\" as +14155550199",
+          "status": "passed",
+          "title": "reads \"+1 (415) 555-0199\" as +14155550199",
+          "duration": 0.061599999999998545,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"+44 20 7946 0958\" as +442079460958",
+          "status": "passed",
+          "title": "reads \"+44 20 7946 0958\" as +442079460958",
+          "duration": 0.07290000000000418,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone reads \"+52 55 1234 5678\" as +525512345678",
+          "status": "passed",
+          "title": "reads \"+52 55 1234 5678\" as +525512345678",
+          "duration": 0.07110000000000127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses too short",
+          "status": "passed",
+          "title": "refuses too short",
+          "duration": 0.0882000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses 11 digits not starting with 1",
+          "status": "passed",
+          "title": "refuses 11 digits not starting with 1",
+          "duration": 0.06960000000000832,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses area code starting with 0",
+          "status": "passed",
+          "title": "refuses area code starting with 0",
+          "duration": 0.0782999999999845,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses exchange starting with 1",
+          "status": "passed",
+          "title": "refuses exchange starting with 1",
+          "duration": 0.04720000000000368,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses international without a plus",
+          "status": "passed",
+          "title": "refuses international without a plus",
+          "duration": 0.03639999999998622,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses +1 with too many digits",
+          "status": "passed",
+          "title": "refuses +1 with too many digits",
+          "duration": 0.030200000000007776,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses more than 15 digits",
+          "status": "passed",
+          "title": "refuses more than 15 digits",
+          "duration": 0.057999999999992724,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses letters",
+          "status": "passed",
+          "title": "refuses letters",
+          "duration": 0.04050000000000864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses empty",
+          "status": "passed",
+          "title": "refuses empty",
+          "duration": 0.035599999999988086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "toE164Phone"
+          ],
+          "fullName": "toE164Phone refuses values that are not strings",
+          "status": "passed",
+          "title": "refuses values that are not strings",
+          "duration": 0.0630000000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody accepts a valid ASAP order and returns the phone in E.164",
+          "status": "passed",
+          "title": "accepts a valid ASAP order and returns the phone in E.164",
+          "duration": 0.7048000000000059,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody preserves and trims a valid attempt UUID",
+          "status": "passed",
+          "title": "preserves and trims a valid attempt UUID",
+          "duration": 0.15610000000000923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects missing checkout attempt ID",
+          "status": "passed",
+          "title": "rejects missing checkout attempt ID",
+          "duration": 0.09430000000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects null checkout attempt ID",
+          "status": "passed",
+          "title": "rejects null checkout attempt ID",
+          "duration": 0.037599999999997635,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects empty checkout attempt ID",
+          "status": "passed",
+          "title": "rejects empty checkout attempt ID",
+          "duration": 0.031999999999982265,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects whitespace checkout attempt ID",
+          "status": "passed",
+          "title": "rejects whitespace checkout attempt ID",
+          "duration": 0.039299999999997226,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects not a UUID checkout attempt ID",
+          "status": "passed",
+          "title": "rejects not a UUID checkout attempt ID",
+          "duration": 0.029899999999997817,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects invalid version checkout attempt ID",
+          "status": "passed",
+          "title": "rejects invalid version checkout attempt ID",
+          "duration": 0.028999999999996362,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects invalid variant checkout attempt ID",
+          "status": "passed",
+          "title": "rejects invalid variant checkout attempt ID",
+          "duration": 0.03130000000001587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody rejects number checkout attempt ID",
+          "status": "passed",
+          "title": "rejects number checkout attempt ID",
+          "duration": 0.03119999999998413,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses missing parent item",
+          "status": "passed",
+          "title": "refuses missing parent item",
+          "duration": 0.11760000000001014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses blank parent item",
+          "status": "passed",
+          "title": "refuses blank parent item",
+          "duration": 0.04169999999999163,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses missing size",
+          "status": "passed",
+          "title": "refuses missing size",
+          "duration": 0.046499999999980446,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses no customer",
+          "status": "passed",
+          "title": "refuses no customer",
+          "duration": 0.03260000000000218,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a bad email",
+          "status": "passed",
+          "title": "refuses a bad email",
+          "duration": 0.03180000000000405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a bad phone",
+          "status": "passed",
+          "title": "refuses a bad phone",
+          "duration": 0.035699999999991405,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a long name",
+          "status": "passed",
+          "title": "refuses a long name",
+          "duration": 0.04460000000000264,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses an unknown timing type",
+          "status": "passed",
+          "title": "refuses an unknown timing type",
+          "duration": 0.033999999999991815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a scheduled order with no time",
+          "status": "passed",
+          "title": "refuses a scheduled order with no time",
+          "duration": 0.037499999999994316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a scheduled order with a bad time",
+          "status": "passed",
+          "title": "refuses a scheduled order with a bad time",
+          "duration": 0.07910000000001105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses an empty cart",
+          "status": "passed",
+          "title": "refuses an empty cart",
+          "duration": 0.04239999999998645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses quantity 0",
+          "status": "passed",
+          "title": "refuses quantity 0",
+          "duration": 0.036100000000004684,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses quantity 51",
+          "status": "passed",
+          "title": "refuses quantity 51",
+          "duration": 0.02940000000000964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a fractional quantity",
+          "status": "passed",
+          "title": "refuses a fractional quantity",
+          "duration": 0.02760000000000673,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a note over 150 characters",
+          "status": "passed",
+          "title": "refuses a note over 150 characters",
+          "duration": 0.5150000000000148,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses blank option IDs",
+          "status": "passed",
+          "title": "refuses blank option IDs",
+          "duration": 0.091700000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses more than 50 lines",
+          "status": "passed",
+          "title": "refuses more than 50 lines",
+          "duration": 0.03829999999999245,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "validateCheckoutRequestBody"
+          ],
+          "fullName": "validateCheckoutRequestBody refuses a body that is not an object",
+          "status": "passed",
+          "title": "refuses a body that is not an object",
+          "duration": 0.026900000000011914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296743184,
+      "endTime": 1795296743189.0918,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/checkout-validators.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries atomically reserves a new checkout attempt",
+          "status": "passed",
+          "title": "atomically reserves a new checkout attempt",
+          "duration": 1.869100000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries returns null when another request reserved the attempt",
+          "status": "passed",
+          "title": "returns null when another request reserved the attempt",
+          "duration": 0.17739999999997735,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries reads an existing attempt by its identifier",
+          "status": "passed",
+          "title": "reads an existing attempt by its identifier",
+          "duration": 0.3194000000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries allows only a reserved attempt to enter processing",
+          "status": "passed",
+          "title": "allows only a reserved attempt to enter processing",
+          "duration": 0.26079999999998904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries rejects a competing processing claim",
+          "status": "passed",
+          "title": "rejects a competing processing claim",
+          "duration": 0.20130000000000337,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries atomically reclaims an uncertain attempt without changing its Square request",
+          "status": "passed",
+          "title": "atomically reclaims an uncertain attempt without changing its Square request",
+          "duration": 0.30460000000002196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries reclaims stalled processing only if the original owner and timestamp still match",
+          "status": "passed",
+          "title": "reclaims stalled processing only if the original owner and timestamp still match",
+          "duration": 0.31289999999998486,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries rejects recovery if the original claim has no owner or timestamp",
+          "status": "passed",
+          "title": "rejects recovery if the original claim has no owner or timestamp",
+          "duration": 0.17300000000000182,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries records a completed checkout for the processing owner",
+          "status": "passed",
+          "title": "records a completed checkout for the processing owner",
+          "duration": 0.2501000000000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries does not complete an attempt owned by another request",
+          "status": "passed",
+          "title": "does not complete an attempt owned by another request",
+          "duration": 0.16089999999999804,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries preserves uncertain Square outcomes without releasing the attempt",
+          "status": "passed",
+          "title": "preserves uncertain Square outcomes without releasing the attempt",
+          "duration": 0.25319999999999254,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries does not let a different owner mark an attempt uncertain",
+          "status": "passed",
+          "title": "does not let a different owner mark an attempt uncertain",
+          "duration": 0.08310000000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries propagates D1 reservation failures rather than claiming success",
+          "status": "passed",
+          "title": "propagates D1 reservation failures rather than claiming success",
+          "duration": 0.733300000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Checkout attempt D1 queries"
+          ],
+          "fullName": "Checkout attempt D1 queries propagates failures during processing transitions",
+          "status": "passed",
+          "title": "propagates failures during processing transitions",
+          "duration": 0.1449000000000069,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742864,
+      "endTime": 1795296742869.145,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/checkout-attempts.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "checkout rate limit"
+          ],
+          "fullName": "checkout rate limit allows 10 attempts in 10 minutes and refuses the 11th",
+          "status": "passed",
+          "title": "allows 10 attempts in 10 minutes and refuses the 11th",
+          "duration": 13.966200000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout rate limit"
+          ],
+          "fullName": "checkout rate limit counts each visitor separately",
+          "status": "passed",
+          "title": "counts each visitor separately",
+          "duration": 11.641899999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout rate limit"
+          ],
+          "fullName": "checkout rate limit starts a new window once 10 minutes have passed",
+          "status": "passed",
+          "title": "starts a new window once 10 minutes have passed",
+          "duration": 11.410600000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout rate limit"
+          ],
+          "fullName": "checkout rate limit stores a hash, never the IP itself",
+          "status": "passed",
+          "title": "stores a hash, never the IP itself",
+          "duration": 11.565399999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "checkout rate limit"
+          ],
+          "fullName": "checkout rate limit allows the request when D1 is not configured or fails",
+          "status": "passed",
+          "title": "allows the request when D1 is not configured or fails",
+          "duration": 12.205899999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730306,
+      "endTime": 1795296730367.2058,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/rate-limit.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery shares a cold-start lookup across concurrent checkouts and caches the result",
+          "status": "passed",
+          "title": "shares a cold-start lookup across concurrent checkouts and caches the result",
+          "duration": 1.7690999999999804,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery lets concurrent callers retry after a failed lookup",
+          "status": "passed",
+          "title": "lets concurrent callers retry after a failed lookup",
+          "duration": 0.42509999999998627,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery retries when the account initially has no locations",
+          "status": "passed",
+          "title": "retries when the account initially has no locations",
+          "duration": 0.8341000000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery prefers the configured location even while discovery is pending",
+          "status": "passed",
+          "title": "prefers the configured location even while discovery is pending",
+          "duration": 0.19769999999999754,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery keeps an older lookup from repopulating a cleared cache or clearing a newer lookup",
+          "status": "passed",
+          "title": "keeps an older lookup from repopulating a cleared cache or clearing a newer lookup",
+          "duration": 0.20980000000000132,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery requires an explicit location ID in production when unset or blank",
+          "status": "passed",
+          "title": "requires an explicit location ID in production when unset or blank",
+          "duration": 0.53449999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square location discovery"
+          ],
+          "fullName": "Square location discovery uses the explicit location ID in production without invoking discovery",
+          "status": "passed",
+          "title": "uses the explicit location ID in production without invoking discovery",
+          "duration": 0.21809999999999263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296743528,
+      "endTime": 1795296743532.218,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/square-location.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment requests an API version that exposes nesting and preserves nested relationships through the SDK",
+          "status": "passed",
+          "title": "requests an API version that exposes nesting and preserves nested relationships through the SDK",
+          "duration": 2876.3151000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment allows catalog images from both Square environments",
+          "status": "passed",
+          "title": "allows catalog images from both Square environments",
+          "duration": 0.5521000000003369,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment uses undefined for sandbox location discovery and checkout",
+          "status": "passed",
+          "title": "uses undefined for sandbox location discovery and checkout",
+          "duration": 6.80580000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment uses sandbox for sandbox location discovery and checkout",
+          "status": "passed",
+          "title": "uses sandbox for sandbox location discovery and checkout",
+          "duration": 1.604200000000219,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment requires an explicit location ID in production",
+          "status": "passed",
+          "title": "requires an explicit location ID in production",
+          "duration": 1.3006000000000313,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment uses production endpoint and configured location ID for checkout",
+          "status": "passed",
+          "title": "uses production endpoint and configured location ID for checkout",
+          "duration": 1.0585999999998421,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"\" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"\" at startup, client initialization and database configuration",
+          "duration": 5.730099999999766,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"   \" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"   \" at startup, client initialization and database configuration",
+          "duration": 0.7739000000001397,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"staging\" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"staging\" at startup, client initialization and database configuration",
+          "duration": 0.787300000000414,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"Sandbox\" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"Sandbox\" at startup, client initialization and database configuration",
+          "duration": 0.9010000000002947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"PRODUCTION\" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"PRODUCTION\" at startup, client initialization and database configuration",
+          "duration": 0.6502999999997883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \" sandbox \" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \" sandbox \" at startup, client initialization and database configuration",
+          "duration": 0.7002999999999702,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment rejects invalid environment \"https://connect.squareup.com\" at startup, client initialization and database configuration",
+          "status": "passed",
+          "title": "rejects invalid environment \"https://connect.squareup.com\" at startup, client initialization and database configuration",
+          "duration": 0.6530000000002474,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square environment"
+          ],
+          "fullName": "Square environment still requires an access token",
+          "status": "passed",
+          "title": "still requires an access token",
+          "duration": 0.4802999999997155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296684762,
+      "endTime": 1795296687660.4802,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/square.test.ts"
+    }
+  ]
+}

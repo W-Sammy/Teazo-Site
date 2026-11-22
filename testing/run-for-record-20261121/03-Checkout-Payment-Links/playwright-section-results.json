@@ -1,0 +1,27 @@
+[
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "validates checkout customer details",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "shows rejected-order feedback",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "allows retry after checkout service failure",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "disables checkout while awaiting a response",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/customizer-cart-checkout.spec.ts",
+    "test": "navigates to a mocked successful checkout session",
+    "status": "expected"
+  }
+]

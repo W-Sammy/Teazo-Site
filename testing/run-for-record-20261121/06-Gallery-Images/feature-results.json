@@ -1,0 +1,2093 @@
+{
+  "section": "06-Gallery-Images",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page renders published Gallery images with correct URLs and alternative text",
+          "status": "passed",
+          "title": "renders published Gallery images with correct URLs and alternative text",
+          "duration": 66.76890000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page renders multiple images with their correct captions",
+          "status": "passed",
+          "title": "renders multiple images with their correct captions",
+          "duration": 3.736499999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page does not render a caption when none is provided",
+          "status": "passed",
+          "title": "does not render a caption when none is provided",
+          "duration": 2.117300000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page displays placeholder images when the published Gallery is empty",
+          "status": "passed",
+          "title": "displays placeholder images when the published Gallery is empty",
+          "duration": 4.169599999999946,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page displays placeholders when Gallery retrieval is unavailable",
+          "status": "passed",
+          "title": "displays placeholders when Gallery retrieval is unavailable",
+          "duration": 2.6376999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public Gallery page"
+          ],
+          "fullName": "Public Gallery page uses the configured website logo",
+          "status": "passed",
+          "title": "uses the configured website logo",
+          "duration": 7.470499999999902,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296725035,
+      "endTime": 1795296725122.4705,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/gallery/page.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection defaults to List View with no images selected",
+          "status": "passed",
+          "title": "defaults to List View with no images selected",
+          "duration": 115.39930000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection hides selection and deletion controls for read-only users",
+          "status": "passed",
+          "title": "hides selection and deletion controls for read-only users",
+          "duration": 20.748499999999922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection selects an individual image",
+          "status": "passed",
+          "title": "selects an individual image",
+          "duration": 55.65859999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection deselects an image when its checkbox is clicked again",
+          "status": "passed",
+          "title": "deselects an image when its checkbox is clicked again",
+          "duration": 45.42989999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection selects and deselects all displayed images",
+          "status": "passed",
+          "title": "selects and deselects all displayed images",
+          "duration": 36.055900000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection clears selections using the Clear selection button",
+          "status": "passed",
+          "title": "clears selections using the Clear selection button",
+          "duration": 43.14359999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection preserves selections when switching between List and Card views",
+          "status": "passed",
+          "title": "preserves selections when switching between List and Card views",
+          "duration": 59.28839999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection preserves selections when changing sort order",
+          "status": "passed",
+          "title": "preserves selections when changing sort order",
+          "duration": 30.267900000000054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection clears selections when the search query changes",
+          "status": "passed",
+          "title": "clears selections when the search query changes",
+          "duration": 30.15910000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection clears selections when tag filters change",
+          "status": "passed",
+          "title": "clears selections when tag filters change",
+          "duration": 27.519600000000082,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection selects only images matching the current search",
+          "status": "passed",
+          "title": "selects only images matching the current search",
+          "duration": 30.547600000000102,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection retains selections when bulk deletion is canceled",
+          "status": "passed",
+          "title": "retains selections when bulk deletion is canceled",
+          "duration": 45.789600000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection removes images after successful server-confirmed deletion",
+          "status": "passed",
+          "title": "removes images after successful server-confirmed deletion",
+          "duration": 52.704099999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection retains failed images and retries only those images",
+          "status": "passed",
+          "title": "retains failed images and retries only those images",
+          "duration": 74.82760000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection keeps failed deletions selected when the network is unavailable",
+          "status": "passed",
+          "title": "keeps failed deletions selected when the network is unavailable",
+          "duration": 48.450700000000325,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery administration bulk selection"
+          ],
+          "fullName": "Gallery administration bulk selection disables bulk selection when the gallery is empty",
+          "status": "passed",
+          "title": "disables bulk selection when the gallery is empty",
+          "duration": 10.083399999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296701833,
+      "endTime": 1795296702559.0835,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/gallery/components/admin-gallery-selection.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects view-only access for PATCH",
+          "status": "passed",
+          "title": "rejects view-only access for PATCH",
+          "duration": 15.473500000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects view-only access for DELETE",
+          "status": "passed",
+          "title": "rejects view-only access for DELETE",
+          "duration": 0.5758999999999901,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE allows role 1 to reach PATCH processing",
+          "status": "passed",
+          "title": "allows role 1 to reach PATCH processing",
+          "duration": 1.9765000000000157,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE allows role 2 to reach PATCH processing",
+          "status": "passed",
+          "title": "allows role 2 to reach PATCH processing",
+          "duration": 0.5494999999999948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE allows role 1 to reach DELETE processing",
+          "status": "passed",
+          "title": "allows role 1 to reach DELETE processing",
+          "duration": 0.3050000000000068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE allows role 2 to reach DELETE processing",
+          "status": "passed",
+          "title": "allows role 2 to reach DELETE processing",
+          "duration": 0.2342000000000155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects an empty image ID when editing",
+          "status": "passed",
+          "title": "rejects an empty image ID when editing",
+          "duration": 0.565400000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects non-multipart PATCH requests",
+          "status": "passed",
+          "title": "rejects non-multipart PATCH requests",
+          "duration": 0.28600000000000136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects malformed multipart request bodies",
+          "status": "passed",
+          "title": "rejects malformed multipart request bodies",
+          "duration": 0.4451999999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE requires exactly one image name",
+          "status": "passed",
+          "title": "requires exactly one image name",
+          "duration": 0.5108999999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE requires exactly one tag list",
+          "status": "passed",
+          "title": "requires exactly one tag list",
+          "duration": 0.43889999999998963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects a missing tag list",
+          "status": "passed",
+          "title": "rejects a missing tag list",
+          "duration": 0.3475999999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects tags submitted as a file",
+          "status": "passed",
+          "title": "rejects tags submitted as a file",
+          "duration": 1.4490000000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects malformed tag JSON",
+          "status": "passed",
+          "title": "rejects malformed tag JSON",
+          "duration": 0.3785000000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects more than one replacement file",
+          "status": "passed",
+          "title": "rejects more than one replacement file",
+          "duration": 0.9510000000000218,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects replacement values that are not files",
+          "status": "passed",
+          "title": "rejects replacement values that are not files",
+          "duration": 0.40100000000001046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE delegates metadata-only edits without uploading new media",
+          "status": "passed",
+          "title": "delegates metadata-only edits without uploading new media",
+          "duration": 0.651299999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE delegates file replacement to the Gallery service",
+          "status": "passed",
+          "title": "delegates file replacement to the Gallery service",
+          "duration": 1.7734000000000094,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns the persisted Gallery image after an edit",
+          "status": "passed",
+          "title": "returns the persisted Gallery image after an edit",
+          "duration": 0.3849999999999909,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE sets no-store on successful PATCH responses",
+          "status": "passed",
+          "title": "sets no-store on successful PATCH responses",
+          "duration": 0.29630000000000223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE preserves Gallery input validation status",
+          "status": "passed",
+          "title": "preserves Gallery input validation status",
+          "duration": 0.3399000000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 409 when image replacement loses a race",
+          "status": "passed",
+          "title": "returns 409 when image replacement loses a race",
+          "duration": 0.3545000000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 503 with recovery guidance when D1 fails",
+          "status": "passed",
+          "title": "returns 503 with recovery guidance when D1 fails",
+          "duration": 0.32799999999997453,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 503 when image storage configuration fails",
+          "status": "passed",
+          "title": "returns 503 when image storage configuration fails",
+          "duration": 0.31329999999999814,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 500 for unexpected edit failures",
+          "status": "passed",
+          "title": "returns 500 for unexpected edit failures",
+          "duration": 0.4181999999999846,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE rejects deletion when the image ID is missing",
+          "status": "passed",
+          "title": "rejects deletion when the image ID is missing",
+          "duration": 0.2639000000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE soft-deletes the requested Gallery image",
+          "status": "passed",
+          "title": "soft-deletes the requested Gallery image",
+          "duration": 0.19130000000001246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 404 when the image has already been removed",
+          "status": "passed",
+          "title": "returns 404 when the image has already been removed",
+          "duration": 0.18070000000000164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE sets no-store on successful deletion",
+          "status": "passed",
+          "title": "sets no-store on successful deletion",
+          "duration": 0.13759999999999195,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 503 when the database deletion fails",
+          "status": "passed",
+          "title": "returns 503 when the database deletion fails",
+          "duration": 0.23900000000000432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE returns 500 for unexpected deletion failures",
+          "status": "passed",
+          "title": "returns 500 for unexpected deletion failures",
+          "duration": 0.2407999999999788,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery PATCH and DELETE"
+          ],
+          "fullName": "Admin gallery PATCH and DELETE sets no-store on deletion errors",
+          "status": "passed",
+          "title": "sets no-store on deletion errors",
+          "duration": 0.14440000000001874,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730822,
+      "endTime": 1795296730854.1443,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/gallery/[id]/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling requires role 2 for image creation",
+          "status": "passed",
+          "title": "requires role 2 for image creation",
+          "duration": 14.978499999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling allows role 1 to reach image processing",
+          "status": "passed",
+          "title": "allows role 1 to reach image processing",
+          "duration": 2.2153999999999883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling allows role 2 to reach image processing",
+          "status": "passed",
+          "title": "allows role 2 to reach image processing",
+          "duration": 0.6231000000000222,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling passes image fields to the Gallery service",
+          "status": "passed",
+          "title": "passes image fields to the Gallery service",
+          "duration": 2.4677999999999827,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling defaults to an empty tag list when tags are omitted",
+          "status": "passed",
+          "title": "defaults to an empty tag list when tags are omitted",
+          "duration": 0.6673999999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns 400 when image tags contain malformed JSON",
+          "status": "passed",
+          "title": "returns 400 when image tags contain malformed JSON",
+          "duration": 1.079499999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling forwards parsed tag arrays for service validation",
+          "status": "passed",
+          "title": "forwards parsed tag arrays for service validation",
+          "duration": 0.6987000000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns the saved Gallery image after upload",
+          "status": "passed",
+          "title": "returns the saved Gallery image after upload",
+          "duration": 1.748199999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling sets no-store on successful upload responses",
+          "status": "passed",
+          "title": "sets no-store on successful upload responses",
+          "duration": 0.7506000000000199,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns 400 when Gallery input validation fails",
+          "status": "passed",
+          "title": "returns 400 when Gallery input validation fails",
+          "duration": 0.6140000000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling preserves unsupported image type status 415",
+          "status": "passed",
+          "title": "preserves unsupported image type status 415",
+          "duration": 0.37409999999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling preserves oversized image status 413",
+          "status": "passed",
+          "title": "preserves oversized image status 413",
+          "duration": 0.4000999999999806,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns a service error when media storage fails",
+          "status": "passed",
+          "title": "returns a service error when media storage fails",
+          "duration": 0.48730000000000473,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling preserves media proxy refusal status codes",
+          "status": "passed",
+          "title": "preserves media proxy refusal status codes",
+          "duration": 0.32800000000000296,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns 503 when database persistence fails",
+          "status": "passed",
+          "title": "returns 503 when database persistence fails",
+          "duration": 0.37579999999999814,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling returns 500 for unexpected upload failures",
+          "status": "passed",
+          "title": "returns 500 for unexpected upload failures",
+          "duration": 0.3439999999999941,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin gallery POST authorization and upload handling"
+          ],
+          "fullName": "Admin gallery POST authorization and upload handling marks upload error responses as non-cacheable",
+          "status": "passed",
+          "title": "marks upload error responses as non-cacheable",
+          "duration": 0.3094999999999857,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296731484,
+      "endTime": 1795296731512.344,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/gallery/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "public gallery caching (TZ-515)"
+          ],
+          "fullName": "public gallery caching (TZ-515) clears the cached gallery when an image is removed",
+          "status": "passed",
+          "title": "clears the cached gallery when an image is removed",
+          "duration": 2.4650999999999783,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "public gallery caching (TZ-515)"
+          ],
+          "fullName": "public gallery caching (TZ-515) leaves the cache alone when removing an image fails",
+          "status": "passed",
+          "title": "leaves the cache alone when removing an image fails",
+          "duration": 0.6908999999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "public gallery caching (TZ-515)"
+          ],
+          "fullName": "public gallery caching (TZ-515) still reports a removal when clearing the cache fails",
+          "status": "passed",
+          "title": "still reports a removal when clearing the cache fails",
+          "duration": 0.29229999999998313,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "public gallery caching (TZ-515)"
+          ],
+          "fullName": "public gallery caching (TZ-515) maps published images to their public URLs",
+          "status": "passed",
+          "title": "maps published images to their public URLs",
+          "duration": 0.25020000000000664,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "public gallery caching (TZ-515)"
+          ],
+          "fullName": "public gallery caching (TZ-515) returns null so the page shows placeholders when the read fails",
+          "status": "passed",
+          "title": "returns null so the page shows placeholders when the read fails",
+          "duration": 0.28520000000000323,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296745469,
+      "endTime": 1795296745472.2922,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/gallery.cache.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service maps stored records into Admin Gallery images",
+          "status": "passed",
+          "title": "maps stored records into Admin Gallery images",
+          "duration": 1.7532999999999959,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns an empty Admin Gallery when there are no images",
+          "status": "passed",
+          "title": "returns an empty Admin Gallery when there are no images",
+          "duration": 0.21210000000002083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service maps public image captions and alternative text",
+          "status": "passed",
+          "title": "maps public image captions and alternative text",
+          "duration": 0.2266999999999939,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service uses the image name when public caption or alt text is missing",
+          "status": "passed",
+          "title": "uses the image name when public caption or alt text is missing",
+          "duration": 0.3586999999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns null when public gallery queries fail",
+          "status": "passed",
+          "title": "returns null when public gallery queries fail",
+          "duration": 0.8462999999999852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects blank image names",
+          "status": "passed",
+          "title": "rejects blank image names",
+          "duration": 1.3007000000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects image names over 120 characters",
+          "status": "passed",
+          "title": "rejects image names over 120 characters",
+          "duration": 0.6210999999999842,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects tags that are not an array",
+          "status": "passed",
+          "title": "rejects tags that are not an array",
+          "duration": 0.37060000000002447,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects non-string tags",
+          "status": "passed",
+          "title": "rejects non-string tags",
+          "duration": 0.3632000000000062,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects tags longer than 30 characters",
+          "status": "passed",
+          "title": "rejects tags longer than 30 characters",
+          "duration": 0.4168000000000234,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects more than 12 unique tags",
+          "status": "passed",
+          "title": "rejects more than 12 unique tags",
+          "duration": 0.3748999999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects missing image files",
+          "status": "passed",
+          "title": "rejects missing image files",
+          "duration": 0.4399999999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects empty image files",
+          "status": "passed",
+          "title": "rejects empty image files",
+          "duration": 1.084699999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects unsupported image MIME types",
+          "status": "passed",
+          "title": "rejects unsupported image MIME types",
+          "duration": 0.358099999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects files exceeding 10 MB",
+          "status": "passed",
+          "title": "rejects files exceeding 10 MB",
+          "duration": 2.774799999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service converts uploads to WebP before storing them",
+          "status": "passed",
+          "title": "converts uploads to WebP before storing them",
+          "duration": 2.815799999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service normalizes image names and duplicate tags before persistence",
+          "status": "passed",
+          "title": "normalizes image names and duplicate tags before persistence",
+          "duration": 2.071300000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service stores media before writing the Gallery database records",
+          "status": "passed",
+          "title": "stores media before writing the Gallery database records",
+          "duration": 0.20629999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service records the converted image dimensions and owner",
+          "status": "passed",
+          "title": "records the converted image dimensions and owner",
+          "duration": 0.32329999999998904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns the saved image read back from D1",
+          "status": "passed",
+          "title": "returns the saved image read back from D1",
+          "duration": 0.19819999999998572,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns a fallback record when the D1 read-back is missing",
+          "status": "passed",
+          "title": "returns a fallback record when the D1 read-back is missing",
+          "duration": 0.8388999999999953,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns a fallback record when the D1 read-back throws",
+          "status": "passed",
+          "title": "returns a fallback record when the D1 read-back throws",
+          "duration": 0.23699999999999477,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects unreadable image data before storage",
+          "status": "passed",
+          "title": "rejects unreadable image data before storage",
+          "duration": 0.300200000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service does not store media if the public URL cannot be configured",
+          "status": "passed",
+          "title": "does not store media if the public URL cannot be configured",
+          "duration": 0.2717999999999847,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service removes uploaded media after a definite D1 rejection",
+          "status": "passed",
+          "title": "removes uploaded media after a definite D1 rejection",
+          "duration": 0.27060000000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service preserves uploaded media after an uncertain D1 failure",
+          "status": "passed",
+          "title": "preserves uploaded media after an uncertain D1 failure",
+          "duration": 0.2248000000000161,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service preserves the original D1 error if immediate cleanup fails",
+          "status": "passed",
+          "title": "preserves the original D1 error if immediate cleanup fails",
+          "duration": 0.2752000000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service updates an image name and tags without replacing its file",
+          "status": "passed",
+          "title": "updates an image name and tags without replacing its file",
+          "duration": 0.23430000000001883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects editing an image with an empty ID",
+          "status": "passed",
+          "title": "rejects editing an image with an empty ID",
+          "duration": 0.17379999999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns 404 when the image no longer exists",
+          "status": "passed",
+          "title": "returns 404 when the image no longer exists",
+          "duration": 0.14820000000000277,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns 404 when a concurrent deletion prevents the update",
+          "status": "passed",
+          "title": "returns 404 when a concurrent deletion prevents the update",
+          "duration": 0.11830000000000496,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service preserves the image ID when replacing its stored media",
+          "status": "passed",
+          "title": "preserves the image ID when replacing its stored media",
+          "duration": 0.42719999999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service rejects replacement when the original image is missing",
+          "status": "passed",
+          "title": "rejects replacement when the original image is missing",
+          "duration": 0.23910000000000764,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service cleans up a stale replacement and returns a conflict",
+          "status": "passed",
+          "title": "cleans up a stale replacement and returns a conflict",
+          "duration": 0.32519999999999527,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service cleans up replacement media after a definite D1 rejection",
+          "status": "passed",
+          "title": "cleans up replacement media after a definite D1 rejection",
+          "duration": 0.23059999999998126,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service preserves replacement media after an uncertain D1 failure",
+          "status": "passed",
+          "title": "preserves replacement media after an uncertain D1 failure",
+          "duration": 0.21810000000002105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service delegates removal to the Gallery database query",
+          "status": "passed",
+          "title": "delegates removal to the Gallery database query",
+          "duration": 0.13819999999998345,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service returns false when the Gallery image does not exist",
+          "status": "passed",
+          "title": "returns false when the Gallery image does not exist",
+          "duration": 0.08310000000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery service"
+          ],
+          "fullName": "Gallery service creates GalleryInputError with an HTTP status",
+          "status": "passed",
+          "title": "creates GalleryInputError with an HTTP status",
+          "duration": 0.12129999999999086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296736067,
+      "endTime": 1795296736089.1382,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/gallery.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers creates a public URL from an R2 object key",
+          "status": "passed",
+          "title": "creates a public URL from an R2 object key",
+          "duration": 13.006900000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers removes a trailing slash from the public base URL",
+          "status": "passed",
+          "title": "removes a trailing slash from the public base URL",
+          "duration": 0.3335999999999899,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers rejects missing public URL configuration",
+          "status": "passed",
+          "title": "rejects missing public URL configuration",
+          "duration": 0.6522000000000219,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers generates date-based media keys",
+          "status": "passed",
+          "title": "generates date-based media keys",
+          "duration": 1.2490999999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers generates different keys for successive files",
+          "status": "passed",
+          "title": "generates different keys for successive files",
+          "duration": 0.5576000000000079,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers supports expected image, PDF, and video MIME types",
+          "status": "passed",
+          "title": "supports expected image, PDF, and video MIME types",
+          "duration": 0.4398999999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers uploads image bytes through the authenticated media proxy",
+          "status": "passed",
+          "title": "uploads image bytes through the authenticated media proxy",
+          "duration": 2.0870999999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers sends the original file bytes without modification",
+          "status": "passed",
+          "title": "sends the original file bytes without modification",
+          "duration": 0.5189000000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers rejects missing proxy configuration",
+          "status": "passed",
+          "title": "rejects missing proxy configuration",
+          "duration": 0.7069999999999936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers rejects empty files before sending an upload request",
+          "status": "passed",
+          "title": "rejects empty files before sending an upload request",
+          "duration": 0.38800000000000523,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers uses a maximum stored media size of 10 MB",
+          "status": "passed",
+          "title": "uses a maximum stored media size of 10 MB",
+          "duration": 0.21049999999999613,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers rejects stored media exceeding 10 MB",
+          "status": "passed",
+          "title": "rejects stored media exceeding 10 MB",
+          "duration": 0.5076999999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers reports proxy HTTP failures with their status",
+          "status": "passed",
+          "title": "reports proxy HTTP failures with their status",
+          "duration": 0.4661000000000115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers reports media proxy network failures",
+          "status": "passed",
+          "title": "reports media proxy network failures",
+          "duration": 0.5426999999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers deletes an unlinked file through the proxy",
+          "status": "passed",
+          "title": "deletes an unlinked file through the proxy",
+          "duration": 0.4913999999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers reports failed immediate deletions",
+          "status": "passed",
+          "title": "reports failed immediate deletions",
+          "duration": 0.307200000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers does not hide network errors during immediate deletion",
+          "status": "passed",
+          "title": "does not hide network errors during immediate deletion",
+          "duration": 0.2616999999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Media storage helpers"
+          ],
+          "fullName": "Media storage helpers creates MediaError instances with optional status codes",
+          "status": "passed",
+          "title": "creates MediaError instances with optional status codes",
+          "duration": 0.4350000000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296734391,
+      "endTime": 1795296734414.435,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/media.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries lists live Gallery images newest first",
+          "status": "passed",
+          "title": "lists live Gallery images newest first",
+          "duration": 2.976699999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns an empty list when no live images exist",
+          "status": "passed",
+          "title": "returns an empty list when no live images exist",
+          "duration": 0.17439999999999145,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries lists only published images in public display order",
+          "status": "passed",
+          "title": "lists only published images in public display order",
+          "duration": 0.3217999999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries maps unpublished image flags to false",
+          "status": "passed",
+          "title": "maps unpublished image flags to false",
+          "duration": 0.2504999999999882,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries retrieves an image by its ID",
+          "status": "passed",
+          "title": "retrieves an image by its ID",
+          "duration": 0.2154999999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns null when the image does not exist",
+          "status": "passed",
+          "title": "returns null when the image does not exist",
+          "duration": 0.09499999999999886,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries normalizes accented names for sorting",
+          "status": "passed",
+          "title": "normalizes accented names for sorting",
+          "duration": 0.1542999999999779,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries lowercases image sort keys",
+          "status": "passed",
+          "title": "lowercases image sort keys",
+          "duration": 0.07880000000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries normalizes case and spacing in tags",
+          "status": "passed",
+          "title": "normalizes case and spacing in tags",
+          "duration": 0.11990000000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries uses a maximum of 12 Gallery tags",
+          "status": "passed",
+          "title": "uses a maximum of 12 Gallery tags",
+          "duration": 0.27309999999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries creates image and media records in one batch",
+          "status": "passed",
+          "title": "creates image and media records in one batch",
+          "duration": 0.34689999999997667,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries binds media metadata and image identity correctly",
+          "status": "passed",
+          "title": "binds media metadata and image identity correctly",
+          "duration": 0.11240000000000805,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries uses normalized tag keys when creating associations",
+          "status": "passed",
+          "title": "uses normalized tag keys when creating associations",
+          "duration": 0.11439999999998918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries guards tag associations against deleted images",
+          "status": "passed",
+          "title": "guards tag associations against deleted images",
+          "duration": 0.09829999999999472,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries propagates failed image creation transactions",
+          "status": "passed",
+          "title": "propagates failed image creation transactions",
+          "duration": 0.7212000000000103,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries updates image metadata and returns the saved row",
+          "status": "passed",
+          "title": "updates image metadata and returns the saved row",
+          "duration": 0.3469000000000051,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries preserves the media reference during metadata updates",
+          "status": "passed",
+          "title": "preserves the media reference during metadata updates",
+          "duration": 0.37940000000000396,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries guards metadata writes against concurrent deletion",
+          "status": "passed",
+          "title": "guards metadata writes against concurrent deletion",
+          "duration": 0.2032000000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries replaces existing tag associations when metadata changes",
+          "status": "passed",
+          "title": "replaces existing tag associations when metadata changes",
+          "duration": 0.14509999999998513,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries rejects metadata updates with more than 12 tags",
+          "status": "passed",
+          "title": "rejects metadata updates with more than 12 tags",
+          "duration": 0.3689999999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns null when the edited image was deleted concurrently",
+          "status": "passed",
+          "title": "returns null when the edited image was deleted concurrently",
+          "duration": 0.09029999999998495,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries rejects an incomplete metadata transaction result",
+          "status": "passed",
+          "title": "rejects an incomplete metadata transaction result",
+          "duration": 0.125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries replaces media while preserving the Gallery image ID",
+          "status": "passed",
+          "title": "replaces media while preserving the Gallery image ID",
+          "duration": 0.32150000000001455,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries guards replacements against concurrent changes",
+          "status": "passed",
+          "title": "guards replacements against concurrent changes",
+          "duration": 0.157100000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries updates the image record to the new media ID",
+          "status": "passed",
+          "title": "updates the image record to the new media ID",
+          "duration": 0.09239999999999782,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries protects media that is still referenced by another image",
+          "status": "passed",
+          "title": "protects media that is still referenced by another image",
+          "duration": 0.09230000000002292,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries queues old media for delayed R2 deletion",
+          "status": "passed",
+          "title": "queues old media for delayed R2 deletion",
+          "duration": 0.569199999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns null when another replacement won the race",
+          "status": "passed",
+          "title": "returns null when another replacement won the race",
+          "duration": 0.09360000000000923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns null when replacement produces no live row",
+          "status": "passed",
+          "title": "returns null when replacement produces no live row",
+          "duration": 0.0811000000000206,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries rejects incomplete replacement transaction results",
+          "status": "passed",
+          "title": "rejects incomplete replacement transaction results",
+          "duration": 0.16900000000001114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries rejects replacements with more than 12 tags",
+          "status": "passed",
+          "title": "rejects replacements with more than 12 tags",
+          "duration": 0.2890999999999906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries returns false when deleting a nonexistent image",
+          "status": "passed",
+          "title": "returns false when deleting a nonexistent image",
+          "duration": 0.1525000000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries soft-deletes an image and its media in one batch",
+          "status": "passed",
+          "title": "soft-deletes an image and its media in one batch",
+          "duration": 0.1285000000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries queues the deleted file without duplicate active queue entries",
+          "status": "passed",
+          "title": "queues the deleted file without duplicate active queue entries",
+          "duration": 0.06990000000001828,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Gallery D1 queries"
+          ],
+          "fullName": "Gallery D1 queries does not report success if the deletion transaction fails",
+          "status": "passed",
+          "title": "does not report success if the deletion transaction fails",
+          "duration": 0.11899999999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741719,
+      "endTime": 1795296741729.289,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/gallery.test.ts"
+    }
+  ]
+}

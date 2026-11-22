@@ -1,0 +1,4 @@
+File,Passed,Failed,Other
+app/components/bubble-field.test.tsx,10,0,0
+app/lib/preloadable-component.test.tsx,4,0,0
+app/lib/site-url.test.ts,9,0,0

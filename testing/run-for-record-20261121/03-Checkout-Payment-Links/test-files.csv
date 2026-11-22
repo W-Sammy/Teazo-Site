@@ -1,0 +1,15 @@
+File,Passed,Failed,Other
+app/(site)/components/cart-drawer-checkout.test.tsx,40,0,0
+app/(site)/components/checkout-security-integration.test.tsx,33,0,0
+app/(site)/components/checkout-security.test.tsx,14,0,0
+app/(site)/order/confirmation/page.checkout-attempt.test.tsx,7,0,0
+app/api/checkout/route.duplicate-submission.test.ts,16,0,0
+app/api/checkout/route.test.ts,26,0,0
+app/context/cart-context.checkout-recovery.test.tsx,7,0,0
+app/lib/cart-payment-ownership.test.ts,12,0,0
+app/lib/checkout-attempt-storage.test.ts,12,0,0
+app/lib/checkout-validators.test.ts,45,0,0
+app/lib/queries/checkout-attempts.test.ts,14,0,0
+app/lib/queries/rate-limit.test.ts,5,0,0
+app/lib/square-location.test.ts,7,0,0
+app/lib/square.test.ts,14,0,0

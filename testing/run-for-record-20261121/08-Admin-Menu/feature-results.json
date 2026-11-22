@@ -1,0 +1,2351 @@
+{
+  "section": "08-Admin-Menu",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "focuses Cancel, blocks immediate repeated input and cancellation, then unlocks on failure",
+          "status": "passed",
+          "title": "focuses Cancel, blocks immediate repeated input and cancellation, then unlocks on failure",
+          "duration": 92.96349999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "exposes conflict recovery inside the modal on revision conflict",
+          "status": "passed",
+          "title": "exposes conflict recovery inside the modal on revision conflict",
+          "duration": 25.859900000000152,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "warns when unsaved local form edits exist before reloading from storage",
+          "status": "passed",
+          "title": "warns when unsaved local form edits exist before reloading from storage",
+          "duration": 15.871800000000121,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296721261,
+      "endTime": 1795296721395.8718,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/components/confirm-delete-dialog.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions defaults to List View on both view controls",
+          "status": "passed",
+          "title": "defaults to List View on both view controls",
+          "duration": 118.07979999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions switches between Card View and List View manually",
+          "status": "passed",
+          "title": "switches between Card View and List View manually",
+          "duration": 67.26050000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions searches menu item names and descriptions",
+          "status": "passed",
+          "title": "searches menu item names and descriptions",
+          "duration": 56.90039999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions filters by category and clears the selection",
+          "status": "passed",
+          "title": "filters by category and clears the selection",
+          "duration": 36.9529,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions sorts items by price without modifying their data",
+          "status": "passed",
+          "title": "sorts items by price without modifying their data",
+          "duration": 17.691499999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Display, search, sorting, and permissions"
+          ],
+          "fullName": "Admin Menu UI integration Display, search, sorting, and permissions provides menu management controls for authorized admins",
+          "status": "passed",
+          "title": "provides menu management controls for authorized admins",
+          "duration": 44.9674,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items cancels item creation without sending a request",
+          "status": "passed",
+          "title": "cancels item creation without sending a request",
+          "duration": 42.23160000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items creates an item using the Square endpoint and updates the list",
+          "status": "passed",
+          "title": "creates an item using the Square endpoint and updates the list",
+          "duration": 102.89589999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items does not duplicate a created item when refreshed server props contain its ID",
+          "status": "passed",
+          "title": "does not duplicate a created item when refreshed server props contain its ID",
+          "duration": 114.99130000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items keeps the form open when Square rejects invalid item data",
+          "status": "passed",
+          "title": "keeps the form open when Square rejects invalid item data",
+          "duration": 74.54570000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items rejects a successful HTTP response without a valid saved item",
+          "status": "passed",
+          "title": "rejects a successful HTTP response without a valid saved item",
+          "duration": 62.10779999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items preserves the form after a network failure without automatically retrying",
+          "status": "passed",
+          "title": "preserves the form after a network failure without automatically retrying",
+          "duration": 76.92769999999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Creating menu items"
+          ],
+          "fullName": "Admin Menu UI integration Creating menu items prevents duplicate creation requests during a pending save",
+          "status": "passed",
+          "title": "prevents duplicate creation requests during a pending save",
+          "duration": 59.48979999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Editing menu items"
+          ],
+          "fullName": "Admin Menu UI integration Editing menu items cancels an edit without sending changes to Square",
+          "status": "passed",
+          "title": "cancels an edit without sending changes to Square",
+          "duration": 43.53070000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Editing menu items"
+          ],
+          "fullName": "Admin Menu UI integration Editing menu items saves an edit through PUT without creating another row",
+          "status": "passed",
+          "title": "saves an edit through PUT without creating another row",
+          "duration": 69.94090000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Editing menu items"
+          ],
+          "fullName": "Admin Menu UI integration Editing menu items keeps original data and the edit form after a conflict",
+          "status": "passed",
+          "title": "keeps original data and the edit form after a conflict",
+          "duration": 71.58420000000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Editing menu items"
+          ],
+          "fullName": "Admin Menu UI integration Editing menu items rejects a saved-item response with a different item ID",
+          "status": "passed",
+          "title": "rejects a saved-item response with a different item ID",
+          "duration": 64.88990000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Deleting menu items"
+          ],
+          "fullName": "Admin Menu UI integration Deleting menu items cancels deletion without calling Square",
+          "status": "passed",
+          "title": "cancels deletion without calling Square",
+          "duration": 48.4701,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Deleting menu items"
+          ],
+          "fullName": "Admin Menu UI integration Deleting menu items removes an item only after Square confirms its deletion",
+          "status": "passed",
+          "title": "removes an item only after Square confirms its deletion",
+          "duration": 56.5645999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Deleting menu items"
+          ],
+          "fullName": "Admin Menu UI integration Deleting menu items does not remove an item when Square confirms a different ID",
+          "status": "passed",
+          "title": "does not remove an item when Square confirms a different ID",
+          "duration": 67.90499999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Deleting menu items"
+          ],
+          "fullName": "Admin Menu UI integration Deleting menu items allows retrying after a service failure without prematurely deleting",
+          "status": "passed",
+          "title": "allows retrying after a service failure without prematurely deleting",
+          "duration": 81.68010000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "Deleting menu items"
+          ],
+          "fullName": "Admin Menu UI integration Deleting menu items blocks duplicate deletion requests while one is pending",
+          "status": "passed",
+          "title": "blocks duplicate deletion requests while one is pending",
+          "duration": 46.55549999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "PDF upload UI"
+          ],
+          "fullName": "Admin Menu UI integration PDF upload UI rejects invalid PDF selections before making a request",
+          "status": "passed",
+          "title": "rejects invalid PDF selections before making a request",
+          "duration": 37.41160000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "PDF upload UI"
+          ],
+          "fullName": "Admin Menu UI integration PDF upload UI uploads a valid PDF and displays a new-tab viewing link",
+          "status": "passed",
+          "title": "uploads a valid PDF and displays a new-tab viewing link",
+          "duration": 56.5659999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu UI integration",
+            "PDF upload UI"
+          ],
+          "fullName": "Admin Menu UI integration PDF upload UI keeps the upload form open after a failed publication request",
+          "status": "passed",
+          "title": "keeps the upload form open after a failed publication request",
+          "duration": 65.29030000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296696265,
+      "endTime": 1795296697851.2903,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/menu/components/admin-menu-client.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Menu fresh-load behavior"
+          ],
+          "fullName": "Admin Menu fresh-load behavior displays a newly created item after remounting with an updated server snapshot",
+          "status": "passed",
+          "title": "displays a newly created item after remounting with an updated server snapshot",
+          "duration": 248.66009999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu fresh-load behavior"
+          ],
+          "fullName": "Admin Menu fresh-load behavior displays confirmed edited values after a fresh mount with updated server data",
+          "status": "passed",
+          "title": "displays confirmed edited values after a fresh mount with updated server data",
+          "duration": 116.10059999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu fresh-load behavior"
+          ],
+          "fullName": "Admin Menu fresh-load behavior keeps a confirmed deletion absent after remounting with the updated server list",
+          "status": "passed",
+          "title": "keeps a confirmed deletion absent after remounting with the updated server list",
+          "duration": 71.19770000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu fresh-load behavior"
+          ],
+          "fullName": "Admin Menu fresh-load behavior does not mistake local creation state for persisted server data when a fresh snapshot omits the item",
+          "status": "passed",
+          "title": "does not mistake local creation state for persisted server data when a fresh snapshot omits the item",
+          "duration": 117.81360000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296706147,
+      "endTime": 1795296706700.8137,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/menu/components/admin-menu-refresh.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Create form and required fields"
+          ],
+          "fullName": "Admin Menu Item Form Create form and required fields renders a new item form with empty fields and required name and price",
+          "status": "passed",
+          "title": "renders a new item form with empty fields and required name and price",
+          "duration": 91.68669999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Create form and required fields"
+          ],
+          "fullName": "Admin Menu Item Form Create form and required fields rejects a completely empty submission",
+          "status": "passed",
+          "title": "rejects a completely empty submission",
+          "duration": 19.53580000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Create form and required fields"
+          ],
+          "fullName": "Admin Menu Item Form Create form and required fields rejects a whitespace-only item name",
+          "status": "passed",
+          "title": "rejects a whitespace-only item name",
+          "duration": 30.366500000000087,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Create form and required fields"
+          ],
+          "fullName": "Admin Menu Item Form Create form and required fields rejects an untouched price even when the name is valid",
+          "status": "passed",
+          "title": "rejects an untouched price even when the name is valid",
+          "duration": 17.3592000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting shifts typed digits into cents and supports Backspace and Delete",
+          "status": "passed",
+          "title": "shifts typed digits into cents and supports Backspace and Delete",
+          "duration": 34.96810000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting accepts a pasted decimal currency amount",
+          "status": "passed",
+          "title": "accepts a pasted decimal currency amount",
+          "duration": 9.503100000000131,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting treats a pasted whole-dollar amount as dollars",
+          "status": "passed",
+          "title": "treats a pasted whole-dollar amount as dollars",
+          "duration": 10.333499999999958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting rejects malformed pasted currency without changing the amount",
+          "status": "passed",
+          "title": "rejects malformed pasted currency without changing the amount",
+          "duration": 25.820400000000063,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting supports mobile-style input changes without keydown events",
+          "status": "passed",
+          "title": "supports mobile-style input changes without keydown events",
+          "duration": 10.707300000000032,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Currency formatting"
+          ],
+          "fullName": "Admin Menu Item Form Currency formatting allows an explicitly entered zero-dollar price",
+          "status": "passed",
+          "title": "allows an explicitly entered zero-dollar price",
+          "duration": 16.925700000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Item values and categories"
+          ],
+          "fullName": "Admin Menu Item Form Item values and categories trims submitted text and preserves selected category IDs",
+          "status": "passed",
+          "title": "trims submitted text and preserves selected category IDs",
+          "duration": 47.831500000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Item values and categories"
+          ],
+          "fullName": "Admin Menu Item Form Item values and categories allows multiple categories to be selected and deselected",
+          "status": "passed",
+          "title": "allows multiple categories to be selected and deselected",
+          "duration": 31.54060000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Item values and categories"
+          ],
+          "fullName": "Admin Menu Item Form Item values and categories prefills edit fields and submits the updated values",
+          "status": "passed",
+          "title": "prefills edit fields and submits the updated values",
+          "duration": 15.962600000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Item values and categories"
+          ],
+          "fullName": "Admin Menu Item Form Item values and categories excludes category IDs no longer available in the supplied options",
+          "status": "passed",
+          "title": "excludes category IDs no longer available in the supplied options",
+          "duration": 15.156799999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Item values and categories"
+          ],
+          "fullName": "Admin Menu Item Form Item values and categories calls Cancel without saving changes",
+          "status": "passed",
+          "title": "calls Cancel without saving changes",
+          "duration": 9.053099999999858,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Saving state and failure recovery"
+          ],
+          "fullName": "Admin Menu Item Form Saving state and failure recovery disables fields and action buttons while the parent is saving",
+          "status": "passed",
+          "title": "disables fields and action buttons while the parent is saving",
+          "duration": 8.700700000000097,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Saving state and failure recovery"
+          ],
+          "fullName": "Admin Menu Item Form Saving state and failure recovery blocks duplicate submissions while an asynchronous save is pending",
+          "status": "passed",
+          "title": "blocks duplicate submissions while an asynchronous save is pending",
+          "duration": 21.173099999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Saving state and failure recovery"
+          ],
+          "fullName": "Admin Menu Item Form Saving state and failure recovery shows an error and allows retrying after a rejected save",
+          "status": "passed",
+          "title": "shows an error and allows retrying after a rejected save",
+          "duration": 55.383800000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Optional item image handling"
+          ],
+          "fullName": "Admin Menu Item Form Optional item image handling rejects an unsupported image format",
+          "status": "passed",
+          "title": "rejects an unsupported image format",
+          "duration": 4.756799999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Optional item image handling"
+          ],
+          "fullName": "Admin Menu Item Form Optional item image handling rejects empty images and prepares oversized images for upload",
+          "status": "passed",
+          "title": "rejects empty images and prepares oversized images for upload",
+          "duration": 58.7367999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Optional item image handling"
+          ],
+          "fullName": "Admin Menu Item Form Optional item image handling previews a valid image and prevents saving until the preview loads",
+          "status": "passed",
+          "title": "previews a valid image and prevents saving until the preview loads",
+          "duration": 46.753200000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Optional item image handling"
+          ],
+          "fullName": "Admin Menu Item Form Optional item image handling marks an existing image for removal when explicitly requested",
+          "status": "passed",
+          "title": "marks an existing image for removal when explicitly requested",
+          "duration": 15.165999999999713,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Admin Menu Item Form",
+            "Optional item image handling"
+          ],
+          "fullName": "Admin Menu Item Form Optional item image handling restores the existing image without marking it for removal",
+          "status": "passed",
+          "title": "restores the existing image without marking it for removal",
+          "duration": 15.571699999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296704111,
+      "endTime": 1795296704724.5718,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/admin/menu/components/menu-item-form.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload requires edit-level Admin authorization",
+          "status": "passed",
+          "title": "requires edit-level Admin authorization",
+          "duration": 18.578100000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects unauthenticated requests before uploading",
+          "status": "passed",
+          "title": "rejects unauthenticated requests before uploading",
+          "duration": 0.6175000000000068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects forbidden Admin requests before uploading",
+          "status": "passed",
+          "title": "rejects forbidden Admin requests before uploading",
+          "duration": 0.4007000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects requests without an Origin header",
+          "status": "passed",
+          "title": "rejects requests without an Origin header",
+          "duration": 0.3674999999999784,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects uploads from another origin",
+          "status": "passed",
+          "title": "rejects uploads from another origin",
+          "duration": 0.3526999999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects malformed Origin headers",
+          "status": "passed",
+          "title": "rejects malformed Origin headers",
+          "duration": 0.3464999999999918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects requests that are not multipart forms",
+          "status": "passed",
+          "title": "rejects requests that are not multipart forms",
+          "duration": 0.48500000000001364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects multipart requests without a body",
+          "status": "passed",
+          "title": "rejects multipart requests without a body",
+          "duration": 0.3383999999999787,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects malformed multipart payloads",
+          "status": "passed",
+          "title": "rejects malformed multipart payloads",
+          "duration": 0.5049000000000206,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects forms without a file",
+          "status": "passed",
+          "title": "rejects forms without a file",
+          "duration": 0.5114999999999839,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects non-file values in the file field",
+          "status": "passed",
+          "title": "rejects non-file values in the file field",
+          "duration": 0.4671000000000163,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects forms containing multiple PDF files",
+          "status": "passed",
+          "title": "rejects forms containing multiple PDF files",
+          "duration": 1.1058000000000163,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects an oversized declared Content-Length",
+          "status": "passed",
+          "title": "rejects an oversized declared Content-Length",
+          "duration": 0.35880000000000223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects oversized multipart bodies during streaming",
+          "status": "passed",
+          "title": "rejects oversized multipart bodies during streaming",
+          "duration": 0.7660000000000196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects files larger than 4 MB",
+          "status": "passed",
+          "title": "rejects files larger than 4 MB",
+          "duration": 6.932700000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects filenames without a PDF extension",
+          "status": "passed",
+          "title": "rejects filenames without a PDF extension",
+          "duration": 0.6368999999999971,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects unsupported MIME types",
+          "status": "passed",
+          "title": "rejects unsupported MIME types",
+          "duration": 0.5050999999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects empty PDF files",
+          "status": "passed",
+          "title": "rejects empty PDF files",
+          "duration": 0.41389999999998395,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects files missing the PDF header",
+          "status": "passed",
+          "title": "rejects files missing the PDF header",
+          "duration": 0.42719999999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload rejects files missing the PDF EOF marker",
+          "status": "passed",
+          "title": "rejects files missing the PDF EOF marker",
+          "duration": 0.3988999999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload uploads and publishes a valid PDF menu",
+          "status": "passed",
+          "title": "uploads and publishes a valid PDF menu",
+          "duration": 1.3307000000000073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload stores the PDF before publishing its database record",
+          "status": "passed",
+          "title": "stores the PDF before publishing its database record",
+          "duration": 0.49270000000001346,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload accepts a valid PDF with a generic MIME type",
+          "status": "passed",
+          "title": "accepts a valid PDF with a generic MIME type",
+          "duration": 0.4047000000000196,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload marks successful responses as non-cacheable",
+          "status": "passed",
+          "title": "marks successful responses as non-cacheable",
+          "duration": 0.40340000000000487,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload returns 503 when R2 storage fails",
+          "status": "passed",
+          "title": "returns 503 when R2 storage fails",
+          "duration": 0.4713000000000136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload returns 503 when D1 publication fails",
+          "status": "passed",
+          "title": "returns 503 when D1 publication fails",
+          "duration": 0.39390000000000214,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload does not remove stored media after uncertain D1 failure",
+          "status": "passed",
+          "title": "does not remove stored media after uncertain D1 failure",
+          "duration": 0.39279999999999404,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload returns 500 for unexpected upload failures",
+          "status": "passed",
+          "title": "returns 500 for unexpected upload failures",
+          "duration": 0.4994999999999834,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload includes recovery guidance when publication cannot be confirmed",
+          "status": "passed",
+          "title": "includes recovery guidance when publication cannot be confirmed",
+          "duration": 0.4088999999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/admin/menu/upload"
+          ],
+          "fullName": "POST /api/admin/menu/upload marks error responses as non-cacheable",
+          "status": "passed",
+          "title": "marks error responses as non-cacheable",
+          "duration": 0.3400000000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730612,
+      "endTime": 1795296730652.34,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/admin/menu/upload/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation accepts a valid menu item",
+          "status": "passed",
+          "title": "accepts a valid menu item",
+          "duration": 1.19459999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation trims the item name and description",
+          "status": "passed",
+          "title": "trims the item name and description",
+          "duration": 0.4154000000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation accepts zero-priced menu items",
+          "status": "passed",
+          "title": "accepts zero-priced menu items",
+          "duration": 0.15350000000000819,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation accepts USD currency and valid associations",
+          "status": "passed",
+          "title": "accepts USD currency and valid associations",
+          "duration": 0.19220000000001392,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation accepts empty category and modifier lists",
+          "status": "passed",
+          "title": "accepts empty category and modifier lists",
+          "duration": 0.11699999999999022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-object create body 0",
+          "status": "passed",
+          "title": "rejects non-object create body 0",
+          "duration": 0.08609999999998763,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-object create body 1",
+          "status": "passed",
+          "title": "rejects non-object create body 1",
+          "duration": 0.05760000000000787,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-object create body 2",
+          "status": "passed",
+          "title": "rejects non-object create body 2",
+          "duration": 0.0595000000000141,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-object create body 3",
+          "status": "passed",
+          "title": "rejects non-object create body 3",
+          "duration": 0.06470000000001619,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-object create body 4",
+          "status": "passed",
+          "title": "rejects non-object create body 4",
+          "duration": 0.09459999999998558,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid item name 0",
+          "status": "passed",
+          "title": "rejects invalid item name 0",
+          "duration": 0.0671999999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid item name 1",
+          "status": "passed",
+          "title": "rejects invalid item name 1",
+          "duration": 0.07399999999998386,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid item name 2",
+          "status": "passed",
+          "title": "rejects invalid item name 2",
+          "duration": 0.037800000000004275,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid item name 3",
+          "status": "passed",
+          "title": "rejects invalid item name 3",
+          "duration": 0.05150000000000432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid item name 4",
+          "status": "passed",
+          "title": "rejects invalid item name 4",
+          "duration": 0.035599999999988086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 0",
+          "status": "passed",
+          "title": "rejects invalid priceCents 0",
+          "duration": 0.0630000000000166,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 1",
+          "status": "passed",
+          "title": "rejects invalid priceCents 1",
+          "duration": 0.03469999999998663,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 2",
+          "status": "passed",
+          "title": "rejects invalid priceCents 2",
+          "duration": 0.02580000000000382,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 3",
+          "status": "passed",
+          "title": "rejects invalid priceCents 3",
+          "duration": 0.03149999999999409,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 4",
+          "status": "passed",
+          "title": "rejects invalid priceCents 4",
+          "duration": 0.030400000000014415,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 5",
+          "status": "passed",
+          "title": "rejects invalid priceCents 5",
+          "duration": 0.02770000000001005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 6",
+          "status": "passed",
+          "title": "rejects invalid priceCents 6",
+          "duration": 0.04720000000000368,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 7",
+          "status": "passed",
+          "title": "rejects invalid priceCents 7",
+          "duration": 0.030599999999992633,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid priceCents 8",
+          "status": "passed",
+          "title": "rejects invalid priceCents 8",
+          "duration": 0.023099999999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation accepts the largest safe integer cent amount",
+          "status": "passed",
+          "title": "accepts the largest safe integer cent amount",
+          "duration": 0.07569999999998345,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects a non-string description",
+          "status": "passed",
+          "title": "rejects a non-string description",
+          "duration": 0.04099999999999682,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects unsupported currency 0",
+          "status": "passed",
+          "title": "rejects unsupported currency 0",
+          "duration": 0.03690000000000282,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects unsupported currency 1",
+          "status": "passed",
+          "title": "rejects unsupported currency 1",
+          "duration": 0.02610000000001378,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects unsupported currency 2",
+          "status": "passed",
+          "title": "rejects unsupported currency 2",
+          "duration": 0.02199999999999136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects unsupported currency 3",
+          "status": "passed",
+          "title": "rejects unsupported currency 3",
+          "duration": 0.02580000000000382,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-array categoryIds",
+          "status": "passed",
+          "title": "rejects non-array categoryIds",
+          "duration": 0.045100000000019236,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects non-array modifierListIds",
+          "status": "passed",
+          "title": "rejects non-array modifierListIds",
+          "duration": 0.03260000000000218,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid association identifiers [ '', 'item-2' ]",
+          "status": "passed",
+          "title": "rejects invalid association identifiers [ '', 'item-2' ]",
+          "duration": 0.05639999999999645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid association identifiers [ '  ' ]",
+          "status": "passed",
+          "title": "rejects invalid association identifiers [ '  ' ]",
+          "duration": 0.026800000000008595,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid association identifiers [ 123 ]",
+          "status": "passed",
+          "title": "rejects invalid association identifiers [ 123 ]",
+          "duration": 0.033999999999991815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Create menu item validation"
+          ],
+          "fullName": "Create menu item validation rejects invalid association identifiers [ null ]",
+          "status": "passed",
+          "title": "rejects invalid association identifiers [ null ]",
+          "duration": 0.052300000000002456,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation accepts a name-only update",
+          "status": "passed",
+          "title": "accepts a name-only update",
+          "duration": 0.12649999999999295,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation accepts a price-only update",
+          "status": "passed",
+          "title": "accepts a price-only update",
+          "duration": 0.052199999999999136,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation accepts clearing an optional description",
+          "status": "passed",
+          "title": "accepts clearing an optional description",
+          "duration": 0.0473999999999819,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation accepts clearing category and modifier associations",
+          "status": "passed",
+          "title": "accepts clearing category and modifier associations",
+          "duration": 0.04779999999999518,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation accepts multiple valid updated fields",
+          "status": "passed",
+          "title": "accepts multiple valid updated fields",
+          "duration": 0.056200000000018235,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects non-object update body 0",
+          "status": "passed",
+          "title": "rejects non-object update body 0",
+          "duration": 0.03520000000000323,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects non-object update body 1",
+          "status": "passed",
+          "title": "rejects non-object update body 1",
+          "duration": 0.021900000000016462,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects non-object update body 2",
+          "status": "passed",
+          "title": "rejects non-object update body 2",
+          "duration": 0.020999999999986585,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects non-object update body 3",
+          "status": "passed",
+          "title": "rejects non-object update body 3",
+          "duration": 0.022700000000014597,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects an empty update",
+          "status": "passed",
+          "title": "rejects an empty update",
+          "duration": 0.027999999999991587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects updates containing only unknown fields",
+          "status": "passed",
+          "title": "rejects updates containing only unknown fields",
+          "duration": 0.627900000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects empty updated names",
+          "status": "passed",
+          "title": "rejects empty updated names",
+          "duration": 0.06020000000000891,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated descriptions",
+          "status": "passed",
+          "title": "rejects invalid updated descriptions",
+          "duration": 0.03509999999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated price 0",
+          "status": "passed",
+          "title": "rejects invalid updated price 0",
+          "duration": 0.03390000000001692,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated price 1",
+          "status": "passed",
+          "title": "rejects invalid updated price 1",
+          "duration": 0.02379999999999427,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated price 2",
+          "status": "passed",
+          "title": "rejects invalid updated price 2",
+          "duration": 0.022199999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated price 3",
+          "status": "passed",
+          "title": "rejects invalid updated price 3",
+          "duration": 0.024699999999995725,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated price 4",
+          "status": "passed",
+          "title": "rejects invalid updated price 4",
+          "duration": 0.02230000000000132,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects unsupported updated currency",
+          "status": "passed",
+          "title": "rejects unsupported updated currency",
+          "duration": 0.03129999999998745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated category IDs",
+          "status": "passed",
+          "title": "rejects invalid updated category IDs",
+          "duration": 0.03150000000002251,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Update menu item validation"
+          ],
+          "fullName": "Update menu item validation rejects invalid updated modifier IDs",
+          "status": "passed",
+          "title": "rejects invalid updated modifier IDs",
+          "duration": 0.032399999999995543,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296742532,
+      "endTime": 1795296742537.0603,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/menu-item-validators.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation uses the configured 4 MB PDF limit",
+          "status": "passed",
+          "title": "uses the configured 4 MB PDF limit",
+          "duration": 0.8290000000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation uses the current menu PDF endpoint",
+          "status": "passed",
+          "title": "uses the current menu PDF endpoint",
+          "duration": 0.13710000000000377,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts valid PDF metadata",
+          "status": "passed",
+          "title": "accepts valid PDF metadata",
+          "duration": 0.18000000000000682,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts uppercase PDF extensions",
+          "status": "passed",
+          "title": "accepts uppercase PDF extensions",
+          "duration": 0.09999999999999432,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts compatible MIME type application/pdf",
+          "status": "passed",
+          "title": "accepts compatible MIME type application/pdf",
+          "duration": 0.08070000000000732,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts compatible MIME type application/octet-stream",
+          "status": "passed",
+          "title": "accepts compatible MIME type application/octet-stream",
+          "duration": 0.05159999999997922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts compatible MIME type ",
+          "status": "passed",
+          "title": "accepts compatible MIME type ",
+          "duration": 0.04889999999997485,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts a PDF exactly at the size limit",
+          "status": "passed",
+          "title": "accepts a PDF exactly at the size limit",
+          "duration": 0.07110000000000127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation accepts the smallest nonempty PDF metadata",
+          "status": "passed",
+          "title": "accepts the smallest nonempty PDF metadata",
+          "duration": 0.0730000000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects invalid filename menu.png",
+          "status": "passed",
+          "title": "rejects invalid filename menu.png",
+          "duration": 0.08230000000000359,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects invalid filename menu.txt",
+          "status": "passed",
+          "title": "rejects invalid filename menu.txt",
+          "duration": 0.04349999999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects invalid filename menu.pdf.exe",
+          "status": "passed",
+          "title": "rejects invalid filename menu.pdf.exe",
+          "duration": 0.04609999999999559,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects invalid filename menu",
+          "status": "passed",
+          "title": "rejects invalid filename menu",
+          "duration": 0.03350000000000364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects incompatible MIME type image/png",
+          "status": "passed",
+          "title": "rejects incompatible MIME type image/png",
+          "duration": 0.041600000000016735,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects incompatible MIME type image/jpeg",
+          "status": "passed",
+          "title": "rejects incompatible MIME type image/jpeg",
+          "duration": 0.029699999999991178,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects incompatible MIME type text/plain",
+          "status": "passed",
+          "title": "rejects incompatible MIME type text/plain",
+          "duration": 0.03089999999997417,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects incompatible MIME type application/zip",
+          "status": "passed",
+          "title": "rejects incompatible MIME type application/zip",
+          "duration": 0.02209999999999468,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects empty PDF files",
+          "status": "passed",
+          "title": "rejects empty PDF files",
+          "duration": 0.03170000000000073,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects a PDF one byte over the size limit",
+          "status": "passed",
+          "title": "rejects a PDF one byte over the size limit",
+          "duration": 0.03159999999999741,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu PDF upload validation"
+          ],
+          "fullName": "Menu PDF upload validation rejects substantially oversized PDFs",
+          "status": "passed",
+          "title": "rejects substantially oversized PDFs",
+          "duration": 0.028799999999989723,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation accepts a successful response with a document ID",
+          "status": "passed",
+          "title": "accepts a successful response with a document ID",
+          "duration": 0.07759999999998968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation allows additional response fields",
+          "status": "passed",
+          "title": "allows additional response fields",
+          "duration": 0.041600000000016735,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 0",
+          "status": "passed",
+          "title": "rejects invalid response 0",
+          "duration": 0.03390000000001692,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 1",
+          "status": "passed",
+          "title": "rejects invalid response 1",
+          "duration": 0.03099999999997749,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 2",
+          "status": "passed",
+          "title": "rejects invalid response 2",
+          "duration": 0.022800000000017917,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 3",
+          "status": "passed",
+          "title": "rejects invalid response 3",
+          "duration": 0.019100000000008777,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 4",
+          "status": "passed",
+          "title": "rejects invalid response 4",
+          "duration": 0.019400000000018736,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 5",
+          "status": "passed",
+          "title": "rejects invalid response 5",
+          "duration": 0.026299999999991996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 6",
+          "status": "passed",
+          "title": "rejects invalid response 6",
+          "duration": 0.02790000000001669,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 7",
+          "status": "passed",
+          "title": "rejects invalid response 7",
+          "duration": 0.02420000000000755,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 8",
+          "status": "passed",
+          "title": "rejects invalid response 8",
+          "duration": 0.026600000000001955,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 9",
+          "status": "passed",
+          "title": "rejects invalid response 9",
+          "duration": 0.069500000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects invalid response 10",
+          "status": "passed",
+          "title": "rejects invalid response 10",
+          "duration": 0.05940000000001078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu upload response validation"
+          ],
+          "fullName": "Menu upload response validation rejects an error-shaped upload response",
+          "status": "passed",
+          "title": "rejects an error-shaped upload response",
+          "duration": 0.05940000000001078,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296746098,
+      "endTime": 1795296746101.0696,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/menu-upload.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries retrieves the current published PDF",
+          "status": "passed",
+          "title": "retrieves the current published PDF",
+          "duration": 1.377299999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries returns null when no current PDF exists",
+          "status": "passed",
+          "title": "returns null when no current PDF exists",
+          "duration": 0.15510000000000446,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries filters current, active PDF document media",
+          "status": "passed",
+          "title": "filters current, active PDF document media",
+          "duration": 0.23080000000001633,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries selects the newest published current document",
+          "status": "passed",
+          "title": "selects the newest published current document",
+          "duration": 0.132000000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries publishes a PDF using a single D1 batch",
+          "status": "passed",
+          "title": "publishes a PDF using a single D1 batch",
+          "duration": 0.662399999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries uses the required publication statement order",
+          "status": "passed",
+          "title": "uses the required publication statement order",
+          "duration": 0.13560000000001082,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries binds the stored PDF metadata to the media record",
+          "status": "passed",
+          "title": "binds the stored PDF metadata to the media record",
+          "duration": 0.13639999999998054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries marks the newly published document as current",
+          "status": "passed",
+          "title": "marks the newly published document as current",
+          "duration": 0.1174000000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries does not delete older media during publication",
+          "status": "passed",
+          "title": "does not delete older media during publication",
+          "duration": 0.1560000000000059,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Menu document queries"
+          ],
+          "fullName": "Menu document queries propagates D1 publication errors",
+          "status": "passed",
+          "title": "propagates D1 publication errors",
+          "duration": 0.7761999999999887,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296745088,
+      "endTime": 1795296745091.7761,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/queries/menu-documents.test.ts"
+    }
+  ]
+}

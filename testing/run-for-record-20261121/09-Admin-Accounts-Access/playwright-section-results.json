@@ -1,0 +1,197 @@
+[
+  {
+    "file": "e2e/admin-account-management-mobile.spec.ts",
+    "test": "completes synthetic mobile add, edit, invitation, and delete workflows",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "displays separate Owner and Admin accounts with protected Owner actions",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "cancels Add New User without creating an account",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "creates a normalized Admin and displays invitation confirmation",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "rejects an empty Add User form without creating an account",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "preserves Add User inputs after an account-creation conflict",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "keeps account editing unchanged when canceled",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "validates an empty edited username without sending PATCH",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "updates an Admin username only after successful PATCH",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "preserves the edit dialog and username after a rejected PATCH",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "cancels administrator deletion without a DELETE request",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "removes a regular administrator after confirmed deletion",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "retains an administrator when deletion fails",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "resends an eligible invitation without sending real email",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "reports invitation resend failures without a success notice",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "prevents duplicate invitation resends while a request is pending",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "hides management actions when administrator API returns 401",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "hides management actions when administrator API returns 403",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "withdraws account-management actions after a failed authorization refresh",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-account-management.spec.ts",
+    "test": "keeps Add and Edit Account controls usable on mobile",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "renders the login page and controls",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "requires both login fields before submitting",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "uses native browser email validation",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "displays denied Google account feedback",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "displays authentication service errors",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "normalizes credentials and displays invalid login feedback",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "rejects an unsafe login destination",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "preserves a valid ownership-transfer destination",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-login.spec.ts",
+    "test": "keeps login controls available on mobile",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "opens and closes the password request dialog",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "submits a normalized password-link request",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "displays password request rate-limit errors",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "displays network errors during a password request",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "rejects a password shorter than six characters",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "rejects mismatched passwords",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "submits a valid setup password request",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "submits a valid reset password request",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "offers recovery when a password token is invalid",
+    "status": "expected"
+  },
+  {
+    "file": "e2e/admin-password-flow.spec.ts",
+    "test": "keeps the password dialog usable on mobile",
+    "status": "expected"
+  }
+]

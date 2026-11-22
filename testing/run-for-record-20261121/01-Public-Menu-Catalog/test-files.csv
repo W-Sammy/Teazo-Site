@@ -1,0 +1,12 @@
+File,Passed,Failed,Other
+app/(site)/components/menu-catalog-deep-link-preload.test.tsx,3,0,0
+app/(site)/components/menu-catalog.test.tsx,19,0,0
+app/(site)/components/menu-items-section.test.tsx,3,0,0
+app/(site)/menu/page.catalog-loading.test.tsx,45,0,0
+app/(site)/static-menu/page.test.tsx,5,0,0
+app/(site)/static-menu/static-menu-content.test.ts,13,0,0
+app/(site)/static-menu/static-menu-content.test.tsx,3,0,0
+app/api/menu/pdf/route.test.ts,26,0,0
+app/api/square/products/route.test.ts,6,0,0
+app/lib/catalog-availability.test.ts,18,0,0
+app/lib/catalog-validation.test.ts,23,0,0

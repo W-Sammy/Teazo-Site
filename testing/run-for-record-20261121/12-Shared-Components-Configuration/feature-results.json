@@ -1,0 +1,308 @@
+{
+  "section": "12-Shared-Components-Configuration",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference paints a static composition and repaints on resize without scheduling animation",
+          "status": "passed",
+          "title": "paints a static composition and repaints on resize without scheduling animation",
+          "duration": 34.86629999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference freezes ongoing motion and resumes at most one loop when the preference changes",
+          "status": "passed",
+          "title": "freezes ongoing motion and resumes at most one loop when the preference changes",
+          "duration": 6.072499999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference cleans up after starting reduced and later enabling motion, including Strict Mode remounts",
+          "status": "passed",
+          "title": "cleans up after starting reduced and later enabling motion, including Strict Mode remounts",
+          "duration": 4.797500000000127,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference freezes ongoing motion while document.body overflow is hidden and resumes when restored",
+          "status": "passed",
+          "title": "freezes ongoing motion while document.body overflow is hidden and resumes when restored",
+          "duration": 3.7657000000001517,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference does not start animation if mounted while modal has overflow hidden",
+          "status": "passed",
+          "title": "does not start animation if mounted while modal has overflow hidden",
+          "duration": 3.002100000000155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference resets the time delta after a long modal pause",
+          "status": "passed",
+          "title": "resets the time delta after a long modal pause",
+          "duration": 1.8503000000000611,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference respects reduced motion when the modal closes and keeps a single loop",
+          "status": "passed",
+          "title": "respects reduced motion when the modal closes and keeps a single loop",
+          "duration": 3.4911000000001877,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference polls overflow without MutationObserver (initially hidden: false)",
+          "status": "passed",
+          "title": "polls overflow without MutationObserver (initially hidden: false)",
+          "duration": 5.360599999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference polls overflow without MutationObserver (initially hidden: true)",
+          "status": "passed",
+          "title": "polls overflow without MutationObserver (initially hidden: true)",
+          "duration": 3.7461000000000695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "BubbleField motion preference"
+          ],
+          "fullName": "BubbleField motion preference resumes if a frame encounters a lock that ends before the next overflow poll",
+          "status": "passed",
+          "title": "resumes if a frame encounters a lock that ends before the next overflow poll",
+          "duration": 2.7359999999998763,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296730132,
+      "endTime": 1795296730201.736,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/components/bubble-field.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "preloadable components"
+          ],
+          "fullName": "preloadable components shares an in-flight import and renders a completed warm-up without even mounting the fallback",
+          "status": "passed",
+          "title": "shares an in-flight import and renders a completed warm-up without even mounting the fallback",
+          "duration": 17.66210000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "preloadable components"
+          ],
+          "fullName": "preloadable components keeps speculative failures silent, exposes rendering failures, and retries through the boundary",
+          "status": "passed",
+          "title": "keeps speculative failures silent, exposes rendering failures, and retries through the boundary",
+          "duration": 684.0002999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "preloadable components"
+          ],
+          "fullName": "preloadable components allows a later intent to recover from a failed preload without rendering an error",
+          "status": "passed",
+          "title": "allows a later intent to recover from a failed preload without rendering an error",
+          "duration": 1.6640999999999622,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "preloadable components"
+          ],
+          "fullName": "preloadable components ignores completion of an obsolete load after reset",
+          "status": "passed",
+          "title": "ignores completion of an obsolete load after reset",
+          "duration": 1.3014000000002852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296703850,
+      "endTime": 1795296704554.3015,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/preloadable-component.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails uses the preview deployment even though NODE_ENV is production",
+          "status": "passed",
+          "title": "uses the preview deployment even though NODE_ENV is production",
+          "duration": 1.2406000000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails honors explicit configuration, including an intentionally shared preview origin",
+          "status": "passed",
+          "title": "honors explicit configuration, including an intentionally shared preview origin",
+          "duration": 0.2664000000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails uses the production fallback only for a production deployment",
+          "status": "passed",
+          "title": "uses the production fallback only for a production deployment",
+          "duration": 0.2839999999999918,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails fails when a preview has no application URL instead of switching environments",
+          "status": "passed",
+          "title": "fails when a preview has no application URL instead of switching environments",
+          "duration": 0.5710999999999729,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails requires explicit configuration outside Vercel production and development",
+          "status": "passed",
+          "title": "requires explicit configuration outside Vercel production and development",
+          "duration": 0.20830000000000837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails allows localhost HTTP only during local development",
+          "status": "passed",
+          "title": "allows localhost HTTP only during local development",
+          "duration": 0.2254999999999825,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails rejects invalid configuration http://example.com",
+          "status": "passed",
+          "title": "rejects invalid configuration http://example.com",
+          "duration": 0.22140000000001692,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails rejects invalid configuration https://user:password@example.com",
+          "status": "passed",
+          "title": "rejects invalid configuration https://user:password@example.com",
+          "duration": 0.17040000000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "application URLs for checkout and admin emails"
+          ],
+          "fullName": "application URLs for checkout and admin emails rejects invalid configuration javascript:alert(1)",
+          "status": "passed",
+          "title": "rejects invalid configuration javascript:alert(1)",
+          "duration": 0.17619999999999436,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296745631,
+      "endTime": 1795296745634.2214,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/lib/site-url.test.ts"
+    }
+  ]
+}

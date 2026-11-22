@@ -1,0 +1,999 @@
+{
+  "section": "04-Orders-Payment-Status",
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page shows a missing-order message when no order reference exists",
+          "status": "passed",
+          "title": "shows a missing-order message when no order reference exists",
+          "duration": 79.74800000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page confirms a paid order and clears its matching cart",
+          "status": "passed",
+          "title": "confirms a paid order and clears its matching cart",
+          "duration": 45.70809999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page shows a paid receipt without clearing an unrelated cart",
+          "status": "passed",
+          "title": "shows a paid receipt without clearing an unrelated cart",
+          "duration": 14.894800000000032,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page displays canceled orders without clearing the cart",
+          "status": "passed",
+          "title": "displays canceled orders without clearing the cart",
+          "duration": 16.07170000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page stops payment verification after four unpaid checks",
+          "status": "passed",
+          "title": "stops payment verification after four unpaid checks",
+          "duration": 4551.0316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page retries a pending payment and clears its matching cart when paid",
+          "status": "passed",
+          "title": "retries a pending payment and clears its matching cart when paid",
+          "duration": 1524.3781,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page handles an unavailable order response without clearing the cart",
+          "status": "passed",
+          "title": "handles an unavailable order response without clearing the cart",
+          "duration": 16.494399999999587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page accepts the order_id query parameter for an order reference",
+          "status": "passed",
+          "title": "accepts the order_id query parameter for an order reference",
+          "duration": 15.2524999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page accepts the id query parameter for an order reference",
+          "status": "passed",
+          "title": "accepts the id query parameter for an order reference",
+          "duration": 8.461200000000645,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page restores a confirmed order reference from session storage",
+          "status": "passed",
+          "title": "restores a confirmed order reference from session storage",
+          "duration": 7.733299999999872,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page displays scheduled pickup information in Pacific time",
+          "status": "passed",
+          "title": "displays scheduled pickup information in Pacific time",
+          "duration": 32.981700000000274,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page displays line items, modifiers, and receipt totals",
+          "status": "passed",
+          "title": "displays line items, modifiers, and receipt totals",
+          "duration": 17.783900000000358,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page restores the last checkout order from session storage",
+          "status": "passed",
+          "title": "restores the last checkout order from session storage",
+          "duration": 27.927999999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page restores a pending checkout order from local storage",
+          "status": "passed",
+          "title": "restores a pending checkout order from local storage",
+          "duration": 31.014900000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page restores a recent order reference from local storage",
+          "status": "passed",
+          "title": "restores a recent order reference from local storage",
+          "duration": 15.228399999999965,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page prioritizes the URL order reference over a stored reference",
+          "status": "passed",
+          "title": "prioritizes the URL order reference over a stored reference",
+          "duration": 16.970100000000457,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Public order confirmation page"
+          ],
+          "fullName": "Public order confirmation page handles a malformed Square order response without clearing the cart",
+          "status": "passed",
+          "title": "handles a malformed Square order response without clearing the cart",
+          "duration": 14.648799999999937,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296672533,
+      "endTime": 1795296678969.6487,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/(site)/order/confirmation/page.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reports the existing payment heuristic for 'OPEN without tenders'",
+          "status": "passed",
+          "title": "reports the existing payment heuristic for 'OPEN without tenders'",
+          "duration": 4.735900000000129,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reports the existing payment heuristic for 'OPEN with a tender'",
+          "status": "passed",
+          "title": "reports the existing payment heuristic for 'OPEN with a tender'",
+          "duration": 3.189100000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reports the existing payment heuristic for 'COMPLETED without tenders'",
+          "status": "passed",
+          "title": "reports the existing payment heuristic for 'COMPLETED without tenders'",
+          "duration": 0.46039999999993597,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reports the existing payment heuristic for 'CANCELED without tenders'",
+          "status": "passed",
+          "title": "reports the existing payment heuristic for 'CANCELED without tenders'",
+          "duration": 0.36679999999978463,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reports the existing payment heuristic for 'CANCELED with an existing tender'",
+          "status": "passed",
+          "title": "reports the existing payment heuristic for 'CANCELED with an existing tender'",
+          "duration": 0.3690000000001419,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation reflects a subsequent Square payment-status change",
+          "status": "passed",
+          "title": "reflects a subsequent Square payment-status change",
+          "duration": 0.5507999999999811,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation does not reuse a prior paid snapshot when Square later returns an unpaid snapshot",
+          "status": "passed",
+          "title": "does not reuse a prior paid snapshot when Square later returns an unpaid snapshot",
+          "duration": 0.45269999999982247,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Current payment-status interpretation"
+          ],
+          "fullName": "Square order lifecycle status handling Current payment-status interpretation handles concurrent order lookups without sharing a cached response",
+          "status": "passed",
+          "title": "handles concurrent order lookups without sharing a cached response",
+          "duration": 0.4844999999995707,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Pickup fulfillment state reporting"
+          ],
+          "fullName": "Square order lifecycle status handling Pickup fulfillment state reporting preserves the Square pickup fulfillment state PROPOSED",
+          "status": "passed",
+          "title": "preserves the Square pickup fulfillment state PROPOSED",
+          "duration": 0.29739999999992506,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Pickup fulfillment state reporting"
+          ],
+          "fullName": "Square order lifecycle status handling Pickup fulfillment state reporting preserves the Square pickup fulfillment state RESERVED",
+          "status": "passed",
+          "title": "preserves the Square pickup fulfillment state RESERVED",
+          "duration": 0.2062999999998283,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Pickup fulfillment state reporting"
+          ],
+          "fullName": "Square order lifecycle status handling Pickup fulfillment state reporting preserves the Square pickup fulfillment state PREPARED",
+          "status": "passed",
+          "title": "preserves the Square pickup fulfillment state PREPARED",
+          "duration": 0.14420000000018263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Pickup fulfillment state reporting"
+          ],
+          "fullName": "Square order lifecycle status handling Pickup fulfillment state reporting preserves the Square pickup fulfillment state COMPLETED",
+          "status": "passed",
+          "title": "preserves the Square pickup fulfillment state COMPLETED",
+          "duration": 0.15419999999994616,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Pickup fulfillment state reporting"
+          ],
+          "fullName": "Square order lifecycle status handling Pickup fulfillment state reporting preserves the Square pickup fulfillment state CANCELED",
+          "status": "passed",
+          "title": "preserves the Square pickup fulfillment state CANCELED",
+          "duration": 0.12560000000030414,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Receipt information and privacy"
+          ],
+          "fullName": "Square order lifecycle status handling Receipt information and privacy preserves line items, modifiers, scheduled pickup information, and totals",
+          "status": "passed",
+          "title": "preserves line items, modifiers, scheduled pickup information, and totals",
+          "duration": 0.6394000000000233,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Receipt information and privacy"
+          ],
+          "fullName": "Square order lifecycle status handling Receipt information and privacy handles orders without optional receipt fields",
+          "status": "passed",
+          "title": "handles orders without optional receipt fields",
+          "duration": 0.24260000000003856,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Receipt information and privacy"
+          ],
+          "fullName": "Square order lifecycle status handling Receipt information and privacy excludes Square metadata, tender details, and unrelated internal fields",
+          "status": "passed",
+          "title": "excludes Square metadata, tender details, and unrelated internal fields",
+          "duration": 0.3553999999999178,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Receipt information and privacy"
+          ],
+          "fullName": "Square order lifecycle status handling Receipt information and privacy masks 'standard customer contact' in the public receipt",
+          "status": "passed",
+          "title": "masks 'standard customer contact' in the public receipt",
+          "duration": 0.3862000000003718,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square order lifecycle status handling",
+            "Receipt information and privacy"
+          ],
+          "fullName": "Square order lifecycle status handling Receipt information and privacy masks 'short phone and malformed email' in the public receipt",
+          "status": "passed",
+          "title": "masks 'short phone and malformed email' in the public receipt",
+          "duration": 0.24350000000004002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296741546,
+      "endTime": 1795296741560.2434,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/orders/[id]/route.lifecycle.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] returns a paid website order with the contact details masked",
+          "status": "passed",
+          "title": "returns a paid website order with the contact details masked",
+          "duration": 4.2645000000002256,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] reports an order without a payment as unpaid",
+          "status": "passed",
+          "title": "reports an order without a payment as unpaid",
+          "duration": 0.43229999999994106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] answers 404 for an order not placed through the website, such as an in-store one",
+          "status": "passed",
+          "title": "answers 404 for an order not placed through the website, such as an in-store one",
+          "duration": 0.3900999999996202,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] answers the same 404 when Square has no such order",
+          "status": "passed",
+          "title": "answers the same 404 when Square has no such order",
+          "duration": 0.5380000000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] answers 404 for a malformed ID without asking Square",
+          "status": "passed",
+          "title": "answers 404 for a malformed ID without asking Square",
+          "duration": 0.7061000000003332,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GET /api/orders/[id]"
+          ],
+          "fullName": "GET /api/orders/[id] keeps error details out of the response",
+          "status": "passed",
+          "title": "keeps error details out of the response",
+          "duration": 0.5387000000000626,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296744926,
+      "endTime": 1795296744933.5388,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/orders/[id]/route.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "POST /api/square/webhooks: menu cache (TZ-515)"
+          ],
+          "fullName": "POST /api/square/webhooks: menu cache (TZ-515) clears the cached Square catalog when the catalog changes",
+          "status": "passed",
+          "title": "clears the cached Square catalog when the catalog changes",
+          "duration": 13.782399999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/square/webhooks: menu cache (TZ-515)"
+          ],
+          "fullName": "POST /api/square/webhooks: menu cache (TZ-515) leaves the cache alone for other events and for bad signatures",
+          "status": "passed",
+          "title": "leaves the cache alone for other events and for bad signatures",
+          "duration": 1.511400000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "POST /api/square/webhooks: menu cache (TZ-515)"
+          ],
+          "fullName": "POST /api/square/webhooks: menu cache (TZ-515) doesn't clear the cache when recording the revision fails, so Square retries",
+          "status": "passed",
+          "title": "doesn't clear the cache when recording the revision fails, so Square retries",
+          "duration": 0.70150000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296737727,
+      "endTime": 1795296737743.7014,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/square/webhooks/route.catalog-cache.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures returns 503 when the signature key is missing",
+          "status": "passed",
+          "title": "returns 503 when the signature key is missing",
+          "duration": 14.28649999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures returns 503 when the notification URL is missing",
+          "status": "passed",
+          "title": "returns 503 when the notification URL is missing",
+          "duration": 0.6961000000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures rejects requests without a signature header",
+          "status": "passed",
+          "title": "rejects requests without a signature header",
+          "duration": 0.6297999999999888,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures rejects a signature generated with the wrong key",
+          "status": "passed",
+          "title": "rejects a signature generated with the wrong key",
+          "duration": 0.587299999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures rejects a signature when the signed body has been modified",
+          "status": "passed",
+          "title": "rejects a signature when the signed body has been modified",
+          "duration": 0.49219999999999686,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures rejects a signature generated for another notification URL",
+          "status": "passed",
+          "title": "rejects a signature generated for another notification URL",
+          "duration": 0.4351000000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures rejects a malformed signature with a different length",
+          "status": "passed",
+          "title": "rejects a malformed signature with a different length",
+          "duration": 0.4008000000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Configuration and HMAC signatures"
+          ],
+          "fullName": "Square webhook endpoint Configuration and HMAC signatures uses the configured notification URL rather than the incoming request URL",
+          "status": "passed",
+          "title": "uses the configured notification URL rather than the incoming request URL",
+          "duration": 0.8796000000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects malformed JSON even with a valid HMAC signature",
+          "status": "passed",
+          "title": "rejects malformed JSON even with a valid HMAC signature",
+          "duration": 0.5842999999999847,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid event structure 0",
+          "status": "passed",
+          "title": "rejects invalid event structure 0",
+          "duration": 0.4890000000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid event structure 1",
+          "status": "passed",
+          "title": "rejects invalid event structure 1",
+          "duration": 0.3305000000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid event structure 2",
+          "status": "passed",
+          "title": "rejects invalid event structure 2",
+          "duration": 0.29529999999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid event structure 3",
+          "status": "passed",
+          "title": "rejects invalid event structure 3",
+          "duration": 0.3316999999999837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog event ID 0",
+          "status": "passed",
+          "title": "rejects invalid catalog event ID 0",
+          "duration": 0.35890000000000555,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog event ID 1",
+          "status": "passed",
+          "title": "rejects invalid catalog event ID 1",
+          "duration": 0.2896000000000072,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog event ID 2",
+          "status": "passed",
+          "title": "rejects invalid catalog event ID 2",
+          "duration": 0.26599999999999113,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog timestamp 0",
+          "status": "passed",
+          "title": "rejects invalid catalog timestamp 0",
+          "duration": 0.31790000000000873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog timestamp 1",
+          "status": "passed",
+          "title": "rejects invalid catalog timestamp 1",
+          "duration": 0.2828999999999837,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog timestamp 2",
+          "status": "passed",
+          "title": "rejects invalid catalog timestamp 2",
+          "duration": 0.2504000000000133,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Signed payload validation"
+          ],
+          "fullName": "Square webhook endpoint Signed payload validation rejects invalid catalog timestamp 3",
+          "status": "passed",
+          "title": "rejects invalid catalog timestamp 3",
+          "duration": 0.24639999999999418,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing returns 500 without recording a revision when category sync fails",
+          "status": "passed",
+          "title": "returns 500 without recording a revision when category sync fails",
+          "duration": 0.44729999999998427,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing records a valid catalog event and revalidates public and admin Menu pages",
+          "status": "passed",
+          "title": "records a valid catalog event and revalidates public and admin Menu pages",
+          "duration": 0.5269999999999868,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing characterizes duplicate catalog-event delivery without claiming endpoint-level deduplication",
+          "status": "passed",
+          "title": "characterizes duplicate catalog-event delivery without claiming endpoint-level deduplication",
+          "duration": 0.49160000000000537,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing accepts out-of-order catalog events without inventing an event-ordering check",
+          "status": "passed",
+          "title": "accepts out-of-order catalog events without inventing an event-ordering check",
+          "duration": 0.375,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing returns 500 on revision-storage failure and accepts a later retry",
+          "status": "passed",
+          "title": "returns 500 on revision-storage failure and accepts a later retry",
+          "duration": 0.585899999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Catalog update processing"
+          ],
+          "fullName": "Square webhook endpoint Catalog update processing returns 500 when cache revalidation fails",
+          "status": "passed",
+          "title": "returns 500 when cache revalidation fails",
+          "duration": 0.37889999999998736,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Non-catalog order and payment events"
+          ],
+          "fullName": "Square webhook endpoint Non-catalog order and payment events acknowledges signed payment.updated without processing an order-state transition",
+          "status": "passed",
+          "title": "acknowledges signed payment.updated without processing an order-state transition",
+          "duration": 1.051400000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Non-catalog order and payment events"
+          ],
+          "fullName": "Square webhook endpoint Non-catalog order and payment events acknowledges signed order.updated without processing an order-state transition",
+          "status": "passed",
+          "title": "acknowledges signed order.updated without processing an order-state transition",
+          "duration": 0.2942999999999927,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Non-catalog order and payment events"
+          ],
+          "fullName": "Square webhook endpoint Non-catalog order and payment events acknowledges signed unrecognized.event without processing an order-state transition",
+          "status": "passed",
+          "title": "acknowledges signed unrecognized.event without processing an order-state transition",
+          "duration": 0.26720000000000255,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Non-catalog order and payment events"
+          ],
+          "fullName": "Square webhook endpoint Non-catalog order and payment events acknowledges a signed non-catalog event without catalog-specific fields",
+          "status": "passed",
+          "title": "acknowledges a signed non-catalog event without catalog-specific fields",
+          "duration": 0.27779999999998495,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Square webhook endpoint",
+            "Non-catalog order and payment events"
+          ],
+          "fullName": "Square webhook endpoint Non-catalog order and payment events acknowledges duplicate signed payment notifications without modifying catalog state",
+          "status": "passed",
+          "title": "acknowledges duplicate signed payment notifications without modifying catalog state",
+          "duration": 0.3602999999999952,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795296731285,
+      "endTime": 1795296731312.3604,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/psilo/source/repo/Teazo-Site/teazo-site/app/api/square/webhooks/route.test.ts"
+    }
+  ]
+}
