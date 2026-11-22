@@ -312,6 +312,7 @@ beforeEach(() => {
   mocks.attempts.clear();
 
   vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://checkout.test/");
+  vi.stubEnv("SQUARE_READ_ONLY", undefined);
 
   vi.useFakeTimers({ toFake: ["Date"] });
 
@@ -343,6 +344,18 @@ afterEach(() => {
 });
 
 describe("POST /api/checkout", () => {
+  it("blocks read-only checkout before parsing, reserving an attempt, or creating a payment link", async () => {
+    vi.stubEnv("SQUARE_READ_ONLY", "true");
+    const response = await POST(new Request("http://localhost/api/checkout", { method: "POST" }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "SQUARE_READ_ONLY" });
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mocks.verifyTurnstile).not.toHaveBeenCalled();
+    expect(mocks.getCheckoutAttempt).not.toHaveBeenCalled();
+    expect(mocks.reserveCheckoutAttempt).not.toHaveBeenCalled();
+    expect(mocks.createPaymentLink).not.toHaveBeenCalled();
+  });
+
   it.each([
     "other drink",
     "duplicate",
