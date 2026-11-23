@@ -119,13 +119,21 @@ function isSavedMenuItem(value: unknown): value is SavedMenuItem {
 const unconfirmedCreateMessage =
   "The item creation could not be confirmed. Reload the menu and check for the item before trying again to avoid adding a duplicate.";
 
+function getSquareReadOnlyMessage(result: unknown): string | null {
+  if (!isRecord(result) || result.code !== "SQUARE_READ_ONLY") return null;
+
+  return typeof result.error === "string" && result.error.trim()
+    ? result.error
+    : "Square is in read-only mode. Square menu changes are temporarily disabled.";
+}
+
 function getCreateErrorMessage(status: number, result: unknown): string {
   if (status === 401) {
     return "Your session has expired. Sign in again before adding an item.";
   }
 
   if (status === 403) {
-    return "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
+    return getSquareReadOnlyMessage(result) ?? "You do not have permission to add an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 400) {
@@ -154,7 +162,7 @@ function getUpdateErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
+    return getSquareReadOnlyMessage(result) ?? "You do not have permission to edit an item, or the request origin was rejected. Sign in with Owner or Admin access from the Teazo admin page.";
   }
 
   if (status === 404) {
@@ -202,7 +210,7 @@ function getDeleteErrorMessage(status: number, result: unknown): string {
   }
 
   if (status === 403) {
-    return "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Admin access from the Teazo admin page.";
+    return getSquareReadOnlyMessage(result) ?? "You do not have permission to delete this item, or the request origin was rejected. Use Owner or Admin access from the Teazo admin page.";
   }
 
   if (
