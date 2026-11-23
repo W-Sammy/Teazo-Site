@@ -1,22 +1,60 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogFixture, locationId } from "@/test/catalog-fixtures";
 
-const mocks = vi.hoisted(() => ({ searchItems: vi.fn(), list: vi.fn(), get: vi.fn() }));
+const mocks = vi.hoisted(() => ({ searchItems: vi.fn(), list: vi.fn(), get: vi.fn(), upsert: vi.fn(), delete: vi.fn(), requireAdminApi: vi.fn() }));
 vi.mock("@/app/lib/square", () => ({ squareClient: { catalog: {
-  searchItems: mocks.searchItems, list: mocks.list, object: { get: mocks.get },
+  searchItems: mocks.searchItems, list: mocks.list, object: { get: mocks.get, upsert: mocks.upsert, delete: mocks.delete },
 } } }));
-vi.mock("@/app/lib/admin", () => ({ requireAdminApi: vi.fn() }));
+vi.mock("@/app/lib/admin", () => ({ requireAdminApi: mocks.requireAdminApi }));
 vi.mock("@/app/lib/square-location", () => ({ resolveSquareLocationId: async () => locationId }));
-const { GET } = await import("./route");
-const { GET: getOne } = await import("./[id]/route");
+const { GET, POST } = await import("./route");
+const { GET: getOne, PUT, DELETE } = await import("./[id]/route");
 let fixture = catalogFixture();
 
 beforeEach(() => {
   fixture = catalogFixture();
   vi.clearAllMocks();
+  vi.stubEnv("SQUARE_READ_ONLY", undefined);
+  mocks.requireAdminApi.mockResolvedValue({ ok: true });
   mocks.searchItems.mockReset().mockImplementation(async () => ({ items: [fixture.item] }));
   mocks.list.mockImplementation(async ({ types }: { types: string }) => types === "MODIFIER_LIST" ? [fixture.list] : []);
   mocks.get.mockImplementation(async () => ({ object: fixture.item, relatedObjects: [fixture.list] }));
+});
+
+afterEach(() => vi.unstubAllEnvs());
+
+describe("Square read-only mode", () => {
+  it.each(["POST", "PUT", "DELETE"])("blocks %s before parsing or contacting Square", async (method) => {
+    vi.stubEnv("SQUARE_READ_ONLY", "true");
+    const request = new Request("http://localhost/api/square/products/ITEM1", { method });
+    const context = { params: Promise.resolve({ id: "ITEM1" }) };
+    const response = method === "POST" ? await POST(request)
+      : method === "PUT" ? await PUT(request, context) : await DELETE(request, context);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "SQUARE_READ_ONLY" });
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(mocks.get).not.toHaveBeenCalled();
+    expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(mocks.delete).not.toHaveBeenCalled();
+  });
+
+  it("keeps catalog list and item reads available", async () => {
+    vi.stubEnv("SQUARE_READ_ONLY", "true");
+    expect((await GET()).status).toBe(200);
+    expect((await getOne(new Request("http://localhost/api/square/products/ITEM1"), {
+      params: Promise.resolve({ id: "ITEM1" }),
+    })).status).toBe(200);
+  });
+
+  it.each([undefined, "false"])("allows writes when the setting is %s", async (setting) => {
+    vi.stubEnv("SQUARE_READ_ONLY", setting);
+    mocks.delete.mockResolvedValue({ deletedObjectIds: ["ITEM1"] });
+    const response = await DELETE(new Request("http://localhost/api/square/products/ITEM1", { method: "DELETE" }), {
+      params: Promise.resolve({ id: "ITEM1" }),
+    });
+    expect(response.status).toBe(200);
+    expect(mocks.delete).toHaveBeenCalledWith({ objectId: "ITEM1" });
+  });
 });
 
 describe("products availability responses", () => {

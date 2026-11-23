@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { squareClient } from "@/app/lib/square";
+import { squareWriteBlockedResponse } from "@/app/lib/square-read-only";
 import { SquareError } from "square";
 import { validateCheckoutRequestBody } from "@/app/lib/checkout-validators";
 import { ONLINE_ORDERING_PAUSED_MESSAGE, validatePickupTiming } from "@/app/lib/store-hours";
@@ -221,6 +222,9 @@ async function handleExistingAttempt(attempt: CheckoutAttempt, fingerprint: stri
  * Retries use the original Square request and key. No D1 claim = no Square call.
  */
 export async function POST(request: Request) {
+  const blocked = squareWriteBlockedResponse();
+  if (blocked) return blocked;
+
   let rawBody: unknown;
   try {
     rawBody = await request.json();
