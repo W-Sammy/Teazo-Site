@@ -246,7 +246,8 @@ export async function getAdminGalleryImages(): Promise<
 }
 
 /**
- * Resize, store and record a new gallery image. Call only after
+ * Validate, encode, store and record new Gallery media without
+ * reducing image dimensions. Call only after
  * requireAdminApi(request, 2). Throws GalleryInputError for input to fix,
  * MediaError when storing fails (507, 429 and 503 are refusals to explain to
  * the admin), and D1Error when the database fails.

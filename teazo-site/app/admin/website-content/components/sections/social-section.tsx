@@ -93,10 +93,10 @@ export default function SocialSection({
       setRef={setRef}
     >
       <p className="mb-1 text-xs text-gray-400">
-        Links shown as icons in the site footer. Supported
-        platforms (Facebook, Instagram, Yelp) automatically
-        display their official brand icons; other destinations
-        use a generic link icon. Custom icon uploads are not
+        Links shown as icons in the site footer. Facebook,
+        Instagram, and Yelp URLs automatically display their
+        matching TEAZO SVG icons. Other destinations use
+        the TEAZO share icon. Custom icon uploads are not
         supported.
       </p>
 
@@ -138,7 +138,7 @@ export default function SocialSection({
                     <span className="text-[#a99584]">
                       <Image
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
-                        alt="Generic Link"
+                        alt="TEAZO share icon"
                         width={24}
                         height={24}
                         className="h-6 w-6 object-contain"

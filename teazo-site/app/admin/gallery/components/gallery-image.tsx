@@ -13,7 +13,24 @@ type GalleryImageProps = {
   unoptimized?: boolean;
 };
 
-export default function GalleryImage({
+/**
+ * Give each media source its own component state.
+ *
+ * A replacement image or video must not inherit the
+ * previous source's failed-loading state.
+ */
+export default function GalleryImage(
+  props: GalleryImageProps,
+) {
+  return (
+    <GalleryImageContent
+      key={`${props.mediaType ?? "image"}:${props.src}`}
+      {...props}
+    />
+  );
+}
+
+function GalleryImageContent({
   src,
   alt,
   sizes,
