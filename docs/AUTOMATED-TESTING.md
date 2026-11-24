@@ -413,7 +413,7 @@ The Delivery and Static Menu areas include both component-level tests and Chromi
 | Events | Public Events display, administrator forms, API routes, event dates, database queries |
 | Checkout | Cart/customizer interactions, synchronous duplicate-submit prevention, checkout-attempt UUID validation, persistent D1 idempotency coordination, Square retry and failure handling, cart revision ownership, payment confirmation, and abandoned-checkout recovery |
 | Orders and Webhooks | Order lifecycle, Square webhook validation, category synchronization, cache invalidation, and failure scenarios |
-| Contact | Form submission, email notifications, notification recovery, Turnstile verification, database queries |
+| Contact | Form submission, deferred notifications, recipient selection from stored Website Content, invalid or unavailable recipient handling, notification recovery, email limits, Turnstile verification, and database queries |
 | Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior, social-link URL normalization, hostname-based Facebook/Instagram/Yelp icon recognition, custom share-icon fallback, and Admin/public social-icon rendering |
 | Analytics | Dashboard queries, analytics storage, SQL behavior, cleanup procedures |
 | Authentication | Session validation, password setup/reset, password tokens, rate limiting, invitation handling; browser login/password workflows |
@@ -508,6 +508,8 @@ Relevant assertions include:
 - Idempotency and duplicate-request handling.
 
 API route tests commonly mock external systems rather than performing live network requests.
+
+Contact-form tests mock Website Content lookups to verify that notifications use the stored contact email instead of an environment recipient. They also test invalid or unavailable recipients and confirm that saved messages remain intact when notification delivery is skipped or fails.
 
 ### Checkout idempotency and cart recovery tests
 
@@ -670,6 +672,7 @@ Common mocked services include:
 - Square catalog, location, checkout, and webhook integrations.
 - Cloudflare D1 and R2 operations.
 - Email providers and invitation delivery.
+- Website Content recipient lookups for contact-form notifications.
 - Authentication sessions.
 - Turnstile verification.
 - Next.js server utilities and cache behavior.
@@ -846,7 +849,6 @@ Examples include:
 - Checking Admin Gallery List/Card View thumbnail appearance and network transfer sizes.
 - Confirming social platform icons and custom share-icon fallbacks display correctly in the Admin editor and public pages.
 
-
 Use development or sandbox systems whenever possible.
 
 Do not modify production records or submit real payments solely for testing without an approved procedure.
@@ -1016,7 +1018,6 @@ Playwright additionally verifies selected browser-based authentication, administ
 - Image compression quality across different image formats, dimensions, browsers, and devices.
 - Large Gallery performance with many stored images, particularly when original images are used for List View thumbnails.
 - Public and Admin social-link interactions in browsers not covered by existing automated browser tests.
-
 
 Vitest and Playwright are separate automated testing suites. Vitest does not provide real-browser end-to-end coverage; Playwright provides limited real-browser coverage for selected workflows. Passing either suite does not prove every production integration or browser is supported.
 

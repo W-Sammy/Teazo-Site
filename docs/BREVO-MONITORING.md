@@ -1,4 +1,3 @@
-
 # TEAZO — Brevo Email Monitoring and Maintenance
 
 ## 1. Overview
@@ -19,12 +18,13 @@ The production contact-form workflow is:
 2. Cloudflare Turnstile verifies the submission.
 3. The application validates the submitted information.
 4. The message is saved in the production Cloudflare D1 database.
-5. The application sends an email notification through Brevo.
-6. The notification is delivered to the configured recipient.
+5. After the message is saved, the application reads the recipient from the email configured in Admin → Website Content.
+6. If the recipient is valid and notification limits permit delivery, the application attempts to send an email through Brevo.
 
 The email includes the visitor's information and uses the visitor's email address as the Reply-To address.
 
-The database record provides a backup of the submission if email delivery fails.
+The recipient is stored in Website Content, not selected by `CONTACT_NOTIFY_TO`.
+The sender address, `EMAIL_FROM`, is configured separately and must be verified with Brevo. If the recipient is invalid, Website Content cannot be loaded, or delivery fails, the visitor's message remains saved in the database.
 
 ### Automated Brevo Activity Check
 
@@ -37,7 +37,7 @@ The Brevo health-check workflow is:
 5. The endpoint reports success or failure to Healthchecks.io.
 6. Healthchecks.io monitors the expected execution schedule and sends email alerts when necessary.
 
-The activity check does not send transactional emails.
+The activity check does not send transactional emails. Healthchecks.io alerts are separate from contact-form notifications and can use another recipient.
 
 ### Analytics Cleanup
 
@@ -56,11 +56,14 @@ The following environment variables are used by the integration.
 | `BREVO_API_KEY` | Authenticates requests to the Brevo API. |
 | `EMAIL_FROM` | Configures the sender email address. |
 | `EMAIL_FROM_NAME` | Configures the sender display name. |
-| `CONTACT_NOTIFY_TO` | Specifies the contact-form notification recipient. |
 | `CRON_SECRET` | Authenticates scheduled endpoint requests. |
 | `BREVO_HEALTHCHECK_URL` | Identifies the Healthchecks.io check receiving monitoring pings. |
 
 These values are managed through the Vercel project's Production environment settings.
+
+Contact-form notification recipients are configured through **Admin → Website Content → Email** and stored in the application database. `CONTACT_NOTIFY_TO` is no longer used. `EMAIL_FROM` remains the Brevo-verified sender address.
+
+Updating the contact-form recipient does not change the sender address or the Healthchecks.io alert recipient, and does not require an environment-variable change or application redeployment.
 
 The API key, Cron secret, and monitoring URL must be treated as sensitive credentials.
 
@@ -123,6 +126,8 @@ Grace time: 2 hours
 
 Notification recipient: `teazodevcsus@gmail.com`
 
+This receives Healthchecks.io monitoring alerts, not necessarily contact-form notifications. The contact-form recipient is set in Website Content.
+
 ### Monitoring Behavior
 
 A successful Brevo API request sends a success ping to Healthchecks.io.
@@ -139,7 +144,9 @@ The Healthchecks.io email integration can be tested from the Integrations page.
 
 The integration should deliver a test notification to the shared Gmail account.
 
-A successful notification test confirms the alert delivery mechanism, but it does not verify the Brevo API or the Vercel Cron Job.
+A successful notification test confirms the alert delivery mechanism, but it does not verify the Brevo API, Vercel Cron Job, or contact-form email delivery.
+
+Verify contact-form notifications separately by submitting a test message and checking the email address saved in Website Content.
 
 ## 6. Monitoring and Troubleshooting
 
@@ -175,7 +182,11 @@ If Brevo rejects the API key:
 5. Securely update `BREVO_API_KEY` in Vercel.
 6. Redeploy the application if required.
 7. Verify the health-check endpoint succeeds.
-8. Submit a test contact-form message and confirm email delivery.
+8. Confirm that Admin → Website Content → Email contains the intended recipient, then submit a test contact-form message and confirm email delivery.
+
+If contact-form notifications do not arrive while the Brevo API check succeeds, verify the Website Content email, ensure `BREVO_SANDBOX` is not enabled, and review application logs for notification failures.
+
+A successful form submission can still have an undelivered email; verify the saved database message separately.
 
 Never share the API key in Discord, GitHub, or ordinary documentation.
 
@@ -217,6 +228,8 @@ Before considering the monitoring integration fully deployed, verify:
 - [ ] The analytics cleanup Cron Job executes successfully.
 - [ ] The Brevo schedule is changed from daily to monthly after testing.
 - [ ] Healthchecks.io is updated to match the monthly schedule.
+- [ ] The contact-form recipient is correct in Admin → Website Content → Email.
+- [ ] A test contact-form notification reaches that recipient.
 
 ## 8. Client Handoff and Maintenance
 
@@ -225,7 +238,8 @@ The TEAZO site owners or designated technical administrator should retain access
 - The Brevo account used for transactional email.
 - The Vercel project hosting the website.
 - The Healthchecks.io monitoring account.
-- The shared Gmail account receiving notifications.
+- The shared Gmail account receiving Healthchecks.io alerts.
+- The inbox receiving contact-form notifications, as configured in Website Content.
 - The domain's DNS management account.
 
 ### Routine Maintenance
@@ -233,10 +247,10 @@ The TEAZO site owners or designated technical administrator should retain access
 Periodically:
 
 1. Review Healthchecks.io for missed or failed checks.
-2. Confirm contact-form notifications continue to arrive.
+2. Confirm contact-form notifications continue to arrive at the Website Content email.
 3. Review Brevo API-key status and activity.
 4. Investigate any Vercel Cron Job failures.
-5. Keep the configured notification recipient current.
+5. Keep both the Website Content contact email and Healthchecks.io alert recipient current.
 6. Rotate credentials when required or if compromised.
 
 ### Handling Alerts
@@ -265,6 +279,8 @@ Never store production secrets in source code.
 
 | File | Purpose |
 |---|---|
+| `teazo-site/app/(site)/contact/actions.ts` | Contact submission, stored recipient selection, and deferred notifications. |
+| `teazo-site/app/lib/website-content.ts` | Reads the saved Website Content email. |
 | `teazo-site/app/lib/email.ts` | Brevo transactional email integration. |
 | `teazo-site/app/api/cron/brevo-health/route.ts` | Brevo API activity check and monitoring integration. |
 | `teazo-site/app/api/cron/brevo-health/route.test.ts` | Automated health-check tests. |

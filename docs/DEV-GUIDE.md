@@ -62,8 +62,8 @@ machine:
 
 - Google sign-in, checked against the `admin_user` table, and a guard on every
   admin page and on the admin write routes, except website content's two (§5).
-- The contact form: bot-checked, saved to the database, and emailed to the
-  owner.
+- The contact form: bot-checked and saved to the database, with email
+  notifications sent to the recipient configured in Website Content.
 - The PDF menu: uploaded from `/admin/menu`, stored in R2, and served on
   `/static-menu`.
 - The Worker's billing limits on R2 and the storage usage report (§2.5).
@@ -74,9 +74,10 @@ machine:
 - Gallery images: storing, listing and removing them in D1 and R2 (§4.1), and
   showing the published ones on `/gallery`.
 
-**Still sample data or hardcoded:** the dashboard's numbers, the events admin
-page, the gallery admin page (the gallery functions its routes need are ready,
-§4.1), and the public menu. Those are waiting for their features.
+**Development status:** Public Menu, Gallery, Events, and the administrator
+interfaces have active implementations. Consult the current application and
+feature tests for remaining limitations rather than treating these pages as
+unimplemented placeholders.
 
 ---
 
@@ -112,7 +113,7 @@ anything older, and it says which version it wants.
 **What you need from someone else:**
 
 - **Google sign-in:** the team's `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
-  Ask Sammy. Needed for sign-in and anything under `/admin`.
+  Ask the team member managing the OAuth configuration. Needed for Google sign-in.
 - **Square:** the team's sandbox access token. Ask whoever holds the team's
   Square developer account. Needed only for Square, the menu admin (including
   the PDF menu upload) and the events admin.
@@ -167,7 +168,7 @@ Check it from another terminal:
 curl -s http://127.0.0.1:8787/query -H 'authorization: Bearer local-dev-token' -H 'content-type: application/json' -d '{"sql":"SELECT label FROM role ORDER BY id"}'
 ```
 
-You should see `Owner`, `Can Edit` and `Can View`.
+You should see `Owner` and `Admin`.
 
 **Looking inside your database.** The quickest way needs no token and no
 running Worker. From the repo root:
@@ -249,7 +250,7 @@ AUTH_GOOGLE_SECRET=<the team's Google OAuth client secret>
 ```
 
 `AUTH_SECRET` is yours; generate your own. Get the Google id and secret from
-Sammy, and never commit them (`.env*` files are gitignored). Leave `AUTH_URL`
+the authorized OAuth administrator, and never commit them (`.env*` files are gitignored). Leave `AUTH_URL`
 and `AUTH_TRUST_HOST` unset: NextAuth trusts `localhost` in development.
 
 Until these are set, every `/admin` page sends you to `/login` and the app's
@@ -264,30 +265,32 @@ cd teazo-d1-proxy
 npm run db:seed:local -- you@gmail.com
 ```
 
-Use the Google address you sign in with. The first address you seed becomes
-the Owner, and any address added after that gets Can Edit. Pass `--role 2`
-(Can Edit) or `--role 3` (Can View) to choose. Running it again for an address
-you already added keeps its role unless you pass `--role`, and never adds a
-second row. It applies any new migrations first, and only ever touches your
-local database. Uploads and Square edits need Owner or Can Edit.
+Use the Google address you sign in with. The first address you seed becomes the Owner, and additional addresses are
+Admins. Use `--role 1` for Owner or `--role 2` for Admin when supported by the
+local seed command. Running it again for an existing address must not create a
+duplicate account. It applies pending migrations and uses the local database.
+Owner and Admin can manage website content; only Owner can manage admin accounts.
 
-Then open `http://localhost:3000/login` and choose **Continue with Google**.
-The email and password fields and "Forgot password?" on that page are
-placeholders: there is no password sign-in yet. Don't type a real password
-into them; the form puts what you type into the page's URL. The red "Email or
-password cannot be empty" line belongs to that placeholder form and shows
-while either of its fields is empty. It is not a sign-in error.
+Open `http://localhost:3000/login` and sign in using **Continue with Google**,
+or use **email and password** after an authorized account has completed its
+password setup. Password setup and reset links are delivered through the
+configured email transport. Credentials sign-in validates the administrator
+account against the current password hash and session version. The password
+request flow is available from the login page; a forgotten password must be
+reset through that flow rather than entered into a URL.
 
-**If sign-in fails:**
+**If sign-in fails:** The email/password form also reports invalid credentials
+or unavailable sign-in services. Verify that the account has completed password
+setup before trying credentials sign-in.
 
 | You see | Cause | Fix |
 |---|---|---|
 | "This Google account does not have admin access" | No live admin row for that exact address, or it is suspended | `npm run db:seed:local -- <that address>` |
 | "We could not verify your access" | The database lookup failed | Start the Worker, and check `D1_PROXY_URL` and `PROXY_TOKEN` in `.env.local` |
-| Sent back to `/login` with no message, or with "Sign-in could not be completed. Please try again." | A missing `AUTH_SECRET`, or a wrong `AUTH_GOOGLE_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set. `CallbackRouteError` after you chose your Google account usually means `AUTH_GOOGLE_SECRET` is wrong: check it against what Sammy sent |
+| Sent back to `/login` with no message, or with "Sign-in could not be completed. Please try again." | A missing `AUTH_SECRET`, or a wrong `AUTH_GOOGLE_SECRET` | Read the `[auth][error]` line in the `npm run dev` terminal. `MissingSecret` means `AUTH_SECRET` is not set. `CallbackRouteError` after you chose your Google account usually means `AUTH_GOOGLE_SECRET` is wrong: check it against the team-provided value |
 | Google's `redirect_uri_mismatch` | The app isn't on port 3000 (see **Terminals and ports** in §2), or the redirect isn't registered | Start the app on port 3000 and open `http://localhost:3000`. The OAuth client must list `http://localhost:3000/api/auth/callback/google` |
 | **Continue with Google** does nothing | You opened `127.0.0.1` or the network address, where the page's scripts never start | Open `http://localhost:3000/login` |
-| Google shows an error page before ours, such as `access_denied`, `org_internal`, `admin_policy_enforced` or `invalid_client` | `access_denied`: the OAuth app's settings don't admit this account. `org_internal`: the OAuth client only admits accounts from one organization. `admin_policy_enforced`: a work or school account whose administrator blocks outside apps. `invalid_client` ("The OAuth client was not found"): `AUTH_GOOGLE_ID` in `.env.local` is missing or wrong | For `invalid_client`, set `AUTH_GOOGLE_ID` to exactly what Sammy sent and restart `npm run dev`. For `admin_policy_enforced`, try a personal Google account. For `access_denied` or `org_internal`, send Sammy your Google address and the error code |
+| Google shows an error page before ours, such as `access_denied`, `org_internal`, `admin_policy_enforced` or `invalid_client` | `access_denied`: the OAuth app's settings don't admit this account. `org_internal`: the OAuth client only admits accounts from one organization. `admin_policy_enforced`: a work or school account whose administrator blocks outside apps. `invalid_client` ("The OAuth client was not found"): `AUTH_GOOGLE_ID` in `.env.local` is missing or wrong | For `invalid_client`, set `AUTH_GOOGLE_ID` to exactly the value provided by the OAuth administrator and restart `npm run dev`. For `admin_policy_enforced`, try a personal Google account. For `access_denied` or `org_internal`, send the OAuth administrator your Google address and the error code |
 
 ### 2.4 Reset
 
@@ -357,8 +360,8 @@ removes them.
 | Bot check (Cloudflare Turnstile) | Nothing: test keys are used automatically. Needs an internet connection | [The bot check](#the-bot-check) |
 | Contact form | Nothing | [The contact form](#the-contact-form) |
 | Limits on the owner's emails | Nothing | [The email limits](#the-email-limits) |
-| Admin invite email | Nothing. Nothing sends it yet: Settings saves new admins but doesn't call it | [Admin invites](#admin-invites) |
-| Admin roles | Sign-in from §2.3: `AUTH_SECRET`, the Google id and secret from Sammy, and your admin row | [Each admin role](#each-admin-role) |
+| Admin invite email | Local email transport; authorized invitations use the configured invitation flow | [Admin invites](#admin-invites) |
+| Admin roles | Sign-in from §2.3: `AUTH_SECRET`, the Google OAuth credentials from the authorized administrator, and your admin row | [Each admin role](#each-admin-role) |
 | Storage limits and usage | Nothing | [Storage limits and usage](#storage-limits-and-usage) |
 | File sweeper | Nothing | [The file sweeper](#the-file-sweeper) |
 
@@ -381,7 +384,7 @@ shows something like:
 
 ```text
 [email] Not sent (no BREVO_API_KEY or MAILPIT_URL). This is what would go out:
-To: owner@teazo.test
+To: teazosf@hotmail.com
 Reply-To: ana@example.com
 Subject: New website message from Ana: Catering
 
@@ -389,8 +392,9 @@ New message from the contact form on the TEAZO website.
 ...
 ```
 
-Only the plain text version is printed. To see the formatted version, use
-Mailpit.
+The `To` address above comes from the local database's seeded Website Content
+email and changes when an administrator updates that setting. Only the plain
+text version is printed. To see the formatted version, use Mailpit.
 
 **To see emails in an inbox, run [Mailpit](https://mailpit.axllent.org/)**, a
 free inbox that runs on your machine and never sends anything on:
@@ -429,13 +433,16 @@ The emails the site sends:
 
 | Subject | How to trigger it locally | Goes to |
 |---|---|---|
-| "New website message from ..." | Submit the form on `/contact` | `owner@teazo.test`, or `CONTACT_NOTIFY_TO` if you set it |
-| "Website contact form: email alerts paused" | See [the email limits](#the-email-limits) | Same |
-| "You've been added as an admin of the TEAZO website" | Not yet: see [admin invites](#admin-invites) | The new admin's address |
+| "New website message from ..." | Submit the form on `/contact` | Email configured in Admin → Website Content |
+| "Website contact form: email alerts paused" | See [the email limits](#the-email-limits) | Same Website Content email |
+| "You've been added as an admin of the TEAZO website" | Owner adds an eligible Admin in Settings or uses Resend Invitation | The invited Admin's address |
 
-A contact email's reply address is the visitor's, so the owner can answer with
-Reply. In Mailpit, emails come from `website@teazo.test` ("TEAZO website")
-unless you set `EMAIL_FROM` or `EMAIL_FROM_NAME`.
+A contact email's reply address is the visitor's, so the recipient can answer
+with Reply. The recipient is read from the saved Website Content email after
+the message is stored. `CONTACT_NOTIFY_TO` is no longer used, and there is no
+recipient fallback when Website Content is unavailable or invalid. In Mailpit,
+emails come from `website@teazo.test` ("TEAZO website") unless you set
+`EMAIL_FROM` or `EMAIL_FROM_NAME`.
 
 #### The bot check
 
@@ -496,7 +503,9 @@ each submission, so run the line again before the next try.
    and message, wait for the widget's check mark, and choose **Submit**.
 2. The form clears and says "Thank you. Your message was sent, and we will get
    back to you soon."
-3. The owner's email is printed in the app's terminal, or appears in Mailpit.
+3. An email addressed to the saved Website Content email is printed in the
+   app's terminal, or appears in Mailpit. The message stays saved even if its
+   notification cannot be delivered.
 4. The message is saved. In terminal 4, from `teazo-d1-proxy`:
 
    ```bash
@@ -572,13 +581,10 @@ npx wrangler d1 execute teazo-db --local --command "DELETE FROM contact_message 
 
 #### Admin invites
 
-When an admin adds someone in Settings, the new admin should get an email that
-explains how to sign in (`sendAdminInvite` in `app/lib/admin-invite.ts`, see
-§5). Settings already saves the new admin, but its add route doesn't call
-`sendAdminInvite` yet, so nothing is sent. Once it does, adding an admin in
-Settings prints the invite in the app's terminal, or shows it in Mailpit,
-addressed to the new admin. Its sign-in link is built from
-`NEXT_PUBLIC_BASE_URL`, or `http://localhost:3000` when that isn't set.
+Owner-only administrator management can invite a new Admin. The invitation
+and password setup email uses the configured email transport. Test with local
+Mailpit or terminal email output rather than sending to production addresses.
+The link's base URL is derived from the configured application URL.
 
 #### Each admin role
 
@@ -587,23 +593,15 @@ can test each role by changing your own row. The change applies on your next
 page load, without signing in again. From `teazo-d1-proxy`:
 
 ```bash
-npm run db:seed:local -- you@gmail.com --role 3    # Can View
-npm run db:seed:local -- you@gmail.com --role 2    # Can Edit
-npm run db:seed:local -- you@gmail.com --role 1    # Owner again
+npm run db:seed:local -- you@gmail.com --role 2    # Admin
+npm run db:seed:local -- you@gmail.com --role 1    # Owner (when eligible)
 ```
 
-- **Can View** opens every admin page, and the server refuses every admin
-  write with `403`. Today three pages write to the server: the menu PDF upload on
-  `/admin/menu`, whose button is disabled for Can View, the admins list in
-  Settings, which shows Can View no edit controls, and `/admin/website-content`,
-  whose saves (hours, holidays, contact details, the logo and the Online
-  Ordering switch) show "Save failed" for Can View. The Square product routes
-  also refuse Can View. The other admin pages only change the page in your
-  browser for now, so their buttons seem to work at any role and the changes
-  are gone when you reload. Use the terminal check below to see the `403`.
-- **Can Edit** and **Owner** can also upload and edit. Adding, changing and
-  removing admins in Settings needs the Owner, or a Can Edit admin with Manage
-  Admins turned on.
+- **Admin** can manage authorized site content, including Gallery, Menu,
+  Events, and Website Content, but cannot add or remove administrators. The
+  Settings administrator-management interface is Owner-only.
+- **Owner** can manage site content and administrator membership.
+  Permissions are enforced by the server, not just by hiding controls in the UI.
 - **Suspended** can't open any admin page. Suspend yourself with
   `npx wrangler d1 execute teazo-db --local --command "UPDATE admin_user SET status = 'suspended' WHERE email_normalized = 'you@gmail.com'"`,
   writing your address in lowercase, exactly as the seed printed it. Wrangler
@@ -623,10 +621,10 @@ cookie as in §5 and send an empty upload:
 curl -s -X POST http://localhost:3000/api/admin/menu/upload -H "Origin: http://localhost:3000" -H "Cookie: authjs.session-token=<your cookie>"
 ```
 
-As Can View the answer is `{"error":"You do not have permission to perform
-this action."}`. As Can Edit or Owner it is `{"error":"Expected a file-upload
-form."}`, which means the role check passed and only the missing file stopped
-it.
+As an authorized Admin or Owner, an empty request to the menu upload endpoint
+reaches upload validation and should report a missing upload form. Admin-only
+access to Owner-restricted account-management APIs is refused with HTTP 403.
+Never use an actual session cookie in shared logs or documentation.
 
 #### Storage limits and usage
 
@@ -732,7 +730,7 @@ npx wrangler d1 execute teazo-db --local --command "UPDATE pending_r2_deletion S
 | `PROXY_TOKEN` | `local-dev-token` | Same. Must match `teazo-d1-proxy/.dev.vars` |
 | `R2_PUBLIC_BASE` | `http://127.0.0.1:8787/media` | Serving stored files. Keep exactly this; `next.config.ts` allows images from that address |
 | `AUTH_SECRET` | your own random string | Sign-in and `/admin` (§2.3) |
-| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | from Sammy | Sign-in and `/admin` (§2.3) |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | from the authorized OAuth administrator | Google sign-in (§2.3) |
 | `SQUARE_ACCESS_TOKEN` | the team's sandbox token | `/api/square/*`, `/admin/menu`, `/admin/events` |
 | `SQUARE_ENVIRONMENT` | optional; defaults to `sandbox` | Selects Square's API environment. Only `sandbox` or `production`; any other value fails startup and the build |
 | `SQUARE_LOCATION_ID` | optional; a sandbox location ID | Checkout's store location. In sandbox, unset means discover a location from the configured Square account and cache its ID in memory. Production requires an explicit location ID |
@@ -740,7 +738,6 @@ npx wrangler d1 execute teazo-db --local --command "UPDATE pending_r2_deletion S
 | `SQUARE_WEBHOOK_NOTIFICATION_URL` | optional; the exact HTTPS notification URL registered with that subscription | For example, your tunnel URL + `/api/square/webhooks`. Must match exactly for signature verification |
 | `NEXT_PUBLIC_BASE_URL` | `http://localhost:3000/` | `/admin/menu`, `/admin/events`, checkout's post-payment redirect, and the sign-in link in invite emails |
 | `MAILPIT_URL` | `http://127.0.0.1:8025` (optional) | Sending email to Mailpit instead of the terminal |
-| `CONTACT_NOTIFY_TO` | optional | Where contact emails go. Under `npm run dev` it defaults to `owner@teazo.test`; a production build has no default |
 | `EMAIL_FROM`, `EMAIL_FROM_NAME` | optional | The sender. Defaults to `website@teazo.test` and "TEAZO website" |
 
 **Leave unset for everyday work** (§2.5 and §2.8 set some of these only while
@@ -748,8 +745,8 @@ you test): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (test
 keys are used automatically), `BREVO_API_KEY` and
 `BREVO_SANDBOX` (production only), `AUTH_URL` and `AUTH_TRUST_HOST`,
 `NODE_ENV` (Next.js sets it: `development` under `npm run dev`, `production`
-under `npm run build` and `npm start`; the test keys, printed email, the
-`owner@teazo.test` fallback and the local image host all depend on it), and
+under `npm run build` and `npm start`; the test keys, printed email, and the
+local image host depend on it), and
 the variables Vercel sets itself: `VERCEL`, `VERCEL_ENV`,
 `VERCEL_PROJECT_PRODUCTION_URL`.
 
@@ -791,7 +788,6 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 AUTH_TRUST_HOST=true
 MAILPIT_URL=http://127.0.0.1:8025
-CONTACT_NOTIFY_TO=owner@teazo.test
 ```
 
 Stop `npm run dev` first, because `npm start` also uses port 3000. Then run
@@ -853,7 +849,7 @@ Rules:
   `status` is 413. So keep the SQL plus its values well under that.
 - **Every call is a network round trip**, so fetch what a page needs in as few
   calls as you can. Pages that read the database render on every request; if
-  a public page needs caching, ask Juan. Before a pull request, check that your
+  a public page needs caching, coordinate with the team. Before a pull request, check that your
   pages still build with `npm run build` (§2.8).
 
 ### 3.1 Writing queries for your feature
@@ -917,7 +913,7 @@ event flyers and the PDF menu.
 | `mintKey(prefix, ext)` | Creates a new key such as `gallery/2026/09/<uuid>.webp`. Keys are never reused |
 | `toPublicUrl(key)` | Builds the public URL for a key. The only place a URL is ever built |
 | `deleteMediaNow(key)` | Removes bytes immediately. Only for a file whose rows were never saved (§4.1) |
-| `MEDIA_TYPES`, `MediaType` | The accepted types: jpeg, png, webp and pdf |
+| `MEDIA_TYPES`, `MediaType` | Supported media types include common image, video, and PDF formats |
 | `MAX_MEDIA_BYTES` | 10 MB. `putMedia` refuses anything larger |
 | `MediaError` | Thrown on failure, with the HTTP `status` when the Worker answered |
 
@@ -962,8 +958,9 @@ show the page without the numbers.
 
 ### 4.1 Saving a file
 
-Every file follows the same three steps: resize (images only), store the bytes,
-record the rows.
+Media uploads generally validate and prepare a file, store its bytes, then
+record the database rows. Gallery image preparation preserves pixel dimensions;
+other upload flows may have their own limits and processing rules.
 
 **The working example is the PDF menu:** `app/api/admin/menu/upload/route.ts`
 (the route), `app/lib/menu-upload.ts` (the file checks shared by the browser
@@ -972,21 +969,24 @@ and the server), `app/lib/queries/menu-documents.ts` (the rows) and
 handling is the one part not to copy: it leaves the stored file behind when
 the database refuses the rows. Follow the gallery's instead, step 4 below.
 
-**The working example for images is the gallery:** `app/lib/gallery.ts`
-checks, resizes and stores the upload, and `app/lib/queries/gallery.ts`
-records the rows. Its steps:
+**Gallery image and video uploads:** `app/admin/gallery/components/gallery-upload-form.tsx`
+prepares browser-selected files; `app/lib/gallery-image-compression.ts` performs
+resolution-preserving image compression, `app/lib/gallery.ts` validates and
+stores media, and `app/lib/queries/gallery.ts` records database rows.
 
-1. Check the input: a name of up to 120 characters, at most 12 tags of up to
-   30 characters each, and a JPEG, PNG or WebP file of 10 MB or less.
-2. Resize with `sharp` to WebP, at most 2000px on the longest side. A 1.6 MB
-   phone photo comes out at a few hundred KB, and photo size is what fills the
-   free storage. `sharp` is pinned in `teazo-site/package.json`.
-3. Store the bytes with `putMedia()` first, so a failure never leaves rows
-   pointing at nothing.
-4. Record `media_asset`, `gallery_image` and the tags in one `batch()`. If the
-   database definitely refused the rows (a `D1Error` with a `status` below
-   500), remove the stored file with `deleteMediaNow()`. A file left behind
-   keeps counting toward the storage cap, because nothing cleans it up later.
+1. Validate the media type, name, tags, and file size. MP4 and WebM videos are
+   restricted to **4 MiB** for uploads and replacements. Gallery images larger
+   than 4 MiB are compressed client-side to fit below the 4 MiB request budget;
+   the app rejects images that cannot fit without reducing pixel dimensions.
+2. For images, prepare WebP using browser compression when needed. Server-side
+   `sharp` rotates and encodes WebP **without resizing or downscaling**. The
+   stored image keeps its original pixel dimensions; encoding quality may
+   change. `sharp` is pinned in `teazo-site/package.json`.
+3. Store bytes with `putMedia()` and record `media_asset`, `gallery_image`, and
+   tags in the database. Keep storage and database failure handling coordinated
+   to avoid dangling rows or orphaned objects.
+4. Revalidate the public Gallery cache after successfully saving new media, so
+   newly added images and videos can appear on the public page.
 
 **The gallery functions**, in `app/lib/gallery.ts`, for the admin gallery's
 routes to call. They are server only, and the routes check the admin first
@@ -994,38 +994,29 @@ routes to call. They are server only, and the routes check the admin first
 
 | Function | What it does | Returns |
 |---|---|---|
-| `getAdminGalleryImages()` | Lists every image, newest first | `AdminGalleryImage[]`, each `{ id, name, url, tags, createdAt }` |
-| `saveGalleryImage({ file, name, tags, adminId })` | The four steps above. `file` is the uploaded `File`, `tags` a list of names, and `adminId` the signed-in admin's id | The saved `AdminGalleryImage`, with its tags as stored |
-| `removeGalleryImage(id)` | Takes the image off the gallery at once. Its file is removed a day later (§4.2) | `false` when there is no such image |
+| `getAdminGalleryImages()` | Lists Gallery media records | `AdminGalleryImage[]`, including image or video media type |
+| `saveGalleryImage({ file, name, tags, adminId })` | Validates, processes, stores, and records new media, then invalidates public Gallery cache | The saved Gallery record |
+| `replaceGalleryImage(...)` | Validates and replaces an existing Gallery item's media | Updated Gallery record |
+| `removeGalleryImage(id)` | Removes an item from the public Gallery and queues its stored file for cleanup (§4.2) | Removal result |
 
-`saveGalleryImage()` throws a `GalleryInputError` for input the admin should
-fix, with a message to show as it is and the HTTP `status` to answer with:
-`400`, `413` over 10 MB, or `415` not a JPEG, PNG or WebP image, or not
-readable. It throws a `MediaError` when storing fails: `507`, `429` and `503`
-are the refusals listed under **An upload can be refused** above, worth
-explaining to the admin, and any other `status`, or none (the Worker can't be
-reached or isn't configured), means storage failed. A `D1Error` means the
-database failed. `getAdminGalleryImages()` throws `D1Error`, or `MediaError`
-when `R2_PUBLIC_BASE` isn't set, and `removeGalleryImage()` throws only
-`D1Error`.
+Gallery validation reports `GalleryInputError` for invalid input, including
+HTTP 413 for videos over 4 MiB. Browser-side image compression prepares large
+images before uploading; the general storage backstop is separate from the
+Vercel request-size limit. Unsupported or unreadable media receives an input
+error. Storage failures may return `MediaError` (including 429, 503, and 507);
+database errors are handled separately. Do not interpret a successful storage
+request as proof that all related database writes were committed.
 
 The public `/gallery` page shows published images through
 `getPublicGalleryImages()`, and its placeholder images whenever no image is
 published or the database can't be read.
 
-> **Vercel rejects request bodies over 4.5 MB**, before your route even runs,
-> and phone photos are often bigger. Shrink them in the browser first:
->
-> ```ts
-> async function shrink(file: File, max = 2000): Promise<File> {
->   const img = await createImageBitmap(file);
->   const scale = Math.min(1, max / Math.max(img.width, img.height));
->   const canvas = new OffscreenCanvas(Math.round(img.width * scale), Math.round(img.height * scale));
->   canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
->   const blob = await canvas.convertToBlob({ type: "image/jpeg", quality: 0.9 });
->   return new File([blob], file.name.replace(/\.[^.]*$/, "") + ".jpg", { type: "image/jpeg" });
-> }
-> ```
+> **Vercel's request-body limit applies before the application upload handler.**
+> The Gallery form prepares oversized images with
+> `prepareGalleryImage()` from `app/lib/gallery-image-compression.ts`. It
+> compresses WebP without reducing the source width or height and rejects
+> files that still exceed the upload budget. Do not use an older resizing
+> helper that silently reduces pixel resolution. Videos must be at most 4 MiB.
 
 **Website logo uploads.** `POST /api/admin/website-content/logo` accepts PNG,
 JPEG, and WebP files up to **4 MiB**. The picker and route share validation;
@@ -1102,128 +1093,112 @@ queued.
 
 ## 5. Authentication
 
-**How sign-in works.** Sign-in is Google only, through NextAuth
-(`teazo-site/auth.ts`). `/login` is both the sign-in page and where errors are
-shown. After Google, NextAuth admits the person only if Google has verified
-their email and it matches a live `admin_user` row with status `active` or
-`invited`; everyone else sees "This Google account does not have admin
-access". If the database lookup fails, for example because the Worker can't
-be reached or refuses the app's `PROXY_TOKEN`, sign-in stops with "We could not
-verify your access" instead (§2.3). The session is an encrypted cookie that lasts 8 hours; the database
-holds no sessions. After sign-in the admin lands on `/admin`, and signs out
-from the admin navigation.
+**How sign-in works.** TEAZO uses NextAuth with **Google** and **email/password
+credentials**. The login page is `/login`. Google sign-in requires a verified
+Google email and a currently authorized administrator account. Credentials
+sign-in requires an eligible administrator account with a configured password;
+the credentials provider verifies its stored password hash. Password setup and
+reset are handled by the email-link flow on the login page and the corresponding
+password APIs. No password should be placed in a URL or source code.
 
-The admin check runs twice: once at sign-in, and again on every admin page and
-admin API request. So removing or suspending an admin takes effect on their
-next request, even though their cookie is still valid.
+Current administrator accounts have two roles: **Owner** (role ID 1) and
+**Admin** (role ID 2). Both can manage authorized site content; only the Owner
+can manage administrator membership in Settings. The obsolete Can View/Can Edit
+roles and Manage Admins toggle are not part of the current authorization model.
 
-**The helpers.** Import them; never write your own check.
+**Session invalidation.** Administrator page and API checks verify the live
+account record and its `session_version`, not merely the presence of an auth
+cookie. A password reset or other session-version change invalidates older
+sessions on their next protected request. Removing or suspending an account also
+revokes access on its next authorization check.
+
+**Authorization helpers.** Import these instead of implementing new checks:
 
 | From | Export | Use it in | What it does |
 |---|---|---|---|
-| `app/lib/admin.ts` | `requireAdminPage(minRole = 3)` | Pages, layouts, server actions | Returns the admin, or redirects to `/login` (not signed in), `/login?error=AccessDenied` (not enough access) or `/login?error=ServiceUnavailable` (the database lookup failed) |
-| | `requireAdminApi(request, minRole = 3)` | Route handlers | Returns `{ ok: true, admin }`, or `{ ok: false, response }` with a ready 401, 403 or 503 |
-| | `getAdmin(minRole)` | Code that must branch without redirecting | Returns the admin or `null`. With a session, it throws a `D1Error` if the database lookup fails; with no session it returns `null` without asking the database |
-| | `Admin` | | `{ id, username, role_id, can_invite_users }` |
-| `app/lib/admin-whitelist.ts` | `normalizeEmail(email)` | Anything that writes `admin_user.email_normalized` | Trims and lowercases, exactly as sign-in does |
-| | `findAuthorizedAdmin(email)`, `AdminRole` | Rarely needed directly | The sign-in lookup |
+| `app/lib/admin.ts` | `requireAdminPage(minRole = 2)` | Protected pages and server actions | Returns an authorized account or redirects to `/login` (missing/invalid session), `/login?error=AccessDenied` (insufficient permissions), or `/login?error=ServiceUnavailable` (lookup failure) |
+| | `requireAdminApi(request, minRole = 2)` | Protected API routes | Returns the authorized admin or an HTTP 401, 403, or 503 response; checks write origins |
+| | `getAdmin(minRole)` | Server code that needs to branch without redirecting | Returns an authorized admin or null (database errors may propagate) |
+| `app/lib/admin-whitelist.ts` | `normalizeEmail(email)` | Administrator email normalization | Trims and lowercases before database lookups and writes |
+| | `findAuthorizedAdmin(email)`, `AdminRole` | Shared authorization | Looks up authorized administrator records and role types |
 
-Roles: 1 Owner, 2 Can Edit, 3 Can View. A lower number is more access, so
-`minRole = 2` lets in Owners and Can Edit.
+Lower role IDs grant more privileges. The default threshold of 2 admits Owners
+and Admins; require role 1 for Owner-only operations.
 
-In a page:
+In a protected page:
 
 ```ts
 const admin = await requireAdminPage(2);
 ```
 
-In a route handler:
+In an API route handler:
 
 ```ts
-const access = await requireAdminApi(request, 2);
+const access = await requireAdminApi(request, 1); // Owner-only example
 if (!access.ok) return access.response;
 const admin = access.admin;
 ```
 
 Three rules:
 
-- **Every page under `/admin` calls `requireAdminPage` itself**, even though
-  `app/admin/layout.tsx` also does. A layout isn't re-run on every client
-  navigation, and it never protects route handlers or server actions.
-- **Every admin route handler calls `requireAdminApi(request, n)` first.**
-- **In an admin server action**, call `await requireAdminPage(n)` at the top.
+- Protect each admin page and server action with the appropriate server-side
+  authorization check, even when the layout also checks access.
+- Protect administrator API endpoints with `requireAdminApi(request, role)`;
+  this includes Origin checks for cookie-authenticated writes.
+- Do not infer write permission from visible UI controls. Only the Owner can
+  change administrator membership.
 
-**Who can reach what today:**
+**Who can reach what:**
 
-| Route | Who |
+| Route or operation | Who |
 |---|---|
-| Every page under `/admin` | Any admin (Can View and up) |
-| `GET /api/admin/settings/admins` | Any admin (Can View and up) |
-| `POST /api/square/products`, `PUT` and `DELETE /api/square/products/[id]`, `POST /api/admin/menu/upload` | Can Edit and up |
-| `POST /api/admin/settings/admins`, `PATCH` and `DELETE /api/admin/settings/admins/[id]` | The Owner, or Can Edit with Manage Admins |
-| `PATCH /api/website-content`, `POST /api/admin/website-content/logo` | Everyone for now: these two don't check sign-in yet |
-| `GET /api/square/*`, `GET /api/menu/pdf`, `GET /api/website-content`, `/api/auth/*`, the contact form | Everyone, on purpose |
-| `/account` | Anyone signed in |
+| `/admin` and authorized content administration | Owner or Admin |
+| `/admin/settings` administrator membership management | Owner only |
+| Administrator membership write APIs | Owner only |
+| Content-management write APIs | Authorized Owner or Admin, subject to route-specific checks |
+| Public menu, Gallery, contact form, and public website-content reads | Public where intended |
+| `/account` | Signed-in users |
 
-**Testing an admin write from a terminal.** `requireAdminApi` refuses a write
-(anything but `GET`, `HEAD` or `OPTIONS`) unless its `Origin` header is the
-site's own, so send one along with your session cookie (copy
-`authjs.session-token` from your browser's cookies for `localhost:3000`):
+**Testing an admin write from a terminal.** Cookie-authenticated admin writes
+must originate from an allowed site origin. Use `Origin` and a locally authorized
+session cookie when testing with `curl`, but do not paste the actual cookie into
+issues, screenshots, or shared logs:
 
 ```bash
-curl -X POST http://localhost:3000/api/... -H "Origin: http://localhost:3000" -H "Cookie: authjs.session-token=..."
+curl -X POST http://localhost:3000/api/... -H "Origin: http://localhost:3000" -H "Cookie: authjs.session-token=<local session cookie>"
 ```
 
-Otherwise you get 403 "Request origin is not allowed." Never call an admin
-route from server code; call the query function directly.
+An unauthorized request should fail with HTTP 401 or 403. An authorized request
+may reach later input validation. Do not use production accounts or datasets for
+routine local testing.
 
-**Adding admins.** Settings saves admins: `POST /api/admin/settings/admins`
-inserts the row with status `invited` (`app/lib/queries/settings.ts`), and the
-new admin can sign in right away. On your machine `npm run db:seed:local`
-(§2.3) still works too. The route doesn't email the new admin yet. To send the
-invite, replace the `return` at the end of its `POST` with:
+**Adding administrators.** Owner-only Settings supports administrator membership
+management and invitations. The current application includes invitation and
+password setup/reset flows; do not copy earlier instructions describing an
+unimplemented invitation email or a Google-only placeholder login form.
 
-```ts
-import { after } from "next/server";
-import { sendAdminInvite } from "@/app/lib/admin-invite";
-
-// in POST, in place of the current return
-const created = await createSettingsAdmin(input);
-const invitedBy = access.admin.username;
-after(() => sendAdminInvite({ email: created.email, username: created.username, role: created.role, canManageAdmins: created.canManageAdmins, invitedBy }));
-return Response.json({ admin: created }, { status: 201 });
-```
-
-`after()` sends it once the response is on its way, so the admin panel doesn't
-wait. `sendAdminInvite` never throws: a failed email is logged, and the new
-admin can still sign in. Locally the invite is printed or caught by Mailpit
-(§2.5). Both `invited` and `active` can sign in, and nothing in the app
-changes one into the other yet (re-running `npm run db:seed:local` for an
-address sets it to `active`, whatever its status). The database allows at most
-one Owner, and the Settings queries never change or delete the Owner's row.
-
-**There are no passwords.** Sign-in is Google only, so there is no password
-reset email. The "Forgot password?" link on `/login` is a placeholder. An admin
-who loses their Google account is removed and added again under their new
-address in Settings. That will send a new invite once the add route calls
-`sendAdminInvite`. On your machine you can also use
-`npm run db:seed:local -- <new address> --role <their role>`, which sends no
-email. Only one Owner is allowed, so to give the new address `--role 1`, reset
-your database first (§2.4).
+**Password recovery.** From `/login`, use the password request flow. Eligible
+accounts receive a single-use setup/reset link and complete the process through
+the password endpoint. Setup and reset tokens expire; changing the password
+invalidates prior sessions through the session-version check. If the configured
+email service is unavailable, troubleshoot the email transport separately from
+administrator authorization.
 
 ---
 
 ## 6. The database
 
-27 tables, created by the migrations in `teazo-site/migrations/` (most of them
-in `0001_init.sql`). Open them when you need exact columns.
+The database tables are created and updated by the migrations in
+`teazo-site/migrations/` (starting with `0001_init.sql`). The number of
+tables changes as migrations are added. Open the migration files or query
+the active database when you need the current table inventory and columns.
 
 **In use today:**
 
 | Table | Holds | Written by | Read by |
 |---|---|---|---|
 | `admin_user` | admin accounts | Settings (`app/lib/queries/settings.ts`), and `npm run db:seed:local` on your machine | sign-in, `requireAdminPage`, `requireAdminApi`, the Settings admins list |
-| `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form's action, which reads the switch |
+| `business_profile` | address, phone, email, and `contact_form_enabled` (one row) | the seed, then `/admin/website-content` (`app/lib/website-content.ts`) | public pages through `getWebsiteContent()`, and the contact form action, which reads the switch and the saved email used as the notification recipient |
 | `business_hours` | one row per day of the week, 0 = Monday (§9) | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `hours_exception` | holidays. `/admin/website-content` stores a holiday that repeats every year as `MM-DD`, and a one-time holiday as `YYYY-MM-DD`. When both fall on the same day, the one-time holiday wins | `/admin/website-content` | public pages through `getWebsiteContent()` |
 | `site_link` | social and delivery links | the seed, then `/admin/website-content` | public pages through `getWebsiteContent()` |
@@ -1236,9 +1211,9 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `gallery_tag` | tag names | the seed, then `saveGalleryImage()` | the gallery functions |
 | `gallery_image_tag` | image ↔ tag | `saveGalleryImage()` | the gallery functions |
 | `r2_object`, `r2_class_a_day` | what is stored in R2, and uploads per day | **the Worker only**, never app code | the Worker's billing limits and `GET /usage` |
-| `role` | Owner / Can Edit / Can View | the seed | the `admin_user.role_id` foreign key. The app uses the ids 1 to 3 directly |
+| `role` | Owner / Admin | the seed and role migrations | The `admin_user.role_id` foreign key; current role IDs are 1 and 2 |
 
-**Built, waiting for their features** (seeded by `0002_seed.sql` or empty):
+**Additional data structures** (see current application code and migrations for active usage):
 
 | Table | Holds | Will be written by | Will be read by |
 |---|---|---|---|
@@ -1253,9 +1228,10 @@ in `0001_init.sql`). Open them when you need exact columns.
 | `menu_section_item` | which items, in what order | `/admin/menu` | `/menu` |
 | `menu_item_display` | badge, featured, hidden | `/admin/menu` | `/menu` |
 
-There are no passwords, reset tokens or invitation tokens in the schema:
-sign-in is Google only (§5). Password sign-in would need a new migration (§7)
-and a new provider in `auth.ts`.
+The current schema supports password credentials, password setup/reset tokens,
+invitation workflows, and session-version invalidation. Follow the current
+authentication migrations and the flow in §5; do not use earlier assumptions
+that sign-in is Google-only.
 
 ### Columns that look odd but matter
 
@@ -1266,7 +1242,7 @@ and a new provider in `auth.ts`.
 | `name_sort_key` | SQLite cannot sort the way the admin UI does, and names are bilingual. Computed when you write the row. |
 | `email_normalized`, `name_normalized` | Stop `Karen@x.com` / `karen@x.com` and `Matcha` / `matcha` being two different things. Write `email_normalized` with `normalizeEmail()`. |
 | `status` (`admin_user`) | `active` and `invited` can sign in; `suspended` cannot. |
-| `can_invite_users` | Per-admin flag, valid only for role 2. |
+| `can_invite_users` | Legacy column; not a grant of administrator membership permission. Only Owner manages administrators. |
 | `contact_form_enabled` | 1 shows the public contact form; 0 hides it, and the form's action refuses messages. |
 | `r2_bucket` | Always record the `bucket` that `putMedia` returns. The sweeper only removes files from its configured bucket. |
 | `is_current` | At most one live PDF menu. None means the site serves the bundled `public/teazo-menu.pdf`. |
@@ -1305,9 +1281,9 @@ writes it:
 A schema change is a new migration file, reviewed in a pull request like any
 other code.
 
-1. Add `teazo-site/migrations/000N_what_it_does.sql`, taking the next number
-   (currently `0005`). The descriptive name keeps two people's migrations from
-   colliding.
+1. Add a new numbered SQL migration under `teazo-site/migrations/`, using the
+   next available sequence number and a descriptive name. Check the existing
+   migrations before choosing a number to avoid collisions.
 2. Apply it on top of your existing data. From the repo root:
    `cd teazo-d1-proxy && npm run db:migrate:local`
 3. Prove it also works from empty: stop the Worker, then from `teazo-d1-proxy`
@@ -1410,7 +1386,11 @@ pages.
 | `BREVO_API_KEY` | the Brevo API key | Secret. Unset means the deployment sends no email |
 | `EMAIL_FROM` | a sender address verified in Brevo | Required whenever `BREVO_API_KEY` is set, or every email fails |
 | `EMAIL_FROM_NAME` | optional | Defaults to "TEAZO website" |
-| `CONTACT_NOTIFY_TO` | the owner's inbox | Required. Without it, contact messages are saved but nobody is emailed, and the logs say `CONTACT_NOTIFY_TO is not set` |
+
+The contact-form notification recipient is the email configured in
+**Admin → Website Content → Email** and saved in `business_profile`. It is not a
+Vercel environment variable. Confirm that a valid recipient is saved before
+testing delivery. `EMAIL_FROM` is a separate, Brevo-verified sender address.
 
 **Going live with Square:** in the Square Developer Console, select the
 production environment and copy the production access token and the shop's
@@ -1480,13 +1460,14 @@ It is free, and the site does not need to be on Cloudflare.
    Hotmail and Gmail may file the emails as junk. Have the owner mark the first
    one "Not junk", and tell new admins to check their spam folder for the
    invite. A domain fixes this for good.
-8. Once the site is live, send one message through the contact form and check
-   that it reaches `CONTACT_NOTIFY_TO` (look in junk too). If it doesn't, check
-   that `BREVO_SANDBOX` is not set, then search the Vercel logs for
-   `notification email failed`, `CONTACT_NOTIFY_TO is not set` and
-   `[email] Not sent`. If the failed line says `Brevo refused the email` and
-   that the account is not yet activated, the client asks Brevo to activate
-   transactional email in a support ticket from inside Brevo.
+8. Once the site is live, send a test message through the contact form and
+   confirm that the notification reaches the email saved in
+   **Admin → Website Content → Email** (check junk folders too). If it does not
+   arrive, verify that stored recipient, confirm `BREVO_SANDBOX` is not set, and
+   inspect Vercel logs for `notification email failed`,
+   `Contact notification skipped`, or `[email] Not sent`. If Brevo reports that
+   the account is not activated for transactional email, request activation
+   through Brevo support.
 
 A failed email never loses a contact message: it is saved before the email is
 attempted, and a failure is only logged. The owner gets at most 20 contact
@@ -1565,7 +1546,7 @@ of the same 300 a day.
 | Database, storage, usage, email and bot-check helpers | `teazo-site/app/lib/` (`d1.ts`, `media.ts`, `usage.ts`, `email.ts`, `turnstile.ts`) |
 | The emails the site sends | `teazo-site/app/lib/contact-notification.ts`, `teazo-site/app/lib/admin-invite.ts`, and the "alerts paused" email and the email limits in `teazo-site/app/(site)/contact/actions.ts` |
 | Feature SQL | `teazo-site/app/lib/queries/` |
-| Gallery images: checks, resizing, storing, removing and the public list | `teazo-site/app/lib/gallery.ts`, `teazo-site/app/lib/queries/gallery.ts` |
+| Gallery media: validation, resolution-preserving image encoding, storing, removal, and public display | `teazo-site/app/lib/gallery.ts`, `teazo-site/app/lib/queries/gallery.ts` |
 | Sign-in and admin checks | `teazo-site/auth.ts`, `teazo-site/app/lib/admin.ts`, `teazo-site/app/lib/admin-whitelist.ts` |
 
 **The migrations are the source of truth** for columns, constraints and
