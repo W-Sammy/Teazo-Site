@@ -48,7 +48,7 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-// The public gallery is cached (TZ-515). Pass the cache through so these tests
+// The public gallery is cached. Pass the cache through so these tests
 // call the query directly, and stub the call that clears it after a save.
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),

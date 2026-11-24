@@ -4,6 +4,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WebsiteContentClient from "./website-content-client";
 import { DEFAULT_WEBSITE_CONTENT } from "@/app/lib/website-content";
 
+// Mock image rendering for Website Content interaction tests.
+// These tests verify editing, deletion, validation, and saving,
+// not Next.js image optimization. This also prevents mocked
+// window.location values from interfering with image URL parsing.
+vi.mock("next/image", () => ({
+  default: ({
+    src,
+    alt,
+  }: {
+    src: string;
+    alt?: string;
+  }) => (
+    <span
+      data-testid="mock-next-image"
+      data-src={src}
+      aria-label={alt}
+    />
+  ),
+}));
+
 const fetchMock = vi.fn();
 
 beforeEach(() => {

@@ -383,7 +383,7 @@ export default function GalleryUploadForm({
     return true;
   }
 
-  // Enter/comma add a tag. Backspace removes the last tag if empty.
+  // Enter or comma add a tag. Backspace removes the last tag if empty.
   function handleTagKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {

@@ -1,13 +1,21 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { AccordionItem } from "../section-shell";
 import { IconSocial } from "../icons";
 import { fieldClass, ErrorText } from "../field-controls";
-import { parseAndNormalizeDestination, MAX_SOCIAL_LINKS } from "../validators";
+import {
+  parseAndNormalizeDestination,
+  MAX_SOCIAL_LINKS,
+} from "../validators";
+import { getSocialPlatformIcon } from "@/app/lib/social-platform-icons";
 import type { SocialLink } from "@/app/types/website-content";
 
-type FieldTouch = { label?: boolean; url?: boolean };
+type FieldTouch = {
+  label?: boolean;
+  url?: boolean;
+};
 
 export default function SocialSection({
   socialLinks,
@@ -28,18 +36,26 @@ export default function SocialSection({
   onRemoveLink: (id: string) => void;
   onBlur?: () => void;
 }) {
-  const [touched, setTouched] = useState<Record<string, FieldTouch>>({});
+  const [touched, setTouched] =
+    useState<Record<string, FieldTouch>>({});
 
-  function markTouched(id: string, field: keyof FieldTouch) {
+  function markTouched(
+    id: string,
+    field: keyof FieldTouch,
+  ) {
     setTouched((prev) => ({
       ...prev,
-      [id]: { ...prev[id], [field]: true },
+      [id]: {
+        ...prev[id],
+        [field]: true,
+      },
     }));
+
     onBlur?.();
   }
 
-  // label/url are only required of each other, not independently, so a fully blank
-  // row (freshly added, untouched) doesn't error, but a half-filled one does
+  // A blank new row is allowed until the administrator
+  // begins entering its platform name or destination.
   function fieldErrors(link: SocialLink) {
     const t = touched[link.id] ?? {};
     const labelEmpty = !link.label.trim();
@@ -57,6 +73,7 @@ export default function SocialSection({
         urlError = "Link required";
       } else if (!urlEmpty) {
         const dest = parseAndNormalizeDestination(link.url);
+
         if (!dest.ok) {
           urlError = dest.error;
         }
@@ -76,50 +93,56 @@ export default function SocialSection({
       setRef={setRef}
     >
       <p className="mb-1 text-xs text-gray-400">
-        Links shown as icons in the site footer. Supported platforms (Facebook, Instagram, Yelp) automatically display their official brand icons; other destinations use a generic link icon. Custom icon uploads are not supported.
+        Links shown as icons in the site footer. Supported
+        platforms (Facebook, Instagram, Yelp) automatically
+        display their official brand icons; other destinations
+        use a generic link icon. Custom icon uploads are not
+        supported.
       </p>
 
       <div className="flex min-w-0 flex-col divide-y divide-[#f3ece4]">
         {socialLinks.map((link) => {
-          const { labelError, urlError } = fieldErrors(link);
+          const { labelError, urlError } =
+            fieldErrors(link);
+
+          // Derive the preview from the current URL, not
+          // the link's ID or previously saved icon value.
+          const platformIcon =
+            getSocialPlatformIcon(link.url);
 
           return (
             <div
               key={link.id}
               className="flex min-w-0 flex-col gap-1.5 py-3.5 first:pt-3 last:pb-0"
             >
-              {/* Mobile: icon/actions, platform, then URL. Desktop: one row. */}
+              {/* Mobile: icon/actions, platform, then URL.
+                  Desktop: one row. */}
               <div className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 lg:grid-cols-[40px_96px_minmax(0,1fr)_auto] lg:gap-x-4">
                 <div
-                  title={link.label ? `${link.label} icon` : "Social media icon"}
+                  title={
+                    link.label
+                      ? `${link.label} icon`
+                      : "Social media icon"
+                  }
                   className="col-start-1 row-start-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fbf3ea]"
                 >
-                  {link.icon ? (
-                    <img
-                      src={link.icon}
-                      alt={link.label || "Platform icon"}
+                  {platformIcon ? (
+                    <Image
+                      src={platformIcon}
+                      alt={`${link.label || "Social media"} icon`}
+                      width={24}
+                      height={24}
                       className="h-6 w-6 object-contain"
-                      onError={(e) => {
-                        const fallbackIcons: Record<string, string> = {
-                          facebook: "/social_icons/social_svg/teazo_fb_icon.svg",
-                          instagram: "/social_icons/social_svg/teazo_insta_icon.svg",
-                          yelp: "/social_icons/social_svg/teazo_yelp_icon.svg",
-                        };
-
-                        const fallback = fallbackIcons[link.id.toLowerCase()];
-
-                        if (fallback && e.currentTarget.src !== new URL(fallback, window.location.origin).href) {
-                          e.currentTarget.src = fallback;
-                        }
-                      }}
                     />
                   ) : (
                     <span className="text-[#a99584]">
-                      <img
+                      <Image
                         src="/admin_icons/admin_svg/teazo_share_icon.svg"
                         alt="Generic Link"
+                        width={24}
+                        height={24}
                         className="h-6 w-6 object-contain"
-                      /> 
+                      />
                     </span>
                   )}
                 </div>
@@ -128,9 +151,13 @@ export default function SocialSection({
                   type="text"
                   value={link.label}
                   onChange={(e) =>
-                    onUpdateLink(link.id, { label: e.target.value })
+                    onUpdateLink(link.id, {
+                      label: e.target.value,
+                    })
                   }
-                  onBlur={() => markTouched(link.id, "label")}
+                  onBlur={() =>
+                    markTouched(link.id, "label")
+                  }
                   placeholder="Platform"
                   aria-label="Social media platform"
                   className={`${fieldClass(
@@ -142,18 +169,34 @@ export default function SocialSection({
                   type="text"
                   value={link.url}
                   onChange={(e) =>
-                    onUpdateLink(link.id, { url: e.target.value })
+                    onUpdateLink(link.id, {
+                      url: e.target.value,
+                    })
                   }
                   onBlur={() => {
                     markTouched(link.id, "url");
-                    const parsed = parseAndNormalizeDestination(link.url);
-                    if (parsed.ok && parsed.destination !== link.url) {
-                      onUpdateLink(link.id, { url: parsed.destination });
+
+                    const parsed =
+                      parseAndNormalizeDestination(link.url);
+
+                    if (
+                      parsed.ok &&
+                      parsed.destination !== link.url
+                    ) {
+                      onUpdateLink(link.id, {
+                        url: parsed.destination,
+                      });
                     }
                   }}
-                  placeholder={link.label ? `${link.label} link` : "Link"}
+                  placeholder={
+                    link.label
+                      ? `${link.label} link`
+                      : "Link"
+                  }
                   aria-label={
-                    link.label ? `${link.label} link` : "Social media link"
+                    link.label
+                      ? `${link.label} link`
+                      : "Social media link"
                   }
                   className={`${fieldClass(
                     Boolean(urlError)
@@ -161,7 +204,8 @@ export default function SocialSection({
                 />
 
                 <div className="col-start-3 row-start-1 flex items-center gap-2 lg:col-start-4 lg:gap-4">
-                  {/* Keep the switch appearance, but enlarge its mobile hit area. */}
+                  {/* Keep the switch appearance, but enlarge
+                      its mobile hit area. */}
                   <button
                     type="button"
                     role="switch"
@@ -170,18 +214,24 @@ export default function SocialSection({
                       link.label || "social media link"
                     } in the footer`}
                     onClick={() =>
-                      onUpdateLink(link.id, { enabled: !link.enabled })
+                      onUpdateLink(link.id, {
+                        enabled: !link.enabled,
+                      })
                     }
                     className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg lg:h-[18px] lg:w-8"
                   >
                     <span
                       className={`relative block h-[18px] w-8 rounded-full transition-colors ${
-                        link.enabled ? "bg-[#6f8f6a]" : "bg-[#dbb082]"
+                        link.enabled
+                          ? "bg-[#6f8f6a]"
+                          : "bg-[#dbb082]"
                       }`}
                     >
                       <span
                         className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white transition-all ${
-                          link.enabled ? "left-4" : "left-0.5"
+                          link.enabled
+                            ? "left-4"
+                            : "left-0.5"
                         }`}
                       />
                     </span>
@@ -192,7 +242,9 @@ export default function SocialSection({
                     aria-label={`Remove ${
                       link.label || "social media link"
                     }`}
-                    onClick={() => onRemoveLink(link.id)}
+                    onClick={() =>
+                      onRemoveLink(link.id)
+                    }
                     className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#c0553f] transition-colors hover:bg-[#f3d9d2] lg:h-5 lg:w-5"
                   >
                     <svg
@@ -211,18 +263,42 @@ export default function SocialSection({
               </div>
 
               {(() => {
-                const parsed = link.url.trim() ? parseAndNormalizeDestination(link.url) : null;
-                const showPreview = parsed?.ok && parsed.destination !== link.url.trim();
+                const parsed = link.url.trim()
+                  ? parseAndNormalizeDestination(link.url)
+                  : null;
 
-                if (!labelError && !urlError && !showPreview) return null;
+                const showPreview =
+                  parsed?.ok &&
+                  parsed.destination !== link.url.trim();
+
+                if (
+                  !labelError &&
+                  !urlError &&
+                  !showPreview
+                ) {
+                  return null;
+                }
 
                 return (
                   <div className="flex min-w-0 flex-col gap-0.5 lg:ml-14">
-                    {labelError && <ErrorText>{labelError}</ErrorText>}
-                    {urlError && <ErrorText>{urlError}</ErrorText>}
+                    {labelError && (
+                      <ErrorText>
+                        {labelError}
+                      </ErrorText>
+                    )}
+
+                    {urlError && (
+                      <ErrorText>
+                        {urlError}
+                      </ErrorText>
+                    )}
+
                     {showPreview && (
                       <span className="text-[11px] text-[#8c6b47]">
-                        Will save as: <span className="font-mono">{parsed.destination}</span>
+                        Will save as:{" "}
+                        <span className="font-mono">
+                          {parsed.destination}
+                        </span>
                       </span>
                     )}
                   </div>
@@ -241,9 +317,12 @@ export default function SocialSection({
       >
         New Social Media +
       </button>
+
       {socialLinks.length >= MAX_SOCIAL_LINKS && (
         <p className="mt-2 text-xs text-amber-700">
-          Maximum limit of {MAX_SOCIAL_LINKS} social links reached. Delete an existing link to add another.
+          Maximum limit of {MAX_SOCIAL_LINKS} social
+          links reached. Delete an existing link to add
+          another.
         </p>
       )}
     </AccordionItem>
