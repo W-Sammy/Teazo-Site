@@ -32,7 +32,10 @@ import {
   updateGalleryImageMetadata,
   type GalleryImageRecord,
 } from "@/app/lib/queries/gallery";
-import type { AdminGalleryImage, GalleryMediaType, } from "@/app/types/gallery-image";
+import type {
+  AdminGalleryImage,
+  GalleryMediaType,
+} from "@/app/types/gallery-image";
 import type { MediaType } from "@/app/lib/media";
 
 /** Upload types the admin can send. Every image is stored as WebP. */
@@ -47,13 +50,13 @@ const VIDEO_UPLOAD_TYPES = new Set([
   "video/webm",
 ]);
 
+// Keep video requests below Vercel's request-body limit.
+const MAX_GALLERY_VIDEO_BYTES = 4 * 1024 * 1024;
+
 const MAX_NAME_LENGTH = 120;
 
 /** Matches the admin gallery form. */
 const MAX_TAG_LENGTH = 30;
-
-/** Longest side after resizing. A phone photo comes out at a few hundred KB. */
-const MAX_SIDE = 2000;
 
 /** Input the admin should correct. `status` is the HTTP status to answer with. */
 export class GalleryInputError extends Error {
@@ -131,26 +134,21 @@ function toAdminImage(
     url: toPublicUrl(image.r2Key),
     tags: image.tags,
     createdAt: image.createdAt,
-     mediaType: image.mimeType.startsWith("video/")
+    mediaType: image.mimeType.startsWith("video/")
       ? "video"
       : "image",
   };
 }
 
-// Re-encoding to WebP at most 2000px on its longest side is what keeps the
-// free storage from filling up. rotate() applies the phone's orientation.
+// Re-encode accepted gallery images as WebP without downscaling.
+// Client-side preparation ensures oversized images are compressed
+// before reaching this route. Sharp preserves their pixel dimensions.
 async function toWebp(file: File) {
   try {
     return await sharp(
       Buffer.from(await file.arrayBuffer()),
     )
       .rotate()
-      .resize({
-        width: MAX_SIDE,
-        height: MAX_SIDE,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
       .webp({ quality: 82 })
       .toBuffer({ resolveWithObject: true });
   } catch {
@@ -160,7 +158,6 @@ async function toWebp(file: File) {
     );
   }
 }
-
 
 type PreparedGalleryMedia = {
   data: Uint8Array;
@@ -180,6 +177,18 @@ async function prepareGalleryMedia(
     );
   }
 
+  // Apply to both new uploads and replacements.
+  if (
+    VIDEO_UPLOAD_TYPES.has(file.type) &&
+    file.size > MAX_GALLERY_VIDEO_BYTES
+  ) {
+    throw new GalleryInputError(
+      "The video is over 4 MB.",
+      413,
+    );
+  }
+
+  // Preserve the existing storage backstop.
   if (file.size > MAX_MEDIA_BYTES) {
     throw new GalleryInputError(
       "The file is over 10 MB.",
@@ -188,14 +197,22 @@ async function prepareGalleryMedia(
   }
 
   if (IMAGE_UPLOAD_TYPES.has(file.type)) {
-    const resized = await toWebp(file);
+    const converted = await toWebp(file);
+
+    // Output size is checked independently of input size.
+    if (converted.data.byteLength > MAX_MEDIA_BYTES) {
+      throw new GalleryInputError(
+        "The processed image exceeds the storage limit.",
+        413,
+      );
+    }
 
     return {
-      data: resized.data,
+      data: converted.data,
       mimeType: "image/webp",
       extension: "webp",
-      width: resized.info.width,
-      height: resized.info.height,
+      width: converted.info.width,
+      height: converted.info.height,
       mediaType: "image",
     };
   }
@@ -221,7 +238,6 @@ async function prepareGalleryMedia(
   );
 }
 
-
 /** Every live image, as the admin gallery lists them. */
 export async function getAdminGalleryImages(): Promise<
   AdminGalleryImage[]
@@ -245,25 +261,23 @@ export async function saveGalleryImage(input: {
   const tags = cleanTags(input.tags);
   const file = input.file;
 
-  
-if (!(file instanceof File) || file.size === 0) {
-  throw new GalleryInputError(
-    "Choose an image or video to upload.",
+  if (!(file instanceof File) || file.size === 0) {
+    throw new GalleryInputError(
+      "Choose an image or video to upload.",
+    );
+  }
+
+  const prepared = await prepareGalleryMedia(file);
+
+  // Validate URL configuration before uploading.
+  const key = mintKey("gallery", prepared.extension);
+  const url = toPublicUrl(key);
+
+  const stored = await putMedia(
+    key,
+    prepared.data,
+    prepared.mimeType,
   );
-}
-
-const prepared = await prepareGalleryMedia(file);
-
-// Validate URL configuration before uploading.
-const key = mintKey("gallery", prepared.extension);
-const url = toPublicUrl(key);
-
-const stored = await putMedia(
-  key,
-  prepared.data,
-  prepared.mimeType,
-);
-
 
   const imageId = crypto.randomUUID();
 
@@ -301,6 +315,10 @@ const stored = await putMedia(
     throw error;
   }
 
+  // Successful writes invalidate the cached public gallery
+  // before the database read-back can return early.
+  revalidatePublicGallery();
+
   // Answer with what was stored, as the list shows it: a tag that already
   // existed keeps its first spelling, and tags come back sorted. The image is
   // saved either way, so a failed read must not look like a failed upload.
@@ -318,7 +336,6 @@ const stored = await putMedia(
     );
   }
 
-  revalidatePublicGallery();
   return {
     id: imageId,
     name,
@@ -380,7 +397,6 @@ export async function editGalleryImageMetadata(input: {
 }
 
 /** Replace an existing gallery image file, preserving its image ID and metadata. */
-
 export async function replaceGalleryImage(input: {
   id: string;
   file: unknown;
@@ -415,7 +431,8 @@ export async function replaceGalleryImage(input: {
     );
   }
 
-  // Process images with Sharp; keep videos in their original format.
+  // Prepare images without changing their dimensions;
+  // keep videos in their original format.
   const prepared = await prepareGalleryMedia(file);
 
   const key = mintKey("gallery", prepared.extension);
@@ -479,10 +496,10 @@ export async function replaceGalleryImage(input: {
       409,
     );
   }
+
   revalidatePublicGallery();
   return toAdminImage(saved);
 }
-
 
 /**
  * Remove an image from the gallery. Its file is deleted 24 hours later.
@@ -543,7 +560,9 @@ export async function getPublicGalleryImages(): Promise<
         url: toPublicUrl(image.r2Key),
         alt: image.alt || image.name,
         caption: image.caption || image.name,
-        mediaType: image.mimeType.startsWith("video/") ? "video" : "image",
+        mediaType: image.mimeType.startsWith("video/")
+          ? "video"
+          : "image",
       }),
     );
   } catch (error) {

@@ -384,12 +384,8 @@ describe("Gallery service", () => {
 
     expect(processor.rotate).toHaveBeenCalledOnce();
 
-    expect(processor.resize).toHaveBeenCalledWith({
-      width: 2000,
-      height: 2000,
-      fit: "inside",
-      withoutEnlargement: true,
-    });
+    // Gallery image processing must preserve the original resolution.
+    expect(processor.resize).not.toHaveBeenCalled();
 
     expect(processor.webp).toHaveBeenCalledWith({
       quality: 82,

@@ -1,4 +1,3 @@
-
 "use client";
 
 import GalleryImage from "./gallery-image";
@@ -58,21 +57,22 @@ export default function AdminGalleryGrid({
               {canEdit && (
                 <>
                   {/*
-                    Preserve the Safari-compatible transparent
-                    edit button instead of an animated overlay.
+                    Keep the Safari-compatible transparent edit
+                    button for both images and videos. The
+                    selection and deletion controls stay above
+                    this overlay so they remain independently
+                    clickable.
                   */}
-                  {image.mediaType !== "video" && (
-                    <button
-                      type="button"
-                      onClick={() => onEdit(image)}
-                      className="absolute inset-0 z-10 cursor-pointer bg-transparent"
-                      aria-label={`Edit ${image.name}`}
-                    >
-                      <span className="sr-only">
-                        Edit {image.name}
-                      </span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onEdit(image)}
+                    className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+                    aria-label={`Edit ${image.name}`}
+                  >
+                    <span className="sr-only">
+                      Edit {image.name}
+                    </span>
+                  </button>
 
                   <label
                     className="absolute left-3 top-3 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-white/95 shadow"
