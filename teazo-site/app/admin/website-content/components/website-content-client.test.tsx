@@ -44,7 +44,7 @@ function openSocialRemoval() {
   fireEvent.click(screen.getByRole("button", { name: "Remove Facebook" }));
 }
 
-describe("confirmed website content deletion (TZ-239, TZ-240)", () => {
+describe("confirmed website content deletion", () => {
   it("prompts before requesting deletion and allows cancellation", () => {
     openSocialRemoval();
     expect(screen.getByRole("dialog", { name: "Delete content entry?" })).toBeTruthy();

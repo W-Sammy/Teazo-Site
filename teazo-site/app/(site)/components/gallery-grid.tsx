@@ -48,7 +48,7 @@ export default function GalleryGrid({
               fill
               className="object-cover transition duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              // The first row is on screen at load (TZ-515); the rest wait until scrolled to.
+              // The first row is on screen at load; the rest wait until scrolled to.
               loading={index < 3 ? "eager" : "lazy"}
               fetchPriority={index === 0 ? "high" : "auto"}
             />
