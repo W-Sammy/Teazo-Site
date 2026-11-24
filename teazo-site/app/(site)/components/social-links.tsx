@@ -83,7 +83,7 @@ export default function SocialLinks({
               />
             ) : (
               /*
-               * Use Kaylina's existing TEAZO share icon for
+               * Use existing TEAZO share icon for
                * unsupported destinations. It already contains
                * the correct gold artwork and transparent
                * background, so no additional styling is needed.

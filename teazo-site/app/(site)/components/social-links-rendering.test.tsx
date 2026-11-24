@@ -62,14 +62,9 @@ const yelpIcon =
 const genericIcon =
   "/admin_icons/admin_svg/teazo_share_icon.svg";
 
+// Shared fixtures contain only supported TEAZO platforms.
+// Additional synthetic links are created within individual tests.
 const links: SocialLink[] = [
-  {
-    id: "social-generated-facebook",
-    label: "My FB",
-    url: "https://www.facebook.com/benpaepke",
-    icon: "",
-    enabled: true,
-  },
   {
     id: "social-generated-instagram",
     label: "My Instagram",
@@ -81,13 +76,6 @@ const links: SocialLink[] = [
     id: "social-generated-yelp",
     label: "My Yelp",
     url: "https://www.yelp.com/biz/teazo-san-francisco",
-    icon: "",
-    enabled: true,
-  },
-  {
-    id: "social-custom",
-    label: "Test",
-    url: "https://www.test.com/",
     icon: "",
     enabled: true,
   },
@@ -144,10 +132,18 @@ describe("Public Contact social icons", () => {
   });
 
   it("recognizes a newly created Facebook link by URL", () => {
-    renderPublic();
+    renderPublic([
+      {
+        id: "generated-facebook-id",
+        label: "Facebook",
+        url: "https://www.facebook.com/example",
+        icon: "",
+        enabled: true,
+      },
+    ]);
 
     expect(
-      publicIcon("My FB").getAttribute("data-src"),
+      publicIcon("Facebook").getAttribute("data-src"),
     ).toBe(facebookIcon);
   });
 
@@ -163,16 +159,26 @@ describe("Public Contact social icons", () => {
     ).toBe(yelpIcon);
   });
 
-  it("uses Kaylina's SVG for an unsupported website", () => {
-    renderPublic();
+  it("uses the TEAZO share SVG for an unsupported website", () => {
+    renderPublic([
+      {
+        id: "custom-destination",
+        label: "External Website",
+        url: "https://example.org/",
+        icon: "",
+        enabled: true,
+      },
+    ]);
 
     expect(
-      publicIcon("Test").getAttribute("data-src"),
+      publicIcon("External Website")
+        .getAttribute("data-src"),
     ).toBe(genericIcon);
 
     expect(
-      publicIcon("Test").closest("a")?.getAttribute("href"),
-    ).toBe("https://www.test.com/");
+      publicIcon("External Website")
+        .closest("a")?.getAttribute("href"),
+    ).toBe("https://example.org/");
   });
 
   it("does not trust an old icon when the URL changes", () => {
@@ -180,7 +186,7 @@ describe("Public Contact social icons", () => {
       {
         id: "facebook",
         label: "Custom Destination",
-        url: "https://www.test.com/",
+        url: "https://example.org/",
         icon: facebookIcon,
         enabled: true,
       },
@@ -231,10 +237,18 @@ describe("Admin Website Content social icons", () => {
   });
 
   it("previews the Facebook icon for a generated ID", () => {
-    renderAdmin();
+    renderAdmin([
+      {
+        id: "generated-facebook-id",
+        label: "Facebook",
+        url: "https://www.facebook.com/example",
+        icon: "",
+        enabled: true,
+      },
+    ]);
 
     expect(
-      adminIcon("My FB")?.getAttribute("data-src"),
+      adminIcon("Facebook")?.getAttribute("data-src"),
     ).toBe(facebookIcon);
   });
 
@@ -251,20 +265,29 @@ describe("Admin Website Content social icons", () => {
   });
 
   it("uses the existing share icon for custom websites", () => {
-    renderAdmin();
+    renderAdmin([
+      {
+        id: "custom-destination",
+        label: "External Website",
+        url: "https://example.org/",
+        icon: "",
+        enabled: true,
+      },
+    ]);
 
     expect(
-      adminIcon("Test")?.getAttribute("data-src"),
+      adminIcon("External Website")
+        ?.getAttribute("data-src"),
     ).toBe(genericIcon);
   });
 
   it("updates the preview when the URL changes", () => {
-    const initial = [
+    const initial: SocialLink[] = [
       {
         id: "new-social-link",
         label: "New Link",
         icon: "",
-        url: "https://www.test.com/",
+        url: "https://example.org/",
         enabled: true,
       },
     ];

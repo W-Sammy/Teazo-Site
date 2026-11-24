@@ -208,21 +208,6 @@ If the test also fails individually, inspect its assertions, mocks, dependencies
 
 **Do not assume that an individually passing test resolves a full-suite failure.** A successful full-suite run is still required before considering the test suite verified.
 
-### Latest verified test results
-
-On **November 18, 2026**, testing on `ben-update-vitests` after merging the approved `dev` changes and adding the four Playwright spec files produced:
-
-| Framework | Verified result | Test files |
-|---|---|---|
-| Vitest | 2,034 passed, 0 failed | 119 passed |
-| Playwright (Chromium) | 39 passed, 0 failed, 0 skipped | 4 specs |
-
-The Playwright results cover 19 authentication/password-flow tests and 20 account-management tests. TypeScript, targeted ESLint, and Git whitespace checks also passed for the browser-test additions. The Next.js production build passed after the `dev` integration, before the Playwright dependency was added.
-
-These figures are a historical **branch-local verification**, not a guaranteed result for future checkouts or a claim that these tests are already on `dev`. Run both suites again after changes. Do not combine the Vitest and Playwright totals into a single Vitest count.
-
-On **November 19, 2026**, the checkout work on `ben-test-frontend-checkout` separately verified **185 Vitest tests across 10 focused test files**, **9 Playwright tests in the public checkout spec**, and a manual local D1 concurrency check in which one of 10 simultaneous requests claimed a checkout attempt and one of 10 claimed processing ownership. These are scoped verification results, **not** a passing full-repository Vitest or combined Playwright result; the 185-test set overlaps the broader test inventory. The complete Vitest run on the checkout branch had unrelated failing tests, and those results must be reconciled after branch integration. The D1 concurrency check did not create real Square links or payments.
-
 ### Understanding test results
 
 After running the test command, Vitest displays the results in the terminal. When using the dot reporter, individual tests are represented by dots, followed by a summary of the run.
@@ -498,7 +483,7 @@ Browser tests are kept under `teazo-site/e2e/` and run independently of the co-l
 | `delivery-admin.spec.ts` | Not yet included in historical baseline | Authenticated local admin editor, draft management, field validation, intercepted saves, failures, visibility, and mobile interaction |
 | `static-menu.spec.ts` | Not yet included in historical baseline | PDF button, preview rendering, fallback states, keyboard activation, new tab, resizing, and Safari simulation |
 
-**Verified Playwright baselines:** 39 Chromium tests passed across the four administrator specs on November 18, 2026 (`ben-update-vitests`); 9 checkout tests passed in the fifth spec on November 19, 2026 (`ben-test-frontend-checkout`). These were **separate branch-local runs**, not a verified combined 48-test run. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
+**Verified Playwright baselines:** Playwright browser tests cover selected application workflows using Chromium. Account-management specifications require a saved local Owner session. Mobile viewport tests use Chromium with simulated mobile dimensions, not actual mobile Safari or Android Chrome. Test counts may change as coverage expands, so run the relevant specifications to determine the current results.
 
 ### Backend and API tests
 

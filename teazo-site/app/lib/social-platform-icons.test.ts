@@ -18,7 +18,7 @@ import {
 describe("Social platform icon recognition", () => {
   it.each([
     [
-      "https://www.facebook.com/benpaepke",
+      "https://www.facebook.com/example",
       "/social_icons/social_svg/teazo_fb_icon.svg",
     ],
     [
