@@ -87,7 +87,7 @@ export default function TurnstileWidget({
   className?: string;
   /**
    * Start the script once the page has loaded instead of with it, so it doesn't
-   * hold back the page on phones (TZ-515). For forms below the fold: the check
+   * hold back the page on phones. For forms below the fold: the check
    * still finishes long before anyone can fill the form in.
    */
   afterPageLoad?: boolean;

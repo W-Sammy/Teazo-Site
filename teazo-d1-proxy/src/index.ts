@@ -131,7 +131,7 @@ function prepare(env: Env, s: Stmt): D1PreparedStatement {
  *   DELETE /media/<key>   token required; idempotent
  */
 const MAX_MEDIA_BYTES = 10 * 1024 * 1024; // backstop — the app resizes before upload
-const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf","video/mp4","video/webm",]);
+const MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf","video/mp4","video/webm","video/quicktime",]);
 /** Keys the app mints look like gallery/2026/09/<uuid>.webp. */
 const KEY_RE = /^[a-z0-9][a-z0-9/_.-]{0,511}$/i;
 

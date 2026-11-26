@@ -143,6 +143,7 @@ describe("Admin Gallery upload-size boundaries", () => {
   it.each([
     ["MP4", "video/mp4", "video.mp4"],
     ["WebM", "video/webm", "video.webm"],
+    ["MOV", "video/quicktime", "video.mov"],
   ])(
     "accepts a %s exactly at 4 MiB",
     async (_format, mimeType, filename) => {
@@ -191,6 +192,7 @@ describe("Admin Gallery upload-size boundaries", () => {
   it.each([
     ["MP4", "video/mp4", "video.mp4"],
     ["WebM", "video/webm", "video.webm"],
+    ["MOV", "video/quicktime", "video.mov"],
   ])(
     "rejects a %s one byte above 4 MiB",
     (_format, mimeType, filename) => {
@@ -219,6 +221,38 @@ describe("Admin Gallery upload-size boundaries", () => {
       ).toBe(true);
 
       expect(onSave).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["", "application/octet-stream"])(
+    "accepts an iPhone MOV with MIME type %s",
+    async (mimeType) => {
+      const { fileInput, onSave } = renderForm();
+      const original = sizedFile(1000, mimeType, "IMG_0001.MOV");
+
+      fireEvent.change(fileInput, {
+        target: { files: [original] },
+      });
+
+      expect(screen.queryByRole("alert")).toBeNull();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Save" }),
+      );
+
+      await waitFor(() => {
+        expect(onSave).toHaveBeenCalledOnce();
+      });
+
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          file: expect.objectContaining({
+            name: "IMG_0001.MOV",
+            type: "video/quicktime",
+          }),
+        }),
+      );
+      expect(mocks.prepareGalleryImage).not.toHaveBeenCalled();
     },
   );
 

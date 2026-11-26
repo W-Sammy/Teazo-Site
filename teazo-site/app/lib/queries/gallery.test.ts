@@ -302,6 +302,7 @@ describe("Gallery D1 queries", () => {
       600,
       "photo.png",
       "admin-1",
+      null,
     ]);
 
     expect(statements[1].args).toEqual([
@@ -497,10 +498,11 @@ describe("Gallery D1 queries", () => {
       "admin-1",
       "image-1",
       "media-original",
+      null,
     ]);
 
     expect(statements[0].sql).toContain(
-      "g.media_id = ?10",
+      "g.media_id = ?11",
     );
     expect(statements[0].sql).toContain(
       "g.deleted_at IS NULL",

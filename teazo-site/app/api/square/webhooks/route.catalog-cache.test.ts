@@ -61,7 +61,7 @@ beforeEach(() => {
 
 afterEach(() => vi.clearAllMocks());
 
-describe("POST /api/square/webhooks: menu cache (TZ-515)", () => {
+describe("POST /api/square/webhooks: menu cache", () => {
   it("clears the cached Square catalog when the catalog changes", async () => {
     const res = await signed(catalogEvent);
 

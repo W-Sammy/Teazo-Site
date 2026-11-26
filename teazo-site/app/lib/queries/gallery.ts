@@ -42,7 +42,7 @@ type ImageRow = {
 const IMAGE_SELECT = `
   SELECT g.id, g.name, g.caption, g.alt, g.is_published, g.created_at,
          g.media_id, m.r2_bucket,
-         m.r2_key, m.mime_type, m.width, m.height,
+         m.r2_key, COALESCE(m.mime_type_override, m.mime_type) AS mime_type, m.width, m.height,
          (SELECT json_group_array(name) FROM (
             SELECT t.name
               FROM gallery_image_tag AS it
@@ -176,19 +176,20 @@ export async function recordGalleryImage(input: {
   await batch([
     prepare(
       `INSERT INTO media_asset
-         (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
+         (id, r2_bucket, r2_key, mime_type, mime_type_override, byte_size, width, height,
           original_filename, purpose, uploaded_by)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'gallery', ?9)`,
+       VALUES (?1, ?2, ?3, ?4, ?10, ?5, ?6, ?7, ?8, 'gallery', ?9)`,
     ).bind(
       mediaId,
       stored.bucket,
       stored.key,
-      mimeType,
+      mimeType === "video/quicktime" ? "video/mp4" : mimeType,
       stored.size,
       width,
       height,
       originalFilename,
       adminId,
+      mimeType === "video/quicktime" ? mimeType : null,
     ),
     prepare(
       `INSERT INTO gallery_image (id, media_id, name, name_sort_key)
@@ -332,15 +333,15 @@ export async function replaceGalleryImageMedia(input: {
   const statements = [
     prepare(
       `INSERT INTO media_asset
-         (id, r2_bucket, r2_key, mime_type, byte_size, width, height,
+         (id, r2_bucket, r2_key, mime_type, mime_type_override, byte_size, width, height,
           original_filename, purpose, uploaded_by)
-       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'gallery', ?9
+       SELECT ?1, ?2, ?3, ?4, ?12, ?5, ?6, ?7, ?8, 'gallery', ?9
         WHERE EXISTS (
           SELECT 1
             FROM gallery_image AS g
             JOIN media_asset AS m ON m.id = g.media_id
-           WHERE g.id = ?9
-             AND g.media_id = ?10
+           WHERE g.id = ?10
+             AND g.media_id = ?11
              AND g.deleted_at IS NULL
              AND m.deleted_at IS NULL
         )`,
@@ -348,7 +349,7 @@ export async function replaceGalleryImageMedia(input: {
       newMediaId,
       stored.bucket,
       stored.key,
-      mimeType,
+      mimeType === "video/quicktime" ? "video/mp4" : mimeType,
       stored.size,
       width,
       height,
@@ -356,6 +357,7 @@ export async function replaceGalleryImageMedia(input: {
       adminId,
       id,
       expectedMediaId,
+      mimeType === "video/quicktime" ? mimeType : null,
     ),
     prepare(
       `UPDATE gallery_image

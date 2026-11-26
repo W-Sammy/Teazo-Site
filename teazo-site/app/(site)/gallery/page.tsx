@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const cabinSketch = Cabin_Sketch({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
+  preload: false, // preloading every font held back first paint on phones
   subsets: ["latin"],
   weight: ["400"],
 });

@@ -3,7 +3,7 @@ import { Cabin_Sketch } from "next/font/google"; // import fonts
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
+    preload: false, // preloading every font held back first paint on phones
     subsets: ['latin'], // reduce amount of importing to just letters, nums
     weight: ['400'] // normal
 });

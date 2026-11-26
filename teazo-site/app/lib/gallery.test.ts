@@ -354,7 +354,7 @@ describe("Gallery service", () => {
       ),
     ).rejects.toMatchObject({
       status: 415,
-      message: "Upload a JPEG, PNG, WebP, MP4 or WebM file.",
+      message: "Upload a JPEG, PNG, WebP, MP4, WebM or MOV file.",
     });
   });
 

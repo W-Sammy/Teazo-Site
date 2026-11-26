@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe("deleted entries on public pages (TZ-242)", () => {
+describe("deleted entries on public pages", () => {
   it.each([Home, ContactPage])("removes a deleted social link from rendered %s", async (Page) => {
     expect(renderToStaticMarkup(await Page())).toContain("TEAZO on Facebook");
     await deleteWebsiteContentEntry("socialLinks", "facebook", 0);

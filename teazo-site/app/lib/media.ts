@@ -27,6 +27,7 @@ export const MEDIA_TYPES = [
   "application/pdf",
   "video/mp4",
   "video/webm",
+  "video/quicktime",
 ] as const;
 
 export type MediaType = (typeof MEDIA_TYPES)[number];

@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
 
 
 const cabinSketch = Cabin_Sketch({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
+  preload: false, // preloading every font held back first paint on phones
   subsets: ["latin"],
   weight: ["400"],
 });
@@ -444,7 +444,7 @@ export default async function MenuPage({
   searchParams?: Promise<{ item?: string }>;
 }) {
   // Events and website content don't depend on the catalog, so they start right
-  // away instead of waiting for the revision check (TZ-515).
+  // away instead of waiting for the revision check.
   // Events are optional: keep the menu available if D1 cannot load them.
   const liveEventsRequest = listActiveEvents().catch(() => []);
   const contentRequest = getPublicWebsiteContent();

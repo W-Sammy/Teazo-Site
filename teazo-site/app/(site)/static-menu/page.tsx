@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 /* Font used for the main page heading. */
 const cabinSketch = Cabin_Sketch({
-	preload: false, // preloading every font held back first paint on phones (TZ-515)
+	preload: false, // preloading every font held back first paint on phones
 	subsets: ["latin"],
 	weight: ["400"],
 });

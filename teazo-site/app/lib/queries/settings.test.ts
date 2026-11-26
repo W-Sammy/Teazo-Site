@@ -289,7 +289,7 @@ describe("Admin Settings database queries", () => {
   });
 
   it.each([
-    { id: "owner-id", role: 1, username: "Ben" },
+    { id: "owner-id", role: 1, username: "Test Owner" },
     { id: "admin-id", role: 2, username: "Updated Admin" },
   ])(
     "updates only the username of a role-$role account",

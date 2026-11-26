@@ -863,48 +863,115 @@ export default function AdminGalleryClient({
           .gallery-landscape-toolbar {
             padding: 8px 12px;
           }
+
           .gallery-landscape-primary,
           .gallery-landscape-search-view {
             flex-direction: row;
             align-items: center;
             gap: 10px;
           }
+
           .gallery-landscape-primary {
             justify-content: space-between;
           }
+
           .gallery-landscape-search-view {
             flex: 1 1 auto;
             min-width: 0;
           }
+
           .gallery-landscape-search {
             width: auto;
             flex: 1 1 200px;
             min-width: 0;
           }
+
           .gallery-landscape-view {
             flex: 0 0 auto;
             align-self: center;
           }
+
           .gallery-landscape-new {
             width: auto;
             margin: 0;
             padding: 8px 12px;
             align-self: center;
           }
+
           .gallery-landscape-bulk {
             margin-top: 8px;
             padding-top: 8px;
             gap: 8px 12px;
             flex-wrap: nowrap;
           }
+
           .gallery-landscape-bulk > label {
             white-space: nowrap;
           }
+
           .gallery-landscape-delete {
             width: auto;
             margin-left: auto;
             padding: 8px 12px;
             white-space: nowrap;
+          }
+        }
+
+        /* Size the toolbar according to its own available width,
+           including when the filters and edit drawer are open. */
+        .gallery-landscape-toolbar {
+          container-type: inline-size;
+        }
+
+        /* Rearrange controls before the desktop toolbar becomes crowded. */
+        @container (max-width: 640px) {
+          .gallery-landscape-primary {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .gallery-landscape-search-view {
+            display: contents;
+          }
+
+          .gallery-landscape-search {
+            grid-column: 1 / -1;
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+          }
+
+          .gallery-landscape-view {
+            grid-column: 1;
+            justify-self: start;
+            align-self: center;
+            width: auto;
+            min-width: 0;
+          }
+
+          .gallery-landscape-new {
+            grid-column: 2;
+            justify-self: end;
+            align-self: center;
+            width: auto;
+            margin: 0;
+          }
+        }
+
+        /* Very narrow layouts need a separate row for each control. */
+        @container (max-width: 380px) {
+          .gallery-landscape-primary {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .gallery-landscape-view {
+            grid-column: 1;
+          }
+
+          .gallery-landscape-new {
+            grid-column: 1;
           }
         }
       `}</style>
@@ -1141,83 +1208,83 @@ export default function AdminGalleryClient({
             </div>
 
             {canEdit && (
-            <button
-              type="button"
-              onClick={openNewImageDrawer}
-              disabled={interactionLocked}
-              className={`gallery-landscape-new inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap ${adminButtonStyles.primary} sm:w-auto sm:self-end lg:ml-4 lg:self-auto`}
-            >
-              New Item +
-            </button>
+              <button
+                type="button"
+                onClick={openNewImageDrawer}
+                disabled={interactionLocked}
+                className={`gallery-landscape-new inline-flex w-full shrink-0 items-center justify-center whitespace-nowrap ${adminButtonStyles.primary} sm:w-auto sm:self-end lg:ml-4 lg:self-auto`}
+              >
+                New Item +
+              </button>
             )}
           </div>
 
           {/* Shared bulk-selection controls for both gallery views. */}
           {canEdit && (
-          <div className="gallery-landscape-bulk mt-3 flex flex-wrap items-center gap-3 border-t border-[#dbb082]/40 pt-3">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={allDisplayedSelected}
+            <div className="gallery-landscape-bulk mt-3 flex flex-wrap items-center gap-3 border-t border-[#dbb082]/40 pt-3">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={allDisplayedSelected}
+                  disabled={
+                    filteredImages.length === 0 ||
+                    interactionLocked
+                  }
+                  onChange={(event) =>
+                    selectAllDisplayed(
+                      event.target.checked,
+                    )
+                  }
+                  ref={(element) => {
+                    if (element) {
+                      element.indeterminate =
+                        someDisplayedSelected &&
+                        !allDisplayedSelected;
+                    }
+                  }}
+                  className="h-4 w-4 cursor-pointer accent-[#b98555] disabled:cursor-not-allowed"
+                />
+
+                Select all displayed
+              </label>
+
+              <span
+                className="text-sm text-gray-500"
+                role="status"
+              >
+                {selectedImages.length} selected
+              </span>
+
+              <button
+                type="button"
+                onClick={clearImageSelection}
                 disabled={
-                  filteredImages.length === 0 ||
+                  selectedImages.length === 0 ||
                   interactionLocked
                 }
-                onChange={(event) =>
-                  selectAllDisplayed(
-                    event.target.checked,
-                  )
+                className="cursor-pointer text-sm text-blue-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Clear selection
+              </button>
+
+              <button
+                type="button"
+                onClick={openBulkDeleteDialog}
+                disabled={
+                  selectedImages.length === 0 ||
+                  interactionLocked ||
+                  drawerOpen
                 }
-                ref={(element) => {
-                  if (element) {
-                    element.indeterminate =
-                      someDisplayedSelected &&
-                      !allDisplayedSelected;
-                  }
-                }}
-                className="h-4 w-4 cursor-pointer accent-[#b98555] disabled:cursor-not-allowed"
-              />
-
-              Select all displayed
-            </label>
-
-            <span
-              className="text-sm text-gray-500"
-              role="status"
-            >
-              {selectedImages.length} selected
-            </span>
-
-            <button
-              type="button"
-              onClick={clearImageSelection}
-              disabled={
-                selectedImages.length === 0 ||
-                interactionLocked
-              }
-              className="cursor-pointer text-sm text-blue-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Clear selection
-            </button>
-
-            <button
-              type="button"
-              onClick={openBulkDeleteDialog}
-              disabled={
-                selectedImages.length === 0 ||
-                interactionLocked ||
-                drawerOpen
-              }
-              title={
-                drawerOpen
-                  ? "Close the image form before deleting selected images."
-                  : undefined
-              }
-              className={`gallery-landscape-delete w-full ${adminButtonStyles.danger} sm:ml-auto sm:w-auto`}
-            >
-              Delete selected ({selectedImages.length})
-            </button>
-          </div>
+                title={
+                  drawerOpen
+                    ? "Close the image form before deleting selected images."
+                    : undefined
+                }
+                className={`gallery-landscape-delete w-full ${adminButtonStyles.danger} sm:ml-auto sm:w-auto`}
+              >
+                Delete selected ({selectedImages.length})
+              </button>
+            </div>
           )}
         </div>
 
@@ -1311,37 +1378,37 @@ export default function AdminGalleryClient({
       {/* Right-side upload/edit form */}
       {/* Mount a fresh form for each selected record, and unmount its contents on close. */}
       {canEdit && (
-      <AdminForm
-        isOpen={drawerOpen}
-        onClose={() => {
-          if (
-            !mutationInFlight.current &&
-            !interactionLocked
-          ) {
-            closeDrawer();
-          }
-        }}
-        mobileFullscreen
-      >
-        {drawerOpen && (
-          <GalleryUploadForm
-            key={
-              editingImage?.id ??
-              "new-image"
+        <AdminForm
+          isOpen={drawerOpen}
+          onClose={() => {
+            if (
+              !mutationInFlight.current &&
+              !interactionLocked
+            ) {
+              closeDrawer();
             }
-            initialImage={editingImage}
-            onCancel={() => {
-              if (
-                !mutationInFlight.current &&
-                !interactionLocked
-              ) {
-                closeDrawer();
+          }}
+          mobileFullscreen
+        >
+          {drawerOpen && (
+            <GalleryUploadForm
+              key={
+                editingImage?.id ??
+                "new-image"
               }
-            }}
-            onSave={handleSave}
-          />
-        )}
-      </AdminForm>
+              initialImage={editingImage}
+              onCancel={() => {
+                if (
+                  !mutationInFlight.current &&
+                  !interactionLocked
+                ) {
+                  closeDrawer();
+                }
+              }}
+              onSave={handleSave}
+            />
+          )}
+        </AdminForm>
       )}
 
       {/* Selecting Delete opens this dialog before the image is deleted. */}

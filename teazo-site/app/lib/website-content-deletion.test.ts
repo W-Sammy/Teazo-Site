@@ -13,7 +13,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe("website content removal (TZ-234, TZ-237, TZ-241, TZ-242)", () => {
+describe("website content removal", () => {
   it.each(["holidays", "socialLinks"] as const)("rejects a missing %s target without changing data or revision", async (collection) => {
     const before = await getWebsiteContent();
     await expect(deleteWebsiteContentEntry(collection, "missing", before.collectionsRevision!))

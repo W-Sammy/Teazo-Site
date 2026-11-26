@@ -178,6 +178,7 @@ describe("Gallery server upload boundaries", () => {
   it.each([
     ["MP4", "video/mp4", "test.mp4"],
     ["WebM", "video/webm", "test.webm"],
+    ["MOV", "video/quicktime", "test.mov"],
   ])(
     "accepts a %s upload exactly at 4 MiB",
     async (_format, mimeType, filename) => {
@@ -207,6 +208,7 @@ describe("Gallery server upload boundaries", () => {
   it.each([
     ["MP4", "video/mp4", "test.mp4"],
     ["WebM", "video/webm", "test.webm"],
+    ["MOV", "video/quicktime", "test.mov"],
   ])(
     "rejects a %s upload one byte above 4 MiB",
     async (_format, mimeType, filename) => {
@@ -238,6 +240,7 @@ describe("Gallery server upload boundaries", () => {
   it.each([
     ["MP4", "video/mp4", "replacement.mp4"],
     ["WebM", "video/webm", "replacement.webm"],
+    ["MOV", "video/quicktime", "replacement.mov"],
   ])(
     "rejects an oversized %s replacement",
     async (_format, mimeType, filename) => {
@@ -263,6 +266,22 @@ describe("Gallery server upload boundaries", () => {
       expect(
         mocks.revalidateTag,
       ).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["", "application/octet-stream"])(
+    "accepts a MOV with MIME type %s from the iPhone picker",
+    async (mimeType) => {
+      await saveGalleryImage(
+        newUpload(fileWithSize(1024, mimeType, "IMG_0001.MOV")),
+      );
+
+      expect(mocks.putMedia).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Uint8Array),
+        "video/quicktime",
+      );
+      expect(mocks.recordGalleryImage).toHaveBeenCalledOnce();
     },
   );
 

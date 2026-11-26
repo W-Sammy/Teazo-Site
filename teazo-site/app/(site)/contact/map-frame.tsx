@@ -5,7 +5,7 @@ import { usePageLoaded } from "@/app/lib/use-page-loaded";
 /**
  * The Google Maps embed, mounted once the page has loaded. The embed pulls in
  * about 600 KB of Google scripts, and loading it with the page delayed the
- * page's own text on phones (TZ-515). The map box shows its background until then.
+ * page's own text on phones. The map box shows its background until then.
  */
 export default function MapFrame({ title, src, className }: { title: string; src: string; className: string }) {
   if (!usePageLoaded()) {

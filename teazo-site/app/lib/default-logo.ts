@@ -1,5 +1,5 @@
 /**
- * The default TEAZO logo, embedded in the page instead of fetched (TZ-515).
+ * The default TEAZO logo, embedded in the page instead of fetched.
  *
  * On the home page the logo is the largest thing on screen, so its paint is what
  * Lighthouse times. As a separate request it waited behind fonts and scripts on

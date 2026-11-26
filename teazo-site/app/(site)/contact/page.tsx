@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 // Cabin Sketch is the approved display face for the hand-drawn headings on this
 // route. Reuse this instance instead of re-declaring font config inline.
 const cabinSketch = Cabin_Sketch({
-  preload: false, // preloading every font held back first paint on phones (TZ-515)
+  preload: false, // preloading every font held back first paint on phones
   subsets: ["latin"],
   weight: ["400"],
 });

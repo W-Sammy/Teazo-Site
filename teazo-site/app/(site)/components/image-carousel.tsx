@@ -19,8 +19,8 @@ export default function ImageCarousel({ images: carouselImages }: ImageCarouselP
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
     // The carousel starts below the fold on phones and desktops, so its images
-    // load once the page has, instead of competing with the top of the page
-    // (TZ-515). The three slides on screen still load before the hidden ones.
+    // load once the page has, instead of competing with the top of the page.
+    // The three slides on screen still load before the hidden ones.
     const pageLoaded = usePageLoaded();
 
     const dragStartX = useRef<number>(0);

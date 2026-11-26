@@ -48,7 +48,22 @@ const IMAGE_UPLOAD_TYPES = new Set([
 const VIDEO_UPLOAD_TYPES = new Set([
   "video/mp4",
   "video/webm",
+  "video/quicktime",
 ]);
+
+/** Recognize iPhone MOV files when the selected File lacks a MIME type. */
+function galleryVideoMimeType(file: File): string {
+  const mimeType = file.type.toLowerCase();
+
+  if (
+    (mimeType === "" || mimeType === "application/octet-stream") &&
+    /\.mov$/i.test(file.name)
+  ) {
+    return "video/quicktime";
+  }
+
+  return mimeType;
+}
 
 // Keep video requests below Vercel's request-body limit.
 const MAX_GALLERY_VIDEO_BYTES = 4 * 1024 * 1024;
@@ -178,8 +193,9 @@ async function prepareGalleryMedia(
   }
 
   // Apply to both new uploads and replacements.
+  const videoMimeType = galleryVideoMimeType(file);
   if (
-    VIDEO_UPLOAD_TYPES.has(file.type) &&
+    VIDEO_UPLOAD_TYPES.has(videoMimeType) &&
     file.size > MAX_GALLERY_VIDEO_BYTES
   ) {
     throw new GalleryInputError(
@@ -217,15 +233,21 @@ async function prepareGalleryMedia(
     };
   }
 
-  if (VIDEO_UPLOAD_TYPES.has(file.type)) {
-    const mimeType = file.type as
+  if (VIDEO_UPLOAD_TYPES.has(videoMimeType)) {
+    const mimeType = videoMimeType as
       | "video/mp4"
-      | "video/webm";
+      | "video/webm"
+      | "video/quicktime";
 
     return {
       data: new Uint8Array(await file.arrayBuffer()),
       mimeType,
-      extension: mimeType === "video/mp4" ? "mp4" : "webm",
+      extension:
+        mimeType === "video/quicktime"
+          ? "mov"
+          : mimeType === "video/mp4"
+            ? "mp4"
+            : "webm",
       width: null,
       height: null,
       mediaType: "video",
@@ -233,7 +255,7 @@ async function prepareGalleryMedia(
   }
 
   throw new GalleryInputError(
-    "Upload a JPEG, PNG, WebP, MP4 or WebM file.",
+    "Upload a JPEG, PNG, WebP, MP4, WebM or MOV file.",
     415,
   );
 }

@@ -42,7 +42,32 @@ const acceptedImageTypes = [
 const acceptedVideoTypes = [
   "video/mp4",
   "video/webm",
+  "video/quicktime",
 ];
+
+/**
+ * iOS can return an empty or generic MIME type for a .mov file.
+ * Normalize that specific case, but do not accept arbitrary unknown types.
+ */
+function normalizeGalleryVideo(file: File): File | null {
+  const mimeType = file.type.toLowerCase();
+
+  if (acceptedVideoTypes.includes(mimeType)) {
+    return file;
+  }
+
+  if (
+    (mimeType === "" || mimeType === "application/octet-stream") &&
+    /\.mov$/i.test(file.name)
+  ) {
+    return new File([file], file.name, {
+      type: "video/quicktime",
+      lastModified: file.lastModified,
+    });
+  }
+
+  return null;
+}
 
 const maxVideoSize = MAX_GALLERY_UPLOAD_BYTES;
 const maxFileSize = MAX_GALLERY_UPLOAD_BYTES;
@@ -204,11 +229,9 @@ export default function GalleryUploadForm({
     setImageError(null);
     setUploadError(null);
 
-    const isVideo = acceptedVideoTypes.includes(
-      file.type.toLowerCase(),
-    );
+    const normalizedVideo = normalizeGalleryVideo(file);
 
-    if (isVideo) {
+    if (normalizedVideo) {
       if (file.size === 0) {
         setImageError(
           "The selected video must be nonempty.",
@@ -227,7 +250,7 @@ export default function GalleryUploadForm({
         return;
       }
 
-      applySelectedFile(file, file.name);
+      applySelectedFile(normalizedVideo, file.name);
       return;
     }
 
@@ -238,7 +261,7 @@ export default function GalleryUploadForm({
       )
     ) {
       setImageError(
-        "Choose a JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM file.",
+        "Choose a JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV file.",
       );
       return;
     }
@@ -711,7 +734,7 @@ export default function GalleryUploadForm({
             id="gallery-image-file"
             name="galleryImageFile"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm,.mov"
             onChange={handleFileChange}
             disabled={isSaving || isConverting}
             className="hidden"
@@ -733,7 +756,7 @@ export default function GalleryUploadForm({
               </button>
 
               <p className="text-center text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller.
+                JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller. MOV playback may vary by browser; MP4 is recommended.
               </p>
             </div>
           ) : (
@@ -777,7 +800,7 @@ export default function GalleryUploadForm({
               </button>
 
               <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller.
+                JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller. MOV playback may vary by browser; MP4 is recommended.
               </p>
             </div>
           )}
