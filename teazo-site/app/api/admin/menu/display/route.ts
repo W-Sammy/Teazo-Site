@@ -44,11 +44,16 @@ export async function POST(request: Request) {
 
   if (action === "update-item") {
     const itemId = textValue(body.itemId);
+    const sectionId = textValue(body.sectionId);
     const visible = booleanValue(body.visible);
-    if (!itemId || visible === null) {
-      return Response.json({ error: "Item ID and visibility are required." }, { status: 400 });
+    if (!sectionId || !itemId || visible === null) {
+      return Response.json({ error: "Category ID, item ID and visibility are required." }, { status: 400 });
     }
 
+    const state = await getMenuDisplayState();
+    if (!state.sections.some((section) => section.id === sectionId)) {
+      return Response.json({ error: "Category not found." }, { status: 404 });
+    }
     await batch([
       prepare(`
         INSERT INTO catalog_item_cache (square_object_id, square_env)
@@ -56,14 +61,14 @@ export async function POST(request: Request) {
         ON CONFLICT (square_object_id, square_env) DO NOTHING
       `).bind(itemId, squareEnv),
       prepare(`
-        INSERT INTO menu_item_display
-          (square_catalog_object_id, square_env, hide_on_website, updated_by)
-        VALUES (?1, ?2, ?3, ?4)
-        ON CONFLICT (square_catalog_object_id, square_env) DO UPDATE SET
+        INSERT INTO menu_section_item_display
+          (square_catalog_object_id, square_env, hide_on_website, updated_by, section_id)
+        VALUES (?1, ?2, ?3, ?4, ?5)
+        ON CONFLICT (section_id, square_catalog_object_id, square_env) DO UPDATE SET
           hide_on_website = excluded.hide_on_website,
           updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
           updated_by = excluded.updated_by
-      `).bind(itemId, squareEnv, visible ? 0 : 1, access.admin.id),
+      `).bind(itemId, squareEnv, visible ? 0 : 1, access.admin.id, sectionId),
     ]);
 
     return Response.json({ ok: true });
@@ -173,14 +178,14 @@ export async function POST(request: Request) {
         // Adding an item to a custom category applies that category's default
         // once. Saving defaults or editing existing members preserves visibility.
         prepare(`
-          INSERT INTO menu_item_display
-            (square_catalog_object_id, square_env, hide_on_website, updated_by)
-          SELECT value, ?2, ?3, ?4 FROM json_each(?1) WHERE true
-          ON CONFLICT (square_catalog_object_id, square_env) DO UPDATE SET
+          INSERT INTO menu_section_item_display
+            (square_catalog_object_id, square_env, hide_on_website, updated_by, section_id)
+          SELECT value, ?2, ?3, ?4, ?5 FROM json_each(?1) WHERE true
+          ON CONFLICT (section_id, square_catalog_object_id, square_env) DO UPDATE SET
             hide_on_website = excluded.hide_on_website,
             updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
             updated_by = excluded.updated_by
-        `).bind(JSON.stringify(addedItemIds), squareEnv, defaultItemVisible ? 0 : 1, access.admin.id),
+        `).bind(JSON.stringify(addedItemIds), squareEnv, defaultItemVisible ? 0 : 1, access.admin.id, id),
         prepare(`
           INSERT INTO menu_section_item (section_id, square_catalog_object_id, square_env, position)
           SELECT ?1, value, ?2, CAST(key AS INTEGER) FROM json_each(?3)
@@ -191,7 +196,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, section: {
       id, title, sectionType, squareCategoryId, sortOrder, isPublished, defaultItemVisible, itemIds,
     }, itemSettings: addedItemIds.map((itemId) => ({
-      squareCatalogObjectId: itemId, visible: defaultItemVisible,
+      sectionId: id, squareCatalogObjectId: itemId, visible: defaultItemVisible,
     })) });
   }
 

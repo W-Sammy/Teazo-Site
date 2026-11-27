@@ -282,6 +282,28 @@ afterEach(() => {
 });
 
 describe("Public Menu catalog loading", () => {
+  it.each([false, true])("keeps shared item visibility independent across Square and custom categories (custom hidden: %s)", async (hideCustom) => {
+    const state = await vi.mocked(getMenuDisplayState)();
+    vi.mocked(getMenuDisplayState).mockResolvedValue({
+      sections: [...state.sections, {
+        id: "favorites", squareCategoryId: null, title: "Favorites", sectionType: "custom",
+        sortOrder: 1, isPublished: true, defaultItemVisible: true, itemIds: ["tea-1"],
+      }],
+      items: [
+        { sectionId: "category:milk-tea", squareCatalogObjectId: "tea-1", visible: false },
+        { sectionId: "category:specials", squareCatalogObjectId: "tea-1", visible: true },
+        { sectionId: "favorites", squareCatalogObjectId: "tea-1", visible: !hideCustom },
+      ],
+    });
+    returnCatalog([catalogItem({ categories: [
+      { id: "milk-tea", name: "Milk Tea" }, { id: "specials", name: "Specials" },
+    ] })]);
+    await renderPage();
+    expect(screen.queryByTestId("card-category:milk-tea-tea-1")).toBeNull();
+    expect(card("category:specials", "tea-1")).toBeTruthy();
+    expect(Boolean(screen.queryByTestId("card-custom:favorites-tea-1"))).toBe(!hideCustom);
+  });
+
   it("keeps unconfigured new Square categories off the public menu", async () => {
     vi.mocked(getMenuDisplayState).mockResolvedValue({ sections: [], items: [] });
     returnCatalog([catalogItem()]);
@@ -321,7 +343,7 @@ describe("Public Menu catalog loading", () => {
   it("does not reinitialize existing explicit item settings", async () => {
     const state = await vi.mocked(getMenuDisplayState)();
     vi.mocked(getMenuDisplayState).mockResolvedValue({
-      ...state, items: [{ squareCatalogObjectId: "tea-1", visible: true }],
+      ...state, items: [{ sectionId: "category:milk-tea", squareCatalogObjectId: "tea-1", visible: true }],
     });
     returnCatalog([catalogItem()]);
     await renderPage();

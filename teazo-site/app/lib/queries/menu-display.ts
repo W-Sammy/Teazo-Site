@@ -16,6 +16,8 @@ export type MenuDisplaySection = {
 };
 
 export type MenuDisplayItem = {
+  /** Missing only for legacy settings retained during the visibility migration. */
+  sectionId?: string;
   squareCatalogObjectId: string;
   visible: boolean;
 };
@@ -36,6 +38,7 @@ type SectionRow = {
 };
 
 type ItemRow = {
+  section_id: string | null;
   square_catalog_object_id: string;
   hide_on_website: number;
 };
@@ -56,9 +59,11 @@ export async function getMenuDisplayState() {
         ORDER BY sort_order, id`,
     ).bind(squareEnv).all<SectionRow>(),
     prepare(
-      `SELECT square_catalog_object_id, hide_on_website
-         FROM menu_item_display
-        WHERE square_env = ?1`,
+      `SELECT NULL AS section_id, square_catalog_object_id, hide_on_website
+         FROM menu_item_display WHERE square_env = ?1
+       UNION ALL
+       SELECT section_id, square_catalog_object_id, hide_on_website
+         FROM menu_section_item_display WHERE square_env = ?1`,
     ).bind(squareEnv).all<ItemRow>(),
     prepare(
       `SELECT section_id, square_catalog_object_id
@@ -87,64 +92,44 @@ export async function getMenuDisplayState() {
       itemIds: itemIdsBySection.get(row.id) ?? [],
     })),
     items: items.results.map((row) => ({
+      ...(row.section_id ? { sectionId: row.section_id } : {}),
       squareCatalogObjectId: row.square_catalog_object_id,
       visible: row.hide_on_website === 0,
     })),
   };
 }
 
-/**
- * Records Square items the website has seen for the first time. This makes a
- * category's default apply only to new items; existing items keep their own
- * visibility setting afterward.
- */
+/** Freeze each category's default when an item first appears in that category. */
 export async function initializeMenuDisplayItems(
   items: CatalogItemForDisplay[],
   sections: MenuDisplaySection[],
 ) {
   if (items.length === 0) return;
-
   const squareEnv = getSquareEnvironment();
-  const existing = await prepare(
-    `SELECT square_catalog_object_id
-       FROM menu_item_display
-      WHERE square_env = ?1`,
-  ).bind(squareEnv).all<{ square_catalog_object_id: string }>();
-  const existingIds = new Set(
-    existing.results.map((row) => row.square_catalog_object_id),
-  );
-  const sectionByCategory = new Map(
-    sections
-      .filter((section) => section.squareCategoryId)
-      .map((section) => [section.squareCategoryId as string, section]),
-  );
-  const uncategorized = sections.find(
-    (section) => section.sectionType === "uncategorized",
-  );
-  const statements = items
-    .filter((item) => !existingIds.has(item.catalogObjectId))
-    .flatMap((item) => {
-      const visible = item.categories.length === 0
-        ? uncategorized?.defaultItemVisible ?? true
-        : item.categories.some(
-            (category) => sectionByCategory.get(category.id)?.defaultItemVisible ?? false,
-          );
-
-      return [
-        prepare(`
-          INSERT INTO catalog_item_cache (square_object_id, square_env)
-          VALUES (?1, ?2)
-          ON CONFLICT (square_object_id, square_env) DO NOTHING
-        `).bind(item.catalogObjectId, squareEnv),
-        prepare(`
-          INSERT INTO menu_item_display
-            (square_catalog_object_id, square_env, hide_on_website)
-          VALUES (?1, ?2, ?3)
-          ON CONFLICT (square_catalog_object_id, square_env) DO NOTHING
-        `).bind(item.catalogObjectId, squareEnv, visible ? 0 : 1),
-      ];
-    });
-
+  const state = await getMenuDisplayState();
+  const existing = new Set(state.items.filter((item) => item.sectionId)
+    .map((item) => JSON.stringify([item.sectionId, item.squareCatalogObjectId])));
+  const statements = [];
+  for (const item of items) {
+    const memberships = sections.filter((section) => section.sectionType === "custom"
+      ? section.itemIds.includes(item.catalogObjectId)
+      : section.sectionType === "uncategorized"
+        ? item.categories.length === 0
+        : item.categories.some((category) => category.id === section.squareCategoryId));
+    for (const section of memberships) {
+      if (existing.has(JSON.stringify([section.id, item.catalogObjectId]))) continue;
+      statements.push(
+        prepare(`INSERT INTO catalog_item_cache (square_object_id, square_env)
+          VALUES (?1, ?2) ON CONFLICT (square_object_id, square_env) DO NOTHING`)
+          .bind(item.catalogObjectId, squareEnv),
+        prepare(`INSERT INTO menu_section_item_display
+          (section_id, square_catalog_object_id, square_env, hide_on_website)
+          VALUES (?1, ?2, ?3, ?4)
+          ON CONFLICT (section_id, square_catalog_object_id, square_env) DO NOTHING`)
+          .bind(section.id, item.catalogObjectId, squareEnv, section.defaultItemVisible ? 0 : 1),
+      );
+    }
+  }
   for (let offset = 0; offset < statements.length; offset += 40) {
     await batch(statements.slice(offset, offset + 40));
   }
