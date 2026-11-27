@@ -346,18 +346,22 @@ async function loadMenu(): Promise<MenuLoadResult> {
     // Unconfigured Square categories stay hidden until an admin publishes them.
     // A failed settings read must not accidentally publish hidden categories.
     let displayState = await getMenuDisplayState();
-    const initializedItemIds = new Set(
-      displayState.items.map((item) => item.squareCatalogObjectId),
-    );
-    if (data.some((item) => !initializedItemIds.has(item.catalogObjectId))) {
-      // Freeze defaults when the website first sees an item, even if no admin
-      // has visited Display Categories since it was added to Square.
+    const initializedMemberships = new Set(displayState.items.map((item) =>
+      JSON.stringify([item.sectionId, item.squareCatalogObjectId])));
+    if (data.some((item) =>
+      displayState.sections.some((section) => (
+        section.sectionType === "custom" ? section.itemIds.includes(item.catalogObjectId)
+          : section.sectionType === "uncategorized" ? item.categories.length === 0
+            : item.categories.some((category) => category.id === section.squareCategoryId)
+      ) && !initializedMemberships.has(JSON.stringify([section.id, item.catalogObjectId]))))) {
+      // Freeze defaults for each new category membership, even before an admin
+      // visits Display Categories.
       await initializeMenuDisplayItems(data, displayState.sections);
       displayState = await getMenuDisplayState();
     }
 
     const itemSettings = new Map(
-      displayState.items.map((item) => [item.squareCatalogObjectId, item.visible]),
+      displayState.items.map((item) => [JSON.stringify([item.sectionId, item.squareCatalogObjectId]), item.visible]),
     );
     const sectionSettings = new Map(
       displayState.sections.map((section) => [section.squareCategoryId, section]),
@@ -366,41 +370,34 @@ async function loadMenu(): Promise<MenuLoadResult> {
       (section) => section.sectionType === "uncategorized",
     );
 
-    const visibleItems = data.flatMap((item) => {
-        const orderable = orderableMenuItem(item);
-        if (!orderable) return [];
+    function itemVisible(itemId: string, section: typeof uncategorizedSettings) {
+      return itemSettings.get(JSON.stringify([section?.id, itemId]))
+        ?? itemSettings.get(JSON.stringify([undefined, itemId]))
+        ?? section?.defaultItemVisible ?? true;
+    }
+    const orderableItems = data.flatMap((item) => {
+      const orderable = orderableMenuItem(item);
+      return orderable ? [orderable] : [];
+    });
 
-        const explicitVisibility = itemSettings.get(item.catalogObjectId);
-        const defaultVisible = item.categories.length === 0
-          ? uncategorizedSettings?.defaultItemVisible ?? true
-          : item.categories.some(
-              (category) => sectionSettings.get(category.id)?.defaultItemVisible ?? false,
-            );
+    const sections = buildMenuSections(orderableItems).flatMap((section) => {
+      const saved = section.id === uncategorizedSectionId
+        ? uncategorizedSettings
+        : sectionSettings.get(section.id.slice("category:".length));
+      if (!(saved?.isPublished ?? (section.id === uncategorizedSectionId))) return [];
+      const items = section.items.filter((item) => itemVisible(item.catalogObjectId, saved));
+      return items.length ? [{ ...section, items }] : [];
+    });
 
-        return explicitVisibility ?? defaultVisible ? [orderable] : [];
-      });
-
-    const sections = buildMenuSections(visibleItems).filter((section) => {
-        if (section.id === uncategorizedSectionId) {
-          return uncategorizedSettings?.isPublished ?? true;
-        }
-
-        const categoryId = section.id.startsWith("category:")
-          ? section.id.slice("category:".length)
-          : null;
-        return categoryId
-          ? sectionSettings.get(categoryId)?.isPublished ?? false
-          : true;
-      });
-
-    const visibleItemById = new Map(
-      visibleItems.map((item) => [item.catalogObjectId, item]),
+    const orderableItemById = new Map(
+      orderableItems.map((item) => [item.catalogObjectId, item]),
     );
     for (const custom of displayState.sections.filter(
       (section) => section.sectionType === "custom" && section.isPublished,
     )) {
       const customItems = custom.itemIds
-        .map((itemId) => visibleItemById.get(itemId))
+        .filter((itemId) => itemVisible(itemId, custom))
+        .map((itemId) => orderableItemById.get(itemId))
         .filter((item): item is CatalogMenuItem => Boolean(item));
       if (customItems.length > 0) {
         sections.push({

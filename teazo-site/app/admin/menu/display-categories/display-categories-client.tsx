@@ -233,7 +233,7 @@ export default function DisplayCategoriesClient({
   }, [items, sections, squareEnvironment]);
 
   const visibleById = useMemo(
-    () => new Map(itemSettings.map((setting) => [setting.squareCatalogObjectId, setting.visible])),
+    () => new Map(itemSettings.map((setting) => [JSON.stringify([setting.sectionId, setting.squareCatalogObjectId]), setting.visible])),
     [itemSettings],
   );
 
@@ -280,7 +280,7 @@ export default function DisplayCategoriesClient({
     }
   }
 
-  async function setItemVisible(itemId: string, visible: boolean) {
+  async function setItemVisible(sectionId: string, itemId: string, visible: boolean) {
     if (savingRef.current) return;
     savingRef.current = true;
     setSaving(itemId);
@@ -289,12 +289,12 @@ export default function DisplayCategoriesClient({
       const response = await fetch("/api/admin/menu/display", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update-item", itemId, visible }),
+        body: JSON.stringify({ action: "update-item", sectionId, itemId, visible }),
       });
       if (!response.ok) throw new Error();
       setItemSettings((current) => [
-        ...current.filter((setting) => setting.squareCatalogObjectId !== itemId),
-        { squareCatalogObjectId: itemId, visible },
+        ...current.filter((setting) => (setting.sectionId !== sectionId || setting.squareCatalogObjectId !== itemId)),
+        { sectionId, squareCatalogObjectId: itemId, visible },
       ]);
     } catch {
       setMessage("The item visibility could not be saved. Please try again.");
@@ -375,7 +375,7 @@ export default function DisplayCategoriesClient({
         const updatedSettings: MenuDisplayItem[] = result.itemSettings;
         setItemSettings((current) => [
           ...current.filter((setting) => !updatedSettings.some(
-            (updated) => updated.squareCatalogObjectId === setting.squareCatalogObjectId,
+            (updated) => updated.sectionId === setting.sectionId && updated.squareCatalogObjectId === setting.squareCatalogObjectId,
           )),
           ...updatedSettings,
         ]);
@@ -697,7 +697,9 @@ export default function DisplayCategoriesClient({
                         No items are assigned to this category yet.
                       </div>
                     ) : category.items.map((item) => {
-                    const visible = visibleById.get(item.catalogObjectId) ?? true;
+                    const visible = visibleById.get(JSON.stringify([category.id, item.catalogObjectId]))
+                      ?? visibleById.get(JSON.stringify([undefined, item.catalogObjectId]))
+                      ?? category.defaultItemVisible;
                     return (
                       <div key={`${category.id}:${item.catalogObjectId}`} role="row" className="grid grid-cols-[minmax(0,1fr)_8rem_9rem_8rem] items-center border-b border-[#dbb082]/40 pr-6 text-sm hover:bg-[#dbb082]/15">
                         <div role="cell" className="flex min-w-0 items-center gap-3 px-3 py-2 pl-12">
@@ -712,7 +714,7 @@ export default function DisplayCategoriesClient({
                           <Toggle
                             checked={visible}
                             disabled={saving !== null}
-                            onChange={() => void setItemVisible(item.catalogObjectId, !visible)}
+                            onChange={() => void setItemVisible(category.id, item.catalogObjectId, !visible)}
                             label={`Show ${item.name ?? "item"} on public menu`}
                             small
                           />
@@ -784,7 +786,7 @@ export default function DisplayCategoriesClient({
             <fieldset disabled={categoryReadOnly || categorySaving} className="mt-4 min-w-0">
               <legend className="text-sm text-gray-700">Items</legend>
               <p className="mb-2 mt-1 text-xs text-gray-500">
-                {categoryReadOnly ? `${categoryPanel?.items.length ?? 0} items in this Square category.` : `${panelItemIds.length} selected. Newly added items start ${categoryPanel?.defaultItemVisible === false ? "hidden" : "visible"}. Item visibility applies across the menu.`}
+                {categoryReadOnly ? `${categoryPanel?.items.length ?? 0} items in this Square category.` : `${panelItemIds.length} selected. Newly added items start ${categoryPanel?.defaultItemVisible === false ? "hidden" : "visible"}. Item visibility applies only within this category.`}
               </p>
               <div className="max-h-44 min-w-0 space-y-1 overflow-y-auto rounded border border-[#dbb082] p-2">
                 {items.length === 0 && <p className="text-sm text-gray-500">No menu items available.</p>}
