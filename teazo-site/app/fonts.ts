@@ -2,7 +2,7 @@ import localFont from "next/font/local";
 
 /*
  * Montserrat for the whole site, from ONE variable font file (all weights,
- * Latin, 38 KB) instead of a separate file per weight (TZ-515). Pages that used
+ * Latin, 38 KB) instead of a separate file per weight. Pages that used
  * four or five weights downloaded about 100 KB of Montserrat; now it is 38 KB.
  *
  * Each export matches one of the old next/font/google declarations:

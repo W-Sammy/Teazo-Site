@@ -35,7 +35,7 @@ import AdminsTable from "./admin-table";
 // Use disposable account information only.
 const owner = {
   id: "test-owner-id",
-  username: "Ben",
+  username: "Test Owner",
   email: "owner@example.invalid",
   role: 1 as const,
   canManageAdmins: true,

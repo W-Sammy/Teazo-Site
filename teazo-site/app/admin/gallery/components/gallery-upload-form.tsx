@@ -13,10 +13,9 @@ import {
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 import { adminButtonStyles } from "../../components/admin-button-styles";
 import {
-  defaultMaxImageSize,
-  isHeicImage,
-  prepareImageForStorage,
-} from "../../../lib/image-conversion";
+  prepareGalleryImage,
+  MAX_GALLERY_UPLOAD_BYTES,
+} from "../../../lib/gallery-image-compression";
 
 // A null file lets edits keep the existing image while updating its name or tags.
 export type GalleryUploadValues = {
@@ -43,12 +42,45 @@ const acceptedImageTypes = [
 const acceptedVideoTypes = [
   "video/mp4",
   "video/webm",
+  "video/quicktime",
 ];
 
-const maxVideoSize = 10 * 1024 * 1024;
-const maxFileSize = defaultMaxImageSize;
+/**
+ * iOS can return an empty or generic MIME type for a .mov file.
+ * Normalize that specific case, but do not accept arbitrary unknown types.
+ */
+function normalizeGalleryVideo(file: File): File | null {
+  const mimeType = file.type.toLowerCase();
+
+  if (acceptedVideoTypes.includes(mimeType)) {
+    return file;
+  }
+
+  if (
+    (mimeType === "" || mimeType === "application/octet-stream") &&
+    /\.mov$/i.test(file.name)
+  ) {
+    return new File([file], file.name, {
+      type: "video/quicktime",
+      lastModified: file.lastModified,
+    });
+  }
+
+  return null;
+}
+
+const maxVideoSize = MAX_GALLERY_UPLOAD_BYTES;
+const maxFileSize = MAX_GALLERY_UPLOAD_BYTES;
 const maxTags = 12;
 const maxTagLength = 30;
+
+function isHeicImage(file: File): boolean {
+  return (
+    ["image/heic", "image/heif"].includes(
+      file.type.toLowerCase(),
+    ) || /\.(heic|heif)$/i.test(file.name)
+  );
+}
 
 // Remove outer whitespace and collapse repeated whitespace inside a tag.
 function normalizeTag(value: string) {
@@ -95,9 +127,10 @@ export default function GalleryUploadForm({
       initialImage?.url ?? null,
     );
 
-  const [previewType, setPreviewType] = useState<"image" | "video">(
-  initialImage?.mediaType ?? "image",
-  );
+  const [previewType, setPreviewType] =
+    useState<"image" | "video">(
+      initialImage?.mediaType ?? "image",
+    );
 
   const [isDragging, setIsDragging] =
     useState(false);
@@ -171,10 +204,10 @@ export default function GalleryUploadForm({
     setPreviewUrl(nextPreviewUrl);
 
     setPreviewType(
-    acceptedVideoTypes.includes(file.type.toLowerCase())
-    ? "video"
-    : "image",
-);
+      acceptedVideoTypes.includes(file.type.toLowerCase())
+        ? "video"
+        : "image",
+    );
 
     if (previousPreviewUrl) {
       URL.revokeObjectURL(previousPreviewUrl);
@@ -196,31 +229,30 @@ export default function GalleryUploadForm({
     setImageError(null);
     setUploadError(null);
 
-    const isVideo = acceptedVideoTypes.includes(
-      file.type.toLowerCase(),
-    );
+    const normalizedVideo = normalizeGalleryVideo(file);
 
-    if (isVideo) {
+    if (normalizedVideo) {
       if (file.size === 0) {
-        setImageError("The selected video must be nonempty.");
-        return;
-      }
-
-      if (file.size > maxVideoSize) {
-        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-
         setImageError(
-          `Video is too large (${fileSizeMB} MB). The maximum allowed size is 10 MB. Please select a smaller video.`
+          "The selected video must be nonempty.",
         );
         return;
       }
 
-      applySelectedFile(file, file.name);
+      if (file.size > maxVideoSize) {
+        const fileSizeMB = (
+          file.size / (1024 * 1024)
+        ).toFixed(1);
+
+        setImageError(
+          `Video is too large (${fileSizeMB} MB). The maximum allowed size is 4 MB. Please select a smaller video.`,
+        );
+        return;
+      }
+
+      applySelectedFile(normalizedVideo, file.name);
       return;
     }
-
-    const needsPreparation =
-      isHeicImage(file) || file.size > maxFileSize;
 
     if (
       !isHeicImage(file) &&
@@ -229,7 +261,7 @@ export default function GalleryUploadForm({
       )
     ) {
       setImageError(
-        "Choose a JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM file.",
+        "Choose a JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV file.",
       );
       return;
     }
@@ -241,6 +273,10 @@ export default function GalleryUploadForm({
       return;
     }
 
+    // Prepare large images and HEIC/HEIF without downscaling.
+    const needsPreparation =
+      isHeicImage(file) || file.size > maxFileSize;
+
     if (!needsPreparation) {
       applySelectedFile(file, file.name);
       return;
@@ -251,9 +287,17 @@ export default function GalleryUploadForm({
     setIsConverting(true);
 
     try {
-      const preparedFile = await prepareImageForStorage(file, maxFileSize);
+      const preparedFile =
+        await prepareGalleryImage(file);
 
-      // Do not update state if the form closed during conversion.
+      // Never send an oversized prepared image.
+      if (preparedFile.size > maxFileSize) {
+        throw new Error(
+          "The prepared image exceeds the 4 MB upload limit.",
+        );
+      }
+
+      // Do not update state if the form closed or changed.
       if (
         isMounted.current &&
         selectionSequence.current === requestId
@@ -274,7 +318,9 @@ export default function GalleryUploadForm({
         selectionSequence.current === requestId
       ) {
         setImageError(
-          "This image could not be prepared. Try another image or convert it to JPG first.",
+          error instanceof Error && error.message
+            ? error.message
+            : "This image could not be prepared. Try another image.",
         );
       }
     } finally {
@@ -360,7 +406,7 @@ export default function GalleryUploadForm({
     return true;
   }
 
-  // Enter/comma add a tag. Backspace removes the last tag if empty.
+  // Enter or comma add a tag. Backspace removes the last tag if empty.
   function handleTagKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
@@ -462,8 +508,7 @@ export default function GalleryUploadForm({
       }
     }
 
-    // Submit the converted JPEG or original supported image.
-    // The parent handles the API request and persistent storage.
+    // The parent handles the API request and persistence.
     try {
       setIsSaving(true);
 
@@ -631,9 +676,26 @@ export default function GalleryUploadForm({
 
         {/* Image preview and selector */}
         <div className="mt-6 min-w-0">
-          <label htmlFor="gallery-image-file" className="mb-2 block text-sm text-gray-700">
-            Image or Video{initialImage ? " (optional)" : <> <span className="text-red-600" aria-hidden="true">*</span></>}
+          <label
+            htmlFor="gallery-image-file"
+            className="mb-2 block text-sm text-gray-700"
+          >
+            Image or Video
+            {initialImage
+              ? " (optional)"
+              : (
+                <>
+                  {" "}
+                  <span
+                    className="text-red-600"
+                    aria-hidden="true"
+                  >
+                    *
+                  </span>
+                </>
+              )}
           </label>
+
           {previewUrl && (
             <div className="mb-3 min-w-0">
               <div className="relative h-52 w-full overflow-hidden rounded-xl border border-[#dbb082] bg-[#f3ece6] md:h-44">
@@ -672,7 +734,7 @@ export default function GalleryUploadForm({
             id="gallery-image-file"
             name="galleryImageFile"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.heic,.heif,.mp4,.webm,.mov"
             onChange={handleFileChange}
             disabled={isSaving || isConverting}
             className="hidden"
@@ -694,7 +756,7 @@ export default function GalleryUploadForm({
               </button>
 
               <p className="text-center text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 10 MB will be resized automatically. Videos must be 10 MB or smaller.
+                JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller. MOV playback may vary by browser; MP4 is recommended.
               </p>
             </div>
           ) : (
@@ -738,7 +800,7 @@ export default function GalleryUploadForm({
               </button>
 
               <p className="mt-2 max-w-full break-words text-xs text-gray-500">
-                JPG, PNG, WebP, HEIC, HEIF, MP4, or WebM · Images over 10 MB will be resized automatically. Videos must be 10 MB or smaller.
+                JPG, PNG, WebP, HEIC, HEIF, MP4, WebM, or MOV · Images over 4 MB will be compressed without reducing their resolution, or rejected if compression is insufficient. Videos must be 4 MB or smaller. MOV playback may vary by browser; MP4 is recommended.
               </p>
             </div>
           )}

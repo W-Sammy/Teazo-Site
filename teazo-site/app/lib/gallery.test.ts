@@ -48,7 +48,7 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-// The public gallery is cached (TZ-515). Pass the cache through so these tests
+// The public gallery is cached. Pass the cache through so these tests
 // call the query directly, and stub the call that clears it after a save.
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
@@ -354,7 +354,7 @@ describe("Gallery service", () => {
       ),
     ).rejects.toMatchObject({
       status: 415,
-      message: "Upload a JPEG, PNG, WebP, MP4 or WebM file.",
+      message: "Upload a JPEG, PNG, WebP, MP4, WebM or MOV file.",
     });
   });
 
@@ -384,12 +384,8 @@ describe("Gallery service", () => {
 
     expect(processor.rotate).toHaveBeenCalledOnce();
 
-    expect(processor.resize).toHaveBeenCalledWith({
-      width: 2000,
-      height: 2000,
-      fit: "inside",
-      withoutEnlargement: true,
-    });
+    // Gallery image processing must preserve the original resolution.
+    expect(processor.resize).not.toHaveBeenCalled();
 
     expect(processor.webp).toHaveBeenCalledWith({
       quality: 82,

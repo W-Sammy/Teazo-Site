@@ -13,7 +13,7 @@ import { montserrat700 } from "@/app/fonts";
 const montserrat = montserrat700;
 
 const cabinSketch = Cabin_Sketch({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
+    preload: false, // preloading every font held back first paint on phones
     subsets: ['latin'], // same as above
     weight: ['400'] // normal
 });

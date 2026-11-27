@@ -10,7 +10,7 @@ import { heroLogoSrc } from "@/app/lib/default-logo";
 
 // setup fonts
 const cabinSketch = Cabin_Sketch({
-    preload: false, // preloading every font held back first paint on phones (TZ-515)
+    preload: false, // preloading every font held back first paint on phones
     subsets: ['latin'], // import only letters, num
     weight: ['400'] // normal
 });

@@ -44,7 +44,7 @@ function formatPrice(priceCents: number, currency: string | null) {
    Clicking the card or the Order action opens the customization modal. */
 export default function MenuItemCard({ item, onCustomize }: MenuItemCardProps) {
   const [hasImageError, setHasImageError] = useState(false);
-  // The menu grid is below the fold, so its photos wait for the page to load (TZ-515).
+  // The menu grid is below the fold, so its photos wait for the page to load.
   const pageLoaded = usePageLoaded();
   const formattedPrice = formatPrice(item.priceCents, item.currency);
 

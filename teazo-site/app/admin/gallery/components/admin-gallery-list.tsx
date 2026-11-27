@@ -1,4 +1,3 @@
-
 "use client";
 
 import GalleryImage from "./gallery-image";
@@ -175,8 +174,19 @@ export default function AdminGalleryList({
                       src={image.url}
                       alt={image.name}
                       mediaType={image.mediaType}
-                      className="object-cover"
+                      loading="lazy"
+                      // Preserve the full image inside the square
+                      // thumbnail without excessive cropping.
+                      className={
+                        image.mediaType === "video"
+                          ? "object-cover"
+                          : "object-contain"
+                      }
                       sizes="44px"
+                      // Bypass optimization only for List View
+                      // images. Videos retain their existing
+                      // native video thumbnail behavior.
+                      unoptimized={image.mediaType !== "video"}
                     />
                   </div>
                 </td>

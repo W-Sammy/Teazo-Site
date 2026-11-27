@@ -10,15 +10,34 @@ type GalleryImageProps = {
   loading?: "eager" | "lazy";
   className?: string;
   mediaType?: "image" | "video";
+  unoptimized?: boolean;
 };
 
-export default function GalleryImage({
+/**
+ * Give each media source its own component state.
+ *
+ * A replacement image or video must not inherit the
+ * previous source's failed-loading state.
+ */
+export default function GalleryImage(
+  props: GalleryImageProps,
+) {
+  return (
+    <GalleryImageContent
+      key={`${props.mediaType ?? "image"}:${props.src}`}
+      {...props}
+    />
+  );
+}
+
+function GalleryImageContent({
   src,
   alt,
   sizes,
   loading = "lazy",
   className = "object-cover",
   mediaType = "image",
+  unoptimized = false,
 }: GalleryImageProps) {
   const [failed, setFailed] = useState(false);
 
@@ -46,12 +65,18 @@ export default function GalleryImage({
             onLoadedMetadata={(event) => {
               const video = event.currentTarget;
 
-              // decode initial frame for thumbnail
-              if (Number.isFinite(video.duration) && video.duration > 0) {
+              // Decode the initial frame for the thumbnail.
+              if (
+                Number.isFinite(video.duration) &&
+                video.duration > 0
+              ) {
                 try {
-                  video.currentTime = Math.min(0.1, video.duration / 2);
+                  video.currentTime = Math.min(
+                    0.1,
+                    video.duration / 2,
+                  );
                 } catch {
-                  // keep initial frame if browser can't seek yet
+                  // Keep the initial frame if seeking is unavailable.
                 }
               }
             }}
@@ -59,7 +84,7 @@ export default function GalleryImage({
           />
         )}
 
-        {/* video marker sized for both list & grid thumbnails */}
+        {/* Video marker for list and grid thumbnails. */}
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
@@ -96,7 +121,10 @@ export default function GalleryImage({
       alt={alt}
       fill
       loading={loading}
-      unoptimized={src.startsWith("blob:")}
+      // List View can display the original stored image to avoid
+      // the washed-out thumbnails observed after optimization.
+      // Blob previews already require bypassing optimization.
+      unoptimized={unoptimized || src.startsWith("blob:")}
       className={className}
       sizes={sizes}
       onError={() => setFailed(true)}

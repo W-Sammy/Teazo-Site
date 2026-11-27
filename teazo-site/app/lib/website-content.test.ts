@@ -36,7 +36,7 @@ beforeEach(() => {
   cacheMocks.staleCopy = null;
 });
 
-describe("caching (TZ-515)", () => {
+describe("caching", () => {
   it("clears the cached content right after a save, with no stale window", async () => {
     await updateWebsiteContent({ onlineOrderingEnabled: false });
     expect(cacheMocks.revalidateTag).toHaveBeenCalledWith(WEBSITE_CONTENT_TAG, { expire: 0 });

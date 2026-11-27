@@ -1,8 +1,7 @@
-
 "use client";
 
-import Image from "next/image";
 import { useState, type MouseEvent } from "react";
+import GalleryImage from "./gallery-image";
 import type { AdminGalleryImage } from "../../../types/gallery-image";
 
 type DeleteImageDialogProps = {
@@ -26,6 +25,9 @@ export default function DeleteImageDialog({
 
   if (!image) return null;
 
+  const isVideo = image.mediaType === "video";
+  const mediaLabel = isVideo ? "video" : "image";
+
   async function handleConfirm() {
     setDeleteError(null);
     setIsDeleting(true);
@@ -43,7 +45,7 @@ export default function DeleteImageDialog({
       );
 
       setDeleteError(
-        "The image could not be deleted. Please try again.",
+        "The gallery item could not be deleted. Please try again.",
       );
     } finally {
       setIsDeleting(false);
@@ -69,14 +71,14 @@ export default function DeleteImageDialog({
         ) => event.stopPropagation()}
       >
         <div className="flex items-start gap-4">
+          {/* Use the shared media preview for images and videos. */}
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f3ece6]">
-            <Image
+            <GalleryImage
               src={image.url}
-              alt=""
-              fill
-              unoptimized={image.url.startsWith("blob:")}
-              className="object-cover"
+              alt={image.name}
+              mediaType={image.mediaType}
               sizes="80px"
+              className="object-cover"
             />
           </div>
 
@@ -85,13 +87,13 @@ export default function DeleteImageDialog({
               id="delete-image-title"
               className="text-xl font-semibold text-gray-900"
             >
-              Delete image?
+              Delete {mediaLabel}?
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-gray-600">
               Are you sure you want to delete{" "}
-              <strong>{image.name}</strong>? This permanently
-              removes the image from the Gallery page.
+              <strong>{image.name}</strong>? This removes
+              the {mediaLabel} from the Gallery page.
             </p>
           </div>
         </div>

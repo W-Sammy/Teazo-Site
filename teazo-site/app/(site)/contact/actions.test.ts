@@ -6,11 +6,13 @@
  * - Honeypot protection and Turnstile verification.
  * - Contact form availability and D1 persistence.
  * - Deferred email notifications.
- * - Hourly and daily owner notification limits.
+ * - Hourly and daily notification limits.
+ * - Website Content notification recipient selection.
  * - Recovery from database and email delivery failures.
  *
- * Next.js headers/after(), D1, Turnstile, and email services
- * are mocked. No production records or emails are affected.
+ * Next.js headers/after(), D1, Turnstile, Website Content,
+ * and email services are mocked. No production records or
+ * emails are affected.
  */
 
 import {
@@ -33,6 +35,7 @@ import {
   isContactFormEnabled,
 } from "@/app/lib/queries/contact";
 import { verifyTurnstile } from "@/app/lib/turnstile";
+import { getAuthoritativeWebsiteContent } from "@/app/lib/website-content";
 
 import {
   submitContactMessage,
@@ -74,6 +77,11 @@ vi.mock("@/app/lib/queries/contact", () => ({
 
 vi.mock("@/app/lib/turnstile", () => ({
   verifyTurnstile: vi.fn(),
+}));
+
+// Email recipients are read from stored Website Content.
+vi.mock("@/app/lib/website-content", () => ({
+  getAuthoritativeWebsiteContent: vi.fn(),
 }));
 
 const INITIAL_STATE: ContactFormState = {
@@ -128,8 +136,15 @@ describe("Contact form submission", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.stubEnv("CONTACT_NOTIFY_TO", "owner@example.com");
     vi.stubEnv("NODE_ENV", "test");
+
+    vi.mocked(
+      getAuthoritativeWebsiteContent,
+    ).mockResolvedValue({
+      address: {
+        email: "owner@example.com",
+      },
+    } as never);
 
     // Use a valid forwarded visitor IP by default.
     vi.mocked(headers).mockResolvedValue(
@@ -537,7 +552,7 @@ describe("Contact form submission", () => {
   // Deferred notification scheduling
   // ============================================================
 
-  // The owner email must not delay the immediate response.
+  // The notification must not delay the immediate response.
   it("schedules notification after saving the message", async () => {
     const result = await submit(makeForm());
 
@@ -561,9 +576,11 @@ describe("Contact form submission", () => {
     expect(insertOrder).toBeLessThan(afterOrder);
   });
 
-  it("notifies the owner after a successful submission", async () => {
+  it("notifies the configured recipient after a successful submission", async () => {
     await submit(makeForm());
     await runNotification();
+
+    expect(getAuthoritativeWebsiteContent).toHaveBeenCalledOnce();
 
     expect(countRecentContactMessages).toHaveBeenCalledOnce();
 
@@ -624,11 +641,16 @@ describe("Contact form submission", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  // Missing notification configuration should not discard
+  // Missing notification configuration must not discard
   // a saved visitor message.
-  it("keeps the message when no owner notification address is configured", async () => {
-    vi.stubEnv("CONTACT_NOTIFY_TO", "");
-    vi.stubEnv("NODE_ENV", "production");
+  it("keeps the message when Website Content has no valid recipient", async () => {
+    vi.mocked(
+      getAuthoritativeWebsiteContent,
+    ).mockResolvedValueOnce({
+      address: {
+        email: "",
+      },
+    } as never);
 
     const result = await submit(makeForm());
 
@@ -641,18 +663,28 @@ describe("Contact form submission", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  // In local development, the placeholder owner address
-  // allows the configured email transport to print messages.
-  it("uses the development fallback owner address", async () => {
-    vi.stubEnv("CONTACT_NOTIFY_TO", "");
-    vi.stubEnv("NODE_ENV", "development");
+  it("uses the saved Website Content address instead of the environment recipient", async () => {
+    vi.stubEnv(
+      "CONTACT_NOTIFY_TO",
+      "outdated-recipient@example.com",
+    );
 
     await submit(makeForm());
     await runNotification();
 
+    expect(
+      getAuthoritativeWebsiteContent,
+    ).toHaveBeenCalledOnce();
+
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "owner@teazo.test",
+        to: "owner@example.com",
+      }),
+    );
+
+    expect(sendEmail).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "outdated-recipient@example.com",
       }),
     );
   });
@@ -680,7 +712,7 @@ describe("Contact form submission", () => {
     );
   });
 
-  // Crossing the hourly limit produces one owner warning.
+  // Crossing the hourly limit produces one warning.
   it("sends an alerts-paused notice when the hourly cap is exceeded", async () => {
     vi.mocked(countRecentContactMessages).mockResolvedValueOnce({
       lastHour: 21,
@@ -792,7 +824,7 @@ describe("Contact form submission", () => {
   // Notification contents
   // ============================================================
 
-  it("uses trimmed visitor details in owner notifications", async () => {
+  it("uses trimmed visitor details in notifications", async () => {
     await submit(
       makeForm({
         firstName: "  Taylor  ",

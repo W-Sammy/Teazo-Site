@@ -30,7 +30,7 @@ const r2ImagePattern = (() => {
 })();
 
 // Files in public/ keep the same name when replaced, so browsers keep them for
-// a day and refresh them in the background for a week after that (TZ-515).
+// a day and refresh them in the background for a week after that.
 const PUBLIC_ASSET_CACHE = "public, max-age=86400, stale-while-revalidate=604800";
 
 const nextConfig: NextConfig = {

@@ -1,9 +1,8 @@
-
 > teazo-site@0.1.0 test
 > vitest run app/lib/gallery.test.ts app/lib/queries/gallery.test.ts
 
 
-[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/Users/chenb/TEAZO/Teazo-Site/teazo-site[39m
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/Users/[redacted]/TEAZO/Teazo-Site/teazo-site[39m
 
  [31m❯[39m app/lib/queries/gallery.test.ts [2m([22m[2m35 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 17[2mms[22m[39m
      [32m✓[39m lists live Gallery images newest first[32m 3[2mms[22m[39m

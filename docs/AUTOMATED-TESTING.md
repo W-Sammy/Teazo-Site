@@ -208,21 +208,6 @@ If the test also fails individually, inspect its assertions, mocks, dependencies
 
 **Do not assume that an individually passing test resolves a full-suite failure.** A successful full-suite run is still required before considering the test suite verified.
 
-### Latest verified test results
-
-On **November 18, 2026**, testing on `ben-update-vitests` after merging the approved `dev` changes and adding the four Playwright spec files produced:
-
-| Framework | Verified result | Test files |
-|---|---|---|
-| Vitest | 2,034 passed, 0 failed | 119 passed |
-| Playwright (Chromium) | 39 passed, 0 failed, 0 skipped | 4 specs |
-
-The Playwright results cover 19 authentication/password-flow tests and 20 account-management tests. TypeScript, targeted ESLint, and Git whitespace checks also passed for the browser-test additions. The Next.js production build passed after the `dev` integration, before the Playwright dependency was added.
-
-These figures are a historical **branch-local verification**, not a guaranteed result for future checkouts or a claim that these tests are already on `dev`. Run both suites again after changes. Do not combine the Vitest and Playwright totals into a single Vitest count.
-
-On **November 19, 2026**, the checkout work on `ben-test-frontend-checkout` separately verified **185 Vitest tests across 10 focused test files**, **9 Playwright tests in the public checkout spec**, and a manual local D1 concurrency check in which one of 10 simultaneous requests claimed a checkout attempt and one of 10 claimed processing ownership. These are scoped verification results, **not** a passing full-repository Vitest or combined Playwright result; the 185-test set overlaps the broader test inventory. The complete Vitest run on the checkout branch had unrelated failing tests, and those results must be reconciled after branch integration. The D1 concurrency check did not create real Square links or payments.
-
 ### Understanding test results
 
 After running the test command, Vitest displays the results in the terminal. When using the dot reporter, individual tests are represented by dots, followed by a summary of the run.
@@ -424,12 +409,12 @@ The Delivery and Static Menu areas include both component-level tests and Chromi
 | Public Delivery | Page content, logo, visible platform links and ordering, external-link destinations, keyboard activation, and responsive layout |
 | Admin Delivery | Delivery platform add/edit/hide/show/remove, field requirements, URL and name validation, debounced saves, errors, and multi-platform isolation |
 | Admin Menu | Item forms, creation, editing, deletion, refresh behavior, category display controls, validation, PDF uploads |
-| Gallery | Public image display, administrator selection, upload/deletion routes, media utilities, database queries |
+| Gallery | Public image and video display, administrator List/Card View interactions, selection, editing, deletion confirmation previews, upload and replacement validation, image compression without reducing pixel dimensions, file-size boundaries, thumbnail rendering, media utilities, database queries, and public cache invalidation |
 | Events | Public Events display, administrator forms, API routes, event dates, database queries |
 | Checkout | Cart/customizer interactions, synchronous duplicate-submit prevention, checkout-attempt UUID validation, persistent D1 idempotency coordination, Square retry and failure handling, cart revision ownership, payment confirmation, and abandoned-checkout recovery |
 | Orders and Webhooks | Order lifecycle, Square webhook validation, category synchronization, cache invalidation, and failure scenarios |
-| Contact | Form submission, email notifications, notification recovery, Turnstile verification, database queries |
-| Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior |
+| Contact | Form submission, deferred notifications, recipient selection from stored Website Content, invalid or unavailable recipient handling, notification recovery, email limits, Turnstile verification, and database queries |
+| Website Content | Public content rendering, administrative editing, store hours, content validation, API behavior, social-link URL normalization, hostname-based Facebook/Instagram/Yelp icon recognition, custom share-icon fallback, and Admin/public social-icon rendering |
 | Analytics | Dashboard queries, analytics storage, SQL behavior, cleanup procedures |
 | Authentication | Session validation, password setup/reset, password tokens, rate limiting, invitation handling; browser login/password workflows |
 | Administrator Management | Owner/Admin authorization, administrator settings, invitations, database migrations; desktop/mobile browser account workflows |
@@ -460,6 +445,12 @@ Examples of behaviors to test include:
 - Whether loading and disabled states prevent unintended actions.
 
 Frontend tests should focus on observable behavior rather than implementation details whenever practical.
+
+Gallery frontend tests also cover image and video deletion previews, Card View editing and selection, List View thumbnail rendering, client-side upload-size validation, and delayed video-loading feedback. These tests verify that oversized videos are rejected, large images are prepared before upload, and failed image preparation does not submit an invalid file. Public Gallery video tests verify that the loading indicator appears only after a delay, disappears when playback begins, reappears when playback stalls, and displays an unavailable message when loading fails.
+
+Website Content frontend tests verify that supported social media platforms display the correct icons based on URL hostnames rather than internal IDs. They also verify that unsupported destinations use TEAZO's existing custom share SVG in both the Admin editor and public pages.
+
+These component tests use jsdom and mocked dependencies. Real-browser verification is still required for image appearance, video playback, and other behavior that depends on browser media processing.
 
 ### Delivery and Static Menu Vitest files
 
@@ -492,7 +483,7 @@ Browser tests are kept under `teazo-site/e2e/` and run independently of the co-l
 | `delivery-admin.spec.ts` | Not yet included in historical baseline | Authenticated local admin editor, draft management, field validation, intercepted saves, failures, visibility, and mobile interaction |
 | `static-menu.spec.ts` | Not yet included in historical baseline | PDF button, preview rendering, fallback states, keyboard activation, new tab, resizing, and Safari simulation |
 
-**Verified Playwright baselines:** 39 Chromium tests passed across the four administrator specs on November 18, 2026 (`ben-update-vitests`); 9 checkout tests passed in the fifth spec on November 19, 2026 (`ben-test-frontend-checkout`). These were **separate branch-local runs**, not a verified combined 48-test run. The account-management specs need a saved Owner session. Mobile viewport tests use Chromium, not actual mobile Safari or Android Chrome.
+**Verified Playwright baselines:** Playwright browser tests cover selected application workflows using Chromium. Account-management specifications require a saved local Owner session. Mobile viewport tests use Chromium with simulated mobile dimensions, not actual mobile Safari or Android Chrome. Test counts may change as coverage expands, so run the relevant specifications to determine the current results.
 
 ### Backend and API tests
 
@@ -517,6 +508,8 @@ Relevant assertions include:
 - Idempotency and duplicate-request handling.
 
 API route tests commonly mock external systems rather than performing live network requests.
+
+Contact-form tests mock Website Content lookups to verify that notifications use the stored contact email instead of an environment recipient. They also test invalid or unavailable recipients and confirm that saved messages remain intact when notification delivery is skipped or fails.
 
 ### Checkout idempotency and cart recovery tests
 
@@ -589,6 +582,10 @@ app/lib/
 These include validation, dates, store hours, Square catalog rules, email content, and other reusable application logic.
 
 Utility tests should cover successful input, rejected input, edge cases, and relevant business rules.
+
+Gallery utility tests cover resolution-preserving image compression, upload-size boundaries, media conversion, mocked database persistence behavior, and public Gallery cache invalidation. Compression tests verify that oversized images are converted without reducing their pixel dimensions and rejected when compression cannot meet the upload limit.
+
+Social platform utility tests verify hostname-based icon recognition for Facebook, Instagram, and Yelp. They also reject misleading hostnames and return null for unsupported destinations, allowing the interface to display TEAZO's custom share icon.
 
 ## 5. Writing and maintaining tests
 
@@ -675,13 +672,20 @@ Common mocked services include:
 - Square catalog, location, checkout, and webhook integrations.
 - Cloudflare D1 and R2 operations.
 - Email providers and invitation delivery.
+- Website Content recipient lookups for contact-form notifications.
 - Authentication sessions.
 - Turnstile verification.
 - Next.js server utilities and cache behavior.
+- Browser image decoding, canvas encoding, and Gallery media compression.
+- Next.js image rendering for React component tests that do not require real image optimization.
 
 Mocks must be established before modules that depend on them are evaluated.
 
 Some tests use dynamic imports to control module initialization and mocking order.
+
+Gallery tests mock Sharp, Cloudflare R2, D1 queries, browser image decoding, canvas encoding, and Next.js cache invalidation. Upload-size tests may simulate file sizes without allocating large files. These mocks verify validation and application behavior but do not measure actual image quality or network performance.
+
+React component tests may mock `next/image` when testing user interactions, saving, deletion, or icon selection. This prevents framework image URL processing from interfering with tests that do not exercise image optimization. Real image rendering and optimization must be verified separately.
 
 ### Square webhook category synchronization
 
@@ -840,6 +844,10 @@ Examples include:
 - Testing responsive layout on mobile devices.
 - Confirming browser-specific behavior.
 - Checking accessibility and keyboard navigation, including manual review with the WAVE browser extension when evaluating accessibility. WAVE findings are manual verification results unless explicitly captured in automated assertions.
+- Verifying Gallery image and video uploads, replacements, playback, and deletion previews in a real browser.
+- Comparing original and stored image dimensions after compression to confirm that pixel resolution is preserved.
+- Checking Admin Gallery List/Card View thumbnail appearance and network transfer sizes.
+- Confirming social platform icons and custom share-icon fallbacks display correctly in the Admin editor and public pages.
 
 Use development or sandbox systems whenever possible.
 
@@ -1006,6 +1014,10 @@ Playwright additionally verifies selected browser-based authentication, administ
 - Accessibility, including manual WAVE browser-extension reviews, screen-reader checks, color contrast, and keyboard navigation across the site. Browser keyboard assertions and simulated states do not constitute a complete accessibility audit.
 - Performance under load.
 - Production concurrency and operational monitoring; local proxy SQL concurrency testing cannot establish all production conditions.
+- Real-browser Gallery upload, playback, buffering indicators, and media replacement workflows not covered by dedicated Playwright specifications. Video-loading states are simulated in jsdom and require separate real-browser verification.
+- Image compression quality across different image formats, dimensions, browsers, and devices.
+- Large Gallery performance with many stored images, particularly when original images are used for List View thumbnails.
+- Public and Admin social-link interactions in browsers not covered by existing automated browser tests.
 
 Vitest and Playwright are separate automated testing suites. Vitest does not provide real-browser end-to-end coverage; Playwright provides limited real-browser coverage for selected workflows. Passing either suite does not prove every production integration or browser is supported.
 

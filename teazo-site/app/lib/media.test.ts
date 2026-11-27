@@ -118,6 +118,7 @@ describe("Media storage helpers", () => {
       "application/pdf",
       "video/mp4",
       "video/webm",
+      "video/quicktime",
     ]);
   });
 

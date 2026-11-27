@@ -31,7 +31,7 @@ beforeEach(() => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-describe("public gallery caching (TZ-515)", () => {
+describe("public gallery caching", () => {
   it("clears the cached gallery when an image is removed", async () => {
     mocks.deleteImage.mockResolvedValue(true);
     await expect(removeGalleryImage("image-1")).resolves.toBe(true);

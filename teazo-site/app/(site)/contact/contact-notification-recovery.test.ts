@@ -3,14 +3,15 @@
  *
  * Covers deferred notification delivery, message persistence,
  * email transport failures, skipped delivery, and missing
- * notification configuration.
+ * Website Content notification configuration.
  *
  * Also characterizes repeated and concurrent submissions,
  * callback re-execution, missing automatic retries, and
  * hourly/daily notification limits across multiple messages.
  *
- * Next.js after(), Turnstile, D1, and email delivery are
- * mocked. No production records or emails are created.
+ * Next.js after(), Turnstile, D1, Website Content, and email
+ * delivery are mocked. No production records or emails
+ * are created.
  */
 
 import {
@@ -33,6 +34,7 @@ import {
   isContactFormEnabled,
 } from "@/app/lib/queries/contact";
 import { verifyTurnstile } from "@/app/lib/turnstile";
+import { getAuthoritativeWebsiteContent } from "@/app/lib/website-content";
 
 import {
   submitContactMessage,
@@ -77,6 +79,10 @@ vi.mock("@/app/lib/queries/contact", () => ({
 
 vi.mock("@/app/lib/turnstile", () => ({
   verifyTurnstile: vi.fn(),
+}));
+
+vi.mock("@/app/lib/website-content", () => ({
+  getAuthoritativeWebsiteContent: vi.fn(),
 }));
 
 const INITIAL_STATE: ContactFormState = {
@@ -144,12 +150,15 @@ function setCounts(
 beforeEach(() => {
   vi.clearAllMocks();
 
-  vi.stubEnv(
-    "CONTACT_NOTIFY_TO",
-    "owner@example.com",
-  );
-
   vi.stubEnv("NODE_ENV", "test");
+
+  vi.mocked(
+    getAuthoritativeWebsiteContent,
+  ).mockResolvedValue({
+    address: {
+      email: "owner@example.com",
+    },
+  } as never);
 
   vi.mocked(headers).mockResolvedValue(
     new Headers({
@@ -194,7 +203,7 @@ afterEach(() => {
 
 describe("Contact notification recovery", () => {
   describe("Persistence and deferred delivery", () => {
-    it("does not schedule owner notification until message persistence completes", async () => {
+    it("does not schedule notification until message persistence completes", async () => {
       let finishInsert: () => void = () => {};
 
       const pendingInsert = new Promise<void>(
@@ -297,8 +306,18 @@ describe("Contact notification recovery", () => {
       expect(after).toHaveBeenCalledOnce();
     });
 
-    it("does not retroactively deliver a message after missing notification configuration is corrected", async () => {
-      vi.stubEnv("CONTACT_NOTIFY_TO", "");
+    it("does not retroactively deliver a message after the saved notification recipient is corrected", async () => {
+      vi.mocked(getAuthoritativeWebsiteContent)
+        .mockResolvedValueOnce({
+          address: {
+            email: "",
+          },
+        } as never)
+        .mockResolvedValueOnce({
+          address: {
+            email: "owner@example.com",
+          },
+        } as never);
 
       const first = await submit({
         message: "First message",
@@ -308,11 +327,6 @@ describe("Contact notification recovery", () => {
 
       expect(first.status).toBe("sent");
       expect(sendEmail).not.toHaveBeenCalled();
-
-      vi.stubEnv(
-        "CONTACT_NOTIFY_TO",
-        "owner@example.com",
-      );
 
       const second = await submit({
         message: "Second message",
@@ -330,6 +344,7 @@ describe("Contact notification recovery", () => {
 
       expect(sendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
+          to: "owner@example.com",
           text: "Second message",
         }),
       );

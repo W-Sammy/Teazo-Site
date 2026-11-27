@@ -6,7 +6,7 @@ import { CartProvider } from "@/app/context/cart-context";
 
 // Pages that can be prebuilt are rebuilt at most this often (seconds). Saves
 // refresh them right away; this limit is so a page built during a database
-// outage doesn't keep showing its fallback content for long (TZ-515).
+// outage doesn't keep showing its fallback content for long.
 export const revalidate = 300;
 
 export default function SiteLayout({
