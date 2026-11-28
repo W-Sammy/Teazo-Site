@@ -313,21 +313,171 @@ describe("Admin Events form interactions", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("requires both event dates", () => {
+  // Name is the only required field. All other event fields
+  // may be omitted when creating a promotion.
+  it("creates an event with only a name", () => {
     renderForm();
 
     setText(/^Name/, "Tea Festival");
-    setText(/^Description/, "Special event");
 
     submitForm();
 
-    expect(
-      screen.getByRole("alert").textContent,
-    ).toBe(
-      "Choose a start and end date.",
-    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onSave).toHaveBeenCalledOnce();
 
-    expect(onSave).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledWith({
+      name: "Tea Festival",
+      description: "",
+      imageFile: null,
+      startAt: null,
+      endAt: null,
+      appliesToAll: false,
+      categoryIds: [],
+      itemIds: [],
+    });
+  });
+
+  // A start date without an end date represents an event
+  // that remains active indefinitely after its scheduled start.
+  it("accepts an event with only a start date", () => {
+    renderForm();
+
+    setText(/^Name/, "Ongoing Promotion");
+    setText(/^Starts/, "2026-11-05T10:00");
+
+    submitForm();
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onSave).toHaveBeenCalledOnce();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: new Date("2026-11-05T10:00").toISOString(),
+        endAt: null,
+      }),
+    );
+  });
+
+  // An end date without a start date represents an event
+  // that is immediately active until its scheduled expiration.
+  it("accepts an event with only an end date", () => {
+    renderForm();
+
+    setText(/^Name/, "Limited-Time Promotion");
+    setText(/^Ends/, "2026-11-05T12:00");
+
+    submitForm();
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onSave).toHaveBeenCalledOnce();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: null,
+        endAt: new Date("2026-11-05T12:00").toISOString(),
+      }),
+    );
+  });
+
+  // Existing scheduled events can be converted into
+  // unscheduled events without losing their other details.
+  it("allows both existing event dates to be cleared", () => {
+    renderForm(existingEvent);
+
+    setText(/^Starts/, "");
+    setText(/^Ends/, "");
+
+    submitForm();
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onSave).toHaveBeenCalledOnce();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: existingEvent.name,
+        description: existingEvent.description,
+        startAt: null,
+        endAt: null,
+        categoryIds: existingEvent.categoryIds,
+        itemIds: existingEvent.itemIds,
+        imageFile: null,
+      }),
+    );
+  });
+
+  // Nullable database values must render as empty date inputs
+  // rather than invalid dates or Unix epoch timestamps.
+  it("opens an existing event with both dates omitted", () => {
+    renderForm({
+      ...existingEvent,
+      startAt: null,
+      endAt: null,
+    });
+
+    expect(
+      (screen.getByLabelText(/^Starts/) as HTMLInputElement).value,
+    ).toBe("");
+
+    expect(
+      (screen.getByLabelText(/^Ends/) as HTMLInputElement).value,
+    ).toBe("");
+
+    submitForm();
+
+    expect(onSave).toHaveBeenCalledOnce();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: null,
+        endAt: null,
+      }),
+    );
+  });
+
+  // Match the API and database constraint, which allow
+  // equal start and end timestamps.
+  it("accepts identical start and end dates", () => {
+    renderForm();
+
+    setText(/^Name/, "Scheduled Promotion");
+    setText(/^Starts/, "2026-11-05T10:00");
+    setText(/^Ends/, "2026-11-05T10:00");
+
+    submitForm();
+
+    const expectedDate =
+      new Date("2026-11-05T10:00").toISOString();
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onSave).toHaveBeenCalledOnce();
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: expectedDate,
+        endAt: expectedDate,
+      }),
+    );
+  });
+
+  // Optional dates must not be marked as required.
+  // The event name remains the only required input.
+  it("marks only the event name as required", () => {
+    renderForm();
+
+    expect(
+      (screen.getByLabelText(/^Name/) as HTMLInputElement).required,
+    ).toBe(true);
+
+    expect(
+      (screen.getByLabelText(/^Starts/) as HTMLInputElement).required,
+    ).toBe(false);
+
+    expect(
+      (screen.getByLabelText(/^Ends/) as HTMLInputElement).required,
+    ).toBe(false);
+
+    expect(screen.getByLabelText("Starts (optional)")).toBeTruthy();
+    expect(screen.getByLabelText("Ends (optional)")).toBeTruthy();
   });
 
   it("accepts a missing description when required fields are valid", () => {
@@ -362,7 +512,7 @@ describe("Admin Events form interactions", () => {
     expect(
       screen.getByRole("alert").textContent,
     ).toBe(
-      "The end date must be later than the start date.",
+      "The end date must not be before the start date.",
     );
 
     expect(onSave).not.toHaveBeenCalled();

@@ -221,17 +221,30 @@ export default function AdminEventsClient({
           );
 
         case "start-desc":
-          return (
-            Date.parse(b.startAt) -
-            Date.parse(a.startAt)
-          );
-
         case "start-asc":
-        default:
-          return (
+        default: {
+          // Events without a scheduled start are treated as ongoing.
+          // Show them first for Soonest and last for Latest.
+          if (a.startAt === null && b.startAt === null) {
+            return a.name.localeCompare(b.name);
+          }
+
+          if (a.startAt === null) {
+            return sortBy === "start-desc" ? 1 : -1;
+          }
+
+          if (b.startAt === null) {
+            return sortBy === "start-desc" ? -1 : 1;
+          }
+
+          const difference =
             Date.parse(a.startAt) -
-            Date.parse(b.startAt)
-          );
+            Date.parse(b.startAt);
+
+          return sortBy === "start-desc"
+            ? -difference
+            : difference;
+        }
       }
     });
   }, [

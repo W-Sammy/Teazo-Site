@@ -1294,6 +1294,57 @@ other code.
    you did both.
 4. Once it merges, everyone else runs `npm run db:migrate:local` (or the seed).
 
+### Local database migration procedure
+
+Run the following commands from `teazo-d1-proxy`.
+
+1. Check which migrations are pending:
+
+   ```bash
+   npx wrangler d1 migrations list teazo-db --local
+   ```
+
+2. Back up the local database before applying schema changes.
+   Store the backup outside the repository in a secure location.
+
+   ```bash
+   npx wrangler d1 export teazo-db --local --output "$HOME/teazo-backup-local-$(date +%Y%m%d-%H%M%S).sql"
+   ```
+
+3. Apply the pending migrations:
+
+   ```bash
+   npm run db:migrate:local
+   ```
+
+4. Confirm that no migrations remain pending:
+
+   ```bash
+   npx wrangler d1 migrations list teazo-db --local
+   ```
+
+5. Verify foreign-key integrity:
+
+   ```bash
+   npx wrangler d1 execute teazo-db --local --command "PRAGMA foreign_key_check;"
+   ```
+
+6. Inspect the affected tables, columns, indexes, and triggers.
+   Confirm that existing records and relationships have been preserved.
+
+For migrations that rebuild existing tables, check for dependent foreign
+keys, indexes, triggers, and views before replacing the table. Triggers on
+other tables may also reference the table being rebuilt.
+
+Test with populated data as well as an empty database. An empty database
+alone cannot demonstrate that existing records and relationships survive
+a migration.
+
+Migration commands apply all pending migrations, not just a single file.
+Always review the pending migration list before proceeding.
+
+Never commit database backups to the repository.
+
 **Never edit a migration after it has merged.** It is recorded as applied, so
 your edit silently never runs on any database that already has it. Write a new
 migration instead.
@@ -1356,6 +1407,63 @@ failed when app code began reading `admin_user.session_version` before migration
 `0007_admin_password_tokens.sql` was applied. Test migrations locally first
 (§7). `npm run tail` and `npm run db:backup` need access to the team Cloudflare
 account.
+
+### Production database migration procedure
+
+Production migrations require authorized access to the team Cloudflare
+account and approval before making changes to the live database.
+
+Run the following commands from `teazo-d1-proxy`.
+
+1. Confirm that the intended migration has been reviewed and tested locally.
+
+2. Check the pending production migrations:
+
+   ```bash
+   npx wrangler d1 migrations list teazo-db --remote
+   ```
+
+3. Back up the production database:
+
+   ```bash
+   npm run db:backup
+   ```
+
+   Verify that the backup was created successfully. Store it securely outside
+   the repository and never commit it to version control.
+
+4. Once approved, apply the pending production migrations:
+
+   ```bash
+   npx wrangler d1 migrations apply teazo-db --remote
+   ```
+
+5. Verify that no migrations remain pending:
+
+   ```bash
+   npx wrangler d1 migrations list teazo-db --remote
+   ```
+
+6. Verify foreign-key integrity:
+
+   ```bash
+   npx wrangler d1 execute teazo-db --remote --command "PRAGMA foreign_key_check;"
+   ```
+
+7. Verify the affected schema, existing data, and application functionality
+   according to the approved deployment plan.
+
+**Important considerations:**
+
+- Migration commands apply all pending migrations.
+- Deploying the Worker or Next.js application does not automatically apply
+  database migrations.
+- Coordinate migration execution with the application deployment so that
+  the database remains compatible with the running application.
+- Review table rebuilds carefully to preserve existing records, foreign
+  keys, indexes, triggers, and views.
+- Do not apply unreviewed or untested migrations to production.
+- Do not commit database backups or credentials to the repository.
 
 ### 8.1 Settings for Vercel
 

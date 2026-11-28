@@ -41,7 +41,7 @@ export default function Sidebar({
   const activePath = pendingPath ?? pathname;
 
   // Keep labels, destinations, and icon filenames together for each primary link.
-  // Admin management is included only for the authenticated Owner.
+  // Admin management and maintenance are included only for the authenticated Owner.
   const adminPages = [
     {
       id: "dashboard",
@@ -74,6 +74,12 @@ export default function Sidebar({
             label: "Admin",
             img: "teazo_setting_icon.svg",
             href: "/admin/settings",
+          },
+          {
+            id: "maintenance",
+            label: "Maintenance",
+            img: "teazo_maintenance_icon.svg",
+            href: "/admin/maintenance",
           },
         ]
       : []),

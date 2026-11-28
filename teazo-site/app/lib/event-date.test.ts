@@ -10,9 +10,19 @@
 
 import { describe, expect, it } from "vitest";
 
-import { formatEventDate } from "./event-date";
+import { formatEventDate, formatEventDuration } from "./event-date";
 
 describe("formatEventDate", () => {
+  // Missing dates must not display an error or epoch timestamp.
+  it("returns an empty string for an omitted date", () => {
+    expect(formatEventDate(null)).toBe("");
+  });
+
+  // Including the year must not change missing-date behavior.
+  it("returns an empty string for an omitted date with year formatting", () => {
+    expect(formatEventDate(null, true)).toBe("");
+  });
+
   // Verify the default display format and optional year.
   it("formats a valid date without the year by default", () => {
     expect(formatEventDate("2026-10-25T00:30:00Z")).toBe(
@@ -91,5 +101,70 @@ describe("formatEventDate", () => {
     expect(formatEventDate("invalid", true)).toBe(
       "Date unavailable",
     );
+  });
+});
+
+describe("formatEventDuration", () => {
+  const start = "2026-07-15T19:00:00Z";
+  const end = "2026-07-15T21:00:00Z";
+
+  // Preserve the existing display when both dates are supplied.
+  it("formats a complete event date range", () => {
+    expect(formatEventDuration(start, end)).toBe(
+      "Jul 15, 12:00 PM – Jul 15, 2:00 PM",
+    );
+  });
+
+  // A start-only event must not display a trailing separator.
+  it("formats an event with only a start date", () => {
+    expect(formatEventDuration(start, null)).toBe(
+      "Starts Jul 15, 12:00 PM",
+    );
+  });
+
+  // An end-only event must not display a leading separator.
+  it("formats an event with only an end date", () => {
+    expect(formatEventDuration(null, end)).toBe(
+      "Ends Jul 15, 2:00 PM",
+    );
+  });
+
+  // Events without dates need no public scheduling text.
+  it("omits scheduling text when both dates are absent", () => {
+    expect(formatEventDuration(null, null)).toBe("");
+  });
+
+  // The details modal requests year-inclusive formatting.
+  it("includes the year for both supplied dates when requested", () => {
+    expect(formatEventDuration(start, end, true)).toBe(
+      `${formatEventDate(start, true)} – ${formatEventDate(end, true)}`,
+    );
+  });
+
+  // Year-inclusive formatting also supports start-only events.
+  it("includes the year for a start-only event", () => {
+    const result = formatEventDuration(start, null, true);
+
+    expect(result).toBe(
+      `Starts ${formatEventDate(start, true)}`,
+    );
+
+    expect(result).toContain("2026");
+  });
+
+  // Year-inclusive formatting also supports end-only events.
+  it("includes the year for an end-only event", () => {
+    const result = formatEventDuration(null, end, true);
+
+    expect(result).toBe(
+      `Ends ${formatEventDate(end, true)}`,
+    );
+
+    expect(result).toContain("2026");
+  });
+
+  // The details modal must also omit entirely absent dates.
+  it("omits scheduling text for undated events with year formatting", () => {
+    expect(formatEventDuration(null, null, true)).toBe("");
   });
 });
