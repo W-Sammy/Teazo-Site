@@ -7,8 +7,8 @@ type EventRow = {
   id: string;
   name: string;
   description: string;
-  start_at: string;
-  end_at: string;
+  start_at: string | null;
+  end_at: string | null;
   applies_to_all: number;
   image_r2_key: string | null;
 };
@@ -26,8 +26,8 @@ type EventMediaRow = {
 export type EventInput = {
   name: string;
   description: string;
-  startAt: string;
-  endAt: string;
+  startAt: string | null;
+  endAt: string | null;
   appliesToAll: boolean;
   categoryIds: string[];
   itemIds: string[];
@@ -41,6 +41,7 @@ function normalizeIds(ids: string[]): string[] {
 
 function mapEvent(row: EventRow, targets: TargetRow[]): AdminEvent {
   const eventTargets = targets.filter((target) => target.event_id === row.id);
+
   return {
     id: row.id,
     name: row.name,
@@ -87,13 +88,21 @@ export async function listEvents(): Promise<AdminEvent[]> {
 export async function listActiveEvents(): Promise<AdminEvent[]> {
   const events = await listEvents();
   const now = Date.now();
-  return events.filter((event) => Date.parse(event.startAt) <= now && Date.parse(event.endAt) >= now);
+
+  // A missing start date means the event has no scheduled start restriction.
+  // A missing end date means the event has no scheduled expiration.
+  return events.filter(
+    (event) =>
+      (event.startAt === null || Date.parse(event.startAt) <= now) &&
+      (event.endAt === null || Date.parse(event.endAt) >= now),
+  );
 }
 
 export async function eventExists(id: string): Promise<boolean> {
   const row = await prepare(
     "SELECT id FROM event WHERE id = ?1 AND deleted_at IS NULL",
   ).bind(id).first<{ id: string }>();
+
   return row !== null;
 }
 
@@ -107,7 +116,13 @@ function targetInsertStatements(
   const itemIds = normalizeIds(input.itemIds);
 
   if (categoryIds.length > 0) {
-    const placeholders = categoryIds.map((_, index) => `(?${index * 3 + 1}, ?${index * 3 + 2}, ?${index * 3 + 3})`).join(",");
+    const placeholders = categoryIds
+      .map(
+        (_, index) =>
+          `(?${index * 3 + 1}, ?${index * 3 + 2}, ?${index * 3 + 3})`,
+      )
+      .join(",");
+
     statements.push(
       prepare(
         `INSERT INTO event_category (event_id, square_category_id, square_env) VALUES ${placeholders}`,
@@ -116,7 +131,13 @@ function targetInsertStatements(
   }
 
   if (itemIds.length > 0) {
-    const placeholders = itemIds.map((_, index) => `(?${index * 3 + 1}, ?${index * 3 + 2}, ?${index * 3 + 3})`).join(",");
+    const placeholders = itemIds
+      .map(
+        (_, index) =>
+          `(?${index * 3 + 1}, ?${index * 3 + 2}, ?${index * 3 + 3})`,
+      )
+      .join(",");
+
     statements.push(
       prepare(
         `INSERT INTO event_item (event_id, square_catalog_object_id, square_env) VALUES ${placeholders}`,
@@ -130,10 +151,17 @@ function targetInsertStatements(
 export async function createEvent(
   input: EventInput,
   adminId: string,
-  media?: { id: string; stored: StoredMedia; mimeType: string; originalFilename: string; adminId: string },
+  media?: {
+    id: string;
+    stored: StoredMedia;
+    mimeType: string;
+    originalFilename: string;
+    adminId: string;
+  },
   squareEnv: "sandbox" | "production" = getSquareEnvironment(),
 ) {
   const id = crypto.randomUUID();
+
   const statements = [
     ...(media
       ? [
@@ -166,21 +194,32 @@ export async function createEvent(
       input.appliesToAll ? 1 : 0,
       adminId,
     ),
-    ...(!input.appliesToAll ? targetInsertStatements(id, input, squareEnv) : []),
+    ...(!input.appliesToAll
+      ? targetInsertStatements(id, input, squareEnv)
+      : []),
   ];
+
   await batch(statements);
+
   return id;
 }
 
 export async function updateEvent(
   id: string,
   input: EventInput,
-  media?: { id: string; stored: StoredMedia; mimeType: string; originalFilename: string; adminId: string },
+  media?: {
+    id: string;
+    stored: StoredMedia;
+    mimeType: string;
+    originalFilename: string;
+    adminId: string;
+  },
   squareEnv: "sandbox" | "production" = getSquareEnvironment(),
 ) {
   const previous = await prepare(
     "SELECT image_media_id FROM event WHERE id = ?1 AND deleted_at IS NULL",
   ).bind(id).first<EventMediaRow>();
+
   if (!previous) return false;
 
   const statements = [
@@ -215,10 +254,17 @@ export async function updateEvent(
       input.appliesToAll ? 1 : 0,
       id,
     ),
-    prepare("DELETE FROM event_category WHERE event_id = ?1 AND square_env = ?2").bind(id, squareEnv),
-    prepare("DELETE FROM event_item WHERE event_id = ?1 AND square_env = ?2").bind(id, squareEnv),
-    ...(!input.appliesToAll ? targetInsertStatements(id, input, squareEnv) : []),
+    prepare(
+      "DELETE FROM event_category WHERE event_id = ?1 AND square_env = ?2",
+    ).bind(id, squareEnv),
+    prepare(
+      "DELETE FROM event_item WHERE event_id = ?1 AND square_env = ?2",
+    ).bind(id, squareEnv),
+    ...(!input.appliesToAll
+      ? targetInsertStatements(id, input, squareEnv)
+      : []),
   ];
+
   if (media?.id && previous.image_media_id && previous.image_media_id !== media.id) {
     statements.push(
       prepare(
@@ -234,6 +280,7 @@ export async function updateEvent(
             AND NOT EXISTS (SELECT 1 FROM admin_user WHERE avatar_media_id = ?1 AND deleted_at IS NULL)`,
       ).bind(previous.image_media_id),
     );
+
     statements.push(
       prepare(
         `INSERT INTO pending_r2_deletion (r2_bucket, r2_key)
@@ -249,7 +296,9 @@ export async function updateEvent(
       ).bind(previous.image_media_id),
     );
   }
+
   await batch(statements);
+
   return true;
 }
 
@@ -258,12 +307,17 @@ export async function softDeleteEvent(id: string): Promise<boolean> {
     `UPDATE event SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?1 AND deleted_at IS NULL`,
   ).bind(id).run();
+
   return Number(result.meta.changes ?? 0) > 0;
 }
 
 export async function softDeleteEndedEvents(): Promise<void> {
+  // Only events with an explicit end date can expire.
+  // Events without an end date must remain available until manually deleted.
   await prepare(
     `UPDATE event SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-      WHERE deleted_at IS NULL AND end_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`,
+      WHERE deleted_at IS NULL
+        AND end_at IS NOT NULL
+        AND end_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`,
   ).run();
 }

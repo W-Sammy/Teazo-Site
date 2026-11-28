@@ -5,12 +5,35 @@ import { deleteMediaNow, MAX_MEDIA_BYTES, mintKey, putMedia, type MediaType } fr
 
 const acceptedTypes = new Set<MediaType>(["image/jpeg", "image/png", "image/webp"]);
 
+// Missing or empty dates are stored as NULL.
+// Provided dates must be valid and are normalized to UTC.
+function parseOptionalDate(form: FormData, key: string, label: string): string | null {
+  const value = String(form.get(key) ?? "").trim();
+
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    throw new Error(`${label} must be a valid date and time.`);
+  }
+
+  return date.toISOString();
+}
+
 function parseInput(form: FormData): EventInput {
   const name = String(form.get("name") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
-  const startAt = String(form.get("startAt") ?? "");
-  const endAt = String(form.get("endAt") ?? "");
+
+  // Name is the only required event form field.
+  if (!name) {
+    throw new Error("An event name is required.");
+  }
+
+  const startAt = parseOptionalDate(form, "startAt", "Start date");
+  const endAt = parseOptionalDate(form, "endAt", "End date");
   const appliesToAll = form.get("appliesToAll") === "true";
+
   const parseIds = (key: string) => {
     try {
       const value = JSON.parse(String(form.get(key) ?? "[]"));
@@ -19,12 +42,25 @@ function parseInput(form: FormData): EventInput {
       return [];
     }
   };
-  const start = Date.parse(startAt);
-  const end = Date.parse(endAt);
-  if (!name || Number.isNaN(start) || Number.isNaN(end) || end < start) {
-    throw new Error("A name and valid start/end dates are required.");
+
+  // Only compare chronological order when both dates are provided.
+  if (
+    startAt !== null &&
+    endAt !== null &&
+    Date.parse(endAt) < Date.parse(startAt)
+  ) {
+    throw new Error("The end date must not be before the start date.");
   }
-  return { name, description, startAt, endAt, appliesToAll, categoryIds: parseIds("categoryIds"), itemIds: parseIds("itemIds") };
+
+  return {
+    name,
+    description,
+    startAt,
+    endAt,
+    appliesToAll,
+    categoryIds: parseIds("categoryIds"),
+    itemIds: parseIds("itemIds"),
+  };
 }
 
 async function readMedia(form: FormData) {

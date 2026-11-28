@@ -249,6 +249,266 @@ describe("Public Events sidebar", () => {
     );
   });
 
+  // ============================================================
+  // Optional event date presentation
+  // ============================================================
+
+  // Events without dates must display only their name,
+  // without empty date rows or misleading timestamps.
+  it("omits scheduling text from undated event cards", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        startAt: null,
+        endAt: null,
+      },
+    ]);
+
+    openSidebar();
+
+    const button = screen.getByRole("button", {
+      name: "Fall Tea Festival. View event details",
+    });
+
+    expect(button.textContent).toBe("Fall Tea Festival");
+    expect(button.querySelector("p")).toBeNull();
+  });
+
+  // Start-only events display a readable start label
+  // without an unnecessary trailing date separator.
+  it("displays only the start date on a start-only event card", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        endAt: null,
+      },
+    ]);
+
+    openSidebar();
+
+    const button = screen.getByRole("button", {
+      name: "Fall Tea Festival. Starts Oct 30, 11:00 AM. View event details",
+    });
+
+    expect(button.querySelector("p")?.textContent).toBe(
+      "Starts Oct 30, 11:00 AM",
+    );
+  });
+
+  // End-only events display an expiration label
+  // without an unnecessary leading date separator.
+  it("displays only the end date on an end-only event card", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        startAt: null,
+      },
+    ]);
+
+    openSidebar();
+
+    const button = screen.getByRole("button", {
+      name: "Fall Tea Festival. Ends Oct 30, 2:00 PM. View event details",
+    });
+
+    expect(button.querySelector("p")?.textContent).toBe(
+      "Ends Oct 30, 2:00 PM",
+    );
+  });
+
+  // Undated event cards must remain fully interactive.
+  // Their details modal must also omit the scheduling row.
+  it("opens an undated event modal without displaying date text", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        startAt: null,
+        endAt: null,
+      },
+    ]);
+
+    openSidebar();
+    selectEvent("Fall Tea Festival");
+
+    const dialog = screen.getByRole("dialog");
+
+    const heading = within(dialog).getByRole("heading", {
+      name: "Fall Tea Festival",
+    });
+
+    expect(heading).toBeTruthy();
+
+    expect(
+      heading.nextElementSibling?.tagName,
+    ).toBe("DIV");
+
+    expect(
+      within(dialog).getByText(eventOne.description),
+    ).toBeTruthy();
+
+    expect(
+      within(dialog).getByText(
+        "All menu items are included in this event.",
+      ),
+    ).toBeTruthy();
+
+    expect(dialog.textContent).not.toContain("Date unavailable");
+    expect(dialog.textContent).not.toContain("1970");
+    expect(dialog.textContent).not.toContain("Starts ");
+    expect(dialog.textContent).not.toContain("Ends ");
+  });
+
+  // The modal includes the year for a supplied start date
+  // while omitting the missing expiration date.
+  it("displays year-inclusive scheduling for a start-only event modal", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        endAt: null,
+      },
+    ]);
+
+    openSidebar();
+    selectEvent("Fall Tea Festival");
+
+    const dialog = screen.getByRole("dialog");
+
+    const heading = within(dialog).getByRole("heading", {
+      name: "Fall Tea Festival",
+    });
+
+    const duration = heading.nextElementSibling;
+
+    expect(duration?.tagName).toBe("P");
+    expect(duration?.textContent).toContain("Starts Oct 30");
+    expect(duration?.textContent).toContain("2026");
+    expect(duration?.textContent).toContain("11:00 AM");
+    expect(duration?.textContent).not.toContain("Ends");
+    expect(duration?.textContent).not.toContain("–");
+  });
+
+  // The modal includes the year for a supplied end date
+  // while omitting the missing start date.
+  it("displays year-inclusive scheduling for an end-only event modal", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        startAt: null,
+      },
+    ]);
+
+    openSidebar();
+    selectEvent("Fall Tea Festival");
+
+    const dialog = screen.getByRole("dialog");
+
+    const heading = within(dialog).getByRole("heading", {
+      name: "Fall Tea Festival",
+    });
+
+    const duration = heading.nextElementSibling;
+
+    expect(duration?.tagName).toBe("P");
+    expect(duration?.textContent).toContain("Ends Oct 30");
+    expect(duration?.textContent).toContain("2026");
+    expect(duration?.textContent).toContain("2:00 PM");
+    expect(duration?.textContent).not.toContain("Starts");
+    expect(duration?.textContent).not.toContain("–");
+  });
+
+  // A complete schedule must retain both timestamps
+  // and the existing date range separator in the modal.
+  it("preserves both dates in a fully scheduled event modal", () => {
+    renderSidebar([eventOne]);
+
+    openSidebar();
+    selectEvent("Fall Tea Festival");
+
+    const dialog = screen.getByRole("dialog");
+
+    const heading = within(dialog).getByRole("heading", {
+      name: "Fall Tea Festival",
+    });
+
+    const duration = heading.nextElementSibling;
+
+    expect(duration?.tagName).toBe("P");
+    expect(duration?.textContent).toContain("11:00 AM");
+    expect(duration?.textContent).toContain("2:00 PM");
+    expect(duration?.textContent).toContain("–");
+
+    expect(
+      duration?.textContent?.match(/2026/g),
+    ).toHaveLength(2);
+  });
+
+  // Mixed event schedules must render together without
+  // changing the supplied ordering or event count.
+  it("renders mixed optional date combinations in the same sidebar", () => {
+    renderSidebar([
+      {
+        ...eventOne,
+        id: "no-dates",
+        name: "Ongoing Promotion",
+        startAt: null,
+        endAt: null,
+      },
+      {
+        ...eventOne,
+        id: "start-only",
+        name: "Start Only Promotion",
+        endAt: null,
+      },
+      {
+        ...eventOne,
+        id: "end-only",
+        name: "End Only Promotion",
+        startAt: null,
+      },
+      {
+        ...eventOne,
+        id: "both-dates",
+        name: "Scheduled Promotion",
+      },
+    ]);
+
+    openSidebar();
+
+    expect(screen.getByLabelText("4 live events")).toBeTruthy();
+
+    const sidebar = document.getElementById(
+      "live-events-sidebar",
+    );
+
+    const buttons = Array.from(
+      sidebar?.querySelectorAll("button") ?? [],
+    );
+
+    expect(buttons).toHaveLength(4);
+
+    expect(
+      buttons.map((button) =>
+        button.querySelector("h3")?.textContent,
+      ),
+    ).toEqual([
+      "Ongoing Promotion",
+      "Start Only Promotion",
+      "End Only Promotion",
+      "Scheduled Promotion",
+    ]);
+
+    expect(
+      buttons.map((button) =>
+        button.querySelector("p")?.textContent ?? null,
+      ),
+    ).toEqual([
+      null,
+      "Starts Oct 30, 11:00 AM",
+      "Ends Oct 30, 2:00 PM",
+      "Oct 30, 11:00 AM – Oct 30, 2:00 PM",
+    ]);
+  });
+
   it("displays the correct event image sources", () => {
     const { container } = renderSidebar();
 

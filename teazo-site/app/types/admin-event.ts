@@ -3,8 +3,8 @@ export type AdminEvent = {
   name: string;
   description: string;
   imageUrl: string;
-  startAt: string;
-  endAt: string;
+  startAt: string | null;
+  endAt: string | null;
   appliesToAll: boolean;
   categoryIds: string[];
   itemIds: string[];

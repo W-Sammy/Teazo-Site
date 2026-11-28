@@ -5,14 +5,23 @@ import type { AdminEvent, EventFormValues } from "@/app/types/admin-event";
 
 function eventFormData(values: EventFormValues) {
   const form = new FormData();
+
   form.set("name", values.name);
   form.set("description", values.description);
-  form.set("startAt", values.startAt);
-  form.set("endAt", values.endAt);
+
+  // FormData accepts strings or files, not null values.
+  // The API converts empty date strings back to null.
+  form.set("startAt", values.startAt ?? "");
+  form.set("endAt", values.endAt ?? "");
+
   form.set("appliesToAll", String(values.appliesToAll));
   form.set("categoryIds", JSON.stringify(values.categoryIds));
   form.set("itemIds", JSON.stringify(values.itemIds));
-  if (values.imageFile) form.set("imageFile", values.imageFile);
+
+  if (values.imageFile) {
+    form.set("imageFile", values.imageFile);
+  }
+
   return form;
 }
 
@@ -23,6 +32,7 @@ function eventFormData(values: EventFormValues) {
 export function useEvents(initialEvents: AdminEvent[]) {
   const [events, setEvents] = useState(initialEvents);
   const [errorMessage, setErrorMessage] = useState("");
+
   async function createEvent(values: EventFormValues) {
     setErrorMessage("");
 
@@ -31,10 +41,21 @@ export function useEvents(initialEvents: AdminEvent[]) {
         method: "POST",
         body: eventFormData(values),
       });
-      if (!response.ok) throw new Error("The event could not be created.");
-      const created = await fetch("/api/admin/events", { cache: "no-store" });
-      if (!created.ok) throw new Error("The event was created but could not be loaded.");
+
+      if (!response.ok) {
+        throw new Error("The event could not be created.");
+      }
+
+      const created = await fetch("/api/admin/events", {
+        cache: "no-store",
+      });
+
+      if (!created.ok) {
+        throw new Error("The event was created but could not be loaded.");
+      }
+
       setEvents(await created.json());
+
       return true;
     } catch {
       setErrorMessage("Failed to create the event.");
@@ -49,14 +70,28 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      const response = await fetch(`/api/admin/events/${currentEvent.id}`, {
-        method: "PATCH",
-        body: eventFormData(values),
+      const response = await fetch(
+        `/api/admin/events/${currentEvent.id}`,
+        {
+          method: "PATCH",
+          body: eventFormData(values),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("The event could not be updated.");
+      }
+
+      const refreshed = await fetch("/api/admin/events", {
+        cache: "no-store",
       });
-      if (!response.ok) throw new Error("The event could not be updated.");
-      const refreshed = await fetch("/api/admin/events", { cache: "no-store" });
-      if (!refreshed.ok) throw new Error("The event was updated but could not be loaded.");
+
+      if (!refreshed.ok) {
+        throw new Error("The event was updated but could not be loaded.");
+      }
+
       setEvents(await refreshed.json());
+
       return true;
     } catch {
       setErrorMessage("Failed to update the event.");
@@ -68,9 +103,23 @@ export function useEvents(initialEvents: AdminEvent[]) {
     setErrorMessage("");
 
     try {
-      const response = await fetch(`/api/admin/events/${eventToDelete.id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("The event could not be deleted.");
-      setEvents((current) => current.filter((event) => event.id !== eventToDelete.id));
+      const response = await fetch(
+        `/api/admin/events/${eventToDelete.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("The event could not be deleted.");
+      }
+
+      setEvents((current) =>
+        current.filter(
+          (event) => event.id !== eventToDelete.id,
+        ),
+      );
+
       return true;
     } catch {
       setErrorMessage("Failed to delete the event.");
@@ -84,11 +133,30 @@ export function useEvents(initialEvents: AdminEvent[]) {
     try {
       const response = await fetch("/api/admin/events", {
         method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ endedOnly: true }),
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          endedOnly: true,
+        }),
       });
-      if (!response.ok) throw new Error("Ended events could not be deleted.");
-      setEvents((current) => current.filter((event) => Date.parse(event.endAt) >= Date.now()));
+
+      if (!response.ok) {
+        throw new Error("Ended events could not be deleted.");
+      }
+
+      const now = Date.now();
+
+      // Events without an end date never expire automatically.
+      // Keep those events in the client state after ended-event cleanup.
+      setEvents((current) =>
+        current.filter(
+          (event) =>
+            event.endAt === null ||
+            Date.parse(event.endAt) >= now,
+        ),
+      );
+
       return true;
     } catch {
       setErrorMessage("Failed to delete ended events.");

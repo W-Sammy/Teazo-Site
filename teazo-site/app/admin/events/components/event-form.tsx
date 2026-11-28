@@ -45,7 +45,8 @@ const fallbackImageUrl =
   "/TEAZO_logo.svg";
 
 // Format a stored date for datetime-local using the browser's local clock.
-function toDateTimeLocal(value?: string) {
+// An omitted date is represented by an empty input.
+function toDateTimeLocal(value?: string | null) {
   if (!value) {
     return "";
   }
@@ -284,7 +285,7 @@ export default function EventForm({
     event.target.value = "";
   }
 
-  // Validate required fields and date ordering before handing values to the parent.
+  // Validate the required name and any optional dates before saving.
   function handleSubmit(
     event: SubmitEvent<HTMLFormElement>,
   ) {
@@ -296,6 +297,7 @@ export default function EventForm({
 
     setError(null);
 
+    // Name is the only required event field.
     if (!name.trim()) {
       setError(
         "Enter an event name.",
@@ -303,30 +305,50 @@ export default function EventForm({
       return;
     }
 
-    if (!startAt || !endAt) {
+    // Empty date inputs represent an unspecified start or end.
+    const startDate = startAt ? new Date(startAt) : null;
+    const endDate = endAt ? new Date(endAt) : null;
+
+    if (
+      startDate !== null &&
+      !Number.isFinite(startDate.getTime())
+    ) {
       setError(
-        "Choose a start and end date.",
+        "Choose a valid start date.",
       );
       return;
     }
 
-    const startDate = new Date(startAt);
-    const endDate = new Date(endAt);
-
-    if (endDate <= startDate) {
+    if (
+      endDate !== null &&
+      !Number.isFinite(endDate.getTime())
+    ) {
       setError(
-        "The end date must be later than the start date.",
+        "Choose a valid end date.",
       );
       return;
     }
 
-    // Convert local inputs to UTC ISO strings and omit specific targets for all-items events.
+    // Only validate chronological ordering when both dates are supplied.
+    if (
+      startDate !== null &&
+      endDate !== null &&
+      endDate.getTime() < startDate.getTime()
+    ) {
+      setError(
+        "The end date must not be before the start date.",
+      );
+      return;
+    }
+
+    // Convert provided local inputs to UTC ISO strings.
+    // Preserve omitted dates as null and omit specific targets for all-items events.
     onSave({
       name: name.trim(),
       description: description.trim(),
       imageFile,
-      startAt: startDate.toISOString(),
-      endAt: endDate.toISOString(),
+      startAt: startDate?.toISOString() ?? null,
+      endAt: endDate?.toISOString() ?? null,
       appliesToAll,
       categoryIds: appliesToAll
         ? []
@@ -365,6 +387,7 @@ export default function EventForm({
             name="eventName"
             type="text"
             value={name}
+            required
             onChange={(
               event: ChangeEvent<HTMLInputElement>,
             ) => {
@@ -486,13 +509,13 @@ export default function EventForm({
           )}
         </div>
 
-        {/* Event dates */}
+        {/* Optional event dates */}
         <div className="mt-4 grid min-w-0 grid-cols-1 gap-3">
           <label
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-start"
           >
-            Starts <span className="text-red-600" aria-hidden="true">*</span>
+            Starts <span className="text-gray-400">(optional)</span>
 
             <input
               id="event-start"
@@ -515,7 +538,7 @@ export default function EventForm({
             className="min-w-0 text-sm text-gray-700"
             htmlFor="event-end"
           >
-            Ends <span className="text-red-600" aria-hidden="true">*</span>
+            Ends <span className="text-gray-400">(optional)</span>
 
             <input
               id="event-end"

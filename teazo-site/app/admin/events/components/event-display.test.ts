@@ -21,7 +21,7 @@ import {
   getTargetLabel,
 } from "./event-display";
 
-const event: AdminEvent = {
+const event = {
   id: "event-1",
   name: "Test Event",
   description: "Test description",
@@ -31,7 +31,7 @@ const event: AdminEvent = {
   appliesToAll: false,
   categoryIds: [],
   itemIds: [],
-};
+} satisfies AdminEvent;
 
 const categories: EventCategory[] = [
   { id: "category-1", name: "Milk Tea" },
@@ -87,7 +87,89 @@ describe("Admin Events display helpers", () => {
     });
   });
 
+  describe("Optional event date statuses", () => {
+    const start = Date.parse(event.startAt);
+    const end = Date.parse(event.endAt);
+
+    // Events without scheduling restrictions remain active.
+    it("classifies events without either date as active", () => {
+      const unscheduled = {
+        ...event,
+        startAt: null,
+        endAt: null,
+      };
+
+      expect(getEventStatus(unscheduled, start - 1)).toBe("active");
+      expect(getEventStatus(unscheduled, end + 1)).toBe("active");
+    });
+
+    // An open-ended event may still have a future start.
+    it("classifies future start-only events as upcoming", () => {
+      expect(
+        getEventStatus(
+          { ...event, endAt: null },
+          start - 1,
+        ),
+      ).toBe("upcoming");
+    });
+
+    // The scheduled start boundary remains inclusive.
+    it("classifies start-only events at their start as active", () => {
+      expect(
+        getEventStatus(
+          { ...event, endAt: null },
+          start,
+        ),
+      ).toBe("active");
+    });
+
+    // Without an end date, a started event does not expire.
+    it("keeps start-only events active indefinitely", () => {
+      expect(
+        getEventStatus(
+          { ...event, endAt: null },
+          end + 1,
+        ),
+      ).toBe("active");
+    });
+
+    // No start restriction means the event is immediately active.
+    it("classifies end-only events before expiration as active", () => {
+      expect(
+        getEventStatus(
+          { ...event, startAt: null },
+          start - 1,
+        ),
+      ).toBe("active");
+    });
+
+    // The scheduled end boundary remains inclusive.
+    it("classifies end-only events at expiration as active", () => {
+      expect(
+        getEventStatus(
+          { ...event, startAt: null },
+          end,
+        ),
+      ).toBe("active");
+    });
+
+    // An omitted start date must not prevent expiration.
+    it("classifies expired end-only events as ended", () => {
+      expect(
+        getEventStatus(
+          { ...event, startAt: null },
+          end + 1,
+        ),
+      ).toBe("ended");
+    });
+  });
+
   describe("Event date formatting", () => {
+    // Missing dates are intentional, unlike invalid timestamps.
+    it("displays Not set for an omitted date", () => {
+      expect(formatEventDate(null)).toBe("Not set");
+    });
+
     it("formats UTC timestamps in Pacific daylight time", () => {
       expect(
         formatEventDate("2026-07-15T19:30:00.000Z"),

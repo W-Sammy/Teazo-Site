@@ -13,18 +13,54 @@ export function formatHour(hour: number) {
   return `${displayHour}:${String(minutes).padStart(2, "0")}${period}`;
 }
 
-export function formatEventDate(date: string) {
+export function formatEventDate(date: string | null) {
+  // Missing dates are intentional for events without a fixed schedule.
+  if (date === null) return "";
+
+  const parsedDate = new Date(date);
+
+  if (!Number.isFinite(parsedDate.getTime())) {
+    return "Date unavailable";
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     timeZone: SHOP_TIME_ZONE,
     month: "2-digit",
     day: "2-digit",
     year: "2-digit",
-  }).format(new Date(date));
+  }).format(parsedDate);
+}
+
+// Preserve the dashboard's compact date formatting while
+// supporting events with either or both dates omitted.
+export function formatEventDuration(
+  startAt: string | null,
+  endAt: string | null,
+): string {
+  if (startAt !== null && endAt !== null) {
+    return `${formatEventDate(startAt)} – ${formatEventDate(endAt)}`;
+  }
+
+  if (startAt !== null) {
+    return `Starts ${formatEventDate(startAt)}`;
+  }
+
+  if (endAt !== null) {
+    return `Ends ${formatEventDate(endAt)}`;
+  }
+
+  return "";
 }
 
 export function isEventActive(event: AdminEvent) {
   const now = Date.now();
-  return new Date(event.startAt).getTime() <= now && now <= new Date(event.endAt).getTime();
+
+  // A missing start date imposes no start restriction.
+  // A missing end date imposes no expiration restriction.
+  return (
+    (event.startAt === null || Date.parse(event.startAt) <= now) &&
+    (event.endAt === null || Date.parse(event.endAt) >= now)
+  );
 }
 
 export function getTodayHours(content?: WebsiteContent | null) {
@@ -44,9 +80,12 @@ function shopToday() {
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(new Date());
+
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((value) => value.type === type)?.value ?? "";
+
   const weekday = WEEKDAYS.indexOf(part("weekday") as typeof WEEKDAYS[number]);
+
   return {
     dayIndex: weekday >= 0 ? weekday : 0,
     monthDay: `${part("month")}-${part("day")}`,

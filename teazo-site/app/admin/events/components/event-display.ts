@@ -40,12 +40,29 @@ export function getEventStatus(
   event: AdminEvent,
   now = Date.now(),
 ): EventStatus {
-  if (now < Date.parse(event.startAt)) return "upcoming";
-  if (now > Date.parse(event.endAt)) return "ended";
+  // Only events with a scheduled start can be upcoming.
+  if (
+    event.startAt !== null &&
+    now < Date.parse(event.startAt)
+  ) {
+    return "upcoming";
+  }
+
+  // Only events with a scheduled end can expire.
+  if (
+    event.endAt !== null &&
+    now > Date.parse(event.endAt)
+  ) {
+    return "ended";
+  }
+
   return "active";
 }
 
-export function formatEventDate(value: string): string {
+export function formatEventDate(value: string | null): string {
+  // Explicitly distinguish intentionally omitted dates from invalid dates.
+  if (value === null) return "Not set";
+
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) return "Unknown";

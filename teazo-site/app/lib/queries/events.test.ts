@@ -697,6 +697,326 @@ describe("Event database queries", () => {
     expect(await softDeleteEvent("missing")).toBe(false);
   });
 
+  // ============================================================
+  // Optional event dates
+  // ============================================================
+
+  // Database NULL values must be preserved when mapping
+  // event records to the application data model.
+  it("maps nullable event dates without converting them to strings", async () => {
+    allResults = [
+      {
+        results: [
+          eventRow({
+            id: "no-dates",
+            start_at: null,
+            end_at: null,
+          }),
+          eventRow({
+            id: "start-only",
+            end_at: null,
+          }),
+          eventRow({
+            id: "end-only",
+            start_at: null,
+          }),
+        ],
+      },
+      { results: [] },
+    ];
+
+    const events = await listEvents();
+
+    expect(events).toHaveLength(3);
+
+    expect(events.map(({ id, startAt, endAt }) => ({
+      id,
+      startAt,
+      endAt,
+    }))).toEqual([
+      {
+        id: "no-dates",
+        startAt: null,
+        endAt: null,
+      },
+      {
+        id: "start-only",
+        startAt: START,
+        endAt: null,
+      },
+      {
+        id: "end-only",
+        startAt: null,
+        endAt: END,
+      },
+    ]);
+  });
+
+  // Events without dates remain active indefinitely.
+  it("includes events with neither date in the active event list", async () => {
+    allResults = [
+      {
+        results: [
+          eventRow({
+            id: "ongoing",
+            start_at: null,
+            end_at: null,
+          }),
+        ],
+      },
+      { results: [] },
+    ];
+
+    const active = await listActiveEvents();
+
+    expect(active.map((event) => event.id)).toEqual([
+      "ongoing",
+    ]);
+  });
+
+  // Events without expiration dates become active when
+  // their scheduled start is reached and do not expire.
+  it("filters start-only events using their scheduled start", async () => {
+    vi.useFakeTimers();
+
+    try {
+      vi.setSystemTime(
+        new Date("2026-11-01T18:00:00.000Z"),
+      );
+
+      allResults = [
+        {
+          results: [
+            eventRow({
+              id: "started",
+              start_at: "2026-10-31T18:00:00.000Z",
+              end_at: null,
+            }),
+            eventRow({
+              id: "starts-now",
+              start_at: START,
+              end_at: null,
+            }),
+            eventRow({
+              id: "future-start",
+              start_at: "2026-11-02T18:00:00.000Z",
+              end_at: null,
+            }),
+          ],
+        },
+        { results: [] },
+      ];
+
+      const active = await listActiveEvents();
+
+      expect(active.map((event) => event.id)).toEqual([
+        "started",
+        "starts-now",
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Events without a start date remain active until
+  // their configured end date has passed.
+  it("filters end-only events using their scheduled expiration", async () => {
+    vi.useFakeTimers();
+
+    try {
+      vi.setSystemTime(
+        new Date("2026-11-01T21:00:00.000Z"),
+      );
+
+      allResults = [
+        {
+          results: [
+            eventRow({
+              id: "future-end",
+              start_at: null,
+              end_at: "2026-11-02T21:00:00.000Z",
+            }),
+            eventRow({
+              id: "ends-now",
+              start_at: null,
+              end_at: END,
+            }),
+            eventRow({
+              id: "expired",
+              start_at: null,
+              end_at: "2026-10-31T21:00:00.000Z",
+            }),
+          ],
+        },
+        { results: [] },
+      ];
+
+      const active = await listActiveEvents();
+
+      expect(active.map((event) => event.id)).toEqual([
+        "future-end",
+        "ends-now",
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Event creation must bind actual NULL values rather
+  // than empty strings or artificial timestamps.
+  it("binds null dates when creating an unscheduled event", async () => {
+    const id = await createEvent(
+      input({
+        startAt: null,
+        endAt: null,
+      }),
+      "admin-1",
+    );
+
+    const eventInsert = statements.find((statement) =>
+      /INSERT INTO event\s*\(/.test(statement.sql),
+    );
+
+    expect(eventInsert?.args).toEqual([
+      id,
+      "Fall Special",
+      "Seasonal promotion",
+      null,
+      null,
+      null,
+      0,
+      "admin-1",
+    ]);
+
+    expect(batch).toHaveBeenCalledOnce();
+  });
+
+  // Each optional date must be independently preserved
+  // when creating a new event.
+  it("binds the supplied date and null for an omitted date", async () => {
+    const startOnlyId = await createEvent(
+      input({
+        startAt: START,
+        endAt: null,
+      }),
+      "admin-1",
+    );
+
+    const endOnlyId = await createEvent(
+      input({
+        startAt: null,
+        endAt: END,
+      }),
+      "admin-1",
+    );
+
+    const inserts = statements.filter((statement) =>
+      /INSERT INTO event\s*\(/.test(statement.sql),
+    );
+
+    expect(inserts).toHaveLength(2);
+
+    expect(inserts[0].args).toEqual([
+      startOnlyId,
+      "Fall Special",
+      "Seasonal promotion",
+      null,
+      START,
+      null,
+      0,
+      "admin-1",
+    ]);
+
+    expect(inserts[1].args).toEqual([
+      endOnlyId,
+      "Fall Special",
+      "Seasonal promotion",
+      null,
+      null,
+      END,
+      0,
+      "admin-1",
+    ]);
+
+    expect(batch).toHaveBeenCalledTimes(2);
+  });
+
+  // Updating an existing event must support clearing its
+  // dates without removing its image or catalog associations.
+  it("binds null dates when removing an existing event schedule", async () => {
+    firstResults = [
+      { image_media_id: "media-existing" },
+    ];
+
+    const updated = await updateEvent(
+      "event-1",
+      input({
+        startAt: null,
+        endAt: null,
+      }),
+    );
+
+    expect(updated).toBe(true);
+
+    const update = statementContaining("UPDATE event");
+
+    expect(update?.args).toEqual([
+      "Fall Special",
+      "Seasonal promotion",
+      null,
+      null,
+      null,
+      0,
+      "event-1",
+    ]);
+
+    expect(update?.sql).toContain(
+      "COALESCE(?3, image_media_id)",
+    );
+
+    expect(
+      statementContaining("INSERT INTO event_category")?.args,
+    ).toEqual([
+      "event-1",
+      "category-1",
+      "sandbox",
+    ]);
+
+    expect(
+      statementContaining("INSERT INTO event_item")?.args,
+    ).toEqual([
+      "event-1",
+      "item-1",
+      "sandbox",
+    ]);
+
+    expect(
+      statementContaining("INSERT INTO pending_r2_deletion"),
+    ).toBeUndefined();
+
+    expect(batch).toHaveBeenCalledOnce();
+  });
+
+  // Ended-event cleanup must explicitly exclude events
+  // without expiration dates.
+  it("excludes events with null end dates from bulk cleanup", async () => {
+    await softDeleteEndedEvents();
+
+    expect(statements).toHaveLength(1);
+
+    expect(statements[0].sql).toContain(
+      "end_at IS NOT NULL",
+    );
+
+    expect(statements[0].sql).toContain(
+      "end_at < strftime",
+    );
+
+    expect(statements[0].sql).toContain(
+      "deleted_at IS NULL",
+    );
+  });
+
   // Bulk cleanup must target only events whose end time
   // has passed, leaving active and upcoming events intact.
   it("soft-deletes only events that have ended", async () => {

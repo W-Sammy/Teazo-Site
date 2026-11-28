@@ -236,6 +236,265 @@ describe("saveEvent", () => {
     );
   });
 
+  // A request containing only a name must be accepted.
+  // Missing optional fields are assigned their default values.
+  it("creates an event when only the name is provided", async () => {
+    const form = new FormData();
+    form.set("name", "Ongoing Promotion");
+
+    const response = await saveEvent(makeRequest(form), null);
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ id: "event-new" });
+
+    expect(createEvent).toHaveBeenCalledOnce();
+    expect(createEvent).toHaveBeenCalledWith(
+      {
+        name: "Ongoing Promotion",
+        description: "",
+        startAt: null,
+        endAt: null,
+        appliesToAll: false,
+        categoryIds: [],
+        itemIds: [],
+      },
+      "admin-1",
+      undefined,
+    );
+
+    expect(putMedia).not.toHaveBeenCalled();
+  });
+
+  // Blank date inputs sent by the frontend must be
+  // converted to null before reaching the database.
+  it("converts empty date fields to null", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({ startAt: "", endAt: "" })),
+      null,
+    );
+
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: null,
+        endAt: null,
+      }),
+      "admin-1",
+      undefined,
+    );
+  });
+
+  // Whitespace-only date fields are equivalent to omitted dates.
+  it("converts whitespace-only date fields to null", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({ startAt: "   ", endAt: "   " })),
+      null,
+    );
+
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: null,
+        endAt: null,
+      }),
+      "admin-1",
+      undefined,
+    );
+  });
+
+  // An event can have a scheduled start without an expiration.
+  it("accepts an event with only a start date", async () => {
+    const form = makeForm();
+    form.delete("endAt");
+
+    const response = await saveEvent(makeRequest(form), null);
+
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: START,
+        endAt: null,
+      }),
+      "admin-1",
+      undefined,
+    );
+  });
+
+  // An event can start immediately and expire at a specified time.
+  it("accepts an event with only an end date", async () => {
+    const form = makeForm();
+    form.delete("startAt");
+
+    const response = await saveEvent(makeRequest(form), null);
+
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: null,
+        endAt: END,
+      }),
+      "admin-1",
+      undefined,
+    );
+  });
+
+  // Supplied dates must still be valid when the other date is absent.
+  it("rejects an invalid start date without an end date", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({
+        startAt: "invalid",
+        endAt: "",
+      })),
+      null,
+    );
+
+    expect(response.status).toBe(400);
+
+    expect(await response.json()).toEqual({
+      error: "Start date must be a valid date and time.",
+    });
+
+    expect(createEvent).not.toHaveBeenCalled();
+    expect(putMedia).not.toHaveBeenCalled();
+  });
+
+  // A missing start date must not bypass end-date validation.
+  it("rejects an invalid end date without a start date", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({
+        startAt: "",
+        endAt: "invalid",
+      })),
+      null,
+    );
+
+    expect(response.status).toBe(400);
+
+    expect(await response.json()).toEqual({
+      error: "End date must be a valid date and time.",
+    });
+
+    expect(createEvent).not.toHaveBeenCalled();
+    expect(putMedia).not.toHaveBeenCalled();
+  });
+
+  // Name remains required even when every optional field is absent.
+  it("rejects a request containing no event fields", async () => {
+    const response = await saveEvent(
+      makeRequest(new FormData()),
+      null,
+    );
+
+    expect(response.status).toBe(400);
+
+    expect(await response.json()).toEqual({
+      error: "An event name is required.",
+    });
+
+    expect(createEvent).not.toHaveBeenCalled();
+    expect(putMedia).not.toHaveBeenCalled();
+  });
+
+  // Normalize supplied timestamps to UTC so stored dates
+  // can be compared consistently by database queries.
+  it("normalizes supplied date offsets to UTC", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({
+        startAt: "2026-11-01T10:00:00-08:00",
+        endAt: "2026-11-01T13:00:00-08:00",
+      })),
+      null,
+    );
+
+    expect(response.status).toBe(201);
+
+    expect(createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startAt: START,
+        endAt: END,
+      }),
+      "admin-1",
+      undefined,
+    );
+  });
+
+  // Editing an event must allow both previously configured
+  // dates to be removed without creating a duplicate event.
+  it("clears both dates when updating an existing event", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({ startAt: "", endAt: "" })),
+      "event-existing",
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(await response.json()).toEqual({
+      id: "event-existing",
+    });
+
+    expect(updateEvent).toHaveBeenCalledOnce();
+    expect(updateEvent).toHaveBeenCalledWith(
+      "event-existing",
+      expect.objectContaining({
+        startAt: null,
+        endAt: null,
+        categoryIds: ["category-1"],
+        itemIds: ["item-1"],
+      }),
+      undefined,
+    );
+
+    expect(createEvent).not.toHaveBeenCalled();
+  });
+
+  // An existing event can have its start date removed
+  // while retaining its scheduled expiration.
+  it("clears only the start date when updating an event", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({ startAt: "" })),
+      "event-existing",
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(updateEvent).toHaveBeenCalledWith(
+      "event-existing",
+      expect.objectContaining({
+        startAt: null,
+        endAt: END,
+      }),
+      undefined,
+    );
+
+    expect(createEvent).not.toHaveBeenCalled();
+  });
+
+  // An existing event can have its expiration removed
+  // while retaining its scheduled start.
+  it("clears only the end date when updating an event", async () => {
+    const response = await saveEvent(
+      makeRequest(makeForm({ endAt: "" })),
+      "event-existing",
+    );
+
+    expect(response.status).toBe(200);
+
+    expect(updateEvent).toHaveBeenCalledWith(
+      "event-existing",
+      expect.objectContaining({
+        startAt: START,
+        endAt: null,
+      }),
+      undefined,
+    );
+
+    expect(createEvent).not.toHaveBeenCalled();
+  });
+
   // Leading/trailing whitespace should not be stored as
   // part of an event's name or description.
   it("trims event names and descriptions", async () => {
